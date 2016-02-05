@@ -63,7 +63,7 @@ extern int do_rename_cmd(int argc, char *argv[]);
 extern int do_insert_key_cmd(int argc, char *argv[]);
 extern int do_remove_key_cmd(int argc, char *argv[]);
 extern int do_mix_key_cmd(int argc, char *argv[]);
-extern int do_evaluate_cmd(int argc, char *argv[]);
+extern int do_performance_cmd(int argc, char *argv[]);
 extern void parse_all_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para);
 
 

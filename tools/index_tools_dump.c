@@ -97,17 +97,17 @@ static int32_t dump_key(ATTR_HANDLE *tree, const bool_t v_bReverse)
 
 	memset(&para, 0, sizeof(DUMP_PARA_S));
     
-	OS_PRINT("Start dump all keys. [obj: %s, attr: %s]\n",
+	OS_PRINT("Start dump all keys. obj(%s) attr(%s)\n",
         tree->attr_info->obj->obj_name, tree->attr_info->attr_name);
 
     ret = index_walk_all(tree, v_bReverse, 0, &para, dump_callback);
     if (ret < 0)
     {
-        OS_PRINT("Walk tree failed. [obj: %s, attr: %s, ret: %d]\n",
+        OS_PRINT("Walk tree failed. obj(%s) attr(%s) ret(%d)\n",
             tree->attr_info->obj->obj_name, tree->attr_info->attr_name, ret);
     }
     
-	OS_PRINT("Finished dump all keys. [obj: %s, attr: %s]\n",
+	OS_PRINT("Finished dump all keys. obj(%s) attr(%s)\n",
         tree->attr_info->obj->obj_name, tree->attr_info->attr_name);
     
 	return ret;
@@ -131,7 +131,7 @@ void dump_attr(INDEX_TOOLS_PARA_S *para)
     ret = index_open(para->index_name, para->start_lba, &index);
     if (0 > ret)
     {
-        OS_PRINT("Open index failed. [index_name: %s, start_lba: %lld, ret: %d]\n",
+        OS_PRINT("Open index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
             para->index_name, para->start_lba, ret);
         return;
     }
@@ -146,8 +146,7 @@ void dump_attr(INDEX_TOOLS_PARA_S *para)
         ret = index_open_object(index->root_obj, para->obj_name, &obj);
         if (0 > ret)
         {
-            OS_PRINT("Open obj failed."
-                " [index_name: %s, start_lba: %lld, obj_name: %s, ret: %d]\n",
+            OS_PRINT("Open obj failed. index_name(%s) start_lba(%lld) obj_name(%s) ret(%d)\n",
                 para->index_name, para->start_lba, para->obj_name, ret);
             (void)index_close(index);
         }
@@ -162,8 +161,7 @@ void dump_attr(INDEX_TOOLS_PARA_S *para)
     ret = index_open_xattr(obj, para->attr_name, &attr);
     if (0 > ret)
     {
-        OS_PRINT("Open attr failed."
-            " [index_name: %s, start_lba: %lld, obj_name: %s, attr_name: %s, ret: %d]\n",
+        OS_PRINT("Open attr failed. index_name(%s) start_lba(%lld) obj_name(%s) attr_name(%s) ret(%d)\n",
             para->index_name, para->start_lba, para->obj_name, para->attr_name, ret);
         if (0 != strlen(para->obj_name))
         {
@@ -195,7 +193,7 @@ int do_dump_cmd(int argc, char *argv[])
     para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
     if (NULL == para)
     {
-        OS_PRINT("Allocate memory failed. [size: %d]\n",
+        OS_PRINT("Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
         return -1;
     }

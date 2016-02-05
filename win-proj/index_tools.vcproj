@@ -225,10 +225,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\index_tools_evaluate.c"
-				>
-			</File>
-			<File
 				RelativePath=".\index_tools_fixup.c"
 				>
 			</File>
@@ -245,7 +241,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\index_tools_test.c"
+				RelativePath=".\index_tools_performace.c"
+				>
+			</File>
+			<File
+				RelativePath=".\index_tools_tree.c"
 				>
 			</File>
 			<File

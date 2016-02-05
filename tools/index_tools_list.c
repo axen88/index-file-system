@@ -128,7 +128,7 @@ void print_block_Info(BLOCK_HANDLE_S * hnd)
     OS_PRINT("FreeBlocks       : %lld\n", tmp_hnd->sb.free_blocks);
     OS_PRINT("FirstFreeBlock   : %lld\n", tmp_hnd->sb.first_free_block);
     
-    OS_PRINT("StartLBA         : %lld\n", tmp_hnd->sb.start_lba);
+    OS_PRINT("start_lba         : %lld\n", tmp_hnd->sb.start_lba);
     OS_PRINT("Version          : %d\n", tmp_hnd->sb.version);
     OS_PRINT("Flags            : 0x%08X\n", tmp_hnd->sb.flags);
     OS_PRINT("MagicNum         : 0x%04X\n", tmp_hnd->sb.magic_num);
@@ -151,7 +151,7 @@ int32_t list_super_block(char *index_name, uint64_t start_lba)
     ret = index_open(index_name, start_lba, &index);
     if (0 > ret)
     {
-        OS_PRINT("Open index failed. [index_name: %s, start_lba: %lld, ret: %d]\n",
+        OS_PRINT("Open index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
             index_name, start_lba, ret);
         return ret;
     }
@@ -188,7 +188,7 @@ int32_t cmd_list(char *index_name, char *obj_name, uint64_t start_lba)
         ret = walk_all_opened_index(print_index_info, NULL);
         if (0 > ret)
         {
-            OS_PRINT("Walk all opened index failed. [ret: %d]\n", ret);
+            OS_PRINT("Walk all opened index failed. ret(%d)\n", ret);
         }
 
         return ret;
@@ -197,7 +197,7 @@ int32_t cmd_list(char *index_name, char *obj_name, uint64_t start_lba)
     index = index_find_handle(index_name);
     if (NULL == index)
     {
-        OS_PRINT("The index is not opened. [index: %s]\n",
+        OS_PRINT("The index is not opened. index(%s)\n",
             index_name);
         return -2;
     }
@@ -207,7 +207,7 @@ int32_t cmd_list(char *index_name, char *obj_name, uint64_t start_lba)
         ret = walk_all_opened_child_objects(index->root_obj, print_obj_info, NULL);
         if (0 > ret)
         {
-            OS_PRINT("Walk all opened trees failed. [index: %p, ret: %d]\n",
+            OS_PRINT("Walk all opened trees failed. index(%p) ret(%d)\n",
                 index, ret);
         }
 
@@ -217,7 +217,7 @@ int32_t cmd_list(char *index_name, char *obj_name, uint64_t start_lba)
     ret = index_open_object(index->root_obj, obj_name, &obj);
     if (0 > ret)
     {
-        OS_PRINT("Open tree failed. [index: %p, name: %s, ret: %d]\n",
+        OS_PRINT("Open tree failed. index(%p) name(%s) ret(%d)\n",
             index, obj_name, ret);
         return ret;
     }
@@ -260,7 +260,7 @@ int do_list_cmd(int argc, char *argv[])
     para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
     if (NULL == para)
     {
-        OS_PRINT("Allocate memory failed. [size: %d]\n",
+        OS_PRINT("Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
         return -1;
     }

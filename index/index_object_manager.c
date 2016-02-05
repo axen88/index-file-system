@@ -909,7 +909,7 @@ int32_t index_close_object(OBJECT_HANDLE *obj)
     return ret;
 }     
 
-int32_t index_remove_object(OBJECT_HANDLE *parent_obj, const char *obj_name,
+int32_t index_delete_object(OBJECT_HANDLE *parent_obj, const char *obj_name,
     void *hnd, DeleteFunc del_func)
 {
 #if 0

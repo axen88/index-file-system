@@ -272,14 +272,14 @@ void os_execute_cmd(int32_t argc, char *argv[],
     cmd = OS_MALLOC(CMD_MAX_SIZE);
     if (NULL == cmd)
     {
-        OS_PRINT("Allocate memory failed. [size: %d]\n", CMD_MAX_SIZE);
+        OS_PRINT("Allocate memory failed. size(%d)\n", CMD_MAX_SIZE);
         return;
     }
 
     tmp_argv = (char **)OS_MALLOC(CMD_MAX_ARGS * sizeof(char *));
     if (NULL == tmp_argv)
     {
-        OS_PRINT("Allocate memory failed. [size: %d]\n",
+        OS_PRINT("Allocate memory failed. size(%d)\n",
             CMD_MAX_ARGS * (uint32_t)sizeof(char *));
         OS_FREE(cmd);
         return;
@@ -322,14 +322,14 @@ int32_t os_get_nth_para(char *cmd, int32_t nth,
     tmp_cmd = OS_MALLOC(CMD_MAX_SIZE);
     if (NULL == tmp_cmd)
     {
-        OS_PRINT("Allocate memory failed. [size: %d]\n", CMD_MAX_SIZE);
+        OS_PRINT("Allocate memory failed. size(%d)\n", CMD_MAX_SIZE);
         return -1;
     }
 
     tmp_argv = (char **)OS_MALLOC(CMD_MAX_ARGS * sizeof(char *));
     if (NULL == tmp_argv)
     {
-        OS_PRINT("Allocate memory failed. [size: %d]\n",
+        OS_PRINT("Allocate memory failed. size(%d)\n",
             CMD_MAX_ARGS * (uint32_t)sizeof(char *));
         OS_FREE(tmp_cmd);
         return -1;
@@ -411,14 +411,14 @@ void os_cmd_ui(OS_CMD_LIST_S cmd_list[])
     cmd = OS_MALLOC(CMD_MAX_SIZE);
     if (NULL == cmd)
     {
-        OS_PRINT("Allocate memory failed. [size: %d]\n", CMD_MAX_SIZE);
+        OS_PRINT("Allocate memory failed. size(%d)\n", CMD_MAX_SIZE);
         return;
     }
 
     tmp_argv = (char **)OS_MALLOC(CMD_MAX_ARGS * sizeof(char *));
     if (NULL == tmp_argv)
     {
-        OS_PRINT("Allocate memory failed. [size: %d]\n",
+        OS_PRINT("Allocate memory failed. size(%d)\n",
             CMD_MAX_ARGS * (uint32_t)sizeof(char *));
         OS_FREE(cmd);
         return;

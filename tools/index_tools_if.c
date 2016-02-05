@@ -160,7 +160,7 @@ OS_CMD_LIST_S INDEX_CMD_LIST[]
     {do_remove_key_cmd,   {"remove",   NULL, NULL}, "<-i index_name> [-o obj_name] [-k keys_num]"},
     {do_mix_key_cmd,      {"mix",      NULL, NULL}, "<-i index_name> [-o obj_name] [-k keys_num]"},
                 
-	{do_evaluate_cmd, {"evaluate", NULL, NULL}, "<-i index_name> <-o obj_name> [-n threads_num]"},
+	{do_performance_cmd, {"perf", NULL, NULL}, "<-i index_name> <-o obj_name> [-n threads_num]"},
 	{NULL, NULL, NULL}
 };
 

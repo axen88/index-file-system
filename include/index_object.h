@@ -47,7 +47,7 @@ extern int32_t index_create_object(OBJECT_HANDLE *parent_obj,
 extern int32_t index_close_object(OBJECT_HANDLE *obj);
 
 /* 删除对象 */
-extern int32_t index_remove_object(OBJECT_HANDLE *parent_obj, const char *obj_name,
+extern int32_t index_delete_object(OBJECT_HANDLE *parent_obj, const char *obj_name,
     void *hnd, DeleteFunc del_func);
 
 /* 重命名对象 */

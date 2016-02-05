@@ -84,14 +84,14 @@ static int32_t verify_callback(void *tree, void *para)
             return 0;
         }
 
-        OS_PRINT("Key is not in sequence. [tree: %p, no: %d]\n",
+        OS_PRINT("Key is not in sequence. tree(%p) no(%d)\n",
             tree, para->no);
         return -1;
     }
     
     if (0 == ret)
     {   /* 已经找到了 */
-        OS_PRINT("The same key found. [tree: %p, no: %d]\n",
+        OS_PRINT("The same key found. tree(%p) no(%d)\n",
             tree, para->no);
         return -2;
     }
@@ -104,7 +104,7 @@ static int32_t verify_callback(void *tree, void *para)
         return 0;
     }
     
-    OS_PRINT("Key is not in reverse sequence. [tree: %p, no: %d]\n",
+    OS_PRINT("Key is not in reverse sequence. tree(%p) no(%d)\n",
         tree, para->no);
     return -3;
 #endif
@@ -138,7 +138,7 @@ int32_t index_verify_attr(ATTR_HANDLE *tree, void *para)
     pcKey = OS_MALLOC(usKeyMaxSize);
     if (NULL == pcKey)
     {
-        OS_PRINT("Allocate memory failed. [size: %d]\n", usKeyMaxSize);
+        OS_PRINT("Allocate memory failed. size(%d)\n", usKeyMaxSize);
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 
@@ -150,14 +150,14 @@ int32_t index_verify_attr(ATTR_HANDLE *tree, void *para)
     ret = index_walk_all(tree, tmp_para.bReverse, 0, &tmp_para, verify_callback);
     if (0 > ret)
     {
-        OS_PRINT("Verify sequence failed. [index: %s, tree: %s, ret: %d]\n",
+        OS_PRINT("Verify sequence failed. index(%s) tree(%s) ret(%d)\n",
             tree->index->name, tree->pstInode->name, ret);
         OS_FREE(pcKey);
         pcKey = NULL;
         return ret;
     }
 
-    OS_PRINT("Verify sequence success. [index: %s, tree: %s]\n",
+    OS_PRINT("Verify sequence success. index(%s) tree(%s)\n",
         tree->index->name, tree->pstInode->name);
     
     /* 反向遍历 */
@@ -166,14 +166,14 @@ int32_t index_verify_attr(ATTR_HANDLE *tree, void *para)
     ret = index_walk_all(tree, tmp_para.bReverse, 0, &tmp_para, verify_callback);
     if (0 > ret)
     {
-        OS_PRINT("Verify reverse failed. [index: %s, tree: %s, ret: %d]\n",
+        OS_PRINT("Verify reverse failed. index(%s) tree(%s) ret(%d)\n",
             tree->index->name, tree->pstInode->name, ret);
         OS_FREE(pcKey);
         pcKey = NULL;
         return ret;
     }
     
-    OS_PRINT("Verify reverse success. [index: %s, tree: %s]\n",
+    OS_PRINT("Verify reverse success. index(%s) tree(%s)\n",
         tree->index->name, tree->pstInode->name);
 
     OS_FREE(pcKey);
@@ -205,7 +205,7 @@ int32_t index_verify_attr_by_name(char *index_name, uint64_t start_lba,
     /* 检查输入参数 */
     if ((NULL == index_name) || (NULL == obj_name))
     {
-        OS_PRINT("Invalid parameter. [index_name: %p, obj_name: %p]\n",
+        OS_PRINT("Invalid parameter. index_name(%p) obj_name(%p)\n",
             index_name, obj_name);
         return -INDEX_ERR_PARAMETER;
     }
@@ -213,7 +213,7 @@ int32_t index_verify_attr_by_name(char *index_name, uint64_t start_lba,
     ret = index_open(index_name, start_lba, &index);
     if (0 > ret)
     {
-        OS_PRINT("Open index failed. [index_name: %s, start_lba: %lld]\n",
+        OS_PRINT("Open index failed. index_name(%s) start_lba(%lld)\n",
             index_name, start_lba);
         return ret;
     }
@@ -221,8 +221,7 @@ int32_t index_verify_attr_by_name(char *index_name, uint64_t start_lba,
     ret = index_open_object(index->root_obj, obj_name, &obj);
     if (0 > ret)
     {
-        OS_PRINT("Open tree failed."
-            " [index_name: %s, start_lba: %lld, obj_name: %s]\n",
+        OS_PRINT("Open tree failed. index_name(%s) start_lba(%lld) obj_name(%s)\n",
             index_name, start_lba, obj_name);
         (void)index_close(index);
         return ret;
@@ -304,7 +303,7 @@ int do_verify_cmd(int argc, char *argv[])
     para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
     if (NULL == para)
     {
-        OS_PRINT("Allocate memory failed. [size: %d]\n",
+        OS_PRINT("Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }

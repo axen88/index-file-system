@@ -175,13 +175,13 @@ int32_t fixup_index_by_name(char *index_name, uint64_t start_lba)
     ASSERT (NULL != index_name);
     ASSERT (0 != strlen(index_name));
 
-    OS_PRINT("Start fixup index. [index_name: %s, start_lba: %lld]\n",
+    OS_PRINT("Start fixup index. index_name(%s) start_lba(%lld)\n",
         index_name, start_lba);
 
     ret = index_open(index_name, start_lba, &index);
     if (0 > ret)
     {
-        OS_PRINT("Open index failed. [index_name: %s, start_lba: %lld, ret: %d]\n",
+        OS_PRINT("Open index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
             index_name, start_lba, ret);
         return ret;
     }
@@ -189,12 +189,12 @@ int32_t fixup_index_by_name(char *index_name, uint64_t start_lba)
     ret = fixup_index(index);
     if (0 > ret)
     {
-        OS_PRINT("Fixup index failed. [index_name: %s, start_lba: %lld, ret: %d]\n",
+        OS_PRINT("Fixup index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
             index_name, start_lba, ret);
     }
     else
     {
-        OS_PRINT("Fixup index success. [index_name: %s, start_lba: %lld]\n",
+        OS_PRINT("Fixup index success. index_name(%s) start_lba(%lld)\n",
             index_name, start_lba);
     }
     
@@ -221,7 +221,7 @@ int do_fixup_cmd(int argc, char *argv[])
     para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
     if (NULL == para)
     {
-        OS_PRINT("Allocate memory failed. [size: %d]\n",
+        OS_PRINT("Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
         return -1;
     }

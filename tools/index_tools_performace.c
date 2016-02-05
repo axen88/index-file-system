@@ -22,7 +22,7 @@
 
             版权所有(C), 2011~2014, AXEN工作室
 ********************************************************************************
-文 件 名: OS_INDEX_EVALUATE.C
+文 件 名: INDEX_TOOLS_PERFORMANCE.C
 版    本: 1.00
 日    期: 2011年8月21日
 功能描述: 评估树的插入、删除操作性能的工具
@@ -69,7 +69,7 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
     ret = index_open(index_name, start_lba, &index);
     if (ret < 0)
     {
-        OS_PRINT("Open index failed. [name: %s,  startLBA: %lld, ret: %d]\n",
+        OS_PRINT("Open index failed. name(%s)  start_lba(%lld) ret(%d)\n",
             index_name, start_lba, ret);
         return ret;
     }
@@ -77,7 +77,7 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
     ret = index_create_object(index->root_obj, obj_name, 0,&obj);
     if (ret < 0)
     {
-        OS_PRINT("Create tree failed. [name: %s, ret: %d]\n",
+        OS_PRINT("Create obj failed. name(%s) ret(%d)\n",
             obj_name, ret);
         (void)index_close(index);
         return ret;
@@ -85,7 +85,7 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
 
     memset(c, 0x88, sizeof(c));
 
-    OS_PRINT("Start insert key. [name: %s, total: %lld]\n",
+    OS_PRINT("Start insert key. name(%s) total(%lld)\n",
         obj_name, keys_num);
     ullTime = os_get_ms_count();
 
@@ -95,13 +95,13 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
             c, TEST_VALUE_LEN);
         if (0 > ret)
         {
-            OS_PRINT("Insert key failed. [name: %s, key: %lld, ret: %d]\n",
+            OS_PRINT("Insert key failed. name(%s) key(%lld) ret(%d)\n",
                 obj_name, key, ret);
             break;
         }
     }
 
-    OS_PRINT("Finished insert key. [name: %s, total: %lld, time: %lld ms]\n",
+    OS_PRINT("Finished insert key. name(%s) total(%lld) time(%lld ms)\n",
         obj_name, keys_num, os_get_ms_count() - ullTime);
 
     (void)index_close_object(obj);
@@ -140,7 +140,7 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
     ret = index_open(index_name, start_lba, &index);
     if (ret < 0)
     {
-        OS_PRINT("Open index failed. [name: %s,  startLBA: %lld, ret: %d]\n",
+        OS_PRINT("Open index failed. name(%s) start_lba(%lld) ret(%d)\n",
             index_name, start_lba, ret);
         return ret;
     }
@@ -148,13 +148,13 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
     ret = index_open_object(index->root_obj, obj_name, &obj);
     if (ret < 0)
     {
-        OS_PRINT("Open tree failed. [name: %s, ret: %d]\n",
+        OS_PRINT("Open tree failed. name(%s) ret(%d)\n",
             obj_name, ret);
         (void)index_close(index);
         return ret;
     }
 
-    OS_PRINT("Start remove key. [name: %s, total: %lld]\n",
+    OS_PRINT("Start remove key. name(%s) total(%lld)\n",
         obj_name, keys_num);
     ullTime = os_get_ms_count();
 
@@ -163,13 +163,13 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
         ret = index_remove_key(obj->mattr, &key, TEST_KEY_LEN);
         if (0 > ret)
         {
-            OS_PRINT("Remove key failed. [name: %s, key: %lld, ret: %d]\n",
+            OS_PRINT("Remove key failed. name(%s) key(%lld) ret(%d)\n",
                 obj_name, key, ret);
             break;
         }
     }
 
-    OS_PRINT("Finished remove key. [name: %s, total: %lld, time: %lld ms]\n",
+    OS_PRINT("Finished remove key. name(%s) total(%lld) time(%lld ms)\n",
         obj_name, keys_num, os_get_ms_count() - ullTime);
 
     (void)index_close_object(obj);
@@ -231,26 +231,26 @@ void *test_performance_thread(void *para)
 int32_t test_performance(INDEX_TOOLS_PARA_S *para,
     bool_t v_bInsert)
 {
-    void *pThreadsGroup = NULL;
+    void *threads_group = NULL;
 
     para->insert = v_bInsert;
     para->threads_cnt = 0;
     para->no = 0;
 
-    pThreadsGroup = threads_group_create(para->threads_num,
-        test_performance_thread, para, "index_evaluate");
-    if (NULL == pThreadsGroup)
+    threads_group = threads_group_create(para->threads_num,
+        test_performance_thread, para, "perf");
+    if (NULL == threads_group)
     {
-        OS_PRINT("Create threads group failed. [num: %d]\n",
+        OS_PRINT("Create threads group failed. num(%d)\n",
             para->threads_num);
         return -1;
     }
 
-    if ((int32_t)para->threads_num != threads_group_get_real_num(pThreadsGroup))
+    if ((int32_t)para->threads_num != threads_group_get_real_num(threads_group))
     {
-        OS_PRINT("Create threads group failed. [expect: %d, real: %d]\n",
-            para->threads_num, threads_group_get_real_num(pThreadsGroup));
-        //threads_group_destroy(pThreadsGroup, 1, (OS_U64)0);
+        OS_PRINT("Create threads group failed. expect(%d) real(%d)\n",
+            para->threads_num, threads_group_get_real_num(threads_group));
+        //threads_group_destroy(threads_group, 1, (OS_U64)0);
         //return -2;
     }
 
@@ -259,19 +259,19 @@ int32_t test_performance(INDEX_TOOLS_PARA_S *para,
         OS_SLEEP_SECOND(1);
     }
 
-    threads_group_destroy(pThreadsGroup, 1, (uint64_t)0);
+    threads_group_destroy(threads_group, 1, (uint64_t)0);
 
     return 0;
 }
 
-int do_evaluate_cmd(int argc, char *argv[])
+int do_performance_cmd(int argc, char *argv[])
 {
     INDEX_TOOLS_PARA_S *para = NULL;
 
     para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
     if (NULL == para)
     {
-        OS_PRINT("Allocate memory failed. [size: %d]\n",
+        OS_PRINT("Allocate memory failed. size(%d)\n",
             sizeof(INDEX_TOOLS_PARA_S));
         return -1;
     }
@@ -281,30 +281,21 @@ int do_evaluate_cmd(int argc, char *argv[])
     if ((0 == strlen(para->index_name))
         || (0 == strlen(para->obj_name)))
     {
-        OS_PRINT("invalid index name(%s) or obj name(%s).\n",
-            para->index_name, para->obj_name);
+        OS_PRINT("invalid index name(%s) or obj name(%s).\n", para->index_name, para->obj_name);
         OS_FREE(para);
         return -2;
     }
     
     if (0 == para->threads_num)
     {
-        /* 单线程测试插入性能 */
-        (void)test_insert_key_performance(para->index_name, para->start_lba,
-            para->obj_name, para->keys_num);
-        
-        /* 单线程测试删除性能 */
-        (void)test_remove_key_performance(para->index_name, para->start_lba,
-            para->obj_name, para->keys_num);
+        para->threads_num = 1; // 至少1个线程
     }
-    else
-    {
-        /* 多线程测试插入性能 */
-        (void)test_performance(para, B_TRUE);
-        
-        /* 多线程测试删除性能 */
-        (void)test_performance(para, B_FALSE);
-    }
+
+    /* 多线程测试插入性能 */
+    (void)test_performance(para, B_TRUE);
+    
+    /* 多线程测试删除性能 */
+    (void)test_performance(para, B_FALSE);
 
     OS_FREE(para);
 
