@@ -91,7 +91,7 @@ uint32_t parse_cmd(char *cmd, char *argv[], uint32_t argc)
     for (;;)
     {
         /* 换行符 */
-        if ('\n' == *c)
+        if (('\n' == *c) || ('\r' == *c))
         {
             *c = '\0';
             break;
@@ -117,7 +117,7 @@ uint32_t parse_cmd(char *cmd, char *argv[], uint32_t argc)
         }
         
         /* 过滤掉有效字符，这些字符属于参数 */
-        while ((' ' != *c) && ('\0' != *c) && ('\n' != *c))
+        while ((' ' != *c) && ('\0' != *c) && ('\n' != *c) && ('\r' != *c))
         {
             c++;
         }
