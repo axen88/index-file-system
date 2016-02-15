@@ -68,7 +68,7 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
     if ((0 == strlen(para->index_name))
         || (0 == strlen(para->obj_name)))
     {
-        OS_PRINT("invalid index name(%s) or obj name(%s).\n",
+        para->net->print(para->net->net, "invalid index name(%s) or obj name(%s).\n",
             para->index_name, para->obj_name);
         return -1;
     }
@@ -76,7 +76,7 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
     ret = index_open(para->index_name, para->start_lba, &index);
     if (ret < 0)
     {
-        OS_PRINT("Open index failed. index(%s) start_lba(%lld) ret(%d)\n",
+        para->net->print(para->net->net, "Open index failed. index(%s) start_lba(%lld) ret(%d)\n",
             para->index_name, para->start_lba, ret);
         return ret;
     }
@@ -84,7 +84,7 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
     ret = index_open_object(index->root_obj, para->obj_name, &obj);
     if (ret < 0)
     {
-        OS_PRINT("Create obj failed. obj(%s) ret(%d)\n",
+        para->net->print(para->net->net, "Create obj failed. obj(%s) ret(%d)\n",
             para->obj_name, ret);
         (void)index_close(index);
         return ret;
@@ -96,7 +96,7 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
         ret = index_create_xattr(obj, para->attr_name, ATTR_FLAG_TABLE, &attr);
         if (ret < 0)
         {
-            OS_PRINT("Create tree failed. attr(%s) ret(%d)\n",
+            para->net->print(para->net->net, "Create tree failed. attr(%s) ret(%d)\n",
                 para->attr_name, ret);
             (void)index_close(index);
             return ret;
@@ -111,7 +111,7 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
             value, TEST_VALUE_LEN);
         if (0 > ret)
         {
-            OS_PRINT("Insert key failed. key(%lld) ret(%d)\n",
+            para->net->print(para->net->net, "Insert key failed. key(%lld) ret(%d)\n",
                 key, ret);
             break;
         }
@@ -119,7 +119,7 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
         ret = index_verify_attr(obj);
         if (0 > ret)
         {
-            OS_PRINT("Verify key failed. key(%lld) ret(%d)\n",
+            para->net->print(para->net->net, "Verify key failed. key(%lld) ret(%d)\n",
                 key, ret);
             break;
         }
@@ -145,7 +145,7 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
     if ((0 == strlen(para->index_name))
         || (0 == strlen(para->obj_name)))
     {
-        OS_PRINT("invalid index name(%s) or obj name(%s).\n",
+        para->net->print(para->net->net, "invalid index name(%s) or obj name(%s).\n",
             para->index_name, para->obj_name);
         return -1;
     }
@@ -153,7 +153,7 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
     ret = index_open(para->index_name, para->start_lba, &index);
     if (ret < 0)
     {
-        OS_PRINT("Open index failed. index(%s) start_lba(%lld) ret(%d)\n",
+        para->net->print(para->net->net, "Open index failed. index(%s) start_lba(%lld) ret(%d)\n",
             para->index_name, para->start_lba, ret);
         return ret;
     }
@@ -161,7 +161,7 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
     ret = index_open_object(index->root_obj, para->obj_name, &obj);
     if (ret < 0)
     {
-        OS_PRINT("Open tree failed. tree(%s) ret(%d)\n",
+        para->net->print(para->net->net, "Open tree failed. tree(%s) ret(%d)\n",
             para->obj_name, ret);
         (void)index_close(index);
         return ret;
@@ -173,7 +173,7 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
         ret = index_create_xattr(obj, para->attr_name, ATTR_FLAG_TABLE, &attr);
         if (ret < 0)
         {
-            OS_PRINT("Create tree failed. attr(%s) ret(%d)\n",
+            para->net->print(para->net->net, "Create tree failed. attr(%s) ret(%d)\n",
                 para->attr_name, ret);
             (void)index_close_object(obj);
             (void)index_close(index);
@@ -187,7 +187,7 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
         
         if (0 > ret)
         {
-            OS_PRINT("Remove key failed. key(%lld) ret(%d)\n",
+            para->net->print(para->net->net, "Remove key failed. key(%lld) ret(%d)\n",
                 key, ret);
             break;
         }
@@ -195,7 +195,7 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
         ret = index_verify_attr(obj);
         if (0 > ret)
         {
-            OS_PRINT("Verify key failed. key(%lld) ret(%d)\n",
+            para->net->print(para->net->net, "Verify key failed. key(%lld) ret(%d)\n",
                 key, ret);
             break;
         }
@@ -208,102 +208,21 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
     return 0;
 }
 
-static int32_t cmd_mix_key(INDEX_TOOLS_PARA_S *para)
-{
-    int32_t ret = 0;
-    INDEX_HANDLE *index = NULL;
-    OBJECT_HANDLE *obj = NULL;
-    uint32_t i = 0;
-    uint8_t value[TEST_VALUE_LEN];
-    uint8_t key[TEST_KEY_LEN];
-    int32_t key_len = 0;
 
-    ASSERT(NULL != para);
-
-    if ((0 == strlen(para->index_name))
-        || (0 == strlen(para->obj_name)))
-    {
-        OS_PRINT("invalid index name(%s) or obj name(%s).\n",
-            para->index_name, para->obj_name);
-        return -1;
-    }
-
-    ret = index_open(para->index_name, para->start_lba, &index);
-    if (ret < 0)
-    {
-        OS_PRINT("Open index failed. index(%s) start_lba(%lld) ret(%d)\n",
-            para->index_name, para->start_lba, ret);
-        return ret;
-    }
-
-    ret = index_create_object(index->root_obj, para->obj_name, 0, &obj);
-    if (ret < 0)
-    {
-        OS_PRINT("Create tree failed. tree(%s) ret(%d)\n",
-            para->obj_name, ret);
-        (void)index_close(index);
-        return ret;
-    }
-
-    memset(value, 0x88, sizeof(value));
-
-    for (i = 0; i < ArraySize(KEY_ACTION_LIST); i++)
-    {
-        key_len = os_str_to_hex(KEY_ACTION_LIST[i].key, key, 8);
-        if (8 != key_len)
-        {
-            OS_PRINT("Key is invalid. key(%s) i(%d) ret(%d)\n",
-                KEY_ACTION_LIST[i].key, i, ret);
-            break;
-        }
-
-        if (0 == KEY_ACTION_LIST[i].action)
-        {
-            ret = index_remove_key(obj->mattr, key, TEST_KEY_LEN);
-        }
-        else
-        {
-            ret = index_insert_key(obj->mattr, key, TEST_KEY_LEN,
-                value, TEST_VALUE_LEN);
-        }
-        
-        if (0 > ret)
-        {
-            OS_PRINT("Operate key failed. key(%s) action(%d) i(%d) ret(%d)\n",
-                KEY_ACTION_LIST[i].key, KEY_ACTION_LIST[i].action, i, ret);
-            break;
-        }
-
-        ret = index_verify_attr(obj);
-        if (0 > ret)
-        {
-            OS_PRINT("Verify tree failed. key(%s) action(%d) i(%d) ret(%d)\n",
-                KEY_ACTION_LIST[i].key, KEY_ACTION_LIST[i].action, i, ret);
-            break;
-        }
-    }
-
-    (void)index_close_object(obj);
-    (void)index_close(index);
-    
-    return 0;
-}
-
-
-int do_insert_key_cmd(int argc, char *argv[])
+int do_insert_key_cmd(int argc, char *argv[], NET_PARA_S *net)
 {
     INDEX_TOOLS_PARA_S *para = NULL;
 
     para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
     if (NULL == para)
     {
-        OS_PRINT("Allocate memory failed. size(%d)\n",
+        net->print(net->net, "Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
         return -1;
     }
 
     parse_all_para(argc, argv, para);
-
+    para->net = net;
     cmd_insert_key(para);
 
     OS_FREE(para);
@@ -311,42 +230,21 @@ int do_insert_key_cmd(int argc, char *argv[])
     return 0;
 }
 
-int do_remove_key_cmd(int argc, char *argv[])
+int do_remove_key_cmd(int argc, char *argv[], NET_PARA_S *net)
 {
     INDEX_TOOLS_PARA_S *para = NULL;
 
     para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
     if (NULL == para)
     {
-        OS_PRINT("Allocate memory failed. size(%d)\n",
+        net->print(net->net, "Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
         return -1;
     }
 
     parse_all_para(argc, argv, para);
-
+    para->net = net;
     cmd_remove_key(para);
-
-    OS_FREE(para);
-
-    return 0;
-}
-
-int do_mix_key_cmd(int argc, char *argv[])
-{
-    INDEX_TOOLS_PARA_S *para = NULL;
-
-    para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
-    if (NULL == para)
-    {
-        OS_PRINT("Allocate memory failed. size(%d)\n",
-            (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
-        return -1;
-    }
-
-    parse_all_para(argc, argv, para);
-
-    cmd_mix_key(para);
 
     OS_FREE(para);
 

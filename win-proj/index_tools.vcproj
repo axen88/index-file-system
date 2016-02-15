@@ -217,39 +217,39 @@
 				>
 			</File>
 			<File
-				RelativePath=".\index_tools_debug.c"
+				RelativePath="..\tools\index_tools_debug.c"
 				>
 			</File>
 			<File
-				RelativePath=".\index_tools_dump.c"
+				RelativePath="..\tools\index_tools_dump.c"
 				>
 			</File>
 			<File
-				RelativePath=".\index_tools_fixup.c"
+				RelativePath="..\tools\index_tools_fixup.c"
 				>
 			</File>
 			<File
-				RelativePath=".\index_tools_if.c"
+				RelativePath="..\tools\index_tools_if.c"
 				>
 			</File>
 			<File
-				RelativePath=".\index_tools_list.c"
+				RelativePath="..\tools\index_tools_list.c"
 				>
 			</File>
 			<File
-				RelativePath=".\index_tools_main.c"
+				RelativePath="..\tools\index_tools_main.c"
 				>
 			</File>
 			<File
-				RelativePath=".\index_tools_performace.c"
+				RelativePath="..\tools\index_tools_performace.c"
 				>
 			</File>
 			<File
-				RelativePath=".\index_tools_tree.c"
+				RelativePath="..\tools\index_tools_tree.c"
 				>
 			</File>
 			<File
-				RelativePath=".\index_tools_verify.c"
+				RelativePath="..\tools\index_tools_verify.c"
 				>
 			</File>
 			<File

@@ -40,25 +40,29 @@
 extern "C" {
 #endif
 
-typedef int (*OS_CMD_FUNC)(int argc, char *argv[]); // 指向函数的指针
+
+typedef struct tagNET_PARA_S
+{
+	void *net;
+    int (*print)(void *net, const char *format, ...);
+} NET_PARA_S;
+
+
+typedef int (*OS_CMD_FUNC)(int argc, char *argv[], NET_PARA_S *net);
 
 #define MAX_CMD_LEVEL    3
 #define MAX_SUB_CMD_NUM  10
 
 typedef struct tagOS_CMD_LIST_S
 {
-	OS_CMD_FUNC func; /* 此命令对应的函数 */
+	OS_CMD_FUNC func;
     char *cmdLevel[MAX_CMD_LEVEL];
-	char *comment;   /* 此命令的注释信息 */
+	char *comment;
 } OS_CMD_LIST_S;
 
-extern void os_execute_cmd(int32_t argc, char *argv[],
-    OS_CMD_LIST_S *cmd_list, uint32_t cmd_num);
-extern int32_t os_get_nth_para(char *input, int32_t nth,
-    char *para, uint32_t para_size);
 extern int32_t os_parse_para(int argc, char *argv[], char *para,
     char *content, uint32_t content_size);
-extern void os_cmd_ui(OS_CMD_LIST_S cmd_list[]);
+extern void os_cmd_ui(OS_CMD_LIST_S cmd_list[], NET_PARA_S *net);
 
 #ifdef  __cplusplus
 }

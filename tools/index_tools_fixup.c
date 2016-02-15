@@ -34,6 +34,9 @@
     1. 初始版本
 *******************************************************************************/
 #include "index_if.h"
+#include "os_log.h"
+
+MODULE(PID_INDEX);
 
 int32_t fixup_callback(void *tree, void *para)
 {
@@ -175,13 +178,13 @@ int32_t fixup_index_by_name(char *index_name, uint64_t start_lba)
     ASSERT (NULL != index_name);
     ASSERT (0 != strlen(index_name));
 
-    OS_PRINT("Start fixup index. index_name(%s) start_lba(%lld)\n",
+    LOG_EVENT("Start fixup index. index_name(%s) start_lba(%lld)\n",
         index_name, start_lba);
 
     ret = index_open(index_name, start_lba, &index);
     if (0 > ret)
     {
-        OS_PRINT("Open index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
+        LOG_ERROR("Open index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
             index_name, start_lba, ret);
         return ret;
     }
@@ -189,12 +192,12 @@ int32_t fixup_index_by_name(char *index_name, uint64_t start_lba)
     ret = fixup_index(index);
     if (0 > ret)
     {
-        OS_PRINT("Fixup index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
+        LOG_ERROR("Fixup index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
             index_name, start_lba, ret);
     }
     else
     {
-        OS_PRINT("Fixup index success. index_name(%s) start_lba(%lld)\n",
+        LOG_EVENT("Fixup index success. index_name(%s) start_lba(%lld)\n",
             index_name, start_lba);
     }
     
@@ -214,25 +217,26 @@ int32_t fixup_index_by_name(char *index_name, uint64_t start_lba)
     < 0: 错误代码
 说    明: 无
 *******************************************************************************/
-int do_fixup_cmd(int argc, char *argv[])
+int do_fixup_cmd(int argc, char *argv[], NET_PARA_S *net)
 {
     INDEX_TOOLS_PARA_S *para = NULL;
 
     para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
     if (NULL == para)
     {
-        OS_PRINT("Allocate memory failed. size(%d)\n",
+        net->print(net->net, "Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
         return -1;
     }
 
     parse_all_para(argc, argv, para);
+    para->net = net;
 
     if (0 == strlen(para->index_name))
     {
         OS_FREE(para);
         para = NULL;
-        OS_PRINT("invalid index name(%s).\n", para->index_name);
+        net->print(net->net, "invalid index name(%s).\n", para->index_name);
         return -2;
     }
 

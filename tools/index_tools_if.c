@@ -156,9 +156,8 @@ OS_CMD_LIST_S INDEX_CMD_LIST[]
 	{do_verify_cmd,   {"verify",   NULL, NULL}, "<-i index_name> [-o obj_name] [-a attr_name]"},
     {do_fixup_cmd,    {"fixup",    NULL, NULL}, "<-i index_name>"},
         
-	{do_insert_key_cmd,   {"insert",   NULL, NULL}, "<-i index_name> [-o obj_name] [-k keys_num]"},
-    {do_remove_key_cmd,   {"remove",   NULL, NULL}, "<-i index_name> [-o obj_name] [-k keys_num]"},
-    {do_mix_key_cmd,      {"mix",      NULL, NULL}, "<-i index_name> [-o obj_name] [-k keys_num]"},
+	{do_insert_key_cmd,   {"insert",   NULL, NULL}, "<-i index_name> [-o obj_name] [-k key] [-v value]"},
+    {do_remove_key_cmd,   {"remove",   NULL, NULL}, "<-i index_name> [-o obj_name] [-k key] [-v value]"},
                 
 	{do_performance_cmd, {"perf", NULL, NULL}, "<-i index_name> <-o obj_name> [-n threads_num]"},
 	{NULL, NULL, NULL}

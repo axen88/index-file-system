@@ -398,7 +398,7 @@ void log_trace(void *log, uint32_t pid, uint32_t level, const char *format, ...)
 
     if (0 != (tmp_log->mode & LOG_TO_SCREEN))
     {
-        OS_PRINT("%s %s", tmp_log->date_time, tmp_log->buf);
+        //OS_PRINT("%s %s", tmp_log->date_time, tmp_log->buf);
     }
     
     if (NULL != tmp_log->file_hnd)

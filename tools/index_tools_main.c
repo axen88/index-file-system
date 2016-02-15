@@ -39,6 +39,21 @@ MODULE(PID_INDEX);
 
 extern OS_CMD_LIST_S INDEX_CMD_LIST[];
 
+int tools_print(void *net, const char *format, ...)
+{
+    #define BUF_LEN  1024
+    va_list ap;
+    char buf[BUF_LEN];
+    
+    va_start(ap, format);
+    OS_VSNPRINTF(buf, BUF_LEN, format, ap);
+    va_end(ap);
+
+    printf("%s", buf);
+
+    return 0;
+}
+
 
 /*******************************************************************************
 º¯ÊýÃû³Æ: main
@@ -55,16 +70,19 @@ extern OS_CMD_LIST_S INDEX_CMD_LIST[];
 int32_t main(int32_t argc, char *argv[])
 {
     int32_t ret = 0;
+    NET_PARA_S net;
     
     LOG_SYSTEM_INIT();
     ret = index_init_system();
     if (0 > ret)
     {
-        OS_PRINT("Index system init failed.\n");
+        printf("Index system init failed.\n");
     }
     else
     {
-        os_cmd_ui(INDEX_CMD_LIST);
+        net.net = NULL;
+        net.print = tools_print;
+        os_cmd_ui(INDEX_CMD_LIST, &net);
         index_exit_system();
     }
     

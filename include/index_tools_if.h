@@ -37,6 +37,8 @@ typedef struct tagINDEX_TOOLS_PARA_S
     char new_attr_name[ATTR_NAME_SIZE];
     char tmp[TMP_BUF_SIZE];
 
+    NET_PARA_S *net;
+
     int32_t backup_no;
     uint64_t start_lba;
     uint64_t total_sectors;
@@ -51,19 +53,19 @@ typedef struct tagINDEX_TOOLS_PARA_S
 } INDEX_TOOLS_PARA_S;
 
 
-extern int do_verify_cmd(int argc, char *argv[]);
-extern int do_fixup_cmd(int argc, char *argv[]);
-extern int do_dump_cmd(int argc, char *argv[]);
-extern int do_list_cmd(int argc, char *argv[]);
-extern int do_create_cmd(int argc, char *argv[]);
-extern int do_open_cmd(int argc, char *argv[]);
-extern int do_close_cmd(int argc, char *argv[]);
-extern int do_delete_cmd(int argc, char *argv[]);
-extern int do_rename_cmd(int argc, char *argv[]);
-extern int do_insert_key_cmd(int argc, char *argv[]);
-extern int do_remove_key_cmd(int argc, char *argv[]);
-extern int do_mix_key_cmd(int argc, char *argv[]);
-extern int do_performance_cmd(int argc, char *argv[]);
+extern int do_verify_cmd(int argc, char *argv[], NET_PARA_S *net);
+extern int do_fixup_cmd(int argc, char *argv[], NET_PARA_S *net);
+extern int do_dump_cmd(int argc, char *argv[], NET_PARA_S *net);
+extern int do_list_cmd(int argc, char *argv[], NET_PARA_S *net);
+extern int do_create_cmd(int argc, char *argv[], NET_PARA_S *net);
+extern int do_open_cmd(int argc, char *argv[], NET_PARA_S *net);
+extern int do_close_cmd(int argc, char *argv[], NET_PARA_S *net);
+extern int do_delete_cmd(int argc, char *argv[], NET_PARA_S *net);
+extern int do_rename_cmd(int argc, char *argv[], NET_PARA_S *net);
+extern int do_insert_key_cmd(int argc, char *argv[], NET_PARA_S *net);
+extern int do_remove_key_cmd(int argc, char *argv[], NET_PARA_S *net);
+extern int do_mix_key_cmd(int argc, char *argv[], NET_PARA_S *net);
+extern int do_performance_cmd(int argc, char *argv[], NET_PARA_S *net);
 extern void parse_all_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para);
 
 

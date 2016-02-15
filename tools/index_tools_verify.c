@@ -205,7 +205,7 @@ int32_t index_verify_attr_by_name(char *index_name, uint64_t start_lba,
     /* 检查输入参数 */
     if ((NULL == index_name) || (NULL == obj_name))
     {
-        OS_PRINT("Invalid parameter. index_name(%p) obj_name(%p)\n",
+        LOG_ERROR("Invalid parameter. index_name(%p) obj_name(%p)\n",
             index_name, obj_name);
         return -INDEX_ERR_PARAMETER;
     }
@@ -213,7 +213,7 @@ int32_t index_verify_attr_by_name(char *index_name, uint64_t start_lba,
     ret = index_open(index_name, start_lba, &index);
     if (0 > ret)
     {
-        OS_PRINT("Open index failed. index_name(%s) start_lba(%lld)\n",
+        LOG_ERROR("Open index failed. index_name(%s) start_lba(%lld)\n",
             index_name, start_lba);
         return ret;
     }
@@ -221,7 +221,7 @@ int32_t index_verify_attr_by_name(char *index_name, uint64_t start_lba,
     ret = index_open_object(index->root_obj, obj_name, &obj);
     if (0 > ret)
     {
-        OS_PRINT("Open tree failed. index_name(%s) start_lba(%lld) obj_name(%s)\n",
+        LOG_ERROR("Open tree failed. index_name(%s) start_lba(%lld) obj_name(%s)\n",
             index_name, start_lba, obj_name);
         (void)index_close(index);
         return ret;
@@ -271,13 +271,13 @@ int32_t verify_index(char *index_name, uint64_t start_lba)
     //ret = IndexWalkAllTrees(index, &para);
     if (0 > ret)
     {
-        OS_PRINT("verify index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
+        LOG_ERROR("verify index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
             index_name, start_lba, ret);
         (void)index_close(index);
         return ret;
     }
     
-    OS_PRINT("verify index success. index_name(%s) start_lba(%lld)\n",
+    LOG_ERROR("verify index success. index_name(%s) start_lba(%lld)\n",
         index_name, start_lba);
     
     (void)index_close(index);
@@ -296,25 +296,26 @@ int32_t verify_index(char *index_name, uint64_t start_lba)
     < 0: 错误代码
 说    明: 无
 *******************************************************************************/
-int do_verify_cmd(int argc, char *argv[])
+int do_verify_cmd(int argc, char *argv[], NET_PARA_S *net)
 {
     INDEX_TOOLS_PARA_S *para = NULL;
 
     para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
     if (NULL == para)
     {
-        OS_PRINT("Allocate memory failed. size(%d)\n",
+        net->print(net->net, "Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 
     parse_all_para(argc, argv, para);
+    para->net = net;
 
     if (0 == strlen(para->index_name))
     {
         OS_FREE(para);
         para = NULL;
-        OS_PRINT("invalid index name(%s).\n", para->index_name);
+        net->print(net->net, "invalid index name(%s).\n", para->index_name);
         return -2;
     }
 

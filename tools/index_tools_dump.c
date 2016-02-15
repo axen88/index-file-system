@@ -40,11 +40,11 @@ typedef struct tagDUMP_PARA_S
     uint8_t depth;   /* 树的深度 */
     uint64_t vbn;   /* 当前entry所在的VBN号 */
     uint32_t no;     /* 当前entry序号 */
+    NET_PARA_S *net;
 } DUMP_PARA_S;
 
-static int32_t dump_callback(void *in_tree, void *para)
+static int32_t dump_callback(void *in_tree, DUMP_PARA_S *para)
 {
-    DUMP_PARA_S *tmp_para = para;
     uint32_t i = 0;
     uint8_t *pucDat = NULL;
     ATTR_HANDLE *tree = in_tree;
@@ -52,43 +52,43 @@ static int32_t dump_callback(void *in_tree, void *para)
     ASSERT(NULL != tree);
     ASSERT(NULL != para);
 
-    if ((tmp_para->depth != tree->depth)
-        || (tmp_para->vbn != tree->cache->vbn))
+    if ((para->depth != tree->depth)
+        || (para->vbn != tree->cache->vbn))
     {
-        tmp_para->depth = tree->depth;
-        tmp_para->vbn = tree->cache->vbn;
-        OS_PRINT("-------------iDepth: %d, llVbn: %lld-------------\n",
+        para->depth = tree->depth;
+        para->vbn = tree->cache->vbn;
+        para->net->print(para->net->net, "-------------iDepth: %d, llVbn: %lld-------------\n",
             tree->depth, tree->cache->vbn);
     }
 
-    OS_PRINT("%-7d(%d, %d) ", ++tmp_para->no,
+    para->net->print(para->net->net, "%-7d(%d, %d) ", ++para->no,
         tree->ie->prev_len, tree->ie->len);
 
     pucDat = IEGetKey(tree->ie);
     for (i = 0; i < tree->ie->key_len; i++)
     {
-        OS_PRINT((COLLATE_BINARY == (tree->attr_info->attr_record.attr_flags & COLLATE_RULE_MASK2))
+        para->net->print(para->net->net, (COLLATE_BINARY == (tree->attr_info->attr_record.attr_flags & COLLATE_RULE_MASK2))
             ? "%02X" : "%c", pucDat[i]);
     }
 
-    OS_PRINT("%s", " = ");
+    para->net->print(para->net->net, "%s", " = ");
 
     pucDat = IEGetValue(tree->ie);
     for (i = 0; i < tree->ie->value_len;)
     {
-        OS_PRINT("%02X", pucDat[i++]);
+        para->net->print(para->net->net, "%02X", pucDat[i++]);
         if (0 == (i % 8))
         {
-            OS_PRINT("%c", ' ');
+            para->net->print(para->net->net, "%c", ' ');
         }
     }
 
-    OS_PRINT("%s", "\n");
+    para->net->print(para->net->net, "%s", "\n");
 
     return 0;
 }
 
-static int32_t dump_key(ATTR_HANDLE *tree, const bool_t v_bReverse)
+static int32_t dump_key(ATTR_HANDLE *tree, const bool_t v_bReverse, NET_PARA_S *net)
 {
     int32_t ret = 0;
     DUMP_PARA_S para;
@@ -97,17 +97,18 @@ static int32_t dump_key(ATTR_HANDLE *tree, const bool_t v_bReverse)
 
 	memset(&para, 0, sizeof(DUMP_PARA_S));
     
-	OS_PRINT("Start dump all keys. obj(%s) attr(%s)\n",
+	net->print(net->net, "Start dump all keys. obj(%s) attr(%s)\n",
         tree->attr_info->obj->obj_name, tree->attr_info->attr_name);
 
+    para.net = net;
     ret = index_walk_all(tree, v_bReverse, 0, &para, dump_callback);
     if (ret < 0)
     {
-        OS_PRINT("Walk tree failed. obj(%s) attr(%s) ret(%d)\n",
+        net->print(net->net, "Walk tree failed. obj(%s) attr(%s) ret(%d)\n",
             tree->attr_info->obj->obj_name, tree->attr_info->attr_name, ret);
     }
     
-	OS_PRINT("Finished dump all keys. obj(%s) attr(%s)\n",
+	net->print(net->net, "Finished dump all keys. obj(%s) attr(%s)\n",
         tree->attr_info->obj->obj_name, tree->attr_info->attr_name);
     
 	return ret;
@@ -124,14 +125,14 @@ void dump_attr(INDEX_TOOLS_PARA_S *para)
 
     if (0 == strlen(para->index_name))
     {
-        OS_PRINT("invalid index name(%s).\n", para->index_name);
+        para->net->print(para->net->net, "invalid index name(%s).\n", para->index_name);
         return;
     }
     
     ret = index_open(para->index_name, para->start_lba, &index);
     if (0 > ret)
     {
-        OS_PRINT("Open index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
+        para->net->print(para->net->net, "Open index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
             para->index_name, para->start_lba, ret);
         return;
     }
@@ -146,7 +147,7 @@ void dump_attr(INDEX_TOOLS_PARA_S *para)
         ret = index_open_object(index->root_obj, para->obj_name, &obj);
         if (0 > ret)
         {
-            OS_PRINT("Open obj failed. index_name(%s) start_lba(%lld) obj_name(%s) ret(%d)\n",
+            para->net->print(para->net->net, "Open obj failed. index_name(%s) start_lba(%lld) obj_name(%s) ret(%d)\n",
                 para->index_name, para->start_lba, para->obj_name, ret);
             (void)index_close(index);
         }
@@ -161,7 +162,7 @@ void dump_attr(INDEX_TOOLS_PARA_S *para)
     ret = index_open_xattr(obj, para->attr_name, &attr);
     if (0 > ret)
     {
-        OS_PRINT("Open attr failed. index_name(%s) start_lba(%lld) obj_name(%s) attr_name(%s) ret(%d)\n",
+        para->net->print(para->net->net, "Open attr failed. index_name(%s) start_lba(%lld) obj_name(%s) attr_name(%s) ret(%d)\n",
             para->index_name, para->start_lba, para->obj_name, para->attr_name, ret);
         if (0 != strlen(para->obj_name))
         {
@@ -172,7 +173,7 @@ void dump_attr(INDEX_TOOLS_PARA_S *para)
         return;
     }
 
-    ret = dump_key(attr, para->flags & TOOLS_FLAGS_REVERSE);
+    ret = dump_key(attr, para->flags & TOOLS_FLAGS_REVERSE, para->net);
 
     index_close_attr(attr);
     if (0 != strlen(para->obj_name))
@@ -186,20 +187,20 @@ void dump_attr(INDEX_TOOLS_PARA_S *para)
 }
 
 
-int do_dump_cmd(int argc, char *argv[])
+int do_dump_cmd(int argc, char *argv[], NET_PARA_S *net)
 {
     INDEX_TOOLS_PARA_S *para = NULL;
 
     para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
     if (NULL == para)
     {
-        OS_PRINT("Allocate memory failed. size(%d)\n",
+        net->print(net->net, "Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
         return -1;
     }
 
     parse_all_para(argc, argv, para);
-
+    para->net = net;
     dump_attr(para);
 
     OS_FREE(para);
