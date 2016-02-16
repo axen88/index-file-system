@@ -185,7 +185,7 @@ int32_t cmd_list(char *index_name, char *obj_name, uint64_t start_lba, NET_PARA_
     
     if (0 == strlen(index_name))
     {
-        ret = walk_all_opened_index(print_index_info, net);
+        ret = walk_all_opened_index((int32_t (*)(void *, INDEX_HANDLE *))print_index_info, net);
         if (0 > ret)
         {
             net->print(net->net, "Walk all opened index failed. ret(%d)\n", ret);
@@ -204,7 +204,7 @@ int32_t cmd_list(char *index_name, char *obj_name, uint64_t start_lba, NET_PARA_
     
     if (0 == strlen(obj_name))
     {
-        ret = walk_all_opened_child_objects(index->root_obj, print_obj_info, net);
+        ret = walk_all_opened_child_objects(index->root_obj, (int32_t (*)(void *, OBJECT_HANDLE *))print_obj_info, net);
         if (0 > ret)
         {
             net->print(net->net, "Walk all opened trees failed. index(%p) ret(%d)\n",
@@ -233,11 +233,11 @@ int32_t cmd_list(char *index_name, char *obj_name, uint64_t start_lba, NET_PARA_
     
     net->print(net->net, "\nAttr info:\n");
     net->print(net->net, "-----------------------------------------\n");
-    avl_walk_all(&obj->attr_info_list, print_attr_info, net);
+    avl_walk_all(&obj->attr_info_list, (int (*) (void*, void *))print_attr_info, net);
     
     net->print(net->net, "\nCache info:\n");
     net->print(net->net, "-----------------------------------------\n");
-    avl_walk_all(&obj->obj_caches, print_cache_info, net);
+    avl_walk_all(&obj->obj_caches, (int (*) (void*, void *))print_cache_info, net);
 
     (void)index_close_object(obj);
     

@@ -101,7 +101,7 @@ static int32_t dump_key(ATTR_HANDLE *tree, const bool_t v_bReverse, NET_PARA_S *
         tree->attr_info->obj->obj_name, tree->attr_info->attr_name);
 
     para.net = net;
-    ret = index_walk_all(tree, v_bReverse, 0, &para, dump_callback);
+    ret = index_walk_all(tree, v_bReverse, 0, &para, (WalkAllCallBack)dump_callback);
     if (ret < 0)
     {
         net->print(net->net, "Walk tree failed. obj(%s) attr(%s) ret(%d)\n",

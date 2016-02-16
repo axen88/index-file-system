@@ -36,6 +36,8 @@ typedef struct tagINDEX_TOOLS_PARA_S
     char attr_name[ATTR_NAME_SIZE];
     char new_attr_name[ATTR_NAME_SIZE];
     char tmp[TMP_BUF_SIZE];
+    char key[KEY_MAX_SIZE];
+    char value[VALUE_MAX_SIZE];
 
     NET_PARA_S *net;
 

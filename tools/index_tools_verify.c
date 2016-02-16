@@ -266,7 +266,7 @@ int32_t verify_index(char *index_name, uint64_t start_lba)
     }
 
     memset(&para, 0, sizeof(para));
-    para.pCallBack = index_verify_attr;
+    para.pCallBack = (int32_t (*)(void *, void *))index_verify_attr;
     
     //ret = IndexWalkAllTrees(index, &para);
     if (0 > ret)

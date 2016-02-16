@@ -35,8 +35,6 @@
 *******************************************************************************/
 #include "index_if.h"
 
-extern int32_t index_verify_attr(void *tree);
-
 #define TEST_KEY_LEN   8
 #define TEST_VALUE_LEN 20
 
@@ -60,8 +58,6 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
     INDEX_HANDLE *index = NULL;
     OBJECT_HANDLE *obj = NULL;
     ATTR_HANDLE *attr = NULL;
-    uint64_t key = 0;
-    uint8_t value[TEST_VALUE_LEN];
 
     ASSERT(NULL != para);
 
@@ -70,6 +66,14 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
     {
         para->net->print(para->net->net, "invalid index name(%s) or obj name(%s).\n",
             para->index_name, para->obj_name);
+        return -1;
+    }
+
+    if ((0 == strlen(para->key))
+        || (0 == strlen(para->value)))
+    {
+        para->net->print(para->net->net, "invalid key(%s) or value(%s).\n",
+            para->key, para->value);
         return -1;
     }
 
@@ -93,7 +97,7 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
     ret = index_open_xattr(obj, para->attr_name, &attr);
     if (ret < 0)
     {
-        ret = index_create_xattr(obj, para->attr_name, ATTR_FLAG_TABLE, &attr);
+        ret = index_create_xattr(obj, para->attr_name, ATTR_FLAG_TABLE | COLLATE_ANSI_STRING, &attr);
         if (ret < 0)
         {
             para->net->print(para->net->net, "Create tree failed. attr(%s) ret(%d)\n",
@@ -103,33 +107,19 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
         }
     }
 
-    memset(value, 0x88, sizeof(value));
-
-    for (key = 0; key < para->keys_num; key++)
+    ret = index_insert_key(attr, para->key, strlen(para->key),
+        para->value, strlen(para->value));
+    if (0 > ret)
     {
-        ret = index_insert_key(attr, &key, TEST_KEY_LEN,
-            value, TEST_VALUE_LEN);
-        if (0 > ret)
-        {
-            para->net->print(para->net->net, "Insert key failed. key(%lld) ret(%d)\n",
-                key, ret);
-            break;
-        }
-
-        ret = index_verify_attr(obj);
-        if (0 > ret)
-        {
-            para->net->print(para->net->net, "Verify key failed. key(%lld) ret(%d)\n",
-                key, ret);
-            break;
-        }
+        para->net->print(para->net->net, "Insert key failed. key(%s) value(%s) ret(%d)\n",
+            para->key, para->value, ret);
     }
 
-    //(OS_VOID)index_close_attr(attr);
-    //(OS_VOID)index_close_object(obj);
+    (void)index_close_attr(attr);
+    (void)index_close_object(obj);
     (void)index_close(index);
     
-    return 0;
+    return ret;
 }
 
 static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
@@ -138,7 +128,6 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
     INDEX_HANDLE *index = NULL;
     OBJECT_HANDLE *obj = NULL;
     ATTR_HANDLE *attr = NULL;
-    uint64_t key = 0;
 
     ASSERT(NULL != para);
 
@@ -147,6 +136,12 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
     {
         para->net->print(para->net->net, "invalid index name(%s) or obj name(%s).\n",
             para->index_name, para->obj_name);
+        return -1;
+    }
+    
+    if (0 == strlen(para->key))
+    {
+        para->net->print(para->net->net, "invalid key.\n");
         return -1;
     }
 
@@ -170,7 +165,7 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
     ret = index_open_xattr(obj, para->attr_name, &attr);
     if (ret < 0)
     {
-        ret = index_create_xattr(obj, para->attr_name, ATTR_FLAG_TABLE, &attr);
+        ret = index_create_xattr(obj, para->attr_name, ATTR_FLAG_TABLE | COLLATE_ANSI_STRING, &attr);
         if (ret < 0)
         {
             para->net->print(para->net->net, "Create tree failed. attr(%s) ret(%d)\n",
@@ -181,31 +176,18 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
         }
     }
 
-    for (key = 0; key < para->keys_num; key++)
+    ret = index_remove_key(attr, para->key, strlen(para->key));
+    if (0 > ret)
     {
-        ret = index_remove_key(attr, &key, TEST_KEY_LEN);
-        
-        if (0 > ret)
-        {
-            para->net->print(para->net->net, "Remove key failed. key(%lld) ret(%d)\n",
-                key, ret);
-            break;
-        }
-
-        ret = index_verify_attr(obj);
-        if (0 > ret)
-        {
-            para->net->print(para->net->net, "Verify key failed. key(%lld) ret(%d)\n",
-                key, ret);
-            break;
-        }
+        para->net->print(para->net->net, "Remove key failed. key(%s) ret(%d)\n",
+            para->key, ret);
     }
 
     (void)index_close_attr(attr);
     (void)index_close_object(obj);
     (void)index_close(index);
     
-    return 0;
+    return ret;
 }
 
 

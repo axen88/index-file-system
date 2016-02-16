@@ -97,7 +97,7 @@ static int32_t cmd_create(INDEX_TOOLS_PARA_S *para)
     }
 
     /* ´´½¨ÊôÐÔ */
-    ret = index_create_xattr(obj, para->attr_name, ATTR_FLAG_TABLE, &attr);
+    ret = index_create_xattr(obj, para->attr_name, ATTR_FLAG_TABLE | COLLATE_ANSI_STRING, &attr);
     if (ret < 0)
     {
         para->net->print(para->net->net, "Create attr failed. attr_name(%s) ret(%d)\n", para->attr_name, ret);

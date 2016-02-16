@@ -87,13 +87,14 @@ void parse_object_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para)
         para->new_attr_name[0] = 0;
     }
     
-    if (os_parse_para(argc, argv, "-k", para->tmp, TMP_BUF_SIZE) < 0)
+    if (os_parse_para(argc, argv, "-k", para->key, KEY_MAX_SIZE) < 0)
     {
-        para->keys_num = 1;
+        para->key[0] = 0;
     }
-    else
+
+    if (os_parse_para(argc, argv, "-v", para->value, VALUE_MAX_SIZE) < 0)
     {
-        para->keys_num = OSStrToUll(para->tmp, NULL, 0);
+        para->value[0] = 0;
     }
 
     return;
@@ -159,8 +160,8 @@ OS_CMD_LIST_S INDEX_CMD_LIST[]
 	{do_insert_key_cmd,   {"insert",   NULL, NULL}, "<-i index_name> [-o obj_name] [-k key] [-v value]"},
     {do_remove_key_cmd,   {"remove",   NULL, NULL}, "<-i index_name> [-o obj_name] [-k key] [-v value]"},
                 
-	{do_performance_cmd, {"perf", NULL, NULL}, "<-i index_name> <-o obj_name> [-n threads_num]"},
-	{NULL, NULL, NULL}
+	//{do_performance_cmd, {"perf", NULL, NULL}, "<-i index_name> <-o obj_name> [-n threads_num]"},
+	{NULL, {NULL, NULL, NULL}, NULL}
 };
 
 #ifdef __KERNEL__
