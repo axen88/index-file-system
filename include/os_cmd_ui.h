@@ -60,8 +60,8 @@ typedef struct tagOS_CMD_LIST_S
 	char *comment;
 } OS_CMD_LIST_S;
 
-extern int32_t os_parse_para(int argc, char *argv[], char *para,
-    char *content, uint32_t content_size);
+extern int32_t os_parse_para(int argc, char *argv[], char *para, char *content, uint32_t content_size);
+int32_t parse_and_exec_cmd(char *cmd, OS_CMD_LIST_S cmd_list[], NET_PARA_S *net);
 extern void os_cmd_ui(OS_CMD_LIST_S cmd_list[], NET_PARA_S *net);
 
 #ifdef  __cplusplus
