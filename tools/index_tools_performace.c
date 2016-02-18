@@ -69,7 +69,7 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
     ret = index_open(index_name, start_lba, &index);
     if (ret < 0)
     {
-        net->print(net->net, "Open index failed. name(%s)  start_lba(%lld) ret(%d)\n",
+        OS_PRINT(net, "Open index failed. name(%s)  start_lba(%lld) ret(%d)\n",
             index_name, start_lba, ret);
         return ret;
     }
@@ -77,7 +77,7 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
     ret = index_create_object(index->root_obj, obj_name, 0,&obj);
     if (ret < 0)
     {
-        net->print(net->net, "Create obj failed. name(%s) ret(%d)\n",
+        OS_PRINT(net, "Create obj failed. name(%s) ret(%d)\n",
             obj_name, ret);
         (void)index_close(index);
         return ret;
@@ -85,7 +85,7 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
 
     memset(c, 0x88, sizeof(c));
 
-    net->print(net->net, "Start insert key. name(%s) total(%lld)\n",
+    OS_PRINT(net, "Start insert key. name(%s) total(%lld)\n",
         obj_name, keys_num);
     ullTime = os_get_ms_count();
 
@@ -95,13 +95,13 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
             c, TEST_VALUE_LEN);
         if (0 > ret)
         {
-            net->print(net->net, "Insert key failed. name(%s) key(%lld) ret(%d)\n",
+            OS_PRINT(net, "Insert key failed. name(%s) key(%lld) ret(%d)\n",
                 obj_name, key, ret);
             break;
         }
     }
 
-    net->print(net->net, "Finished insert key. name(%s) total(%lld) time(%lld ms)\n",
+    OS_PRINT(net, "Finished insert key. name(%s) total(%lld) time(%lld ms)\n",
         obj_name, keys_num, os_get_ms_count() - ullTime);
 
     (void)index_close_object(obj);
@@ -140,7 +140,7 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
     ret = index_open(index_name, start_lba, &index);
     if (ret < 0)
     {
-        net->print(net->net, "Open index failed. name(%s) start_lba(%lld) ret(%d)\n",
+        OS_PRINT(net, "Open index failed. name(%s) start_lba(%lld) ret(%d)\n",
             index_name, start_lba, ret);
         return ret;
     }
@@ -148,13 +148,13 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
     ret = index_open_object(index->root_obj, obj_name, &obj);
     if (ret < 0)
     {
-        net->print(net->net, "Open tree failed. name(%s) ret(%d)\n",
+        OS_PRINT(net, "Open tree failed. name(%s) ret(%d)\n",
             obj_name, ret);
         (void)index_close(index);
         return ret;
     }
 
-    net->print(net->net, "Start remove key. name(%s) total(%lld)\n",
+    OS_PRINT(net, "Start remove key. name(%s) total(%lld)\n",
         obj_name, keys_num);
     ullTime = os_get_ms_count();
 
@@ -163,13 +163,13 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
         ret = index_remove_key(obj->mattr, &key, TEST_KEY_LEN);
         if (0 > ret)
         {
-            net->print(net->net, "Remove key failed. name(%s) key(%lld) ret(%d)\n",
+            OS_PRINT(net, "Remove key failed. name(%s) key(%lld) ret(%d)\n",
                 obj_name, key, ret);
             break;
         }
     }
 
-    net->print(net->net, "Finished remove key. name(%s) total(%lld) time(%lld ms)\n",
+    OS_PRINT(net, "Finished remove key. name(%s) total(%lld) time(%lld ms)\n",
         obj_name, keys_num, os_get_ms_count() - ullTime);
 
     (void)index_close_object(obj);
@@ -241,14 +241,14 @@ int32_t test_performance(INDEX_TOOLS_PARA_S *para,
         test_performance_thread, para, "perf");
     if (NULL == threads_group)
     {
-        para->net->print(para->net->net, "Create threads group failed. num(%d)\n",
+        OS_PRINT(para->net, "Create threads group failed. num(%d)\n",
             para->threads_num);
         return -1;
     }
 
     if ((int32_t)para->threads_num != threads_group_get_real_num(threads_group))
     {
-        para->net->print(para->net->net, "Create threads group failed. expect(%d) real(%d)\n",
+        OS_PRINT(para->net, "Create threads group failed. expect(%d) real(%d)\n",
             para->threads_num, threads_group_get_real_num(threads_group));
         //threads_group_destroy(threads_group, 1, (OS_U64)0);
         //return -2;
@@ -271,7 +271,7 @@ int do_performance_cmd(int argc, char *argv[], NET_PARA_S *net)
     para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
     if (NULL == para)
     {
-        net->print(net->net, "Allocate memory failed. size(%d)\n",
+        OS_PRINT(net, "Allocate memory failed. size(%d)\n",
             sizeof(INDEX_TOOLS_PARA_S));
         return -1;
     }
@@ -282,7 +282,7 @@ int do_performance_cmd(int argc, char *argv[], NET_PARA_S *net)
     if ((0 == strlen(para->index_name))
         || (0 == strlen(para->obj_name)))
     {
-        net->print(net->net, "invalid index name(%s) or obj name(%s).\n", para->index_name, para->obj_name);
+        OS_PRINT(net, "invalid index name(%s) or obj name(%s).\n", para->index_name, para->obj_name);
         OS_FREE(para);
         return -2;
     }

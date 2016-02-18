@@ -49,7 +49,7 @@
 
 #define OS_MALLOC   malloc
 #define OS_FREE     free
-//#define OS_PRINT   (void)printf
+#define OS_PRINT(n, fmt, ...)   (n)->print((n)->net, fmt, ##__VA_ARGS__)
 
 #define OSStrToUll(pcBuf, end, base)   strtoul(pcBuf, end, base)
 #define OS_SLEEP_SECOND(x)               Sleep(x)

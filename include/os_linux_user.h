@@ -38,7 +38,7 @@
 
 #define OS_MALLOC   malloc
 #define OS_FREE     free
-//#define OS_PRINT   (void)printf
+#define OS_PRINT(n, fmt, ...)   (n)->print((n)->net, fmt, ##__VA_ARGS__)
 #define OS_VSNPRINTF             vsnprintf
     
 #define _CrtDumpMemoryLeaks()

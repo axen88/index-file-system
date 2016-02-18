@@ -39,7 +39,7 @@ int32_t print_index_info(NET_PARA_S *net, INDEX_HANDLE *index)
 {
     ASSERT(NULL != index);
 
-    net->print(net->net, "index: %p, name: %s, ref: %u\n",
+    OS_PRINT(net, "index: %p, name: %s, ref: %u\n",
         index, index->name, index->index_ref_cnt);
 
     return 0;
@@ -61,7 +61,7 @@ int32_t print_obj_info(NET_PARA_S *net, OBJECT_HANDLE *obj)
 {
     ASSERT(NULL != obj);
 
-    net->print(net->net, "obj: %p, name: %s, ref_cnt: %u\n",
+    OS_PRINT(net, "obj: %p, name: %s, ref_cnt: %u\n",
         obj, obj->obj_name, obj->obj_ref_cnt);
 
     return 0;
@@ -83,7 +83,7 @@ int32_t print_cache_info(NET_PARA_S *net, INDEX_BLOCK_CACHE *cache)
 {
     ASSERT(NULL != cache);
 
-    net->print(net->net, "cache: %p, vbn: %lld, state: %d, ib: %p\n",
+    OS_PRINT(net, "cache: %p, vbn: %lld, state: %d, ib: %p\n",
         cache, cache->vbn, cache->state, cache->ib);
 
     return 0;
@@ -93,7 +93,7 @@ int32_t print_attr_info(NET_PARA_S *net, ATTR_INFO *attr_info)
 {
     ASSERT(NULL != attr_info);
 
-    net->print(net->net, "attr_info: %p, state: %d, ref_cnt: %d, attr_name: %s\n",
+    OS_PRINT(net, "attr_info: %p, state: %d, ref_cnt: %d, attr_name: %s\n",
         attr_info, attr_info->root_ibc.state, attr_info->attr_ref_cnt, attr_info->attr_name);
 
     return 0;
@@ -110,28 +110,28 @@ void print_block_Info(BLOCK_HANDLE_S * hnd, NET_PARA_S *net)
 
     OS_RWLOCK_WRLOCK(&tmp_hnd->rwlock);
 
-    net->print(net->net, "ObjID            : 0x%X\n", tmp_hnd->sb.head.blk_id);
-    net->print(net->net, "AllocSize        : %d\n", tmp_hnd->sb.head.alloc_size);
-    net->print(net->net, "RealSize         : %d\n", tmp_hnd->sb.head.real_size);
-    net->print(net->net, "SeqNo            : 0x%04X\n", tmp_hnd->sb.head.seq_no);
-    net->print(net->net, "Fixup            : 0x%04X\n", tmp_hnd->sb.head.fixup);
+    OS_PRINT(net, "ObjID            : 0x%X\n", tmp_hnd->sb.head.blk_id);
+    OS_PRINT(net, "AllocSize        : %d\n", tmp_hnd->sb.head.alloc_size);
+    OS_PRINT(net, "RealSize         : %d\n", tmp_hnd->sb.head.real_size);
+    OS_PRINT(net, "SeqNo            : 0x%04X\n", tmp_hnd->sb.head.seq_no);
+    OS_PRINT(net, "Fixup            : 0x%04X\n", tmp_hnd->sb.head.fixup);
 
     
-    net->print(net->net, "BlockSizeShift   : %d\n", tmp_hnd->sb.block_size_shift);
-    net->print(net->net, "BlockSize        : %d\n", tmp_hnd->sb.block_size);
-    net->print(net->net, "SectorsPerBlock  : %d\n", tmp_hnd->sb.sectors_per_block);
+    OS_PRINT(net, "BlockSizeShift   : %d\n", tmp_hnd->sb.block_size_shift);
+    OS_PRINT(net, "BlockSize        : %d\n", tmp_hnd->sb.block_size);
+    OS_PRINT(net, "SectorsPerBlock  : %d\n", tmp_hnd->sb.sectors_per_block);
     
-    net->print(net->net, "BitmapBlocks     : %d\n", tmp_hnd->sb.bitmap_blocks);
-    net->print(net->net, "BitmapStartBlock : %lld\n", tmp_hnd->sb.bitmap_start_block);
+    OS_PRINT(net, "BitmapBlocks     : %d\n", tmp_hnd->sb.bitmap_blocks);
+    OS_PRINT(net, "BitmapStartBlock : %lld\n", tmp_hnd->sb.bitmap_start_block);
     
-    net->print(net->net, "TotalBlocks      : %lld\n", tmp_hnd->sb.total_blocks);
-    net->print(net->net, "FreeBlocks       : %lld\n", tmp_hnd->sb.free_blocks);
-    net->print(net->net, "FirstFreeBlock   : %lld\n", tmp_hnd->sb.first_free_block);
+    OS_PRINT(net, "TotalBlocks      : %lld\n", tmp_hnd->sb.total_blocks);
+    OS_PRINT(net, "FreeBlocks       : %lld\n", tmp_hnd->sb.free_blocks);
+    OS_PRINT(net, "FirstFreeBlock   : %lld\n", tmp_hnd->sb.first_free_block);
     
-    net->print(net->net, "start_lba         : %lld\n", tmp_hnd->sb.start_lba);
-    net->print(net->net, "Version          : %d\n", tmp_hnd->sb.version);
-    net->print(net->net, "Flags            : 0x%08X\n", tmp_hnd->sb.flags);
-    net->print(net->net, "MagicNum         : 0x%04X\n", tmp_hnd->sb.magic_num);
+    OS_PRINT(net, "start_lba         : %lld\n", tmp_hnd->sb.start_lba);
+    OS_PRINT(net, "Version          : %d\n", tmp_hnd->sb.version);
+    OS_PRINT(net, "Flags            : 0x%08X\n", tmp_hnd->sb.flags);
+    OS_PRINT(net, "MagicNum         : 0x%04X\n", tmp_hnd->sb.magic_num);
     
     OS_RWLOCK_WRUNLOCK(&tmp_hnd->rwlock);
 
@@ -151,7 +151,7 @@ int32_t list_super_block(char *index_name, uint64_t start_lba, NET_PARA_S *net)
     ret = index_open(index_name, start_lba, &index);
     if (0 > ret)
     {
-        net->print(net->net, "Open index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
+        OS_PRINT(net, "Open index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
             index_name, start_lba, ret);
         return ret;
     }
@@ -188,7 +188,7 @@ int32_t cmd_list(char *index_name, char *obj_name, uint64_t start_lba, NET_PARA_
         ret = walk_all_opened_index((int32_t (*)(void *, INDEX_HANDLE *))print_index_info, net);
         if (0 > ret)
         {
-            net->print(net->net, "Walk all opened index failed. ret(%d)\n", ret);
+            OS_PRINT(net, "Walk all opened index failed. ret(%d)\n", ret);
         }
 
         return ret;
@@ -197,7 +197,7 @@ int32_t cmd_list(char *index_name, char *obj_name, uint64_t start_lba, NET_PARA_
     index = index_find_handle(index_name);
     if (NULL == index)
     {
-        net->print(net->net, "The index is not opened. index(%s)\n",
+        OS_PRINT(net, "The index is not opened. index(%s)\n",
             index_name);
         return -2;
     }
@@ -207,7 +207,7 @@ int32_t cmd_list(char *index_name, char *obj_name, uint64_t start_lba, NET_PARA_
         ret = walk_all_opened_child_objects(index->root_obj, (int32_t (*)(void *, OBJECT_HANDLE *))print_obj_info, net);
         if (0 > ret)
         {
-            net->print(net->net, "Walk all opened trees failed. index(%p) ret(%d)\n",
+            OS_PRINT(net, "Walk all opened trees failed. index(%p) ret(%d)\n",
                 index, ret);
         }
 
@@ -217,26 +217,26 @@ int32_t cmd_list(char *index_name, char *obj_name, uint64_t start_lba, NET_PARA_
     ret = index_open_object(index->root_obj, obj_name, &obj);
     if (0 > ret)
     {
-        net->print(net->net, "Open tree failed. index(%p) name(%s) ret(%d)\n",
+        OS_PRINT(net, "Open tree failed. index(%p) name(%s) ret(%d)\n",
             index, obj_name, ret);
         return ret;
     }
 
-    net->print(net->net, "Obj info:\n");
-    net->print(net->net, "-----------------------------------------\n");
-    net->print(net->net, "inode_no               : %lld\n", obj->inode.inode_no);
-    net->print(net->net, "parent_inode_no inode  : %lld\n", obj->inode.parent_inode_no);
-    net->print(net->net, "mode                   : 0x%llX\n", obj->inode.mode);
-    net->print(net->net, "obj_name               : %s\n", obj->obj_name);
-    net->print(net->net, "state                  : 0x%x\n", obj->obj_state);
-    net->print(net->net, "ref_cnt                : %d\n", obj->obj_ref_cnt);
+    OS_PRINT(net, "Obj info:\n");
+    OS_PRINT(net, "-----------------------------------------\n");
+    OS_PRINT(net, "inode_no               : %lld\n", obj->inode.inode_no);
+    OS_PRINT(net, "parent_inode_no inode  : %lld\n", obj->inode.parent_inode_no);
+    OS_PRINT(net, "mode                   : 0x%llX\n", obj->inode.mode);
+    OS_PRINT(net, "obj_name               : %s\n", obj->obj_name);
+    OS_PRINT(net, "state                  : 0x%x\n", obj->obj_state);
+    OS_PRINT(net, "ref_cnt                : %d\n", obj->obj_ref_cnt);
     
-    net->print(net->net, "\nAttr info:\n");
-    net->print(net->net, "-----------------------------------------\n");
+    OS_PRINT(net, "\nAttr info:\n");
+    OS_PRINT(net, "-----------------------------------------\n");
     avl_walk_all(&obj->attr_info_list, (int (*) (void*, void *))print_attr_info, net);
     
-    net->print(net->net, "\nCache info:\n");
-    net->print(net->net, "-----------------------------------------\n");
+    OS_PRINT(net, "\nCache info:\n");
+    OS_PRINT(net, "-----------------------------------------\n");
     avl_walk_all(&obj->obj_caches, (int (*) (void*, void *))print_cache_info, net);
 
     (void)index_close_object(obj);
@@ -260,7 +260,7 @@ int do_list_cmd(int argc, char *argv[], NET_PARA_S *net)
     para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
     if (NULL == para)
     {
-        net->print(net->net, "Allocate memory failed. size(%d)\n",
+        OS_PRINT(net, "Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
         return -1;
     }

@@ -52,6 +52,18 @@ extern "C" {
  * bottom bits of the parent pointer on 64 bit machines to save on space.
  */
 
+/*
+ * An opaque type used to locate a position in the tree where a node
+ * would be inserted.
+ */
+//typedef uintptr_t avl_index_t;
+#ifdef WIN32
+typedef unsigned long long avl_index_t;
+#else
+typedef unsigned long avl_index_t;
+#endif
+
+
 #ifndef _LP64
 
 struct avl_node {
@@ -207,18 +219,6 @@ typedef struct avl_tree avl_tree_t;
  * The data nodes in the AVL tree must have a field of this type.
  */
 typedef struct avl_node avl_node_t;
-
-/*
- * An opaque type used to locate a position in the tree where a node
- * would be inserted.
- */
-//typedef uintptr_t avl_index_t;
-#ifdef WIN32
-typedef unsigned long long avl_index_t;
-#else
-typedef unsigned long avl_index_t;
-#endif
-
 
 /*
  * Direction constants used for avl_nearest().

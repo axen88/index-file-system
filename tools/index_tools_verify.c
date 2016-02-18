@@ -303,7 +303,7 @@ int do_verify_cmd(int argc, char *argv[], NET_PARA_S *net)
     para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
     if (NULL == para)
     {
-        net->print(net->net, "Allocate memory failed. size(%d)\n",
+        OS_PRINT(net, "Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
@@ -315,7 +315,7 @@ int do_verify_cmd(int argc, char *argv[], NET_PARA_S *net)
     {
         OS_FREE(para);
         para = NULL;
-        net->print(net->net, "invalid index name(%s).\n", para->index_name);
+        OS_PRINT(net, "invalid index name(%s).\n", para->index_name);
         return -2;
     }
 

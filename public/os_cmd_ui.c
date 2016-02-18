@@ -140,10 +140,10 @@ void show_sub_cmd_list(OS_CMD_LIST_S *cmd_list[], uint32_t cmd_num, NET_PARA_S *
                 break;
             }
             
-            net->print(net->net, "%s ", cmd_list[i]->cmdLevel[j]);
+            OS_PRINT(net, "%s ", cmd_list[i]->cmdLevel[j]);
         }
         
-		net->print(net->net, "%s\n", cmd_list[i]->comment);
+		OS_PRINT(net, "%s\n", cmd_list[i]->comment);
 	}
 }
 
@@ -160,16 +160,16 @@ void show_cmd_list(OS_CMD_LIST_S *cmd_list, NET_PARA_S *net)
                 break;
             }
             
-            net->print(net->net, "%s ", cmd_list->cmdLevel[j]);
+            OS_PRINT(net, "%s ", cmd_list->cmdLevel[j]);
         }
         
-		net->print(net->net, ": %s\n", cmd_list->comment);
+		OS_PRINT(net, ": %s\n", cmd_list->comment);
 
         cmd_list++;
 	}
     
-	net->print(net->net, "help : show this information\n");
-	net->print(net->net, "quit : quit the system\n");
+	OS_PRINT(net, "help : show this information\n");
+	OS_PRINT(net, "quit : quit the system\n");
 }
 
 /* 比较是什么命令，并执行 */
@@ -303,7 +303,7 @@ int32_t parse_and_exec_cmd(char *cmd, OS_CMD_LIST_S cmd_list[], NET_PARA_S *net)
     tmp_argv = (char **)OS_MALLOC(CMD_MAX_ARGS * sizeof(char *));
     if (NULL == tmp_argv)
     {
-        net->print(net->net, "Allocate memory failed. size(%d)\n",
+        OS_PRINT(net, "Allocate memory failed. size(%d)\n",
             CMD_MAX_ARGS * (uint32_t)sizeof(char *));
         return CMD_OTHER;
     }
@@ -347,7 +347,7 @@ void os_cmd_ui(OS_CMD_LIST_S cmd_list[], NET_PARA_S *net)
     cmd = OS_MALLOC(CMD_MAX_SIZE);
     if (NULL == cmd)
     {
-        net->print(net->net, "Allocate memory failed. size(%d)\n", CMD_MAX_SIZE);
+        OS_PRINT(net, "Allocate memory failed. size(%d)\n", CMD_MAX_SIZE);
         return;
     }
 
