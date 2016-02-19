@@ -114,7 +114,7 @@ static int32_t dump_key(ATTR_HANDLE *tree, const bool_t v_bReverse, NET_PARA_S *
 	return ret;
 }
 
-void dump_attr(INDEX_TOOLS_PARA_S *para)
+void dump_cmd(INDEX_TOOLS_PARA_S *para)
 {
     INDEX_HANDLE *index = NULL;
     OBJECT_HANDLE *obj = NULL;
@@ -201,7 +201,7 @@ int do_dump_cmd(int argc, char *argv[], NET_PARA_S *net)
 
     parse_all_para(argc, argv, para);
     para->net = net;
-    dump_attr(para);
+    dump_cmd(para);
 
     OS_FREE(para);
     

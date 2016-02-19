@@ -35,23 +35,6 @@
 *******************************************************************************/
 #include "index_if.h"
 
-#define TEST_KEY_LEN   8
-#define TEST_VALUE_LEN 20
-
-typedef struct tagKEY_ACTION_S
-{
-    uint8_t action;   /* 删除或插入操作 */
-    char *key;     /* key */
-} KEY_ACTION_S;
-
-/* 混合测试时的操作序列 */
-const KEY_ACTION_S KEY_ACTION_LIST[]
-= {
-    {1, "0000000000009FFF"},
-    {1, "0000000000001234"},
-    {0, "0000000000009FFF"},
-};
-
 static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
 {
     int32_t ret = 0;
