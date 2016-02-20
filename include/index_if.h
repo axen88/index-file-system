@@ -99,8 +99,6 @@ typedef struct _ATTR_INFO
 {
     struct _OBJECT_HANDLE *obj;           /* 属性所在对象的操作句柄 */
 
-    struct _ATTR_HANDLE *parent_attr;
-
     char attr_name[ATTR_NAME_SIZE];  /* 属性名称，只对扩展属性有效 */
     ATTR_RECORD attr_record;      /* 属性记录 */
     ATTR_RECORD old_attr_record;      /* 属性记录 */
@@ -146,18 +144,15 @@ typedef struct _OBJECT_HANDLE
     
     uint32_t obj_state;                     /* 描述状态变化 */
 
+    uint64_t objid;      // object id
+    uint64_t inode_no;           // inode no, also the position stored on disk
+
     char obj_name[OBJ_NAME_SIZE];
     
-    /* 父子对象关系 */
-    struct _OBJECT_HANDLE *parent_obj; /* 父对象 */
-    avl_tree_t child_obj_list;      /* 子对象列表 */
-    avl_node_t entry;               /* 在父对象中进行登记 */
+    avl_node_t entry;               /* register in index handle */
 
-    ATTR_HANDLE *battr;
-    ATTR_HANDLE *mattr;                 /* 文件数据属性或者目录索引属性 */
-    ATTR_HANDLE *xattr;
-    
-    avl_tree_t attr_info_list;       /* 本对象上已打开的属性信息列表*/
+    ATTR_HANDLE *attr;
+    ATTR_INFO *attr_info;
     DLIST_HEAD_S attr_hnd_list;       /* 本对象上已打开的属性句柄列表*/
     
     avl_tree_t obj_caches;
@@ -174,9 +169,13 @@ typedef struct _INDEX_HANDLE
     BLOCK_HANDLE_S *hnd;               // The block file handle
     char name[INDEX_NAME_SIZE];      // 文件名
 
-    OBJECT_HANDLE *root_obj;
+    OBJECT_HANDLE *idlst_obj;
     OBJECT_HANDLE *log_obj;
     OBJECT_HANDLE *space_obj;
+
+    
+    avl_tree_t obj_list;      /* all opened object */
+    OS_RWLOCK obj_list_lock;  // lock list
 
     avl_node_t entry;
     
@@ -188,7 +187,7 @@ typedef struct _INDEX_HANDLE
 extern int32_t index_block_read(struct _ATTR_HANDLE * tree, uint64_t vbn);
 
 #define INDEX_UPDATE_INODE(obj) \
-    index_update_block_pingpong(obj->index->hnd, &obj->inode.head, obj->inode.inode_no)
+    index_update_block_pingpong(obj->index->hnd, &obj->inode.head, obj->inode_no)
     
 #define INDEX_READ_INODE(index, obj, inode_no) \
     index_read_block_pingpong(index->hnd, &obj->inode.head, inode_no, INODE_MAGIC, INODE_SIZE);
@@ -222,8 +221,6 @@ int32_t index_flush_all_caches_in_attr(struct _ATTR_INFO * attr_info);
 
 extern int32_t walk_all_opened_index(
     int32_t (*func)(void *, struct _INDEX_HANDLE *), void *para);
-extern int32_t walk_all_opened_child_objects(OBJECT_HANDLE *object,
-    int32_t (*func)(void *, OBJECT_HANDLE *), void *para);
 
 
 #include "index_attr.h"

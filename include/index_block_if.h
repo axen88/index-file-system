@@ -89,7 +89,7 @@ extern int32_t index_write_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * o
 extern int32_t index_update_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     uint64_t vbn);
 extern int32_t index_read_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
-     uint64_t vbn, uint32_t obj_id, uint32_t alloc_size);
+     uint64_t vbn, uint32_t objid, uint32_t alloc_size);
 
 /* 带pingpong特性的块数据读写接口 */
 extern int32_t index_update_block_pingpong_init(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
@@ -97,7 +97,7 @@ extern int32_t index_update_block_pingpong_init(BLOCK_HANDLE_S * hnd, OBJECT_HEA
 extern int32_t index_update_block_pingpong(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     uint64_t vbn);
 extern int32_t index_read_block_pingpong(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
-    uint64_t vbn, uint32_t obj_id, uint32_t alloc_size);
+    uint64_t vbn, uint32_t objid, uint32_t alloc_size);
 
 /* 直接读写lba地址 */
 extern int32_t index_update_sectors(BLOCK_HANDLE_S * f, void * buf,

@@ -59,12 +59,14 @@ extern "C" {
 #define FILE_NAME_SIZE            256
 #define OBJ_NAME_SIZE            512
 
+#define DEFAULT_OBJ_NAME       "NO_NAME"
+#define DEFAULT_OBJ_NAME_SIZE  (sizeof(DEFAULT_OBJ_NAME) - 1)
+
 #define ATTR_NAME_SIZE  32
 #define BATTR_NAME_SIZE 8
 
 /* attr_flags中的字段定义 */
-#define ATTR_FLAG_NONRESIDENT   0x0010 /* 1: nonresident  0: resident */
-#define ATTR_FLAG_TABLE         0x0020 /* 1: table        0: data stream */
+#define ATTR_FLAG_TABLE         0x0001 /* 1: table        0: data stream */
 #define ATTR_FLAG_SYSTEM        0x8000 /* 1: system attr  0: non-system attr */
 
 #define COLLATE_BINARY          0x0000
@@ -82,11 +84,8 @@ extern "C" {
 #define INODE_RESERVED_SIZE  1430
 #define INODE_HEAD_SIZE      OS_OFFSET(INODE_RECORD, reserved)
 
-#define ROOT_OBJECT_NAME            "$root"
-
-#define BATTR_NAME "$BATTR"
-#define MATTR_NAME "$MATTR"
-#define XATTR_NAME "$XATTR"
+#define OBJID_OBJ_NAME            "$OBJID"
+#define OBJID_OBJ_ID              0ULL
 
 #define ATTR_RECORD_HEAD_SIZE       OS_OFFSET(ATTR_RECORD, content)
 
@@ -99,11 +98,10 @@ extern "C" {
 #define XATTR_RECORD_CONTENT_SIZE   (XATTR_RECORD_SIZE - ATTR_RECORD_HEAD_SIZE)
 
 /* object mode */
-#define OBJECT_MODE_DIR      0x0000000000000001ULL /* 1: dir    0: file */
 #define OBJECT_MODE_TABLE    0x0000000000000002ULL /* 1: table  0: stream */
 #define OBJECT_MODE_SYSTEM   0x8000000000000000ULL /* 1: system 0: non-system */
 
-#define INODE_GET_BATTR(inode)  ((BATTR_RECORD *)((uint8_t *)(inode) + (inode)->first_attr_off))
+#define INODE_GET_ATTR(inode)  ((ATTR_RECORD *)((uint8_t *)(inode) + (inode)->first_attr_off))
 
 #define KEY_MAX_SIZE    256
 #define VALUE_MAX_SIZE  1024
@@ -161,7 +159,9 @@ typedef struct tagBLOCK_BOOT_SECTOR_S
 
     uint64_t start_lba;                /* super block所在的lba位置 */
     
-    uint64_t root_inode_no;
+    uint64_t idlst_obj_inode_no;
+    uint64_t idlst_objid;
+    
     uint64_t snapshot_no;
     uint8_t aucReserved2[PRV_AREA_SIZE - 16];    // Reserved bytes
     uint8_t aucReserved[176];            /* 保留区域，供系统扩展使用 */
@@ -209,12 +209,6 @@ typedef struct _ATTR_RECORD
     uint8_t content[ATTR_RECORD_MAX_SIZE];  /* 常驻属性内容、表、目录或块表的根 */
 } ATTR_RECORD;
 
-typedef struct _BATTR_RECORD
-{
-    char name[BATTR_NAME_SIZE];
-    ATTR_RECORD attr_record;
-} BATTR_RECORD;
-
 typedef struct _INODE_RECORD
 {                               /* total 2KB bytes */
     /* 头部 0 */
@@ -225,8 +219,8 @@ typedef struct _INODE_RECORD
     uint8_t  paddings[6];
 
     /* 24 */
-    uint64_t inode_no;         // The inode VBN
-    uint64_t parent_inode_no;         // The parent inode VBN
+    uint64_t objid;              // object id
+    uint64_t base_objid;         // base object id
 
     /* 40 */
     uint64_t mode;

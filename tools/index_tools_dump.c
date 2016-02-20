@@ -97,19 +97,16 @@ static int32_t dump_key(ATTR_HANDLE *tree, const bool_t v_bReverse, NET_PARA_S *
 
 	memset(&para, 0, sizeof(DUMP_PARA_S));
     
-	OS_PRINT(net, "Start dump all keys. obj(%s) attr(%s)\n",
-        tree->attr_info->obj->obj_name, tree->attr_info->attr_name);
+	OS_PRINT(net, "Start dump all keys. obj(%s)\n", tree->attr_info->obj->obj_name);
 
     para.net = net;
     ret = index_walk_all(tree, v_bReverse, 0, &para, (WalkAllCallBack)dump_callback);
     if (ret < 0)
     {
-        OS_PRINT(net, "Walk tree failed. obj(%s) attr(%s) ret(%d)\n",
-            tree->attr_info->obj->obj_name, tree->attr_info->attr_name, ret);
+        OS_PRINT(net, "Walk tree failed. obj(%s) ret(%d)\n", tree->attr_info->obj->obj_name, ret);
     }
     
-	OS_PRINT(net, "Finished dump all keys. obj(%s) attr(%s)\n",
-        tree->attr_info->obj->obj_name, tree->attr_info->attr_name);
+	OS_PRINT(net, "Finished dump all keys. obj(%s)\n", tree->attr_info->obj->obj_name);
     
 	return ret;
 }
@@ -139,12 +136,12 @@ void dump_cmd(INDEX_TOOLS_PARA_S *para)
     
     if (0 == strlen(para->obj_name))
     {
-        strcpy(para->obj_name, ROOT_OBJECT_NAME);
-        obj = index->root_obj;
+        strcpy(para->obj_name, OBJID_OBJ_NAME);
+        obj = index->idlst_obj;
     }
     else
     {
-        ret = index_open_object(index->root_obj, para->obj_name, &obj);
+        ret = index_open_object(index, para->objid, &obj);
         if (0 > ret)
         {
             OS_PRINT(para->net, "Open obj failed. index_name(%s) start_lba(%lld) obj_name(%s) ret(%d)\n",
@@ -153,25 +150,8 @@ void dump_cmd(INDEX_TOOLS_PARA_S *para)
         }
        // return;
     }
-    
-    if (0 == strlen(para->attr_name))
-    {
-        strcpy(para->attr_name, MATTR_NAME);
-    }
 
-    ret = index_open_xattr(obj, para->attr_name, &attr);
-    if (0 > ret)
-    {
-        OS_PRINT(para->net, "Open attr failed. index_name(%s) start_lba(%lld) obj_name(%s) attr_name(%s) ret(%d)\n",
-            para->index_name, para->start_lba, para->obj_name, para->attr_name, ret);
-        if (0 != strlen(para->obj_name))
-        {
-            (void)index_close_object(obj);
-        }
-        
-        (void)index_close(index);
-        return;
-    }
+    attr = obj->attr;
 
     ret = dump_key(attr, para->flags & TOOLS_FLAGS_REVERSE, para->net);
 

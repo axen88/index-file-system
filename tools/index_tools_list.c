@@ -93,8 +93,8 @@ int32_t print_attr_info(NET_PARA_S *net, ATTR_INFO *attr_info)
 {
     ASSERT(NULL != attr_info);
 
-    OS_PRINT(net, "attr_info: %p, state: %d, ref_cnt: %d, attr_name: %s\n",
-        attr_info, attr_info->root_ibc.state, attr_info->attr_ref_cnt, attr_info->attr_name);
+    OS_PRINT(net, "attr_info: %p, state: %d, ref_cnt: %d\n",
+        attr_info, attr_info->root_ibc.state, attr_info->attr_ref_cnt);
 
     return 0;
 }
@@ -175,7 +175,7 @@ int32_t list_super_block(char *index_name, uint64_t start_lba, NET_PARA_S *net)
     < 0: 错误代码
 说    明: 无
 *******************************************************************************/
-int32_t cmd_list(char *index_name, char *obj_name, uint64_t start_lba, NET_PARA_S *net)
+int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, NET_PARA_S *net)
 {
     int32_t ret = 0;
     INDEX_HANDLE *index = NULL;
@@ -202,38 +202,33 @@ int32_t cmd_list(char *index_name, char *obj_name, uint64_t start_lba, NET_PARA_
         return -2;
     }
     
-    if (0 == strlen(obj_name))
+    if (0 == objid)
     {
-        ret = walk_all_opened_child_objects(index->root_obj, (int32_t (*)(void *, OBJECT_HANDLE *))print_obj_info, net);
-        if (0 > ret)
-        {
-            OS_PRINT(net, "Walk all opened trees failed. index(%p) ret(%d)\n",
-                index, ret);
-        }
+        print_obj_info(net, index->idlst_obj);
 
 		return ret;
     }
 
-    ret = index_open_object(index->root_obj, obj_name, &obj);
+    ret = index_open_object(index, objid, &obj);
     if (0 > ret)
     {
-        OS_PRINT(net, "Open tree failed. index(%p) name(%s) ret(%d)\n",
-            index, obj_name, ret);
+        OS_PRINT(net, "Open tree failed. index(%p) objid(%lld) ret(%d)\n",
+            index, objid, ret);
         return ret;
     }
 
     OS_PRINT(net, "Obj info:\n");
     OS_PRINT(net, "-----------------------------------------\n");
-    OS_PRINT(net, "inode_no               : %lld\n", obj->inode.inode_no);
-    OS_PRINT(net, "parent_inode_no inode  : %lld\n", obj->inode.parent_inode_no);
-    OS_PRINT(net, "mode                   : 0x%llX\n", obj->inode.mode);
+    OS_PRINT(net, "objid                  : %lld\n", obj->inode.objid);
+    OS_PRINT(net, "base objid             : %lld\n", obj->inode.base_objid);
     OS_PRINT(net, "obj_name               : %s\n", obj->obj_name);
+    OS_PRINT(net, "mode                   : 0x%llX\n", obj->inode.mode);
     OS_PRINT(net, "state                  : 0x%x\n", obj->obj_state);
     OS_PRINT(net, "ref_cnt                : %d\n", obj->obj_ref_cnt);
     
     OS_PRINT(net, "\nAttr info:\n");
     OS_PRINT(net, "-----------------------------------------\n");
-    avl_walk_all(&obj->attr_info_list, (int (*) (void*, void *))print_attr_info, net);
+    print_attr_info(net, obj->attr_info);
     
     OS_PRINT(net, "\nCache info:\n");
     OS_PRINT(net, "-----------------------------------------\n");
@@ -275,7 +270,7 @@ int do_list_cmd(int argc, char *argv[], NET_PARA_S *net)
         return -2;
     }
 
-    cmd_list(para->index_name, para->obj_name, para->start_lba, net);
+    cmd_list(para->index_name, para->objid, para->start_lba, net);
 
     OS_FREE(para);
     para = NULL;

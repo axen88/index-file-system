@@ -36,31 +36,25 @@
 #ifndef __INDEX_OBJECT_H__
 #define __INDEX_OBJECT_H__
 
-/* 打开对象 */
-extern int32_t index_open_object(OBJECT_HANDLE *parent_obj,
-    const char *obj_name, OBJECT_HANDLE **obj);
+/* open object */
+extern int32_t index_open_object(struct _INDEX_HANDLE *index, uint64_t objid, OBJECT_HANDLE **obj);
 
-/* 增加对象 */
-extern int32_t index_create_object(OBJECT_HANDLE *parent_obj,
-    const char *obj_name, uint64_t mode, OBJECT_HANDLE **obj);
+/* create object */
+extern int32_t index_create_object(INDEX_HANDLE *index, uint64_t objid, uint64_t mode, uint64_t base_objid, OBJECT_HANDLE **obj);
 
 extern int32_t index_close_object(OBJECT_HANDLE *obj);
 
-/* 删除对象 */
+/* delete object */
 extern int32_t index_delete_object(OBJECT_HANDLE *parent_obj, const char *obj_name,
     void *hnd, DeleteFunc del_func);
 
-/* 重命名对象 */
+/* rename object */
 extern int32_t index_rename_object(OBJECT_HANDLE *parent_obj,
     const char *obj_name, const char *new_obj_name);
 
-/* 内部函数 */
-int32_t create_object(struct _INDEX_HANDLE *index, OBJECT_HANDLE *parent_obj,
-    const char *obj_name, uint64_t mode, OBJECT_HANDLE **obj);
-int32_t open_object(struct _INDEX_HANDLE *index, OBJECT_HANDLE *parent_obj, const char *obj_name,
-    uint64_t inode_no, OBJECT_HANDLE **obj);
-OBJECT_HANDLE *find_child_object_handle(OBJECT_HANDLE *parent_obj,
-    const char * obj_name);
+/* for internal only */
+int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint64_t mode, uint64_t base_objid, OBJECT_HANDLE **obj);
+int32_t open_object(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, OBJECT_HANDLE **obj);
 extern int32_t index_commit_object_modification(OBJECT_HANDLE *obj);
 extern int32_t close_object(OBJECT_HANDLE *obj);
 

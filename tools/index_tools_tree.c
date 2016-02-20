@@ -68,26 +68,13 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
         return ret;
     }
 
-    ret = index_open_object(index->root_obj, para->obj_name, &obj);
+    ret = index_open_object(index, para->objid, &obj);
     if (ret < 0)
     {
         OS_PRINT(para->net, "Create obj failed. obj(%s) ret(%d)\n",
             para->obj_name, ret);
         (void)index_close(index);
         return ret;
-    }
-
-    ret = index_open_xattr(obj, para->attr_name, &attr);
-    if (ret < 0)
-    {
-        ret = index_create_xattr(obj, para->attr_name, ATTR_FLAG_TABLE | COLLATE_ANSI_STRING, &attr);
-        if (ret < 0)
-        {
-            OS_PRINT(para->net, "Create tree failed. attr(%s) ret(%d)\n",
-                para->attr_name, ret);
-            (void)index_close(index);
-            return ret;
-        }
     }
 
     ret = index_insert_key(attr, para->key, strlen(para->key),
@@ -136,27 +123,13 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
         return ret;
     }
 
-    ret = index_open_object(index->root_obj, para->obj_name, &obj);
+    ret = index_open_object(index, para->objid, &obj);
     if (ret < 0)
     {
         OS_PRINT(para->net, "Open tree failed. tree(%s) ret(%d)\n",
             para->obj_name, ret);
         (void)index_close(index);
         return ret;
-    }
-
-    ret = index_open_xattr(obj, para->attr_name, &attr);
-    if (ret < 0)
-    {
-        ret = index_create_xattr(obj, para->attr_name, ATTR_FLAG_TABLE | COLLATE_ANSI_STRING, &attr);
-        if (ret < 0)
-        {
-            OS_PRINT(para->net, "Create tree failed. attr(%s) ret(%d)\n",
-                para->attr_name, ret);
-            (void)index_close_object(obj);
-            (void)index_close(index);
-            return ret;
-        }
     }
 
     ret = index_remove_key(attr, para->key, strlen(para->key));

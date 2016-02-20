@@ -77,8 +77,7 @@ extern void index_cancel_attr_modification(ATTR_INFO *attr_info);
 extern int32_t index_commit_attr_modification(ATTR_INFO *attr_info);
 
 /* ´ò¿ªÊôÐÔ */
-extern int32_t index_open_attr(struct _OBJECT_HANDLE *obj, ATTR_HANDLE *parent_attr,
-    const char *attr_name, ATTR_RECORD *attr_record, ATTR_HANDLE **attr);
+extern int32_t index_open_attr(struct _OBJECT_HANDLE *obj, ATTR_RECORD *attr_record, ATTR_HANDLE **attr);
 extern int32_t validate_attr(ATTR_INFO *attr_info);
 
 

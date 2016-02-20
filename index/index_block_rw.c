@@ -238,7 +238,7 @@ int32_t fixup_object(OBJECT_HEADER_S * obj)
 功能说明: 校验对象是否合法
 输入参数:
     obj     : 要操作的块数据
-    obj_id    : 对象应有的id
+    objid    : 对象应有的id
     alloc_size: 对象的占用空间
 输出参数: 无
 返 回 值:
@@ -246,17 +246,17 @@ int32_t fixup_object(OBJECT_HEADER_S * obj)
     < 0: 错误代码
 说    明: 无
 *******************************************************************************/
-int32_t verify_object(OBJECT_HEADER_S * obj, uint32_t obj_id,
+int32_t verify_object(OBJECT_HEADER_S * obj, uint32_t objid,
     uint32_t alloc_size)
 {
     ASSERT(NULL != obj);
-    ASSERT(0 != obj_id);
+    ASSERT(0 != objid);
     ASSERT(0 != alloc_size);
 
-    if (obj->blk_id != obj_id)
+    if (obj->blk_id != objid)
     {
-        LOG_ERROR("Object id not match. obj(%p) obj_id(%x) expect(%x)",
-            obj, obj->blk_id, obj_id);
+        LOG_ERROR("Object id not match. obj(%p) objid(%x) expect(%x)",
+            obj, obj->blk_id, objid);
         return -FILE_BLOCK_ERR_INVALID_OBJECT;
     }
 
@@ -381,7 +381,7 @@ int32_t index_update_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
 输入参数:
     hnd         : 块管理系统操作句柄
     obj     : 要读出的对象存储的位置
-    obj_id    : 对象id
+    objid    : 对象id
     alloc_size: 要读出数据的大小，以字节为单位
     vbn     : 要写入的块地址
 输出参数: 无
@@ -391,7 +391,7 @@ int32_t index_update_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
 说    明: 无
 *******************************************************************************/
 int32_t index_read_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
-    uint64_t vbn, uint32_t obj_id, uint32_t alloc_size)
+    uint64_t vbn, uint32_t objid, uint32_t alloc_size)
 {
     int32_t ret = 0;
 
@@ -406,16 +406,16 @@ int32_t index_read_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     ret = index_read_block(hnd, obj, alloc_size, 0, vbn);
     if (0 > ret)
     {
-        LOG_ERROR("Read data failed. hnd(%p) obj(%p) obj_id(%x) alloc_size(%d) vbn(%lld) ret(%d)",
-            hnd, obj, obj_id, alloc_size, vbn, ret);
+        LOG_ERROR("Read data failed. hnd(%p) obj(%p) objid(%x) alloc_size(%d) vbn(%lld) ret(%d)",
+            hnd, obj, objid, alloc_size, vbn, ret);
         return ret;
     }
 
-    ret = verify_object(obj, obj_id, alloc_size);
+    ret = verify_object(obj, objid, alloc_size);
     if (0 > ret)
     {
-        LOG_ERROR("Verify object failed. hnd(%p) obj(%p) obj_id(%x) alloc_size(%d) vbn(%lld) ret(%d)",
-            hnd, obj, obj_id, alloc_size, vbn, ret);
+        LOG_ERROR("Verify object failed. hnd(%p) obj(%p) objid(%x) alloc_size(%d) vbn(%lld) ret(%d)",
+            hnd, obj, objid, alloc_size, vbn, ret);
         return ret;
     }
 
@@ -584,7 +584,7 @@ int32_t index_update_block_pingpong(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
 功能说明: 从块中获取一份合适的正确的数据
 输入参数:
     buf       : 数据存储的位置
-    obj_id     : 对象id
+    objid     : 对象id
     alloc_size : 对象占用空间大小，以字节为单位
     cnt       : 当前buf中存储的对象数目
 输出参数: 无
@@ -593,7 +593,7 @@ int32_t index_update_block_pingpong(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     ==NULL: 错误
 说    明: 无
 *******************************************************************************/
-OBJECT_HEADER_S *get_last_correct_dat(uint8_t * buf, uint32_t obj_id,
+OBJECT_HEADER_S *get_last_correct_dat(uint8_t * buf, uint32_t objid,
     uint32_t alloc_size, uint32_t cnt)
 {
     uint32_t i = 0;
@@ -633,11 +633,11 @@ OBJECT_HEADER_S *get_last_correct_dat(uint8_t * buf, uint32_t obj_id,
             break;
         }
 
-        ret = verify_object(obj, obj_id, alloc_size);
+        ret = verify_object(obj, objid, alloc_size);
         if (0 > ret)
         {       /* 校验失败 */
-            LOG_ERROR("Verify object failed. buf(%p) obj(%p) obj_id(%x) alloc_size(%d) ret(%d)\n",
-                buf, obj, obj_id, alloc_size, ret);
+            LOG_ERROR("Verify object failed. buf(%p) obj(%p) objid(%x) alloc_size(%d) ret(%d)\n",
+                buf, obj, objid, alloc_size, ret);
         }
         else
         {       /* 将内存中的数据修复 */
@@ -658,8 +658,8 @@ OBJECT_HEADER_S *get_last_correct_dat(uint8_t * buf, uint32_t obj_id,
         prev_i--;
     }
 
-    LOG_ERROR("No valid object. buf(%p) obj(%p) obj_id(%x) alloc_size(%d)",
-        buf, obj, obj_id, alloc_size);
+    LOG_ERROR("No valid object. buf(%p) obj(%p) objid(%x) alloc_size(%d)",
+        buf, obj, objid, alloc_size);
 
     return NULL;
 }
@@ -671,7 +671,7 @@ OBJECT_HEADER_S *get_last_correct_dat(uint8_t * buf, uint32_t obj_id,
     hnd           : 块管理系统操作句柄
     obj       : 读出的数据存储的位置
     vbn       : 对象所在的块地址
-    obj_id      : 对象id
+    objid      : 对象id
     alloc_size  : 要读出数据的大小，以字节为单位
 输出参数: 无
 返 回 值:
@@ -680,7 +680,7 @@ OBJECT_HEADER_S *get_last_correct_dat(uint8_t * buf, uint32_t obj_id,
 说    明: 无
 *******************************************************************************/
 int32_t index_read_block_pingpong(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
-    uint64_t vbn, uint32_t obj_id, uint32_t alloc_size)
+    uint64_t vbn, uint32_t objid, uint32_t alloc_size)
 {
     int32_t ret = 0;
     uint32_t block_size = 0;
@@ -717,7 +717,7 @@ int32_t index_read_block_pingpong(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
         return ret;
     }
 
-    tmp_obj = get_last_correct_dat(buf, obj_id, alloc_size, block_size / alloc_size);
+    tmp_obj = get_last_correct_dat(buf, objid, alloc_size, block_size / alloc_size);
     if (NULL == tmp_obj)
     {
         LOG_ERROR("Get invalid object. hnd(%p) obj(%p) vbn(%lld)\n", hnd, tmp_obj, vbn);

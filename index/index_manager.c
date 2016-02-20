@@ -198,9 +198,9 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
 
     tmp_index->hnd = hnd;
 
-    /* 创建$root对象 */
-    ret = create_object(tmp_index, NULL, ROOT_OBJECT_NAME,
-        OBJECT_MODE_SYSTEM | OBJECT_MODE_DIR, &tmp_index->root_obj);
+    /* 创建$OBJID对象 */
+    ret = create_object(tmp_index, OBJID_OBJ_ID,
+        OBJECT_MODE_SYSTEM | OBJECT_MODE_TABLE, 0, &tmp_index->idlst_obj);
     if (ret < 0)
     {
         LOG_ERROR("Create root object failed. name(%s)\n", index_name);
@@ -208,7 +208,8 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
         return ret;
     }
 
-    tmp_index->hnd->sb.root_inode_no = tmp_index->root_obj->inode.inode_no;
+    tmp_index->hnd->sb.idlst_obj_inode_no = tmp_index->idlst_obj->inode_no;
+    tmp_index->hnd->sb.idlst_objid = tmp_index->idlst_obj->inode.objid;
     ret = block_update_super_block(tmp_index->hnd);
     if (0 > ret)
     {
@@ -318,8 +319,8 @@ int32_t index_open_nolock(const char *index_name, uint64_t start_lba, INDEX_HAND
 
     tmp_index->hnd = hnd;
 
-    /* 打开$root对象 */
-    ret = open_object(tmp_index, NULL, ROOT_OBJECT_NAME, tmp_index->hnd->sb.root_inode_no, &tmp_index->root_obj);
+    /* open $OBJID object */
+    ret = open_object(tmp_index, tmp_index->hnd->sb.idlst_objid, tmp_index->hnd->sb.idlst_obj_inode_no, &tmp_index->idlst_obj);
     if (ret < 0)
     {
         LOG_ERROR("Open root object failed. index_name(%s) start_lba(%lld) ret(%d)\n",
@@ -388,9 +389,9 @@ void close_index(INDEX_HANDLE *index)
     ASSERT(NULL != index);
     
     /* 关闭队列中所有的对象 */
-    if (index->root_obj != NULL)
+    if (index->idlst_obj != NULL)
     {
-        (void)close_object(index->root_obj);
+        (void)close_object(index->idlst_obj);
     }
 
     if (NULL != index->hnd)

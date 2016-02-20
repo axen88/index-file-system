@@ -41,6 +41,7 @@ typedef struct tagINDEX_TOOLS_PARA_S
 
     NET_PARA_S *net;
 
+    uint64_t objid;
     int32_t backup_no;
     uint64_t start_lba;
     uint64_t total_sectors;
@@ -66,7 +67,6 @@ extern int do_delete_cmd(int argc, char *argv[], NET_PARA_S *net);
 extern int do_rename_cmd(int argc, char *argv[], NET_PARA_S *net);
 extern int do_insert_key_cmd(int argc, char *argv[], NET_PARA_S *net);
 extern int do_remove_key_cmd(int argc, char *argv[], NET_PARA_S *net);
-extern int do_mix_key_cmd(int argc, char *argv[], NET_PARA_S *net);
 extern int do_performance_cmd(int argc, char *argv[], NET_PARA_S *net);
 extern void parse_all_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para);
 

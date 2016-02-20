@@ -53,7 +53,7 @@
 说    明: 无
 *******************************************************************************/
 int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
-    char *obj_name, uint64_t keys_num, NET_PARA_S *net)
+    uint64_t objid, uint64_t keys_num, NET_PARA_S *net)
 {
     int32_t ret = 0;
     INDEX_HANDLE *index = NULL;
@@ -64,7 +64,7 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
 
     ASSERT(NULL != index_name);
     ASSERT(0 != strlen(index_name));
-    ASSERT(0 != strlen(obj_name));
+    ASSERT(0 != objid);
 
     ret = index_open(index_name, start_lba, &index);
     if (ret < 0)
@@ -74,35 +74,32 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
         return ret;
     }
 
-    ret = index_create_object(index->root_obj, obj_name, 0,&obj);
+    ret = index_create_object(index, objid, ATTR_FLAG_TABLE | COLLATE_ANSI_STRING, 0, &obj);
     if (ret < 0)
     {
-        OS_PRINT(net, "Create obj failed. name(%s) ret(%d)\n",
-            obj_name, ret);
+        OS_PRINT(net, "Create obj failed. objid(%lld) ret(%d)\n", objid, ret);
         (void)index_close(index);
         return ret;
     }
 
     memset(c, 0x88, sizeof(c));
 
-    OS_PRINT(net, "Start insert key. name(%s) total(%lld)\n",
-        obj_name, keys_num);
+    OS_PRINT(net, "Start insert key. objid(%lld) total(%lld)\n", objid, keys_num);
     ullTime = os_get_ms_count();
 
     for (key = 0; key < keys_num; key++)
     {
-        ret = index_insert_key(obj->mattr, &key, TEST_KEY_LEN,
+        ret = index_insert_key(obj->attr, &key, TEST_KEY_LEN,
             c, TEST_VALUE_LEN);
         if (0 > ret)
         {
-            OS_PRINT(net, "Insert key failed. name(%s) key(%lld) ret(%d)\n",
-                obj_name, key, ret);
+            OS_PRINT(net, "Insert key failed. objid(%lld) key(%lld) ret(%d)\n", objid, key, ret);
             break;
         }
     }
 
-    OS_PRINT(net, "Finished insert key. name(%s) total(%lld) time(%lld ms)\n",
-        obj_name, keys_num, os_get_ms_count() - ullTime);
+    OS_PRINT(net, "Finished insert key. objid(%lld) total(%lld) time(%lld ms)\n",
+        objid, keys_num, os_get_ms_count() - ullTime);
 
     (void)index_close_object(obj);
     (void)index_close(index);
@@ -125,7 +122,7 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
 说    明: 无
 *******************************************************************************/
 int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
-    char *obj_name, uint64_t keys_num, NET_PARA_S *net)
+    uint64_t objid, uint64_t keys_num, NET_PARA_S *net)
 {
     int32_t ret = 0;
     INDEX_HANDLE *index = NULL;
@@ -135,7 +132,7 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
 
     ASSERT(NULL != index_name);
     ASSERT(0 != strlen(index_name));
-    ASSERT(0 != strlen(obj_name));
+    ASSERT(0 != objid);
 
     ret = index_open(index_name, start_lba, &index);
     if (ret < 0)
@@ -145,32 +142,29 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
         return ret;
     }
 
-    ret = index_open_object(index->root_obj, obj_name, &obj);
+    ret = index_open_object(index, objid, &obj);
     if (ret < 0)
     {
-        OS_PRINT(net, "Open tree failed. name(%s) ret(%d)\n",
-            obj_name, ret);
+        OS_PRINT(net, "Open tree failed. objid(%lld) ret(%d)\n", objid, ret);
         (void)index_close(index);
         return ret;
     }
 
-    OS_PRINT(net, "Start remove key. name(%s) total(%lld)\n",
-        obj_name, keys_num);
+    OS_PRINT(net, "Start remove key. objid(%lld) total(%lld)\n", objid, keys_num);
     ullTime = os_get_ms_count();
 
     for (key = 0; key < keys_num; key++)
     {
-        ret = index_remove_key(obj->mattr, &key, TEST_KEY_LEN);
+        ret = index_remove_key(obj->attr, &key, TEST_KEY_LEN);
         if (0 > ret)
         {
-            OS_PRINT(net, "Remove key failed. name(%s) key(%lld) ret(%d)\n",
-                obj_name, key, ret);
+            OS_PRINT(net, "Remove key failed. objid(%lld) key(%lld) ret(%d)\n", objid, key, ret);
             break;
         }
     }
 
-    OS_PRINT(net, "Finished remove key. name(%s) total(%lld) time(%lld ms)\n",
-        obj_name, keys_num, os_get_ms_count() - ullTime);
+    OS_PRINT(net, "Finished remove key. objid(%lld) total(%lld) time(%lld ms)\n",
+        objid, keys_num, os_get_ms_count() - ullTime);
 
     (void)index_close_object(obj);
     (void)index_close(index);
@@ -201,12 +195,12 @@ void *test_performance_thread(void *para)
     if (tmp_para->insert)
     {
         (void)test_insert_key_performance(tmp_para->index_name,
-            tmp_para->start_lba, obj_name, tmp_para->keys_num, tmp_para->net);
+            tmp_para->start_lba, tmp_para->objid, tmp_para->keys_num, tmp_para->net);
     }
     else
     {
         (void)test_remove_key_performance(tmp_para->index_name,
-            tmp_para->start_lba, obj_name, tmp_para->keys_num, tmp_para->net);
+            tmp_para->start_lba, tmp_para->objid, tmp_para->keys_num, tmp_para->net);
     }
 
     OS_RWLOCK_WRLOCK(&tmp_para->rwlock);

@@ -67,9 +67,13 @@ void parse_index_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para)
 
 void parse_object_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para)
 {
-    if (os_parse_para(argc, argv, "-o", para->obj_name, OBJ_NAME_SIZE) < 0)
+    if (0 != os_parse_para(argc, argv, "-o", para->tmp, TMP_BUF_SIZE))
     {
-        para->obj_name[0] = 0;
+        para->objid = 0;
+    }
+    else
+    {
+        para->objid = OSStrToUll(para->tmp, NULL, 0);
     }
 
     if (os_parse_para(argc, argv, "-no", para->new_obj_name, OBJ_NAME_SIZE) < 0)

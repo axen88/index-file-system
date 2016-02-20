@@ -278,7 +278,7 @@ int32_t index_release_all_free_caches_in_attr(OBJECT_HANDLE *obj, ATTR_INFO *att
 
 void index_release_all_free_caches_in_obj(OBJECT_HANDLE * obj)
 {
-    avl_walk_all(&obj->attr_info_list, (avl_walk_call_back)index_release_all_free_caches_in_attr, obj);
+    index_release_all_free_caches_in_attr(obj, obj->attr_info);
 
     return;
 }
@@ -316,7 +316,7 @@ int32_t index_release_all_caches_in_attr(OBJECT_HANDLE *obj, ATTR_INFO *attr_inf
 
 int32_t index_release_all_caches_in_obj(OBJECT_HANDLE * obj)
 {
-    avl_walk_all(&obj->attr_info_list, (avl_walk_call_back)index_release_all_caches_in_attr, obj);
+    index_release_all_caches_in_attr(obj, obj->attr_info);
 
     return 0;
 }
@@ -355,7 +355,7 @@ int32_t index_cancel_all_caches_in_attr(OBJECT_HANDLE *obj, ATTR_INFO *attr_info
 
 int32_t index_cancel_all_caches_in_obj(OBJECT_HANDLE * obj)
 {
-    avl_walk_all(&obj->attr_info_list, (avl_walk_call_back)index_cancel_all_caches_in_attr, obj);
+    index_cancel_all_caches_in_attr(obj, obj->attr_info);
 
     return 0;
 }
@@ -392,7 +392,7 @@ void index_release_all_old_blocks_in_attr(OBJECT_HANDLE *obj, ATTR_INFO *attr_in
 
 void index_release_all_old_blocks_in_obj(OBJECT_HANDLE * obj)
 {
-    avl_walk_all(&obj->attr_info_list, (avl_walk_call_back)index_release_all_old_blocks_in_attr, obj);
+    index_release_all_old_blocks_in_attr(obj, obj->attr_info);
 
     return;
 }
@@ -423,7 +423,7 @@ void index_release_all_old_blocks_mem_in_attr(OBJECT_HANDLE *obj, ATTR_INFO *att
 
 void index_release_all_old_blocks_mem_in_obj(OBJECT_HANDLE * obj)
 {
-    avl_walk_all(&obj->attr_info_list, (avl_walk_call_back)index_release_all_old_blocks_mem_in_attr, obj);
+    index_release_all_old_blocks_mem_in_attr(obj, obj->attr_info);
 
     return;
 }

@@ -477,11 +477,9 @@ int32_t walk_tree(ATTR_HANDLE *tree, uint8_t flags)
         return -INDEX_ERR_PARAMETER;
     }
 
-    if ((tree->attr_info->attr_record.attr_flags & (ATTR_FLAG_TABLE | ATTR_FLAG_NONRESIDENT))
-        == 0)
+    if ((tree->attr_info->attr_record.attr_flags & ATTR_FLAG_TABLE) == 0)
     {
-        LOG_ERROR("The attr is resident. obj_name(%s) attr_name(%s)\n",
-            tree->attr_info->obj->obj_name, tree->attr_info->attr_name);
+        LOG_ERROR("The attr is resident. obj_name(%s)\n", tree->attr_info->obj->obj_name);
         return -INDEX_ERR_ATTR_RESIDENT;
     }
 
@@ -658,11 +656,9 @@ int32_t index_search_key_nolock(ATTR_HANDLE *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    if ((tree->attr_info->attr_record.attr_flags & (ATTR_FLAG_TABLE | ATTR_FLAG_NONRESIDENT))
-        == 0)
+    if ((tree->attr_info->attr_record.attr_flags & ATTR_FLAG_TABLE) == 0)
     {
-        LOG_ERROR("The attr is resident. obj_name(%s) attr_name(%s)\n",
-            tree->attr_info->obj->obj_name, tree->attr_info->attr_name);
+        LOG_ERROR("The attr is resident. obj_name(%s)\n", tree->attr_info->obj->obj_name);
         return -INDEX_ERR_ATTR_RESIDENT;
     }
 
@@ -1377,11 +1373,9 @@ int32_t index_remove_key_nolock(ATTR_HANDLE *tree, const void *key,
 
     PRINT_KEY("Remove key start", tree, key, key_len);
 
-    if ((tree->attr_info->attr_record.attr_flags & (ATTR_FLAG_TABLE | ATTR_FLAG_NONRESIDENT))
-        == 0)
+    if ((tree->attr_info->attr_record.attr_flags & ATTR_FLAG_TABLE) == 0)
     {
-        LOG_ERROR("The attr is resident. obj_name(%s) attr_name(%s)\n",
-            tree->attr_info->obj->obj_name, tree->attr_info->attr_name);
+        LOG_ERROR("The attr is resident. obj_name(%s)\n", tree->attr_info->obj->obj_name);
         return -INDEX_ERR_ATTR_RESIDENT;
     }
 
@@ -1447,11 +1441,9 @@ int32_t index_insert_key_nolock(ATTR_HANDLE *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    if ((tree->attr_info->attr_record.attr_flags & (ATTR_FLAG_TABLE | ATTR_FLAG_NONRESIDENT))
-        == 0)
+    if ((tree->attr_info->attr_record.attr_flags & ATTR_FLAG_TABLE) == 0)
     {
-        LOG_ERROR("The attr is resident. obj_name(%s) attr_name(%s)\n",
-            tree->attr_info->obj->obj_name, tree->attr_info->attr_name);
+        LOG_ERROR("The attr is resident. obj_name(%s)\n", tree->attr_info->obj->obj_name);
         return -INDEX_ERR_ATTR_RESIDENT;
     }
 
@@ -1466,7 +1458,7 @@ int32_t index_insert_key_nolock(ATTR_HANDLE *tree, const void *key,
     
     if (-INDEX_ERR_KEY_NOT_FOUND != ret)
     {
-        LOG_ERROR("Search key failed. attr_name(%s) ret(%d)\n", tree->attr_info->attr_name, ret);
+        LOG_ERROR("Search key failed. obj_name(%s) ret(%d)\n", tree->attr_info->obj->obj_name, ret);
         return ret;
     }
 
@@ -1537,11 +1529,9 @@ int32_t index_update_value(ATTR_HANDLE *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    if ((tree->attr_info->attr_record.attr_flags & (ATTR_FLAG_TABLE | ATTR_FLAG_NONRESIDENT))
-        == 0)
+    if ((tree->attr_info->attr_record.attr_flags & ATTR_FLAG_TABLE) == 0)
     {
-        LOG_ERROR("The attr is resident. obj_name(%s) attr_name(%s)\n",
-            tree->attr_info->obj->obj_name, tree->attr_info->attr_name);
+        LOG_ERROR("The attr is resident. obj_name(%s)\n", tree->attr_info->obj->obj_name);
         return -INDEX_ERR_ATTR_RESIDENT;
     }
 
@@ -1566,7 +1556,6 @@ EXPORT_SYMBOL(tree_remove_ie);
 EXPORT_SYMBOL(index_walk_all);
 
 EXPORT_SYMBOL(index_find_handle);
-EXPORT_SYMBOL(find_child_object_handle);
 
 EXPORT_SYMBOL(index_search_key_nolock);
 EXPORT_SYMBOL(index_insert_key_nolock);

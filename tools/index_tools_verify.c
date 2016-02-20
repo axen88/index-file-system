@@ -195,18 +195,17 @@ int32_t index_verify_attr(ATTR_HANDLE *tree, void *para)
     < 0: 错误代码
 说    明: 无
 *******************************************************************************/
-int32_t index_verify_attr_by_name(char *index_name, uint64_t start_lba,
-    char *obj_name)
+int32_t index_verify_attr_by_name(char *index_name, uint64_t start_lba, uint64_t objid)
 {
     OBJECT_HANDLE *obj = NULL;
     INDEX_HANDLE *index = NULL;
     int32_t ret = 0;
 
     /* 检查输入参数 */
-    if ((NULL == index_name) || (NULL == obj_name))
+    if ((NULL == index_name) || (0 == objid))
     {
-        LOG_ERROR("Invalid parameter. index_name(%p) obj_name(%p)\n",
-            index_name, obj_name);
+        LOG_ERROR("Invalid parameter. index_name(%p) objid(%lld)\n",
+            index_name, objid);
         return -INDEX_ERR_PARAMETER;
     }
 
@@ -218,16 +217,16 @@ int32_t index_verify_attr_by_name(char *index_name, uint64_t start_lba,
         return ret;
     }
     
-    ret = index_open_object(index->root_obj, obj_name, &obj);
+    ret = index_open_object(index, objid, &obj);
     if (0 > ret)
     {
-        LOG_ERROR("Open tree failed. index_name(%s) start_lba(%lld) obj_name(%s)\n",
-            index_name, start_lba, obj_name);
+        LOG_ERROR("Open tree failed. index_name(%s) start_lba(%lld) objid(%lld)\n",
+            index_name, start_lba, objid);
         (void)index_close(index);
         return ret;
     }
 
-    ret = index_verify_attr(obj->mattr, NULL);
+    ret = index_verify_attr(obj->attr, NULL);
     
     (void)index_close_object(obj);
     (void)index_close(index);
@@ -325,8 +324,7 @@ int do_verify_cmd(int argc, char *argv[], NET_PARA_S *net)
     }
     else
     {
-        index_verify_attr_by_name(para->index_name, para->start_lba,
-            para->obj_name);
+        index_verify_attr_by_name(para->index_name, para->start_lba, para->objid);
     }
 
     OS_FREE(para);
