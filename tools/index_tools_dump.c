@@ -122,7 +122,7 @@ void dump_cmd(INDEX_TOOLS_PARA_S *para)
 
     if (0 == strlen(para->index_name))
     {
-        OS_PRINT(para->net, "invalid index name(%s).\n", para->index_name);
+        OS_PRINT(para->net, "invalid index name.\n");
         return;
     }
     
@@ -133,6 +133,11 @@ void dump_cmd(INDEX_TOOLS_PARA_S *para)
             para->index_name, para->start_lba, ret);
         return;
     }
+
+    if (OBJID_IS_INVALID(para->objid)) // obj id not specified
+    {
+        para->objid = OBJID_OBJ_ID;
+    }
     
     ret = index_open_object(index, para->objid, &obj);
     if (0 > ret)
@@ -140,13 +145,22 @@ void dump_cmd(INDEX_TOOLS_PARA_S *para)
         OS_PRINT(para->net, "Open obj failed. index_name(%s) start_lba(%lld) objid(%lld) ret(%d)\n",
             para->index_name, para->start_lba, para->objid, ret);
         (void)index_close(index);
+		return;
     }
 
-    attr = obj->attr;
+    ret = index_open_attr(obj, &attr);
+    if (0 > ret)
+    {
+        OS_PRINT(para->net, "Open obj failed. index_name(%s) start_lba(%lld) objid(%lld) ret(%d)\n",
+            para->index_name, para->start_lba, para->objid, ret);
+        (void)index_close_object(obj);
+        (void)index_close(index);
+		return;
+    }
 
     ret = dump_key(attr, para->flags & TOOLS_FLAGS_REVERSE, para->net);
 
-    index_close_attr(attr);
+    (void)index_close_attr(attr);
     (void)index_close_object(obj);
 	(void)index_close(index);
 	

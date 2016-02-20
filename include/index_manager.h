@@ -57,7 +57,7 @@ extern int32_t index_close(INDEX_HANDLE *index);
 
 extern int32_t index_get_opened_attr_num(ATTR_HANDLE * tree);
 
-extern INDEX_HANDLE *index_find_handle(const char * index_name);
+extern INDEX_HANDLE *index_get_handle(const char * index_name);
 
 
 /* 以下是索引系统初始化和退出接口，线程不安全 */

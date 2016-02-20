@@ -25,7 +25,7 @@
 文 件 名: OS_INDEX_LIST.C
 版    本: 1.00
 日    期: 2011年6月8日
-功能描述: 列出所有已经打开索引区或树的信息的工具
+功能描述: show information in memory
 函数列表: 
     1. ...: 
 修改历史: 
@@ -39,46 +39,22 @@ int32_t print_index_info(NET_PARA_S *net, INDEX_HANDLE *index)
 {
     ASSERT(NULL != index);
 
-    OS_PRINT(net, "index: %p, name: %s, ref: %u\n",
-        index, index->name, index->index_ref_cnt);
+    OS_PRINT(net, "index: %p, ref: %u, name: %s\n",
+        index, index->index_ref_cnt, index->name);
 
     return 0;
 }
 
-/*******************************************************************************
-函数名称: print_obj_info
-功能说明: 打印当前已经打开的树的信息
-输入参数:
-    entry: 当前树所在的链表中的位置
-    para   : 此操作相关的参数
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t print_obj_info(NET_PARA_S *net, OBJECT_HANDLE *obj)
 {
     ASSERT(NULL != obj);
 
-    OS_PRINT(net, "obj: %p, name: %s, ref_cnt: %u\n",
-        obj, obj->obj_name, obj->obj_ref_cnt);
+    OS_PRINT(net, "obj: %p, objid: %lld, inode_no: %lld, obj_state: 0x%x, ref_cnt: %u, name: %s\n",
+        obj, obj->objid, obj->inode_no, obj->obj_state, obj->obj_ref_cnt, obj->obj_name);
 
     return 0;
 }
 
-/*******************************************************************************
-函数名称: print_cache_info
-功能说明: 打印当前已经打开的树的信息
-输入参数:
-    entry: 当前树所在的链表中的位置
-    para   : 此操作相关的参数
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t print_cache_info(NET_PARA_S *net, INDEX_BLOCK_CACHE *cache)
 {
     ASSERT(NULL != cache);
@@ -138,7 +114,6 @@ void print_block_Info(BLOCK_HANDLE_S * hnd, NET_PARA_S *net)
     return;
 }
 
-
 int32_t list_super_block(char *index_name, uint64_t start_lba, NET_PARA_S *net)
 {
     INDEX_HANDLE *index = NULL;
@@ -163,18 +138,6 @@ int32_t list_super_block(char *index_name, uint64_t start_lba, NET_PARA_S *net)
     return 0;
 }
 
-/*******************************************************************************
-函数名称: cmd_list
-功能说明: 列出所有已经打开的索引区或树的信息
-输入参数:
-    index_name: 索引区名称
-    start_lba: 索引区的起始lba
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, NET_PARA_S *net)
 {
     int32_t ret = 0;
@@ -194,37 +157,33 @@ int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, NET_PARA_
         return ret;
     }
 
-    index = index_find_handle(index_name);
+    index = index_get_handle(index_name);
     if (NULL == index)
     {
-        OS_PRINT(net, "The index is not opened. index(%s)\n",
-            index_name);
+        OS_PRINT(net, "The index is not opened. index(%s)\n", index_name);
         return -2;
     }
     
-    if (0 == objid)
+    if (OBJID_IS_INVALID(objid))
     {
-        print_obj_info(net, index->idlst_obj);
-
+        avl_walk_all(&index->obj_list, (avl_walk_call_back)print_obj_info, net);
 		return ret;
     }
 
-    ret = index_open_object(index, objid, &obj);
-    if (0 > ret)
+    obj = index_get_object_handle(index, objid);
+    if (NULL == obj)
     {
-        OS_PRINT(net, "Open tree failed. index(%p) objid(%lld) ret(%d)\n",
-            index, objid, ret);
+        OS_PRINT(net, "The object is not opened. index(%p) objid(%lld)\n", index, objid);
         return ret;
     }
 
     OS_PRINT(net, "Obj info:\n");
     OS_PRINT(net, "-----------------------------------------\n");
-    OS_PRINT(net, "objid                  : %lld\n", obj->inode.objid);
-    OS_PRINT(net, "base objid             : %lld\n", obj->inode.base_objid);
-    OS_PRINT(net, "obj_name               : %s\n", obj->obj_name);
-    OS_PRINT(net, "mode                   : 0x%llX\n", obj->inode.mode);
+    OS_PRINT(net, "objid                  : %lld\n", obj->objid);
+    OS_PRINT(net, "inode_no               : %lld\n", obj->inode_no);
+    OS_PRINT(net, "obj_name               : %s\n",   obj->obj_name);
     OS_PRINT(net, "state                  : 0x%x\n", obj->obj_state);
-    OS_PRINT(net, "ref_cnt                : %d\n", obj->obj_ref_cnt);
+    OS_PRINT(net, "ref_cnt                : %d\n",   obj->obj_ref_cnt);
     
     OS_PRINT(net, "\nAttr info:\n");
     OS_PRINT(net, "-----------------------------------------\n");
@@ -232,22 +191,11 @@ int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, NET_PARA_
     
     OS_PRINT(net, "\nCache info:\n");
     OS_PRINT(net, "-----------------------------------------\n");
-    avl_walk_all(&obj->obj_caches, (int (*) (void*, void *))print_cache_info, net);
+    avl_walk_all(&obj->obj_caches, (avl_walk_call_back)print_cache_info, net);
 
-    (void)index_close_object(obj);
-    
     return ret;
 }
 
-/*******************************************************************************
-函数名称: IndexDoListCmd
-功能说明: 执行用户输入的list相关命令行
-输入参数:
-    v_pcCmd: 要执行的命令
-输出参数: 无
-返 回 值: 无
-说    明: 无
-*******************************************************************************/
 int do_list_cmd(int argc, char *argv[], NET_PARA_S *net)
 {
     INDEX_TOOLS_PARA_S *para = NULL;

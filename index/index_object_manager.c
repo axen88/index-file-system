@@ -122,6 +122,8 @@ int32_t get_object_resource(INDEX_HANDLE *index, uint64_t objid, OBJECT_HANDLE *
     tmp_obj->obj_ref_cnt = 1;
     OS_RWLOCK_INIT(&tmp_obj->obj_lock);
     OS_RWLOCK_INIT(&tmp_obj->caches_lock);
+
+    avl_add(&index->obj_list, tmp_obj);
     
     *obj = tmp_obj;
 
@@ -390,16 +392,23 @@ int32_t index_create_object_nolock(INDEX_HANDLE *index, uint64_t objid, uint16_t
     avl_index_t where = 0;
 
     ASSERT(NULL != index);
-    ASSERT(0 != objid);
+    ASSERT(!OBJID_IS_INVALID(objid));
     ASSERT(NULL != obj);
 
     LOG_INFO("Create the obj. obj(%p) objid(%lld)\n", tmp_obj, objid);
+
+    tmp_obj = avl_find(&index->obj_list, compare_object2, (void *)objid, &where);
+    if (NULL != tmp_obj)
+    {
+        LOG_ERROR("The obj already exist. obj(%p) objid(%lld) ret(%d)\n", obj, objid, ret);
+        return -INDEX_ERR_OBJ_EXIST;
+    }
 
     ret = search_key_internal(index->idlst_obj->attr, &objid, sizeof(uint64_t));
     if (0 <= ret)
     {
         LOG_ERROR("The obj already exist. obj(%p) objid(%lld) ret(%d)\n", obj, objid, ret);
-        return -FILE_INDEX_TREE_EXIST;
+        return -INDEX_ERR_OBJ_EXIST;
     }
 
     if (-INDEX_ERR_KEY_NOT_FOUND != ret)
@@ -426,8 +435,8 @@ int32_t index_create_object_nolock(INDEX_HANDLE *index, uint64_t objid, uint16_t
         return ret;
     }
     
-    LOG_INFO("Create the obj success. index_name(%s) objid(%lld) obj(%p)\n",
-        index->name, objid, tmp_obj);
+    LOG_INFO("Create the obj success. objid(%lld) obj(%p) index_name(%s)\n",
+        objid, tmp_obj, index->name);
 
     *obj = tmp_obj;
     
@@ -439,10 +448,9 @@ int32_t index_create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags,
     int32_t ret = 0;
     OBJECT_HANDLE *tmp_obj = NULL;
 
-    if ((NULL == index) || (0 == objid) || (NULL == obj))
+    if ((NULL == index) || (OBJID_IS_INVALID(objid || (NULL == obj))))
     {
-        LOG_ERROR("Invalid parameter. index(%p) objid(%lld) obj(%p)\n",
-            index, objid, obj);
+        LOG_ERROR("Invalid parameter. index(%p) objid(%lld) obj(%p)\n", index, objid, obj);
         return -INDEX_ERR_PARAMETER;
     }
     
@@ -450,7 +458,7 @@ int32_t index_create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags,
     ret = index_create_object_nolock(index, objid, flags, obj);
     OS_RWLOCK_WRUNLOCK(&index->index_lock);
     
-    return 0;
+    return ret;
 }    
 
 int32_t index_open_object_nolock(struct _INDEX_HANDLE *index, uint64_t objid, uint32_t open_flags, OBJECT_HANDLE **obj)
@@ -466,7 +474,7 @@ int32_t index_open_object_nolock(struct _INDEX_HANDLE *index, uint64_t objid, ui
 
     LOG_INFO("Open the obj. objid(%lld)\n", objid);
 
-    tmp_obj = avl_find(&index->obj_list, compare_object2, &objid, &where);
+    tmp_obj = avl_find(&index->obj_list, compare_object2, (void *)objid, &where);
     if (NULL != tmp_obj)
     {
         if (0 != (open_flags & DELETE_FLAG))
@@ -533,12 +541,27 @@ int32_t index_open_object(struct _INDEX_HANDLE *index, uint64_t objid, OBJECT_HA
         return -INDEX_ERR_PARAMETER;
     }
 
-    OS_RWLOCK_WRLOCK(&index->obj_list_lock);
+    OS_RWLOCK_WRLOCK(&index->index_lock);
     ret = index_open_object_nolock(index, objid, 0, obj);
-    OS_RWLOCK_WRUNLOCK(&index->obj_list_lock);
+    OS_RWLOCK_WRUNLOCK(&index->index_lock);
 
     return ret;
 }      
+
+OBJECT_HANDLE *index_get_object_handle(INDEX_HANDLE *index, uint64_t objid)
+{
+    OBJECT_HANDLE *tmp_obj = NULL;
+    avl_index_t where = 0;
+
+    ASSERT(NULL != index);
+    ASSERT(!OBJID_IS_INVALID(objid));
+
+    OS_RWLOCK_RDLOCK(&index->index_lock);
+    tmp_obj = avl_find(&index->obj_list, compare_object2, (void *)objid, &where);
+    OS_RWLOCK_RDLOCK(&index->index_lock);
+
+    return tmp_obj;
+}
 
 int32_t recover_attr_record(ATTR_INFO *attr_info)
 {

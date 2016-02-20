@@ -69,7 +69,7 @@ void parse_object_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para)
 {
     if (0 != os_parse_para(argc, argv, "-o", para->tmp, TMP_BUF_SIZE))
     {
-        para->objid = 0;
+        para->objid = INVALID_OBJID;
     }
     else
     {

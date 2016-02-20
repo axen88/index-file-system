@@ -50,7 +50,7 @@ static int32_t cmd_create(INDEX_TOOLS_PARA_S *para)
         return -1;
     }
     
-    if (0 == para->objid) // create index if obj id not specified
+    if (OBJID_IS_INVALID(para->objid)) // obj id not specified
     {
         ret = index_create(para->index_name, para->total_sectors, para->start_lba, &index);
         if (ret < 0)
@@ -66,7 +66,7 @@ static int32_t cmd_create(INDEX_TOOLS_PARA_S *para)
     }
 
     /* find the specified index */
-    index = index_find_handle(para->index_name);
+    index = index_get_handle(para->index_name);
     if (index == NULL)
     {
         OS_PRINT(para->net, "The index(%s) is not opened.\n", para->index_name);
@@ -100,7 +100,7 @@ static int32_t cmd_open(INDEX_TOOLS_PARA_S *para)
         return -1;
     }
 
-    if (0 == para->objid)
+    if (OBJID_IS_INVALID(para->objid)) // obj id not specified
     {
         ret = index_open(para->index_name, para->start_lba, &index);
         if (ret < 0)
@@ -110,12 +110,12 @@ static int32_t cmd_open(INDEX_TOOLS_PARA_S *para)
             return ret;
         }
         
-        OS_PRINT(para->net, "Open index success. index(%s) start_lba(%lld) index(%p)\n",
-            para->index_name, para->start_lba, index);
+        OS_PRINT(para->net, "Open index success. index(%s) start_lba(%lld) index(%p), ref_cnt(%d)\n",
+            para->index_name, para->start_lba, index, index->index_ref_cnt);
         return 0;
     }
 
-    index = index_find_handle(para->index_name);
+    index = index_get_handle(para->index_name);
     if (NULL == index)
     {
         OS_PRINT(para->net, "The index is not opened. index(%s)\n", para->index_name);
@@ -129,7 +129,8 @@ static int32_t cmd_open(INDEX_TOOLS_PARA_S *para)
         return ret;
     }
 
-    OS_PRINT(para->net, "Open obj success. objid(%lld) obj(%p)\n", para->objid, obj);
+    OS_PRINT(para->net, "Open obj success. objid(%lld) obj(%p) ref_cnt(%d)\n",
+        para->objid, obj, obj->obj_ref_cnt);
  
     return 0;
 }
@@ -144,18 +145,18 @@ static int32_t cmd_close(INDEX_TOOLS_PARA_S *para)
 
     if (0 == strlen(para->index_name))
     {
-        OS_PRINT(para->net, "invalid index name(%s).\n", para->index_name);
+        OS_PRINT(para->net, "index name not specified.\n");
         return -1;
     }
 
-    index = index_find_handle(para->index_name);
+    index = index_get_handle(para->index_name);
     if (NULL == index)
     {
         OS_PRINT(para->net, "The index is not opened. index(%s)\n", para->index_name);
         return -2;
     }
     
-    if (0 == para->objid)
+    if (OBJID_IS_INVALID(para->objid)) // obj id not specified
     {
         ret = index_close(index);
         if (ret < 0)
@@ -168,6 +169,13 @@ static int32_t cmd_close(INDEX_TOOLS_PARA_S *para)
         return 0;
     }
 
+    obj = index_get_object_handle(index, para->objid);
+    if (NULL == obj)
+    {
+        OS_PRINT(para->net, "The object is not opened. objid(%lld)\n", para->objid);
+        return -2;
+    }
+    
     ret = index_close_object(obj);
     if (0 > ret)
     {
@@ -188,8 +196,11 @@ static int32_t cmd_delete(INDEX_TOOLS_PARA_S *para)
 
     ASSERT(NULL != para);
 
+    OS_PRINT(para->net, "comming soon.\n");
+    return 0;
+
     if ((0 == strlen(para->index_name))
-        || (0 == para->objid))
+        || OBJID_IS_INVALID(para->objid))
     {
         OS_PRINT(para->net, "invalid index name(%s) or objid(%lld).\n",
             para->index_name, para->objid);

@@ -274,7 +274,7 @@ int do_performance_cmd(int argc, char *argv[], NET_PARA_S *net)
     para->net = net;
 
     if ((0 == strlen(para->index_name))
-        || (0 == para->objid))
+        || OBJID_IS_INVALID(para->objid))
     {
         OS_PRINT(net, "invalid index name(%s) or objid(%lld).\n", para->index_name, para->objid);
         OS_FREE(para);

@@ -57,6 +57,10 @@ typedef enum tagCACHE_STATUS_E
     DIRTY       /* 数据是脏的 */
 } CACHE_STATUS_E;
 
+#define INVALID_OBJID                ((uint64_t)(-1))
+#define OBJID_IS_INVALID(id)          ((id) == INVALID_OBJID)
+
+
 #define IBC_SET_DIRTY(ibc)  ((ibc)->state = DIRTY)
 #define IBC_SET_CLEAN(ibc)  ((ibc)->state == CLEAN)
 #define IBC_SET_EMPTY(ibc)  ((ibc)->state == EMPTY)
@@ -169,18 +173,15 @@ typedef struct _INDEX_HANDLE
     char name[INDEX_NAME_SIZE];      // 文件名
 
     OBJECT_HANDLE *idlst_obj;
-    OBJECT_HANDLE *log_obj;
-    OBJECT_HANDLE *space_obj;
-
+    //OBJECT_HANDLE *log_obj;
+    //OBJECT_HANDLE *space_obj;
     
+    uint32_t index_ref_cnt;
     avl_tree_t obj_list;      /* all opened object */
-    OS_RWLOCK obj_list_lock;  // lock list
 
     avl_node_t entry;
     
-    uint32_t index_ref_cnt;
-
-    OS_RWLOCK index_lock; /* 锁索引区操作 */
+    OS_RWLOCK index_lock; /* lock */
 } INDEX_HANDLE;
 
 extern int32_t index_block_read(struct _ATTR_HANDLE * tree, uint64_t vbn);

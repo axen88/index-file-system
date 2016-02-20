@@ -118,8 +118,9 @@ int32_t walk_all_opened_index(
     return ret;
 }
 
-int32_t init_index_resource(INDEX_HANDLE ** index,
-    const char * index_name)
+int32_t compare_object1(const OBJECT_HANDLE *obj, const OBJECT_HANDLE *obj_node);
+
+int32_t init_index_resource(INDEX_HANDLE ** index, const char * index_name)
 {
     INDEX_HANDLE *tmp_index = NULL;
 
@@ -137,6 +138,8 @@ int32_t init_index_resource(INDEX_HANDLE ** index,
     strncpy(tmp_index->name, index_name, INDEX_NAME_SIZE);
     OS_RWLOCK_INIT(&tmp_index->index_lock);
     tmp_index->index_ref_cnt = 1;
+    avl_create(&tmp_index->obj_list, (int (*)(const void *, const void*))compare_object1, sizeof(OBJECT_HANDLE),
+        OS_OFFSET(OBJECT_HANDLE, entry));
     avl_add(g_index_list, tmp_index);
 
     *index = tmp_index;
@@ -400,6 +403,7 @@ void close_index(INDEX_HANDLE *index)
         index->hnd = NULL;
     }
 
+    avl_destroy(&index->obj_list);
     OS_RWLOCK_DESTROY(&index->index_lock);
     avl_remove(g_index_list, index);
 
@@ -465,18 +469,7 @@ int32_t index_close(INDEX_HANDLE *index)
     return ret;
 }     
 
-/*******************************************************************************
-函数名称: IndexFindIndexHandle
-功能说明: 根据索引区名称查找是否已经打开，如果是，返回操作句柄
-输入参数:
-    index_name : 指定的索引区名称
-输出参数: 无
-返 回 值:
-    !=NULL: 成功，索引区根目录树句柄
-    ==NULL: 失败
-说    明: 无
-*******************************************************************************/
-INDEX_HANDLE *index_find_handle(const char * index_name)
+INDEX_HANDLE *index_get_handle(const char * index_name)
 {
     INDEX_HANDLE *index = NULL;
     avl_index_t where = 0;
