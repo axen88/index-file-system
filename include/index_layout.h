@@ -62,12 +62,9 @@ extern "C" {
 #define DEFAULT_OBJ_NAME       "NO_NAME"
 #define DEFAULT_OBJ_NAME_SIZE  (sizeof(DEFAULT_OBJ_NAME) - 1)
 
-#define ATTR_NAME_SIZE  32
-#define BATTR_NAME_SIZE 8
-
 /* attr_flags中的字段定义 */
-#define ATTR_FLAG_TABLE         0x0001 /* 1: table        0: data stream */
-#define ATTR_FLAG_SYSTEM        0x8000 /* 1: system attr  0: non-system attr */
+#define FLAG_SYSTEM        0x8000 /* 1: system attr  0: non-system attr */
+#define FLAG_TABLE         0x4000 /* 1: table        0: data stream */
 
 #define COLLATE_BINARY          0x0000
 #define COLLATE_ANSI_STRING     0x0001
@@ -89,17 +86,8 @@ extern "C" {
 
 #define ATTR_RECORD_HEAD_SIZE       OS_OFFSET(ATTR_RECORD, content)
 
-#define BATTR_RECORD_SIZE   (INODE_RESERVED_SIZE - BATTR_NAME_SIZE)
-#define MATTR_RECORD_SIZE   1024
-#define XATTR_RECORD_SIZE   (BATTR_RECORD_SIZE - MATTR_RECORD_SIZE - 20)
-
-#define BATTR_RECORD_CONTENT_SIZE   (BATTR_RECORD_SIZE - ATTR_RECORD_HEAD_SIZE)
-#define MATTR_RECORD_CONTENT_SIZE   (MATTR_RECORD_SIZE - ATTR_RECORD_HEAD_SIZE)
-#define XATTR_RECORD_CONTENT_SIZE   (XATTR_RECORD_SIZE - ATTR_RECORD_HEAD_SIZE)
-
-/* object mode */
-#define OBJECT_MODE_TABLE    0x0000000000000002ULL /* 1: table  0: stream */
-#define OBJECT_MODE_SYSTEM   0x8000000000000000ULL /* 1: system 0: non-system */
+#define ATTR_RECORD_SIZE           (INODE_RESERVED_SIZE)
+#define ATTR_RECORD_CONTENT_SIZE   (ATTR_RECORD_SIZE - ATTR_RECORD_HEAD_SIZE)
 
 #define INODE_GET_ATTR(inode)  ((ATTR_RECORD *)((uint8_t *)(inode) + (inode)->first_attr_off))
 

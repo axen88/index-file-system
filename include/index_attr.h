@@ -36,28 +36,9 @@
 
 #ifndef __INDEX_ATTR_H__
 #define __INDEX_ATTR_H__
-
-
-/* 打开扩展属性 */
-#define index_open_xattr(obj, attr_name, attr) \
-    index_open_attr(obj, obj->xattr, attr_name, NULL, attr)
-
-/* 创建扩展属性 */
-extern int32_t index_create_xattr(struct _OBJECT_HANDLE *obj,
-    const char *attr_name, uint16_t attr_flags, ATTR_HANDLE **attr);
     
-extern int32_t index_create_attr(struct _OBJECT_HANDLE *obj, ATTR_HANDLE *parent_attr,
-    const char *attr_name, ATTR_RECORD *attr_record, ATTR_HANDLE **attr);
-
 /* 关闭属性 */
 extern int32_t index_close_attr(ATTR_HANDLE *attr);
-
-/* 删除扩展属性 */
-extern int32_t index_remove_xattr(struct _OBJECT_HANDLE *obj, const char *attr_name);
-
-/* 重命名扩展属性 */
-extern int32_t index_rename_xattr(struct _OBJECT_HANDLE *obj,
-    const char *attr_name, const char *attr_name_new);
 
 /* 读属性 */
 extern int32_t index_pread_attr(ATTR_HANDLE *attr, uint64_t position,
@@ -77,8 +58,9 @@ extern void index_cancel_attr_modification(ATTR_INFO *attr_info);
 extern int32_t index_commit_attr_modification(ATTR_INFO *attr_info);
 
 /* 打开属性 */
-extern int32_t index_open_attr(struct _OBJECT_HANDLE *obj, ATTR_RECORD *attr_record, ATTR_HANDLE **attr);
+extern int32_t index_open_attr(struct _OBJECT_HANDLE *obj, ATTR_HANDLE **attr);
 extern int32_t validate_attr(ATTR_INFO *attr_info);
+extern void init_attr_info(struct _OBJECT_HANDLE *obj, ATTR_RECORD *attr_record, ATTR_INFO *attr_info);
 
 
 #endif

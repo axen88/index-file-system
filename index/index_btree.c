@@ -477,7 +477,7 @@ int32_t walk_tree(ATTR_HANDLE *tree, uint8_t flags)
         return -INDEX_ERR_PARAMETER;
     }
 
-    if ((tree->attr_info->attr_record.attr_flags & ATTR_FLAG_TABLE) == 0)
+    if ((tree->attr_info->attr_record.attr_flags & FLAG_TABLE) == 0)
     {
         LOG_ERROR("The attr is resident. obj_name(%s)\n", tree->attr_info->obj->obj_name);
         return -INDEX_ERR_ATTR_RESIDENT;
@@ -656,7 +656,7 @@ int32_t index_search_key_nolock(ATTR_HANDLE *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    if ((tree->attr_info->attr_record.attr_flags & ATTR_FLAG_TABLE) == 0)
+    if ((tree->attr_info->attr_record.attr_flags & FLAG_TABLE) == 0)
     {
         LOG_ERROR("The attr is resident. obj_name(%s)\n", tree->attr_info->obj->obj_name);
         return -INDEX_ERR_ATTR_RESIDENT;
@@ -1373,7 +1373,7 @@ int32_t index_remove_key_nolock(ATTR_HANDLE *tree, const void *key,
 
     PRINT_KEY("Remove key start", tree, key, key_len);
 
-    if ((tree->attr_info->attr_record.attr_flags & ATTR_FLAG_TABLE) == 0)
+    if ((tree->attr_info->attr_record.attr_flags & FLAG_TABLE) == 0)
     {
         LOG_ERROR("The attr is resident. obj_name(%s)\n", tree->attr_info->obj->obj_name);
         return -INDEX_ERR_ATTR_RESIDENT;
@@ -1441,7 +1441,7 @@ int32_t index_insert_key_nolock(ATTR_HANDLE *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    if ((tree->attr_info->attr_record.attr_flags & ATTR_FLAG_TABLE) == 0)
+    if ((tree->attr_info->attr_record.attr_flags & FLAG_TABLE) == 0)
     {
         LOG_ERROR("The attr is resident. obj_name(%s)\n", tree->attr_info->obj->obj_name);
         return -INDEX_ERR_ATTR_RESIDENT;
@@ -1529,7 +1529,7 @@ int32_t index_update_value(ATTR_HANDLE *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    if ((tree->attr_info->attr_record.attr_flags & ATTR_FLAG_TABLE) == 0)
+    if ((tree->attr_info->attr_record.attr_flags & FLAG_TABLE) == 0)
     {
         LOG_ERROR("The attr is resident. obj_name(%s)\n", tree->attr_info->obj->obj_name);
         return -INDEX_ERR_ATTR_RESIDENT;

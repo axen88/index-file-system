@@ -63,50 +63,30 @@ int32_t validate_attr(ATTR_INFO *attr_info)
     return 0;
 }
 
-int32_t get_attr_info(struct _OBJECT_HANDLE *obj, ATTR_RECORD *attr_record, ATTR_INFO **attr_info)
+void init_attr_info(struct _OBJECT_HANDLE *obj, ATTR_RECORD *attr_record, ATTR_INFO *attr_info)
 {
-    ATTR_INFO *tmp_attr_info = NULL;
-    int32_t ret = 0;
+    memset(attr_info, 0, sizeof(ATTR_INFO));
 
-    if (NULL != obj->attr_info)
-    {
-        tmp_attr_info = obj->attr_info;
-        tmp_attr_info->attr_ref_cnt++;
-		*attr_info = tmp_attr_info;
-        return 0;
-    }
-
-    if (attr_record == NULL)
-    {
-        return -INDEX_ERR_ATTR_NOT_FOUND;
-    }
-
-    tmp_attr_info = (ATTR_INFO *)OS_MALLOC(sizeof(ATTR_INFO));
-    if (tmp_attr_info == NULL)
-    {
-        LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(ATTR_INFO));
-        return -INDEX_ERR_ALLOCATE_MEMORY;
-    }
-
-    memset(tmp_attr_info, 0, sizeof(ATTR_INFO));
-
-    tmp_attr_info->obj = obj;
-    memcpy(&tmp_attr_info->attr_record, attr_record, attr_record->record_size);
-    memcpy(&tmp_attr_info->old_attr_record, attr_record, attr_record->record_size);
-    tmp_attr_info->root_ibc.vbn = obj->inode.objid;
-    tmp_attr_info->root_ibc.ib = (INDEX_BLOCK *)tmp_attr_info->attr_record.content;
-    tmp_attr_info->attr_ref_cnt = 1;
-    avl_create(&tmp_attr_info->attr_old_blocks, (int (*)(const void *, const void*))compare_old_block1, sizeof(INDEX_OLD_BLOCK),
+    attr_info->obj = obj;
+    memcpy(&attr_info->attr_record, attr_record, attr_record->record_size);
+    memcpy(&attr_info->old_attr_record, attr_record, attr_record->record_size);
+    attr_info->root_ibc.vbn = obj->inode.objid;
+    attr_info->root_ibc.ib = (INDEX_BLOCK *)attr_record->content;
+    attr_info->attr_ref_cnt = 1;
+    avl_create(&attr_info->attr_old_blocks, (int (*)(const void *, const void*))compare_old_block1, sizeof(INDEX_OLD_BLOCK),
         OS_OFFSET(INDEX_OLD_BLOCK, attr_entry));
-    avl_create(&tmp_attr_info->attr_caches, (int (*)(const void *, const void*))compare_cache1, sizeof(INDEX_BLOCK_CACHE),
+    avl_create(&attr_info->attr_caches, (int (*)(const void *, const void*))compare_cache1, sizeof(INDEX_BLOCK_CACHE),
         OS_OFFSET(INDEX_BLOCK_CACHE, attr_entry));
-    OS_RWLOCK_INIT(&tmp_attr_info->attr_lock);
-    obj->attr_info = tmp_attr_info;
-
-    *attr_info = tmp_attr_info;
-
-    return 0;
+    OS_RWLOCK_INIT(&attr_info->attr_lock);
 }
+
+void get_attr_info(ATTR_INFO *attr_info)
+{
+    attr_info->attr_ref_cnt++;
+
+    return;
+}
+
 
 int32_t put_attr_info(ATTR_INFO *attr_info)
 {
@@ -130,82 +110,38 @@ int32_t put_attr_info(ATTR_INFO *attr_info)
 
     index_release_all_caches_in_attr(attr_info->obj, attr_info);
     avl_destroy(&attr_info->attr_caches);
-    
-    OS_FREE(attr_info);
 
     return 0;
 }
 
-int32_t index_open_attr(struct _OBJECT_HANDLE *obj, ATTR_RECORD *attr_record, ATTR_HANDLE **attr)
+int32_t index_open_attr(struct _OBJECT_HANDLE *obj, ATTR_HANDLE **attr)
 {
     ATTR_HANDLE *tmp_attr = NULL;
-    ATTR_INFO *attr_info = NULL;
     int32_t ret = 0;
 
     ASSERT(obj != NULL);
     ASSERT(attr != NULL);
 
-    OS_RWLOCK_WRLOCK(&obj->obj_lock);
-
-    ret = get_attr_info(obj, attr_record, &attr_info);
-    if (ret < 0)
-    {
-        LOG_ERROR("Get attr info failed. obj_name(%s) ret(%d)\n", obj->obj_name, ret);
-        OS_RWLOCK_WRUNLOCK(&obj->obj_lock);
-        return ret;
-    }
-
     tmp_attr = (ATTR_HANDLE *)OS_MALLOC(sizeof(ATTR_HANDLE));
     if (tmp_attr == NULL)
     {
-        put_attr_info(attr_info);
         LOG_ERROR("Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(ATTR_HANDLE));
-        OS_RWLOCK_WRUNLOCK(&obj->obj_lock);
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 
     memset(tmp_attr, 0, sizeof(ATTR_HANDLE));
 
-	tmp_attr->attr_info = attr_info;
+    OS_RWLOCK_WRLOCK(&obj->obj_lock);
+
+    get_attr_info(&obj->attr_info);
+	tmp_attr->attr_info = &obj->attr_info;
 	dlist_add_tail(&obj->attr_hnd_list, &tmp_attr->entry);
 
     *attr = tmp_attr;
     OS_RWLOCK_WRUNLOCK(&obj->obj_lock);
 
     return 0;
-}
-
-int32_t index_create_attr(struct _OBJECT_HANDLE *obj, ATTR_HANDLE *parent_attr,
-    const char *attr_name, ATTR_RECORD *attr_record, ATTR_HANDLE **attr)
-{
-    int32_t ret = 0;
-
-    ASSERT(obj != NULL);
-    ASSERT(parent_attr != NULL);
-    ASSERT(attr_name != NULL);
-    ASSERT(attr_record != NULL);
-    ASSERT(attr != NULL);
-    
-    ret = index_open_attr(obj, attr_record, attr);
-    if (ret < 0)
-    {
-        LOG_ERROR("Get attr info failed. obj_name(%s) attr_name(%s) ret(%d)\n",
-            obj->obj_name, attr_name, ret);
-        return ret;
-    }
-
-    ATTR_INFO_SET_DIRTY((*attr)->attr_info);
-
-    ret = index_commit_attr_modification((*attr)->attr_info);
-    if (ret < 0)
-    {
-        LOG_ERROR("Commit attr info failed. obj_name(%s) attr_name(%s) ret(%d)\n",
-            obj->obj_name, attr_name, ret);
-        return ret;
-    }
-
-    return ret;
 }
 
 int32_t index_close_attr(ATTR_HANDLE *attr)

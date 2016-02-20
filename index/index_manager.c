@@ -168,7 +168,7 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
     LOG_INFO("Create the index. index_name(%s) total_sectors(%lld) start_lba(%lld)\n",
         index_name, total_sectors, start_lba);
 
-    /* 检查是否已经打开 */
+    /* already opened */
     tmp_index = avl_find(g_index_list, (int (*)(const void*, void *))compare_index2, index_name, &where);
     if (NULL != tmp_index)
     {
@@ -178,7 +178,7 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
         return -INDEX_ERR_IS_OPENED;
     }
 
-    /* 申请操作索引系统需要的资源 */
+    /* allocate resource */
     ret = init_index_resource(&tmp_index, index_name);
     if (0 > ret)
     {
@@ -186,7 +186,7 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
         return ret;
     }
     
-    /* 创建块管理文件 */
+    /* create block manager */
     ret = block_create(&hnd, index_name, total_sectors, BYTES_PER_BLOCK_SHIFT,
         0, start_lba);
     if (ret < 0)
@@ -198,9 +198,8 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
 
     tmp_index->hnd = hnd;
 
-    /* 创建$OBJID对象 */
-    ret = create_object(tmp_index, OBJID_OBJ_ID,
-        OBJECT_MODE_SYSTEM | OBJECT_MODE_TABLE, 0, &tmp_index->idlst_obj);
+    /* create objid object */
+    ret = create_object(tmp_index, OBJID_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | COLLATE_BINARY, &tmp_index->idlst_obj);
     if (ret < 0)
     {
         LOG_ERROR("Create root object failed. name(%s)\n", index_name);

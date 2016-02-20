@@ -99,7 +99,6 @@ typedef struct _ATTR_INFO
 {
     struct _OBJECT_HANDLE *obj;           /* 属性所在对象的操作句柄 */
 
-    char attr_name[ATTR_NAME_SIZE];  /* 属性名称，只对扩展属性有效 */
     ATTR_RECORD attr_record;      /* 属性记录 */
     ATTR_RECORD old_attr_record;      /* 属性记录 */
 
@@ -151,8 +150,8 @@ typedef struct _OBJECT_HANDLE
     
     avl_node_t entry;               /* register in index handle */
 
+    ATTR_INFO attr_info;
     ATTR_HANDLE *attr;
-    ATTR_INFO *attr_info;
     DLIST_HEAD_S attr_hnd_list;       /* 本对象上已打开的属性句柄列表*/
     
     avl_tree_t obj_caches;

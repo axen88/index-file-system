@@ -228,7 +228,7 @@ int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, NET_PARA_
     
     OS_PRINT(net, "\nAttr info:\n");
     OS_PRINT(net, "-----------------------------------------\n");
-    print_attr_info(net, obj->attr_info);
+    print_attr_info(net, &obj->attr_info);
     
     OS_PRINT(net, "\nCache info:\n");
     OS_PRINT(net, "-----------------------------------------\n");

@@ -74,7 +74,7 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
         return ret;
     }
 
-    ret = index_create_object(index, objid, ATTR_FLAG_TABLE | COLLATE_ANSI_STRING, 0, &obj);
+    ret = index_create_object(index, objid, FLAG_TABLE | COLLATE_ANSI_STRING, &obj);
     if (ret < 0)
     {
         OS_PRINT(net, "Create obj failed. objid(%lld) ret(%d)\n", objid, ret);

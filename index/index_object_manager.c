@@ -170,26 +170,6 @@ int32_t close_base_attr(void *para, DLIST_ENTRY_S *entry)
 
 }
 
-int32_t validate_extra_attr(void *para, ATTR_INFO *attr_info)
-{
-    ASSERT(attr_info != NULL);
-
-    return validate_attr(attr_info);
-}
-
-int32_t validate_base_attr(void *para, ATTR_INFO *attr_info)
-{
-    return validate_attr(attr_info);
-}
-
-int32_t validate_all_attr(OBJECT_HANDLE *obj)
-{
-    validate_attr(obj->attr_info);
-    validate_attr(obj->attr->attr_info);
-    
-    return 0;
-}
-
 int32_t flush_inode(OBJECT_HANDLE * obj)
 {
     int32_t ret = 0;
@@ -230,7 +210,7 @@ int32_t close_all_attr(OBJECT_HANDLE *obj)
     return 0;
 }
 
-int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint64_t mode, uint64_t base_objid, OBJECT_HANDLE **obj)
+int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJECT_HANDLE **obj)
 {
      int32_t ret = sizeof(INODE_RECORD);
      OBJECT_HANDLE *tmp_obj = NULL;
@@ -241,7 +221,7 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint64_t mode, uint64
     ASSERT(NULL != obj);
     ASSERT(INODE_SIZE == sizeof(INODE_RECORD));
 
-    /* 分配一个块存放inode信息 */
+    /* allocate inode block */
     ret = block_alloc(index->hnd, 1, &inode_no);
     if (ret < 0)
     {
@@ -257,7 +237,7 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint64_t mode, uint64
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 
-    /* 初始化inode信息 */
+    /* init inode */
     tmp_obj->inode.head.blk_id = INODE_MAGIC;
     tmp_obj->inode.head.alloc_size = INODE_SIZE;
     tmp_obj->inode.head.real_size = INODE_SIZE;
@@ -265,9 +245,9 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint64_t mode, uint64
     tmp_obj->inode.first_attr_off = OS_OFFSET(INODE_RECORD, reserved);
     
     tmp_obj->inode.objid = objid;
-    tmp_obj->inode.base_objid = base_objid;
+    tmp_obj->inode.base_objid = 0;
     
-    tmp_obj->inode.mode = mode;
+    tmp_obj->inode.mode = 0;
     tmp_obj->inode.uid = 0;
     tmp_obj->inode.gid = 0;
     tmp_obj->inode.size = 0;
@@ -285,19 +265,20 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint64_t mode, uint64
 
     /* init attr */
     attr_record = INODE_GET_ATTR(&tmp_obj->inode);
-    attr_record->record_size = BATTR_RECORD_SIZE;
-    if (mode & OBJECT_MODE_TABLE)
+    attr_record->record_size = ATTR_RECORD_SIZE;
+    attr_record->attr_flags = flags;
+    if (flags & FLAG_TABLE)
     { /* table */
-        attr_record->attr_flags = ATTR_FLAG_SYSTEM | ATTR_FLAG_TABLE | (mode & COLLATE_RULE_MASK);
-        init_ib((INDEX_BLOCK *)&attr_record->content, INDEX_BLOCK_SMALL,
-            MATTR_RECORD_CONTENT_SIZE);
+        init_ib((INDEX_BLOCK *)&attr_record->content, INDEX_BLOCK_SMALL, ATTR_RECORD_CONTENT_SIZE);
     }
     else
     { /* data stream */
-        attr_record->attr_flags = ATTR_FLAG_SYSTEM;
+        memset(attr_record->content, 0, ATTR_RECORD_CONTENT_SIZE);
     }
     
-    ret = index_open_attr(tmp_obj, attr_record, &tmp_obj->attr);
+    init_attr_info(tmp_obj, attr_record, &tmp_obj->attr_info);
+
+    ret = index_open_attr(tmp_obj, &tmp_obj->attr);
     if (ret < 0)
     {
         (void)block_free(index->hnd, inode_no, 1);
@@ -309,7 +290,7 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint64_t mode, uint64
     IBC_SET_DIRTY(&tmp_obj->attr->attr_info->root_ibc);
 
     /* 生效以上修改 */
-    validate_all_attr(tmp_obj);
+    validate_attr(&tmp_obj->attr_info);
 
     /* 更新到inode信息中去 */
     ret = index_update_block_pingpong_init(index->hnd, &tmp_obj->inode.head, inode_no);
@@ -381,7 +362,8 @@ int32_t open_object(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, OBJE
 
     /* open attr */
     attr_record = INODE_GET_ATTR(&tmp_obj->inode);
-    ret = index_open_attr(tmp_obj, attr_record, &tmp_obj->attr);
+	init_attr_info(tmp_obj, attr_record, &tmp_obj->attr_info);
+    ret = index_open_attr(tmp_obj, &tmp_obj->attr);
     if (ret < 0)
     {
         put_object_resource(tmp_obj);
@@ -400,7 +382,7 @@ uint64_t get_objid(INDEX_HANDLE *index)
     return 1;
 }
 
-int32_t index_create_object_nolock(INDEX_HANDLE *index, uint64_t objid, uint64_t mode, uint64_t base_objid, OBJECT_HANDLE **obj)
+int32_t index_create_object_nolock(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJECT_HANDLE **obj)
 {
     int32_t ret = 0;
     OBJECT_HANDLE *tmp_obj = NULL;
@@ -426,7 +408,7 @@ int32_t index_create_object_nolock(INDEX_HANDLE *index, uint64_t objid, uint64_t
         return ret;
     }
 
-    ret = create_object(index, objid, mode, 0, &tmp_obj);
+    ret = create_object(index, objid, flags, &tmp_obj);
     if (ret < 0)
     {
         LOG_ERROR("Create obj failed. objid(%lld) ret(%d)\n", objid, ret);
@@ -452,7 +434,7 @@ int32_t index_create_object_nolock(INDEX_HANDLE *index, uint64_t objid, uint64_t
     return 0;
 }    
 
-int32_t index_create_object(INDEX_HANDLE *index, uint64_t objid, uint64_t mode, uint64_t base_objid, OBJECT_HANDLE **obj)
+int32_t index_create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJECT_HANDLE **obj)
 {
     int32_t ret = 0;
     OBJECT_HANDLE *tmp_obj = NULL;
@@ -465,7 +447,7 @@ int32_t index_create_object(INDEX_HANDLE *index, uint64_t objid, uint64_t mode, 
     }
     
     OS_RWLOCK_WRLOCK(&index->index_lock);
-    ret = index_create_object_nolock(index, objid, mode, base_objid, obj);
+    ret = index_create_object_nolock(index, objid, flags, obj);
     OS_RWLOCK_WRUNLOCK(&index->index_lock);
     
     return 0;
@@ -558,7 +540,7 @@ int32_t index_open_object(struct _INDEX_HANDLE *index, uint64_t objid, OBJECT_HA
     return ret;
 }      
 
-int32_t recover_attr_record(ATTR_INFO *attr_info, void *para)
+int32_t recover_attr_record(ATTR_INFO *attr_info)
 {
     memcpy(&attr_info->attr_record, &attr_info->old_attr_record,
         sizeof(ATTR_RECORD));
@@ -572,7 +554,7 @@ void index_cancel_object_modification(OBJECT_HANDLE *obj)
     index_cancel_all_caches_in_obj(obj);
 
     /* 恢复所有属性记录到修改之前的状态 */
-    recover_attr_record(NULL, obj->attr_info);
+    recover_attr_record(&obj->attr_info);
 
     /* 恢复inode信息 */
     memcpy(&obj->inode, &obj->old_inode, sizeof(INODE_RECORD));
@@ -585,7 +567,7 @@ void index_cancel_object_modification(OBJECT_HANDLE *obj)
     return;
 }
 
-void backup_attr_record(void *para, ATTR_INFO *attr_info)
+void backup_attr_record(ATTR_INFO *attr_info)
 {
     /* 备份属性记录 */
     memcpy(&attr_info->old_attr_record, &attr_info->attr_record,
@@ -601,7 +583,7 @@ int32_t index_commit_object_modification(OBJECT_HANDLE *obj)
     ASSERT(obj != NULL);
 
     /* 使所有的属性修改生效 */
-    validate_all_attr(obj);
+    validate_attr(&obj->attr_info);
 
     /* 将cache中的脏数据下盘 */
     ret = index_flush_all_caches_in_obj(obj);
@@ -619,7 +601,7 @@ int32_t index_commit_object_modification(OBJECT_HANDLE *obj)
         return ret;
     }
 
-    backup_attr_record(NULL, obj->attr_info);
+    backup_attr_record(&obj->attr_info);
 
     /* 删除修改过的块对应的旧块，因为前面已经成功了，所以这里是否成功没关系 */
     index_release_all_old_blocks_in_obj(obj);
