@@ -187,8 +187,8 @@ void *test_performance_thread(void *para)
     char obj_name[OBJ_NAME_SIZE];
 
     OS_RWLOCK_WRLOCK(&tmp_para->rwlock);
-    OS_SNPRINTF(obj_name, OBJ_NAME_SIZE, "%s%d",
-        tmp_para->obj_name, tmp_para->no++);
+    OS_SNPRINTF(obj_name, OBJ_NAME_SIZE, "%lld%d",
+        tmp_para->objid, tmp_para->no++);
     tmp_para->threads_cnt++;
     OS_RWLOCK_WRUNLOCK(&tmp_para->rwlock);
 
@@ -274,9 +274,9 @@ int do_performance_cmd(int argc, char *argv[], NET_PARA_S *net)
     para->net = net;
 
     if ((0 == strlen(para->index_name))
-        || (0 == strlen(para->obj_name)))
+        || (0 == para->objid))
     {
-        OS_PRINT(net, "invalid index name(%s) or obj name(%s).\n", para->index_name, para->obj_name);
+        OS_PRINT(net, "invalid index name(%s) or objid(%lld).\n", para->index_name, para->objid);
         OS_FREE(para);
         return -2;
     }

@@ -76,21 +76,6 @@ void parse_object_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para)
         para->objid = OSStrToUll(para->tmp, NULL, 0);
     }
 
-    if (os_parse_para(argc, argv, "-no", para->new_obj_name, OBJ_NAME_SIZE) < 0)
-    {
-        para->new_obj_name[0] = 0;
-    }
-    
-    if (os_parse_para(argc, argv, "-a", para->attr_name, ATTR_NAME_SIZE) < 0)
-    {
-        para->attr_name[0] = 0;
-    }
-
-    if (os_parse_para(argc, argv, "-na", para->new_attr_name, ATTR_NAME_SIZE) < 0)
-    {
-        para->new_attr_name[0] = 0;
-    }
-    
     if (os_parse_para(argc, argv, "-k", para->key, KEY_MAX_SIZE) < 0)
     {
         para->key[0] = 0;
@@ -111,15 +96,6 @@ void parse_all_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para)
     OS_RWLOCK_INIT(&para->rwlock);
     parse_index_para(argc, argv, para);
     parse_object_para(argc, argv, para);
-
-    if (0 != os_parse_para(argc, argv, "-b", para->tmp, TMP_BUF_SIZE))
-    {
-        para->backup_no = -1;
-    }
-    else
-    {
-        para->backup_no = OSStrToUll(para->tmp, NULL, 0);
-    }
 
     if (0 != os_parse_para(argc, argv, "-n", para->tmp, TMP_BUF_SIZE))
     {
@@ -154,7 +130,7 @@ OS_CMD_LIST_S INDEX_CMD_LIST[]
     {do_open_cmd,     {"open",     NULL, NULL}, "<-i index_name> [-o obj_name] [-a attr_name] [-s start_lba]"},
     {do_close_cmd,    {"close",    NULL, NULL}, "<-i index_name> [-o obj_name] [-a attr_name]"},
     {do_delete_cmd,   {"delete",   NULL, NULL}, "<-i index_name> [-o obj_name] [-a attr_name]"},
-    {do_rename_cmd,   {"rename",   NULL, NULL}, "<-i index_name> [-o obj_name/-a attr_name] [-no new_obj_name/-na new_attr_name]"},
+    //{do_rename_cmd,   {"rename",   NULL, NULL}, "<-i index_name> [-o obj_name/-a attr_name] [-no new_obj_name/-na new_attr_name]"},
         
 	{do_list_cmd,     {"list",     NULL, NULL}, "[-i index_name] [-o obj_name] [-a attr_name]"},
 	{do_dump_cmd,     {"dump",     NULL, NULL}, "<-i index_name> [-o obj_name] [-a attr_name]"},

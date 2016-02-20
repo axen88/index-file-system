@@ -77,11 +77,11 @@ static int32_t cmd_create(INDEX_TOOLS_PARA_S *para)
     ret = index_create_object(index, para->objid, ATTR_FLAG_TABLE | COLLATE_ANSI_STRING, 0, &obj);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Create obj failed. obj_name(%s) ret(%d)\n", para->obj_name, ret);
+        OS_PRINT(para->net, "Create obj failed. objid(%lld) ret(%d)\n", para->objid, ret);
         return ret;
     }
 
-    OS_PRINT(para->net, "Create obj success. obj_name(%s) obj(%p)\n", para->obj_name, obj);
+    OS_PRINT(para->net, "Create obj success. objid(%lld) obj(%p)\n", para->objid, obj);
     
     return 0;
 }
@@ -100,7 +100,7 @@ static int32_t cmd_open(INDEX_TOOLS_PARA_S *para)
         return -1;
     }
 
-    if (0 == strlen(para->obj_name))
+    if (0 == para->objid)
     {
         ret = index_open(para->index_name, para->start_lba, &index);
         if (ret < 0)
@@ -125,11 +125,11 @@ static int32_t cmd_open(INDEX_TOOLS_PARA_S *para)
     ret = index_open_object(index, para->objid, &obj);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Open obj failed. obj(%s) ret(%d)\n", para->obj_name, ret);
+        OS_PRINT(para->net, "Open obj failed. objid(%lld) ret(%d)\n", para->objid, ret);
         return ret;
     }
 
-    OS_PRINT(para->net, "Open obj success. obj(%s) obj(%p)\n", para->obj_name, obj);
+    OS_PRINT(para->net, "Open obj success. objid(%lld) obj(%p)\n", para->objid, obj);
  
     return 0;
 }
@@ -155,8 +155,8 @@ static int32_t cmd_close(INDEX_TOOLS_PARA_S *para)
         return -2;
     }
     
-    if (0 == strlen(para->obj_name))
-    { /* 仅仅打开索引区 */
+    if (0 == para->objid)
+    {
         ret = index_close(index);
         if (ret < 0)
         {
@@ -171,12 +171,12 @@ static int32_t cmd_close(INDEX_TOOLS_PARA_S *para)
     ret = index_close_object(obj);
     if (0 > ret)
     {
-        OS_PRINT(para->net, "Close obj failed. index(%p) obj(%s) ret(%d)\n",
-            index, para->obj_name, ret);
+        OS_PRINT(para->net, "Close obj failed. index(%p) objid(%lld) ret(%d)\n",
+            index, para->objid, ret);
         return ret;
     }
 
-    OS_PRINT(para->net, "Close obj success. index(%p) obj(%s)\n", index, para->obj_name);
+    OS_PRINT(para->net, "Close obj success. index(%p) objid(%lld)\n", index, para->objid);
     
     return 0;
 }
@@ -189,10 +189,10 @@ static int32_t cmd_delete(INDEX_TOOLS_PARA_S *para)
     ASSERT(NULL != para);
 
     if ((0 == strlen(para->index_name))
-        || (0 == strlen(para->obj_name)))
+        || (0 == para->objid))
     {
-        OS_PRINT(para->net, "invalid index name(%s) or obj name(%s).\n",
-            para->index_name, para->obj_name);
+        OS_PRINT(para->net, "invalid index name(%s) or objid(%lld).\n",
+            para->index_name, para->objid);
         return -1;
     }
 
@@ -204,58 +204,16 @@ static int32_t cmd_delete(INDEX_TOOLS_PARA_S *para)
         return ret;
     }
 
-    ret = index_delete_object(index->idlst_obj, para->obj_name, NULL, NULL);
+    ret = index_delete_object(index, para->objid, NULL, NULL);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Delete obj failed. obj(%s) ret(%d)\n",
-            para->obj_name, ret);
+        OS_PRINT(para->net, "Delete obj failed. objid(%lld) ret(%d)\n",
+            para->objid, ret);
         (void)index_close(index);
         return ret;
     }
 
-    OS_PRINT(para->net, "Delete obj success. obj(%s)\n", para->obj_name);
-
-    (void)index_close(index);
-    
-    return 0;
-}
-
-static int32_t cmd_rename(INDEX_TOOLS_PARA_S *para)
-{
-    int32_t ret = 0;
-    INDEX_HANDLE *index = NULL;
-
-    ASSERT(NULL != para);
-
-    if ((0 == strlen(para->index_name))
-        || (0 == strlen(para->obj_name))
-        || (0 == strlen(para->new_obj_name)))
-    {
-        OS_PRINT(para->net, "invalid index name(%s) or obj name(%s) or new obj name(%s).\n",
-            para->index_name, para->obj_name, para->new_obj_name);
-        return -1;
-    }
-
-    ret = index_open(para->index_name, para->start_lba, &index);
-    if (ret < 0)
-    {
-        OS_PRINT(para->net, "Open index failed. index(%s) start_lba(%lld) ret(%d)\n",
-            para->index_name, para->start_lba, ret);
-        return ret;
-    }
-
-    ret = index_rename_object(index->idlst_obj, para->obj_name,
-        para->new_obj_name);
-    if (ret < 0)
-    {
-        OS_PRINT(para->net, "Rename obj failed. obj(%s) new_obj(%s) ret(%d)\n",
-            para->obj_name, para->new_obj_name, ret);
-        (void)index_close(index);
-        return ret;
-    }
-
-    OS_PRINT(para->net, "Rename obj success. obj(%s) new_obj(%s)\n",
-        para->obj_name, para->new_obj_name);
+    OS_PRINT(para->net, "Delete obj success. objid(%lld)\n", para->objid);
 
     (void)index_close(index);
     
@@ -340,27 +298,6 @@ int do_delete_cmd(int argc, char *argv[], NET_PARA_S *net)
     parse_all_para(argc, argv, para);
     para->net = net;
     cmd_delete(para);
-
-    OS_FREE(para);
-
-    return 0;
-}
-
-int do_rename_cmd(int argc, char *argv[], NET_PARA_S *net)
-{
-    INDEX_TOOLS_PARA_S *para = NULL;
-
-    para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
-    if (NULL == para)
-    {
-        OS_PRINT(net, "Allocate memory failed. size(%d)\n",
-            (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
-        return -1;
-    }
-
-    parse_all_para(argc, argv, para);
-    para->net = net;
-    cmd_rename(para);
 
     OS_FREE(para);
 

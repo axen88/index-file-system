@@ -45,10 +45,10 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
     ASSERT(NULL != para);
 
     if ((0 == strlen(para->index_name))
-        || (0 == strlen(para->obj_name)))
+        || (0 == para->objid))
     {
-        OS_PRINT(para->net, "invalid index name(%s) or obj name(%s).\n",
-            para->index_name, para->obj_name);
+        OS_PRINT(para->net, "invalid index name(%s) or objid(%lld).\n",
+            para->index_name, para->objid);
         return -1;
     }
 
@@ -71,8 +71,8 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
     ret = index_open_object(index, para->objid, &obj);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Create obj failed. obj(%s) ret(%d)\n",
-            para->obj_name, ret);
+        OS_PRINT(para->net, "Create obj failed. objid(%lld) ret(%d)\n",
+            para->objid, ret);
         (void)index_close(index);
         return ret;
     }
@@ -102,10 +102,10 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
     ASSERT(NULL != para);
 
     if ((0 == strlen(para->index_name))
-        || (0 == strlen(para->obj_name)))
+        || (0 == para->objid))
     {
-        OS_PRINT(para->net, "invalid index name(%s) or obj name(%s).\n",
-            para->index_name, para->obj_name);
+        OS_PRINT(para->net, "invalid index name(%s) or objid(%lld).\n",
+            para->index_name, para->objid);
         return -1;
     }
     
@@ -126,8 +126,8 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
     ret = index_open_object(index, para->objid, &obj);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Open tree failed. tree(%s) ret(%d)\n",
-            para->obj_name, ret);
+        OS_PRINT(para->net, "Open tree failed. objid(%lld) ret(%d)\n",
+            para->objid, ret);
         (void)index_close(index);
         return ret;
     }

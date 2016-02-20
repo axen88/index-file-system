@@ -675,8 +675,7 @@ int32_t index_close_object(OBJECT_HANDLE *obj)
     return ret;
 }     
 
-int32_t index_delete_object(OBJECT_HANDLE *parent_obj, const char *obj_name,
-    void *hnd, DeleteFunc del_func)
+int32_t index_delete_object(INDEX_HANDLE *index, uint64_t objid, void *hnd, DeleteFunc del_func)
 {
 #if 0
     int32_t ret = 0;

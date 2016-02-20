@@ -45,8 +45,7 @@ extern int32_t index_create_object(INDEX_HANDLE *index, uint64_t objid, uint64_t
 extern int32_t index_close_object(OBJECT_HANDLE *obj);
 
 /* delete object */
-extern int32_t index_delete_object(OBJECT_HANDLE *parent_obj, const char *obj_name,
-    void *hnd, DeleteFunc del_func);
+extern int32_t index_delete_object(INDEX_HANDLE *index, uint64_t objid, void *hnd, DeleteFunc del_func);
 
 /* rename object */
 extern int32_t index_rename_object(OBJECT_HANDLE *parent_obj,

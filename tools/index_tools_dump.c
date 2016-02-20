@@ -134,21 +134,12 @@ void dump_cmd(INDEX_TOOLS_PARA_S *para)
         return;
     }
     
-    if (0 == strlen(para->obj_name))
+    ret = index_open_object(index, para->objid, &obj);
+    if (0 > ret)
     {
-        strcpy(para->obj_name, OBJID_OBJ_NAME);
-        obj = index->idlst_obj;
-    }
-    else
-    {
-        ret = index_open_object(index, para->objid, &obj);
-        if (0 > ret)
-        {
-            OS_PRINT(para->net, "Open obj failed. index_name(%s) start_lba(%lld) obj_name(%s) ret(%d)\n",
-                para->index_name, para->start_lba, para->obj_name, ret);
-            (void)index_close(index);
-        }
-       // return;
+        OS_PRINT(para->net, "Open obj failed. index_name(%s) start_lba(%lld) objid(%lld) ret(%d)\n",
+            para->index_name, para->start_lba, para->objid, ret);
+        (void)index_close(index);
     }
 
     attr = obj->attr;
@@ -156,11 +147,7 @@ void dump_cmd(INDEX_TOOLS_PARA_S *para)
     ret = dump_key(attr, para->flags & TOOLS_FLAGS_REVERSE, para->net);
 
     index_close_attr(attr);
-    if (0 != strlen(para->obj_name))
-    {
-        (void)index_close_object(obj);
-    }
-    
+    (void)index_close_object(obj);
 	(void)index_close(index);
 	
 	return;

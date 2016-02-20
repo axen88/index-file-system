@@ -31,10 +31,6 @@
 typedef struct tagINDEX_TOOLS_PARA_S
 {
     char index_name[INDEX_NAME_SIZE];
-    char obj_name[OBJ_NAME_SIZE];
-    char new_obj_name[OBJ_NAME_SIZE];
-    char attr_name[ATTR_NAME_SIZE];
-    char new_attr_name[ATTR_NAME_SIZE];
     char tmp[TMP_BUF_SIZE];
     char key[KEY_MAX_SIZE];
     char value[VALUE_MAX_SIZE];
@@ -42,7 +38,6 @@ typedef struct tagINDEX_TOOLS_PARA_S
     NET_PARA_S *net;
 
     uint64_t objid;
-    int32_t backup_no;
     uint64_t start_lba;
     uint64_t total_sectors;
     uint32_t threads_num;
@@ -64,7 +59,6 @@ extern int do_create_cmd(int argc, char *argv[], NET_PARA_S *net);
 extern int do_open_cmd(int argc, char *argv[], NET_PARA_S *net);
 extern int do_close_cmd(int argc, char *argv[], NET_PARA_S *net);
 extern int do_delete_cmd(int argc, char *argv[], NET_PARA_S *net);
-extern int do_rename_cmd(int argc, char *argv[], NET_PARA_S *net);
 extern int do_insert_key_cmd(int argc, char *argv[], NET_PARA_S *net);
 extern int do_remove_key_cmd(int argc, char *argv[], NET_PARA_S *net);
 extern int do_performance_cmd(int argc, char *argv[], NET_PARA_S *net);

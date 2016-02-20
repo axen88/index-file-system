@@ -318,14 +318,7 @@ int do_verify_cmd(int argc, char *argv[], NET_PARA_S *net)
         return -2;
     }
 
-    if (0 == strlen(para->obj_name))
-    {
-        verify_index(para->index_name, para->start_lba);
-    }
-    else
-    {
-        index_verify_attr_by_name(para->index_name, para->start_lba, para->objid);
-    }
+    index_verify_attr_by_name(para->index_name, para->start_lba, para->objid);
 
     OS_FREE(para);
     para = NULL;
