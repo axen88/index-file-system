@@ -299,6 +299,9 @@ int do_verify_cmd(int argc, char *argv[], NET_PARA_S *net)
 {
     INDEX_TOOLS_PARA_S *para = NULL;
 
+    OS_PRINT(net, "comming soon.\n");
+    return 0;
+
     para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
     if (NULL == para)
     {

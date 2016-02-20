@@ -44,8 +44,7 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
 
     ASSERT(NULL != para);
 
-    if ((0 == strlen(para->index_name))
-        || (0 == para->objid))
+    if ((0 == strlen(para->index_name)) || OBJID_IS_INVALID(para->objid))
     {
         OS_PRINT(para->net, "invalid index name(%s) or objid(%lld).\n",
             para->index_name, para->objid);
@@ -77,6 +76,16 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
         return ret;
     }
 
+    ret = index_open_attr(obj, &attr);
+    if (0 > ret)
+    {
+        OS_PRINT(para->net, "Open obj failed. index_name(%s) start_lba(%lld) objid(%lld) ret(%d)\n",
+            para->index_name, para->start_lba, para->objid, ret);
+        (void)index_close_object(obj);
+        (void)index_close(index);
+		return ret;
+    }
+
     ret = index_insert_key(attr, para->key, strlen(para->key),
         para->value, strlen(para->value));
     if (0 > ret)
@@ -101,8 +110,7 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
 
     ASSERT(NULL != para);
 
-    if ((0 == strlen(para->index_name))
-        || (0 == para->objid))
+    if ((0 == strlen(para->index_name)) || OBJID_IS_INVALID(para->objid))
     {
         OS_PRINT(para->net, "invalid index name(%s) or objid(%lld).\n",
             para->index_name, para->objid);
@@ -130,6 +138,16 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
             para->objid, ret);
         (void)index_close(index);
         return ret;
+    }
+
+    ret = index_open_attr(obj, &attr);
+    if (0 > ret)
+    {
+        OS_PRINT(para->net, "Open obj failed. index_name(%s) start_lba(%lld) objid(%lld) ret(%d)\n",
+            para->index_name, para->start_lba, para->objid, ret);
+        (void)index_close_object(obj);
+        (void)index_close(index);
+		return ret;
     }
 
     ret = index_remove_key(attr, para->key, strlen(para->key));
