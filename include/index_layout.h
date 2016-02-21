@@ -147,8 +147,8 @@ typedef struct tagBLOCK_BOOT_SECTOR_S
 
     uint64_t start_lba;                /* super block所在的lba位置 */
     
-    uint64_t idlst_obj_inode_no;
-    uint64_t idlst_objid;
+    uint64_t objid_inode_no;
+    uint64_t objid_id;
     
     uint64_t snapshot_no;
     uint8_t aucReserved2[PRV_AREA_SIZE - 16];    // Reserved bytes

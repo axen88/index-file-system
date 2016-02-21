@@ -215,7 +215,7 @@ static int32_t cmd_delete(INDEX_TOOLS_PARA_S *para)
         return ret;
     }
 
-    ret = index_delete_object(index, para->objid, NULL, NULL);
+    ret = index_delete_object(index, para->objid);
     if (ret < 0)
     {
         OS_PRINT(para->net, "Delete obj failed. objid(%lld) ret(%d)\n",

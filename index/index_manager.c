@@ -223,8 +223,8 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
         return ret;
     }
 
-    tmp_index->hnd->sb.idlst_obj_inode_no = tmp_index->id_obj->inode_no;
-    tmp_index->hnd->sb.idlst_objid = tmp_index->id_obj->inode.objid;
+    tmp_index->hnd->sb.objid_inode_no = tmp_index->id_obj->inode_no;
+    tmp_index->hnd->sb.objid_id = tmp_index->id_obj->inode.objid;
     ret = block_update_super_block(tmp_index->hnd);
     if (0 > ret)
     {
@@ -335,7 +335,7 @@ int32_t index_open_nolock(const char *index_name, uint64_t start_lba, INDEX_HAND
     tmp_index->hnd = hnd;
 
     /* open $OBJID object */
-    ret = open_object(tmp_index, tmp_index->hnd->sb.idlst_objid, tmp_index->hnd->sb.idlst_obj_inode_no, &tmp_index->id_obj);
+    ret = open_object(tmp_index, tmp_index->hnd->sb.objid_id, tmp_index->hnd->sb.objid_inode_no, &tmp_index->id_obj);
     if (ret < 0)
     {
         LOG_ERROR("Open root object failed. index_name(%s) start_lba(%lld) ret(%d)\n",

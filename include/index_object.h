@@ -45,11 +45,10 @@ extern int32_t index_create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t
 extern int32_t index_close_object(OBJECT_HANDLE *obj);
 
 /* delete object */
-extern int32_t index_delete_object(INDEX_HANDLE *index, uint64_t objid, void *hnd, DeleteFunc del_func);
+extern int32_t index_delete_object(INDEX_HANDLE *index, uint64_t objid);
 
 /* rename object */
-extern int32_t index_rename_object(OBJECT_HANDLE *parent_obj,
-    const char *obj_name, const char *new_obj_name);
+extern int32_t index_rename_object(OBJECT_HANDLE *obj, const char *new_obj_name);
 
 extern OBJECT_HANDLE *index_get_object_handle(INDEX_HANDLE *index, uint64_t objid);
 
@@ -61,6 +60,8 @@ extern int32_t close_object(OBJECT_HANDLE *obj);
 
 extern int32_t compare_attr_info2(const char *attr_name, ATTR_INFO *attr_info_node);
 int32_t flush_inode(OBJECT_HANDLE * obj);
+void recover_obj_inode(OBJECT_HANDLE *obj);
+void backup_obj_inode(OBJECT_HANDLE *obj);
 
 #endif
 

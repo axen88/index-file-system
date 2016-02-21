@@ -40,12 +40,6 @@ MODULE(PID_INDEX);
 
 #define INDEX_WALK_FINISHED       1
 
-typedef struct tagFIND_CACHE_PARA_S
-{
-    uint64_t vbn;
-    INDEX_BLOCK_CACHE *cache;
-} FIND_CACHE_PARA_S;
-
 
 int32_t compare_cache2(const uint64_t *vbn, INDEX_BLOCK_CACHE *cache_node)
 {
@@ -190,6 +184,8 @@ int32_t release_free_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
 
     if (EMPTY != cache->state)
     {
+        LOG_ERROR("The cache is still dirty. name(%s) vbn(%lld)\n",
+            attr_info->obj->obj_name, cache->vbn);
         return 0;
     }
 
@@ -219,7 +215,7 @@ int32_t release_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
 
     if (DIRTY == cache->state)
     {
-        LOG_INFO("The dirty cache will be released. name(%s) vbn(%lld)\n",
+        LOG_ERROR("The dirty cache will be released. name(%s) vbn(%lld)\n",
             attr_info->obj->obj_name, cache->vbn);
     }
 
@@ -228,7 +224,6 @@ int32_t release_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
     OS_FREE(cache->ib);
     cache->ib = NULL;
     OS_FREE(cache);
-    cache = NULL;
 
     return 0;
 }

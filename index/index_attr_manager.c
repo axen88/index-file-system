@@ -38,41 +38,68 @@
 MODULE(PID_INDEX);
 #include "os_log.h"
 
-int32_t compare_old_block1(const INDEX_OLD_BLOCK *old_block,
-    const INDEX_OLD_BLOCK *old_block_node);
-int32_t compare_cache1(const INDEX_BLOCK_CACHE *cache,
-    const INDEX_BLOCK_CACHE *cache_node);
-
-int32_t validate_attr(ATTR_INFO *attr_info)
+int32_t compare_cache1(const INDEX_BLOCK_CACHE *cache, const INDEX_BLOCK_CACHE *cache_node)
 {
-    int32_t ret = 0;
+    if (cache->vbn > cache_node->vbn)
+    {
+        return 1;
+    }
     
+    if (cache->vbn < cache_node->vbn)
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
+int32_t compare_old_block1(const INDEX_OLD_BLOCK *old_block, const INDEX_OLD_BLOCK *old_block_node)
+{
+    if (old_block->vbn > old_block_node->vbn)
+    {
+        return 1;
+    }
+    
+    if (old_block->vbn < old_block_node->vbn)
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
+// update the attr root cache into inode
+void validate_attr(ATTR_INFO *attr_info)
+{
     if (!ATTR_INFO_DIRTY(attr_info))
     {
-        return 0;
+        return;
     }
     
     ASSERT(attr_info->attr_record.record_size
         == (INODE_GET_ATTR(&attr_info->obj->inode))->record_size);
     memcpy((INODE_GET_ATTR(&attr_info->obj->inode)),
         &attr_info->attr_record, attr_info->attr_record.record_size);
+    
     INODE_SET_DIRTY(attr_info->obj);
-
     ATTR_INFO_CLR_DIRTY(attr_info);
 
-    return 0;
+    return;
 }
 
-void init_attr_info(struct _OBJECT_HANDLE *obj, ATTR_RECORD *attr_record, ATTR_INFO *attr_info)
+void init_attr_info(struct _OBJECT_HANDLE *obj, ATTR_INFO *attr_info)
 {
+    ATTR_RECORD *attr_record = INODE_GET_ATTR(&obj->inode);
+
     memset(attr_info, 0, sizeof(ATTR_INFO));
 
     attr_info->obj = obj;
     memcpy(&attr_info->attr_record, attr_record, attr_record->record_size);
     memcpy(&attr_info->old_attr_record, attr_record, attr_record->record_size);
-    attr_info->root_ibc.vbn = obj->inode.objid;
+    attr_info->root_ibc.vbn = obj->inode_no;
     attr_info->root_ibc.ib = (INDEX_BLOCK *)attr_record->content;
-    attr_info->attr_ref_cnt = 1;
+    attr_info->attr_ref_cnt = 0;
+    dlist_init_head(&attr_info->attr_hnd_list);
     avl_create(&attr_info->attr_old_blocks, (int (*)(const void *, const void*))compare_old_block1, sizeof(INDEX_OLD_BLOCK),
         OS_OFFSET(INDEX_OLD_BLOCK, attr_entry));
     avl_create(&attr_info->attr_caches, (int (*)(const void *, const void*))compare_cache1, sizeof(INDEX_BLOCK_CACHE),
@@ -81,28 +108,8 @@ void init_attr_info(struct _OBJECT_HANDLE *obj, ATTR_RECORD *attr_record, ATTR_I
     OS_RWLOCK_INIT(&attr_info->caches_lock);
 }
 
-void get_attr_info(ATTR_INFO *attr_info)
+void destroy_attr_info(ATTR_INFO *attr_info)
 {
-    attr_info->attr_ref_cnt++;
-
-    return;
-}
-
-
-int32_t put_attr_info(ATTR_INFO *attr_info)
-{
-    if (attr_info->attr_ref_cnt == 0)
-    {
-        LOG_EMERG("Too many times put attr info.\n");
-        return -INDEX_ERR_MANY_TIMES_PUT;
-    }
-
-    attr_info->attr_ref_cnt--;
-    if (attr_info->attr_ref_cnt != 0)
-    {
-        return 0;
-    }
-    
     LOG_INFO("Now put attr info. obj_name(%s)\n", attr_info->obj->obj_name);
 
     index_commit_attr_modification(attr_info);
@@ -112,8 +119,6 @@ int32_t put_attr_info(ATTR_INFO *attr_info)
     index_release_all_caches_in_attr(attr_info);
     avl_destroy(&attr_info->attr_caches);
     OS_RWLOCK_DESTROY(&attr_info->caches_lock);
-
-    return 0;
 }
 
 int32_t index_open_attr(struct _OBJECT_HANDLE *obj, ATTR_HANDLE **attr)
@@ -134,35 +139,57 @@ int32_t index_open_attr(struct _OBJECT_HANDLE *obj, ATTR_HANDLE **attr)
 
     memset(tmp_attr, 0, sizeof(ATTR_HANDLE));
 
-    OS_RWLOCK_WRLOCK(&obj->obj_lock);
+    OS_RWLOCK_WRLOCK(&obj->attr_info.attr_lock);
 
-    get_attr_info(&obj->attr_info);
+    obj->attr_info.attr_ref_cnt++;
 	tmp_attr->attr_info = &obj->attr_info;
-	dlist_add_tail(&obj->attr_hnd_list, &tmp_attr->entry);
+	dlist_add_tail(&obj->attr_info.attr_hnd_list, &tmp_attr->entry);
 
     *attr = tmp_attr;
-    OS_RWLOCK_WRUNLOCK(&obj->obj_lock);
+    OS_RWLOCK_WRUNLOCK(&obj->attr_info.attr_lock);
 
     return 0;
 }
 
 int32_t index_close_attr(ATTR_HANDLE *attr)
 {
-    OBJECT_HANDLE *obj = NULL;
+    ATTR_INFO *attr_info = NULL;
     
     ASSERT(attr != NULL);
 
-    obj = attr->attr_info->obj;
+    attr_info = attr->attr_info;
 
-    OS_RWLOCK_WRLOCK(&obj->obj_lock);
+    OS_RWLOCK_WRLOCK(&attr_info->attr_lock);
     
-    dlist_remove_entry(&obj->attr_hnd_list, &attr->entry);
-    put_attr_info(attr->attr_info);
+    if (attr->attr_info->attr_ref_cnt == 0)
+    {
+        OS_RWLOCK_WRUNLOCK(&attr_info->attr_lock);
+        LOG_EMERG("Too many times put attr info.\n");
+        return -1;
+    }
+    else
+    {
+        attr->attr_info->attr_ref_cnt--;
+    }
+    
+    dlist_remove_entry(&attr->attr_info->attr_hnd_list, &attr->entry);
     OS_FREE(attr);
 
-    OS_RWLOCK_WRUNLOCK(&obj->obj_lock);
+    OS_RWLOCK_WRUNLOCK(&attr_info->attr_lock);
     
     return 0;
+}
+
+void recover_attr_record(ATTR_INFO *attr_info)
+{
+    memcpy(&attr_info->attr_record, &attr_info->old_attr_record,
+        sizeof(ATTR_RECORD));
+}
+
+void backup_attr_record(ATTR_INFO *attr_info)
+{
+    memcpy(&attr_info->old_attr_record, &attr_info->attr_record,
+        sizeof(ATTR_RECORD));
 }
 
 void index_cancel_attr_modification(ATTR_INFO *attr_info)
@@ -174,23 +201,21 @@ void index_cancel_attr_modification(ATTR_INFO *attr_info)
         return;
     }
 
-    /* 释放旧块占用的内存 */
+    // free old block memory
     index_release_all_old_blocks_mem_in_attr(attr_info);
     
-    /* 取消所有的脏cache数据 */
+    // discard all dirty block cache
     index_cancel_all_caches_in_attr(attr_info);
     
-    /* 释放所有的空cache */
+    // free all memory
     index_release_all_free_caches_in_attr(attr_info);
 
-    /* 恢复属性记录 */
-    memcpy(&attr_info->attr_record, &attr_info->old_attr_record,
-        sizeof(ATTR_RECORD));
+    // recover the attr record
+    recover_attr_record(attr_info);
     ATTR_INFO_CLR_DIRTY(attr_info);
         
-
-    /* 恢复inode记录 */
-    memcpy(&attr_info->obj->old_inode, &attr_info->obj->inode, sizeof(INODE_RECORD));
+    // recover obj inode
+    recover_obj_inode(attr_info->obj);
     INODE_CLR_DIRTY(attr_info->obj);
 
     return;
@@ -202,25 +227,35 @@ int32_t index_commit_attr_modification(ATTR_INFO *attr_info)
     
     ASSERT(attr_info != NULL);
 
-    ret = validate_attr(attr_info);
+    // validate the attribute into inode
+    validate_attr(attr_info);
 
-    /* 释放旧块占用的内存 */
+    // write index block caches to disk
     ret = index_flush_all_caches_in_attr(attr_info);
+    if (0 > ret)
+    {
+        LOG_ERROR("Flush index block cache failed. obj_name(%s) ret(%d)\n",
+            attr_info->obj->obj_name, ret);
+        return ret;
+    }
         
-
-    /* 恢复inode记录 */
+    // write inode to disk
     ret = flush_inode(attr_info->obj);
+    if (0 > ret)
+    {
+        LOG_ERROR("Flush index inode failed. obj_name(%s) ret(%d)\n",
+            attr_info->obj->obj_name, ret);
+        return ret;
+    }
 
-    /* 释放旧块 */
+    // release old blocks
     index_release_all_old_blocks_in_attr(attr_info);
     
-    /* 释放所有的空cache */
+    // release free caches
     index_release_all_free_caches_in_attr(attr_info);
 
-    /* 备份属性记录 */
-    memcpy(&attr_info->old_attr_record, &attr_info->attr_record,
-        sizeof(ATTR_RECORD));
-    
+    // backup the attr record
+    backup_attr_record(attr_info);
 
     return 0;
 }

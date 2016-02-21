@@ -68,37 +68,6 @@ int32_t compare_object2(const void *objid, OBJECT_HANDLE *obj_node)
     return -1;
 }
 
-int32_t compare_cache1(const INDEX_BLOCK_CACHE *cache, const INDEX_BLOCK_CACHE *cache_node)
-{
-    if (cache->vbn > cache_node->vbn)
-    {
-        return 1;
-    }
-    
-    if (cache->vbn < cache_node->vbn)
-    {
-        return -1;
-    }
-
-    return 0;
-}
-
-
-int32_t compare_old_block1(const INDEX_OLD_BLOCK *old_block, const INDEX_OLD_BLOCK *old_block_node)
-{
-    if (old_block->vbn > old_block_node->vbn)
-    {
-        return 1;
-    }
-    
-    if (old_block->vbn < old_block_node->vbn)
-    {
-        return -1;
-    }
-
-    return 0;
-}
-
 int32_t get_object_resource(INDEX_HANDLE *index, uint64_t objid, OBJECT_HANDLE **obj)
 {
     int32_t ret = 0;
@@ -114,7 +83,6 @@ int32_t get_object_resource(INDEX_HANDLE *index, uint64_t objid, OBJECT_HANDLE *
     memset(tmp_obj, 0, sizeof(OBJECT_HANDLE));
     tmp_obj->index = index;
     tmp_obj->objid = objid;
-    dlist_init_head(&tmp_obj->attr_hnd_list);
     tmp_obj->obj_ref_cnt = 1;
     OS_RWLOCK_INIT(&tmp_obj->obj_lock);
 
@@ -133,6 +101,16 @@ void put_object_resource(OBJECT_HANDLE *obj)
     OS_FREE(obj);
 
     return;
+}
+
+void recover_obj_inode(OBJECT_HANDLE *obj)
+{
+    memcpy(&obj->inode, &obj->old_inode, sizeof(INODE_RECORD));
+}
+
+void backup_obj_inode(OBJECT_HANDLE *obj)
+{
+    memcpy(&obj->old_inode, &obj->inode, sizeof(INODE_RECORD));
 }
 
 int32_t close_one_attr(void *para, DLIST_ENTRY_S *entry)
@@ -169,8 +147,8 @@ int32_t flush_inode(OBJECT_HANDLE * obj)
     LOG_DEBUG("Update inode success. name(%s) inode(%p) objid(%lld)\n",
         obj->obj_name, obj->inode, obj->inode.objid);
 
-    /* 设置inode回复点，供取消修改时使用 */
-    memcpy(&obj->old_inode, &obj->inode, sizeof(INODE_RECORD));
+    // set recover dot
+    backup_obj_inode(obj);
     INODE_CLR_DIRTY(obj);
 
     return 0;
@@ -178,8 +156,9 @@ int32_t flush_inode(OBJECT_HANDLE * obj)
 
 int32_t close_all_attr(OBJECT_HANDLE *obj)
 {
-    dlist_walk_all(&obj->attr_hnd_list, close_one_attr, NULL);
+    dlist_walk_all(&obj->attr_info.attr_hnd_list, close_one_attr, NULL);
     obj->attr = NULL; // already closed
+    destroy_attr_info(&obj->attr_info);
     
     return 0;
 }
@@ -250,8 +229,7 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
         memset(attr_record->content, 0, ATTR_RECORD_CONTENT_SIZE);
     }
     
-    init_attr_info(tmp_obj, attr_record, &tmp_obj->attr_info);
-
+    init_attr_info(tmp_obj, &tmp_obj->attr_info);
     ret = index_open_attr(tmp_obj, &tmp_obj->attr);
     if (ret < 0)
     {
@@ -261,9 +239,9 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
         return ret;
     }
 
-    IBC_SET_DIRTY(&tmp_obj->attr->attr_info->root_ibc);
+    IBC_SET_DIRTY(&tmp_obj->attr_info.root_ibc);
 
-    /* 生效以上修改 */
+    // validate the attribute into inode
     validate_attr(&tmp_obj->attr_info);
 
     /* 更新到inode信息中去 */
@@ -280,7 +258,7 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
     LOG_DEBUG("Create inode success. name(%s) vbn(%lld)\n",
         tmp_obj->inode.name, inode_no);
 
-    memcpy(&tmp_obj->old_inode, &tmp_obj->inode, sizeof(INODE_RECORD));
+    backup_obj_inode(tmp_obj);
     *obj = tmp_obj;
 
     return 0;
@@ -288,11 +266,14 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
 
 int32_t close_object(OBJECT_HANDLE *obj)
 {
+    if (0 != obj->obj_ref_cnt)
+    {
+        LOG_ERROR("There are still object handle not closed. objid(%lld) obj_ref_cnt(%d)\n",
+            obj->objid, obj->obj_ref_cnt);
+    }
+    
     index_commit_object_modification(obj);
     close_all_attr(obj);
-
-    index_release_all_caches_in_attr(&obj->attr_info);
-    
     put_object_resource(obj);
 
     return 0;
@@ -302,7 +283,6 @@ int32_t open_object(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, OBJE
 {
     int32_t ret = 0;
     OBJECT_HANDLE *tmp_obj= NULL;
-    ATTR_RECORD *attr_record = NULL;
 
     ASSERT(NULL != index);
     ASSERT(NULL != obj);
@@ -325,8 +305,7 @@ int32_t open_object(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, OBJE
     strncpy(tmp_obj->obj_name, tmp_obj->inode.name, tmp_obj->inode.name_size);
 
     /* open attr */
-    attr_record = INODE_GET_ATTR(&tmp_obj->inode);
-	init_attr_info(tmp_obj, attr_record, &tmp_obj->attr_info);
+	init_attr_info(tmp_obj, &tmp_obj->attr_info);
     ret = index_open_attr(tmp_obj, &tmp_obj->attr);
     if (ret < 0)
     {
@@ -335,7 +314,7 @@ int32_t open_object(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, OBJE
         return ret;
     }
 
-    memcpy(&tmp_obj->old_inode, &tmp_obj->inode, sizeof(INODE_RECORD));
+    backup_obj_inode(tmp_obj);
     *obj = tmp_obj;
 
     return 0;
@@ -525,41 +504,16 @@ OBJECT_HANDLE *index_get_object_handle(INDEX_HANDLE *index, uint64_t objid)
     return tmp_obj;
 }
 
-int32_t recover_attr_record(ATTR_INFO *attr_info)
-{
-    memcpy(&attr_info->attr_record, &attr_info->old_attr_record,
-        sizeof(ATTR_RECORD));
-    ATTR_INFO_CLR_DIRTY(attr_info);
-
-    return 0;
-}
-
 void index_cancel_object_modification(OBJECT_HANDLE *obj)
 {
     ASSERT(obj != NULL);
 
-    // cancel the cache
-    index_cancel_all_caches_in_attr(&obj->attr_info);
-
-    // recover the attr record
-    recover_attr_record(&obj->attr_info);
-
     // recover the inode content
-    memcpy(&obj->inode, &obj->old_inode, sizeof(INODE_RECORD));
+    recover_obj_inode(obj);
     INODE_CLR_DIRTY(obj);
 
-    index_release_all_old_blocks_mem_in_attr(&obj->attr_info);
-    index_release_all_free_caches_in_attr(&obj->attr_info);
+    index_cancel_attr_modification(&obj->attr_info);
     
-    return;
-}
-
-void backup_attr_record(ATTR_INFO *attr_info)
-{
-    /* 备份属性记录 */
-    memcpy(&attr_info->old_attr_record, &attr_info->attr_record,
-        sizeof(ATTR_RECORD));
-
     return;
 }
 
@@ -569,33 +523,7 @@ int32_t index_commit_object_modification(OBJECT_HANDLE *obj)
     
     ASSERT(obj != NULL);
 
-    /* 使所有的属性修改生效 */
-    validate_attr(&obj->attr_info);
-
-    /* 将cache中的脏数据下盘 */
-    ret = index_flush_all_caches_in_attr(&obj->attr_info);
-    if (0 > ret)
-    {
-        LOG_ERROR("Flush index blocks failed. obj_name(%s) ret(%d)\n", obj->obj_name, ret);
-        return ret;
-    }
-
-    /* 将inode中的脏数据下盘，此处成功则可认为事务提交成功 */
-    ret = flush_inode(obj);
-    if (0 > ret)
-    {
-        LOG_ERROR("Flush inode failed. obj_name(%s) ret(%d)\n", obj->obj_name, ret);
-        return ret;
-    }
-
-    backup_attr_record(&obj->attr_info);
-
-    /* 删除修改过的块对应的旧块，因为前面已经成功了，所以这里是否成功没关系 */
-    index_release_all_old_blocks_in_attr(&obj->attr_info);
-
-    index_release_all_free_caches_in_attr(&obj->attr_info);
-
-    return 0;
+    return index_commit_attr_modification(&obj->attr_info);
 }
 
 int32_t index_close_object_nolock(OBJECT_HANDLE *obj)
@@ -644,152 +572,13 @@ int32_t index_close_object(OBJECT_HANDLE *obj)
     return ret;
 }     
 
-int32_t index_delete_object(INDEX_HANDLE *index, uint64_t objid, void *hnd, DeleteFunc del_func)
+int32_t index_delete_object(INDEX_HANDLE *index, uint64_t objid)
 {
-#if 0
-    int32_t ret = 0;
-    OBJECT_HANDLE *obj = NULL;
-
-    if ((NULL == parent_obj) || (NULL == obj_name))
-    {
-        LOG_ERROR("Invalid parameter. parent_obj(%p) obj_name(%p)\n",
-            parent_obj, obj_name);
-        return -INDEX_ERR_PARAMETER;
-    }
-
-    /* 锁目录树，防止树再次被打开 */
-    OS_RWLOCK_WRLOCK(&parent_obj->obj_lock);
-    
-    LOG_INFO("Delete the obj. obj(%p) obj_name(%s) obj(%p)\n",
-        obj, obj_name, obj);
-
-    ret = index_open_object_nolock(parent_obj, obj_name, 
-        DELETE_FLAG, &obj);
-    if (0 > ret)
-    {
-        LOG_ERROR("The obj not found. name(%s)\n", obj_name);
-        OS_RWLOCK_WRUNLOCK(&parent_obj->obj_lock);
-        return ret;
-    }
-    
-    ret = index_remove_key_nolock(&parent_obj->attr->tree, obj_name, (uint16_t)strlen(obj_name));
-    if (0 > ret)
-    {
-        LOG_ERROR("Remove the obj failed. name(%s)\n", obj_name);
-        (void)index_close_object_nolock(obj);
-        (void)index_close_object_nolock(obj); /* 关2次，以便释放资源 */
-        OS_RWLOCK_WRUNLOCK(&parent_obj->obj_lock);
-        return ret;
-    }
-
-    OS_RWLOCK_WRUNLOCK(&parent_obj->obj_lock);
-
-    if (walk_tree(obj, INDEX_GET_FIRST) == 0)
-    {
-        do
-        {
-            if (NULL != del_func)
-            {
-                (void)del_func(hnd,
-                    IEGetKey(obj->ie), obj->ie->key_len,
-                    IEGetValue(obj->ie), obj->ie->value_len);
-            }
-        }
-        while (walk_tree(obj, INDEX_REMOVE_BLOCK) == 0);
-    }
-
-    ret = index_record_old_block(obj->old_block_queue, obj->inode->inode_no, 1);
-    if (0 > ret)
-    {
-        LOG_ERROR("Record old block failed. ret(%d)\n", ret);
-        (void)INDEX_CancelTreeTransNoLock(obj);
-        (void)index_close_object_nolock(obj);
-        (void)index_close_object_nolock(obj); /* 关2次，以便释放资源 */
-        return ret;
-    }
-    (void)index_close_object_nolock(obj);
-    (void)index_close_object_nolock(obj); /* 关2次，以便释放资源 */
-
-
-    LOG_INFO("Delete the obj success. obj(%p) obj_name(%s)\n",
-        obj, obj_name);
-    
-#endif
-
     return 0;
 }
 
-int32_t index_rename_object(OBJECT_HANDLE *parent_obj, const char *old_obj_name,
-    const char * new_obj_name)
+int32_t index_rename_object(OBJECT_HANDLE *obj, const char *new_obj_name)
 {
-    #if 0
-    int32_t ret = 0;
-    OBJECT_HANDLE *obj = NULL;
-    uint64_t inode_no = 0;
-
-    if ((NULL == obj) || (NULL == old_obj_name)
-        || (NULL == new_obj_name))
-    {
-        LOG_ERROR("Invalid parameter. obj(%p) old_obj_name(%p) new_obj_name(%p)\n",
-            obj, old_obj_name, new_obj_name);
-        return -INDEX_ERR_PARAMETER;
-    }
-
-    LOG_INFO("Rename the obj. obj(%p) old_obj_name(%s) new_obj_name(%s)\n",
-        obj, old_obj_name, new_obj_name);
-    
-    /* 锁目录树，防止树再次被打开 */
-    OS_RWLOCK_WRLOCK(&parent_obj->obj_lock);
-    
-    ret = search_key_internal(&parent_obj->attr->tree, old_obj_name,
-        (uint16_t)strlen(old_obj_name));
-    if (0 > ret)
-    {
-        LOG_ERROR("Search for obj failed. parent_obj(%p) name(%s) ret(%d)\n",
-            parent_obj, old_obj_name, ret);
-        OS_RWLOCK_WRUNLOCK(&parent_obj->obj_lock);
-        return ret;
-    }
-
-    if (parent_obj->attr->ie->value_len != VBN_SIZE)
-    {
-        LOG_DEBUG("The attr chaos."
-            " [obj: %p, name: %s, value_len: %d]\n", obj, obj_name, parent_obj->attr->ie->value_len);
-        return -INDEX_ERR_CHAOS;
-    }
-
-    memcpy(&inode_no, IEGetValue(parent_obj->attr->ie), VBN_SIZE);
-
-    (void)INDEX_StartTreeTransNoLock(&parent_obj->attr->tree);
-
-    ret = index_remove_key_nolock(&parent_obj->attr->tree, old_obj_name,
-        (uint16_t)strlen(old_obj_name));
-    if (0 > ret)
-    {
-        LOG_ERROR("Remove obj failed. name(%s) ret(%d)\n", old_obj_name, ret);
-        (void)INDEX_CancelTreeTransNoLock(&parent_obj->attr->tree);
-        OS_RWLOCK_WRUNLOCK(&parent_obj->obj_lock);
-        return ret;
-    }
-
-    ret = index_insert_key_nolock(&parent_obj->attr->tree, new_obj_name,
-        (uint16_t)strlen(new_obj_name), &inode_no, VBN_SIZE);
-    if (0 > ret)
-    {
-        LOG_ERROR("Insert obj failed. name(%s) ret(%d)\n", new_obj_name, ret);
-        (void)INDEX_CancelTreeTransNoLock(&parent_obj->attr->tree);
-        OS_RWLOCK_WRUNLOCK(&parent_obj->obj_lock);
-        return ret;
-    }
-
-    ret = INDEX_CommitTreeTransNoLock(&parent_obj->attr->tree, COMMIT_FLAG_FORCE);
-    OS_RWLOCK_WRUNLOCK(&parent_obj->obj_lock);
-
-    LOG_INFO("Rename the obj finished. parent_obj(%p) old_obj_name(%s) new_obj_name(%s) ret(%d)\n",
-        parent_obj, old_obj_name, new_obj_name, ret);
-    
-    return ret;
-    #endif
     return 0;
 }
 

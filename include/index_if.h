@@ -88,35 +88,35 @@ typedef struct _INDEX_BLOCK_CACHE
 	uint64_t vbn;
 	uint32_t state;
 	struct _INDEX_BLOCK *ib;
-	avl_node_t obj_entry;
 	avl_node_t attr_entry;
 } INDEX_BLOCK_CACHE;
 
 typedef struct _INDEX_OLD_BLOCK
 {
 	uint64_t vbn;
-	avl_node_t obj_entry;
 	avl_node_t attr_entry;
 } INDEX_OLD_BLOCK;
 
 typedef struct _ATTR_INFO
 {
-    struct _OBJECT_HANDLE *obj;           /* 属性所在对象的操作句柄 */
+    struct _OBJECT_HANDLE *obj;        // object handle
 
-    ATTR_RECORD attr_record;      /* 属性记录 */
-    ATTR_RECORD old_attr_record;      /* 属性记录 */
+    ATTR_RECORD attr_record;           // attr record
+    ATTR_RECORD old_attr_record;       // old attr record
 
     INDEX_BLOCK_CACHE root_ibc;
     
+    DLIST_HEAD_S attr_hnd_list;        // all attr handle
+
     avl_tree_t attr_caches;
     avl_tree_t attr_old_blocks;
     OS_RWLOCK caches_lock;
     
-    avl_node_t entry;               /* recorded in object */
+    avl_node_t entry;                  // recorded in object
    
-    uint32_t attr_ref_cnt;             /* 引用计数 */
+    uint32_t attr_ref_cnt;             // reference count
     
-    OS_RWLOCK attr_lock;                    /* 锁 */    
+    OS_RWLOCK attr_lock;               // lock  
 } ATTR_INFO;
 
 typedef struct _ATTR_HANDLE
@@ -157,7 +157,6 @@ typedef struct _OBJECT_HANDLE
 
     ATTR_INFO attr_info;
     ATTR_HANDLE *attr;                 // default attr handle
-    DLIST_HEAD_S attr_hnd_list;        // all attr handle
 
     uint32_t obj_ref_cnt;
     
