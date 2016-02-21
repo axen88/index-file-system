@@ -68,7 +68,17 @@ int32_t compare_old_block1(const INDEX_OLD_BLOCK *old_block, const INDEX_OLD_BLO
     return 0;
 }
 
-// update the attr root cache into inode
+
+// copy origin attr record from inode
+void recover_attr_record(ATTR_INFO *attr_info)
+{
+    ATTR_RECORD *attr_record;
+    
+    attr_record = INODE_GET_ATTR(&attr_info->obj->inode);
+    memcpy(&attr_info->attr_record, attr_record, attr_record->record_size);
+}
+
+// copy attr record into inode
 void validate_attr(ATTR_INFO *attr_info)
 {
     if (!ATTR_INFO_DIRTY(attr_info))
@@ -89,27 +99,29 @@ void validate_attr(ATTR_INFO *attr_info)
 
 void init_attr_info(struct _OBJECT_HANDLE *obj)
 {
-    ATTR_RECORD *attr_record;
     ATTR_INFO *attr_info;
     
     ASSERT(obj != NULL);
 
-    attr_record = INODE_GET_ATTR(&obj->inode);
     attr_info = &obj->attr_info;
 
     memset(attr_info, 0, sizeof(ATTR_INFO));
-
     attr_info->obj = obj;
-    memcpy(&attr_info->attr_record, attr_record, attr_record->record_size);
-    memcpy(&attr_info->old_attr_record, attr_record, attr_record->record_size);
+    
+    recover_attr_record(attr_info);
     attr_info->root_ibc.vbn = obj->inode_no;
-    attr_info->root_ibc.ib = (INDEX_BLOCK *)attr_record->content;
+    attr_info->root_ibc.ib = (INDEX_BLOCK *)attr_info->attr_record.content;
+    attr_info->root_ibc.state = CLEAN;
     attr_info->attr_ref_cnt = 0;
+    
     dlist_init_head(&attr_info->attr_hnd_list);
+    
     avl_create(&attr_info->attr_old_blocks, (int (*)(const void *, const void*))compare_old_block1, sizeof(INDEX_OLD_BLOCK),
         OS_OFFSET(INDEX_OLD_BLOCK, attr_entry));
+    
     avl_create(&attr_info->attr_caches, (int (*)(const void *, const void*))compare_cache1, sizeof(INDEX_BLOCK_CACHE),
         OS_OFFSET(INDEX_BLOCK_CACHE, attr_entry));
+    
     OS_RWLOCK_INIT(&attr_info->attr_lock);
     OS_RWLOCK_INIT(&attr_info->caches_lock);
 }
@@ -187,18 +199,6 @@ int32_t index_close_attr(ATTR_HANDLE *attr)
     return 0;
 }
 
-void recover_attr_record(ATTR_INFO *attr_info)
-{
-    memcpy(&attr_info->attr_record, &attr_info->old_attr_record,
-        sizeof(ATTR_RECORD));
-}
-
-void backup_attr_record(ATTR_INFO *attr_info)
-{
-    memcpy(&attr_info->old_attr_record, &attr_info->attr_record,
-        sizeof(ATTR_RECORD));
-}
-
 void cancel_attr_modification(ATTR_INFO *attr_info)
 {
     ASSERT(attr_info != NULL);
@@ -256,9 +256,6 @@ int32_t commit_attr_modification(ATTR_INFO *attr_info)
     
     // release free caches
     index_release_all_free_caches_in_attr(attr_info);
-
-    // backup the attr record
-    backup_attr_record(attr_info);
 
     return 0;
 }

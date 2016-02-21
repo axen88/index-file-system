@@ -102,21 +102,18 @@ typedef struct _ATTR_INFO
     struct _OBJECT_HANDLE *obj;        // object handle
 
     ATTR_RECORD attr_record;           // attr record
-    ATTR_RECORD old_attr_record;       // old attr record
 
     INDEX_BLOCK_CACHE root_ibc;
     
+    uint32_t attr_ref_cnt;             // reference count
     DLIST_HEAD_S attr_hnd_list;        // all attr handle
+    OS_RWLOCK attr_lock;               // lock  
 
-    avl_tree_t attr_caches;
+    avl_tree_t attr_caches;            // 
     avl_tree_t attr_old_blocks;
     OS_RWLOCK caches_lock;
     
     avl_node_t entry;                  // recorded in object
-   
-    uint32_t attr_ref_cnt;             // reference count
-    
-    OS_RWLOCK attr_lock;               // lock  
 } ATTR_INFO;
 
 typedef struct _ATTR_HANDLE

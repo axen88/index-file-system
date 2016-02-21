@@ -40,20 +40,6 @@ MODULE(PID_INDEX);
 
 #define DELETE_FLAG    0x01
 
-int32_t compare_object1(const OBJECT_HANDLE *obj, const OBJECT_HANDLE *obj_node)
-{
-    if (obj->objid > obj_node->objid)
-    {
-        return 1;
-    }
-    else if (obj->objid == obj_node->objid)
-    {
-        return 0;
-    }
-
-    return -1;
-}
-
 int32_t compare_object2(const void *objid, OBJECT_HANDLE *obj_node)
 {
     if ((uint64_t)objid > obj_node->objid)
@@ -120,7 +106,6 @@ int32_t close_one_attr(void *para, DLIST_ENTRY_S *entry)
     attr = OS_CONTAINER(entry, ATTR_HANDLE, entry);
     
     return index_close_attr(attr);
-
 }
 
 int32_t flush_inode(OBJECT_HANDLE * obj)
@@ -139,13 +124,13 @@ int32_t flush_inode(OBJECT_HANDLE * obj)
     ret = INDEX_UPDATE_INODE(obj);
     if (0 > ret)
     {
-        LOG_ERROR("Update inode failed. objid(%lld) inode(%p) objid(%lld) ret(%d)\n",
-            obj->objid, obj->inode, obj->inode.objid, ret);
+        LOG_ERROR("Update inode failed. objid(%lld) inode(%p) inode_no(%lld) ret(%d)\n",
+            obj->objid, obj->inode, obj->inode_no, ret);
         return ret;
     }
 
-    LOG_DEBUG("Update inode success. objid(%lld) inode(%p) objid(%lld)\n",
-        obj->objid, obj->inode, obj->inode.objid);
+    LOG_DEBUG("Update inode success. objid(%lld) inode(%p) inode_no(%lld)\n",
+        obj->objid, obj->inode, obj->inode_no);
 
     // set recover dot
     backup_obj_inode(obj);
@@ -513,7 +498,6 @@ void cancel_object_modification(OBJECT_HANDLE *obj)
     // recover obj inode
     recover_obj_inode(obj);
     INODE_CLR_DIRTY(obj);
-
     
     return;
 }

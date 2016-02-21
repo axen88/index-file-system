@@ -56,6 +56,21 @@ int32_t compare_index2(const char *index_name, INDEX_HANDLE *index_node)
         index_node->name, strlen(index_node->name));
 }
 
+
+int32_t compare_object1(const OBJECT_HANDLE *obj, const OBJECT_HANDLE *obj_node)
+{
+    if (obj->objid > obj_node->objid)
+    {
+        return 1;
+    }
+    else if (obj->objid == obj_node->objid)
+    {
+        return 0;
+    }
+
+    return -1;
+}
+
 int32_t index_init_system(void)
 {
     if (NULL != g_index_list)
@@ -130,8 +145,6 @@ int32_t walk_all_opened_index(
     
     return ret;
 }
-
-int32_t compare_object1(const OBJECT_HANDLE *obj, const OBJECT_HANDLE *obj_node);
 
 int32_t init_index_resource(INDEX_HANDLE ** index, const char * index_name)
 {
@@ -241,21 +254,6 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
     return 0;
 }     
 
-/*******************************************************************************
-函数名称: INDEX_Create
-功能说明: 创建索引系统
-输入参数:
-    index_name         : 要创建的索引名称
-    total_sectors   : 索引系统要管理的块数目
-    block_size_shift: 索引系统的块大小的幂，2 ^ v_blockSizeShift就是块大小
-    start_lba: 索引系统的的起始lba地址
-输出参数:
-    index        : 打开成功后的索引区的根目录句柄
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_create(const char *index_name, uint64_t total_sectors, uint64_t start_lba,
     INDEX_HANDLE **index)
 {
@@ -268,19 +266,6 @@ int32_t index_create(const char *index_name, uint64_t total_sectors, uint64_t st
     return ret;
 }     
 
-/*******************************************************************************
-函数名称: INDEX_OpenNoLock
-功能说明: 打开指定名称的索引系统
-输入参数:
-    index_name  : 要打开的索引名称
-    start_lba: 索引区的起始lba地址
-输出参数:
-    index        : 打开成功后的索引区的根目录句柄
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_open_nolock(const char *index_name, uint64_t start_lba, INDEX_HANDLE **index)
 {
     INDEX_HANDLE *tmp_index = NULL;
@@ -364,19 +349,6 @@ int32_t index_open_nolock(const char *index_name, uint64_t start_lba, INDEX_HAND
     return 0;
 }     
 
-/*******************************************************************************
-函数名称: INDEX_Open
-功能说明: 打开指定名称的索引系统
-输入参数:
-    index_name  : 要打开的索引名称
-    start_lba: 索引区的起始lba地址
-输出参数:
-    index        : 打开成功后的索引区的根目录句柄
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_open(const char *index_name, uint64_t start_lba, INDEX_HANDLE **index)
 {
     int32_t ret = 0;
@@ -388,17 +360,6 @@ int32_t index_open(const char *index_name, uint64_t start_lba, INDEX_HANDLE **in
     return ret;
 }     
 
-/*******************************************************************************
-函数名称: close_index
-功能说明: 关闭指定索引区
-输入参数:
-    index : 指定的索引区句柄
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 void close_index(INDEX_HANDLE *index)
 {
     ASSERT(NULL != index);
@@ -462,17 +423,6 @@ int32_t index_close_nolock(INDEX_HANDLE *index)
     return 0;
 }     
 
-/*******************************************************************************
-函数名称: INDEX_Close
-功能说明: 关闭指定树上的索引区
-输入参数:
-    index : 指定的索引区上的某棵树句柄
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_close(INDEX_HANDLE *index)
 {
     int32_t ret = 0;
