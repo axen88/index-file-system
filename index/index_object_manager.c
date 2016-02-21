@@ -244,10 +244,10 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
     // validate the attribute into inode
     validate_attr(&tmp_obj->attr_info);
 
-    /* 更新到inode信息中去 */
+    // update index block
     ret = index_update_block_pingpong_init(index->hnd, &tmp_obj->inode.head, inode_no);
     if (0 > ret)
-    {   /* 新数据覆盖旧有数据 */
+    {
         (void)block_free(index->hnd, inode_no, 1);
         put_object_resource(tmp_obj);
         LOG_ERROR("Create inode failed. name(%s) vbn(%lld) ret(%d)\n",
@@ -272,7 +272,7 @@ int32_t close_object(OBJECT_HANDLE *obj)
             obj->objid, obj->obj_ref_cnt);
     }
     
-    index_commit_object_modification(obj);
+    commit_object_modification(obj);
     close_all_attr(obj);
     put_object_resource(obj);
 
@@ -512,12 +512,12 @@ void index_cancel_object_modification(OBJECT_HANDLE *obj)
     recover_obj_inode(obj);
     INODE_CLR_DIRTY(obj);
 
-    index_cancel_attr_modification(&obj->attr_info);
+    cancel_attr_modification(&obj->attr_info);
     
     return;
 }
 
-int32_t index_commit_object_modification(OBJECT_HANDLE *obj)
+int32_t commit_object_modification(OBJECT_HANDLE *obj)
 {
     int32_t ret = 0;
     

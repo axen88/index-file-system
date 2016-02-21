@@ -52,7 +52,7 @@ extern int32_t index_pwrite_attr(ATTR_HANDLE *attr, uint64_t position,
 extern int32_t index_truncate_attr(ATTR_HANDLE *attr, uint64_t new_size);
 
 /* 取消属性的修改 */
-extern void index_cancel_attr_modification(ATTR_INFO *attr_info);
+extern void cancel_attr_modification(ATTR_INFO *attr_info);
 
 /* 提交属性的修改 */
 extern int32_t index_commit_attr_modification(ATTR_INFO *attr_info);

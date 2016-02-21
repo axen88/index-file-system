@@ -192,7 +192,7 @@ void backup_attr_record(ATTR_INFO *attr_info)
         sizeof(ATTR_RECORD));
 }
 
-void index_cancel_attr_modification(ATTR_INFO *attr_info)
+void cancel_attr_modification(ATTR_INFO *attr_info)
 {
     ASSERT(attr_info != NULL);
 

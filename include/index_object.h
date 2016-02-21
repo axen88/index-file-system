@@ -55,7 +55,7 @@ extern OBJECT_HANDLE *index_get_object_handle(INDEX_HANDLE *index, uint64_t obji
 /* for internal only */
 int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJECT_HANDLE **obj);
 int32_t open_object(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, OBJECT_HANDLE **obj);
-extern int32_t index_commit_object_modification(OBJECT_HANDLE *obj);
+extern int32_t commit_object_modification(OBJECT_HANDLE *obj);
 extern int32_t close_object(OBJECT_HANDLE *obj);
 
 extern int32_t compare_attr_info2(const char *attr_name, ATTR_INFO *attr_info_node);
