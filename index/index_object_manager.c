@@ -536,17 +536,19 @@ int32_t recover_attr_record(ATTR_INFO *attr_info)
 
 void index_cancel_object_modification(OBJECT_HANDLE *obj)
 {
+    ASSERT(obj != NULL);
+
+    // cancel the cache
     index_cancel_all_caches_in_attr(&obj->attr_info);
 
-    /* 恢复所有属性记录到修改之前的状态 */
+    // recover the attr record
     recover_attr_record(&obj->attr_info);
 
-    /* 恢复inode信息 */
+    // recover the inode content
     memcpy(&obj->inode, &obj->old_inode, sizeof(INODE_RECORD));
     INODE_CLR_DIRTY(obj);
 
     index_release_all_old_blocks_mem_in_attr(&obj->attr_info);
-
     index_release_all_free_caches_in_attr(&obj->attr_info);
     
     return;
