@@ -85,13 +85,11 @@ static int32_t set_ib_dirty(ATTR_HANDLE *tree, uint64_t vbn, uint8_t depth)
             /* 将原来的块放入旧块队列以便事务处理 */
             ret = index_record_old_block(tree->attr_info, tree->cache_stack[depth]->vbn);
             
-            OS_RWLOCK_WRLOCK(&tree->attr_info->obj->caches_lock);
+            OS_RWLOCK_WRLOCK(&tree->attr_info->caches_lock);
             avl_remove(&tree->attr_info->attr_caches, tree->cache_stack[depth]);
-            avl_remove(&tree->attr_info->obj->obj_caches, tree->cache_stack[depth]);
             tree->cache_stack[depth]->vbn = new_vbn;
-            avl_add(&tree->attr_info->obj->obj_caches, tree->cache_stack[depth]);
             avl_add(&tree->attr_info->attr_caches, tree->cache_stack[depth]);
-            OS_RWLOCK_WRUNLOCK(&tree->attr_info->obj->caches_lock);
+            OS_RWLOCK_WRUNLOCK(&tree->attr_info->caches_lock);
             
             if (0 > ret)
             {

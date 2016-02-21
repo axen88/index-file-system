@@ -110,6 +110,7 @@ typedef struct _ATTR_INFO
     
     avl_tree_t attr_caches;
     avl_tree_t attr_old_blocks;
+    OS_RWLOCK caches_lock;
     
     avl_node_t entry;               /* recorded in object */
    
@@ -140,27 +141,23 @@ typedef struct _ATTR_HANDLE
 
 typedef struct _OBJECT_HANDLE
 {
-    struct _INDEX_HANDLE *index;       /* 索引区操作句柄 */
+    struct _INDEX_HANDLE *index;       // index handle
     
-    INODE_RECORD inode;                /* 此树对应的inode */
-    INODE_RECORD old_inode;                /* 此树对应的inode */
+    INODE_RECORD inode;                // inode
+    INODE_RECORD old_inode;            // old inode
     
-    uint32_t obj_state;                     /* 描述状态变化 */
+    uint32_t obj_state;                // state
 
-    uint64_t objid;      // object id
-    uint64_t inode_no;           // inode no, also the position stored on disk
+    uint64_t objid;                    // object id
+    uint64_t inode_no;                 // inode no, also the position stored on disk
 
     char obj_name[OBJ_NAME_SIZE];
     
-    avl_node_t entry;               /* register in index handle */
+    avl_node_t entry;                  // register in index handle
 
     ATTR_INFO attr_info;
-    ATTR_HANDLE *attr;
-    DLIST_HEAD_S attr_hnd_list;       /* 本对象上已打开的属性句柄列表*/
-    
-    avl_tree_t obj_caches;
-    avl_tree_t obj_old_blocks;   /* 旧块列表 */
-    OS_RWLOCK caches_lock;
+    ATTR_HANDLE *attr;                 // default attr handle
+    DLIST_HEAD_S attr_hnd_list;        // all attr handle
 
     uint32_t obj_ref_cnt;
     
@@ -170,18 +167,18 @@ typedef struct _OBJECT_HANDLE
 typedef struct _INDEX_HANDLE
 {
     BLOCK_HANDLE_S *hnd;               // The block file handle
-    char name[INDEX_NAME_SIZE];      // 文件名
+    char name[INDEX_NAME_SIZE];        // index name
 
-    OBJECT_HANDLE *idlst_obj;
+    OBJECT_HANDLE *id_obj;
     //OBJECT_HANDLE *log_obj;
     //OBJECT_HANDLE *space_obj;
     
     uint32_t index_ref_cnt;
-    avl_tree_t obj_list;      /* all opened object */
+    avl_tree_t obj_list;              // all opened object
 
     avl_node_t entry;
     
-    OS_RWLOCK index_lock; /* lock */
+    OS_RWLOCK index_lock;             // lock
 } INDEX_HANDLE;
 
 extern int32_t index_block_read(struct _ATTR_HANDLE * tree, uint64_t vbn);
@@ -193,20 +190,15 @@ extern int32_t index_block_read(struct _ATTR_HANDLE * tree, uint64_t vbn);
     index_read_block_pingpong(index->hnd, &obj->inode.head, inode_no, INODE_MAGIC, INODE_SIZE);
 
 extern int32_t index_alloc_cache_and_block(struct _ATTR_INFO *attr_info, INDEX_BLOCK_CACHE **cache);
-int32_t index_release_all_free_caches_in_attr(struct _OBJECT_HANDLE *obj, struct _ATTR_INFO *attr_info);
-int32_t index_cancel_all_caches_in_attr(struct _OBJECT_HANDLE *obj, struct _ATTR_INFO *attr_info);
-void index_release_all_old_blocks_mem_in_attr(struct _OBJECT_HANDLE *obj, struct _ATTR_INFO *attr_info);
-void index_release_all_old_blocks_mem_in_obj(struct _OBJECT_HANDLE * obj);
-void index_release_all_old_blocks_in_attr(struct _OBJECT_HANDLE *obj, struct _ATTR_INFO *attr_info);
-void index_release_all_old_blocks_in_obj(struct _OBJECT_HANDLE * obj);
+int32_t index_release_all_free_caches_in_attr(struct _ATTR_INFO *attr_info);
+int32_t index_cancel_all_caches_in_attr(struct _ATTR_INFO *attr_info);
+
+extern void index_release_all_old_blocks_mem_in_attr(struct _ATTR_INFO *attr_info);
+extern void index_release_all_old_blocks_in_attr(struct _ATTR_INFO *attr_info);
 extern int32_t index_record_old_block(struct _ATTR_INFO *attr_info, uint64_t vbn);
-extern int32_t index_release_all_caches_in_attr(struct _OBJECT_HANDLE *obj,
-    struct _ATTR_INFO *attr_info);
-extern int32_t index_release_all_caches_in_obj(struct _OBJECT_HANDLE * obj);
-void index_release_all_free_caches_in_obj(struct _OBJECT_HANDLE * obj);
-int32_t index_release_all_caches_in_obj(struct _OBJECT_HANDLE * obj);
-int32_t index_flush_all_caches_in_obj(struct _OBJECT_HANDLE * obj);
-int32_t index_cancel_all_caches_in_obj(struct _OBJECT_HANDLE * obj);
+extern int32_t index_release_all_caches_in_attr(struct _ATTR_INFO *attr_info);
+
+extern int32_t index_flush_all_caches_in_obj(struct _OBJECT_HANDLE * obj);
 
 
 
@@ -215,7 +207,6 @@ int32_t index_cancel_all_caches_in_obj(struct _OBJECT_HANDLE * obj);
 extern int32_t IndexIBCacheFlush(struct _ATTR_HANDLE * obj);
 extern void IndexIBCacheFree(struct _ATTR_HANDLE * obj);
 extern void IndexIBCacheInvalidate(struct _ATTR_HANDLE * obj);
-extern void index_release_all_old_blocks_in_obj(struct _OBJECT_HANDLE * obj);
 int32_t index_flush_all_caches_in_attr(struct _ATTR_INFO * attr_info);
 
 

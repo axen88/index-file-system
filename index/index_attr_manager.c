@@ -78,6 +78,7 @@ void init_attr_info(struct _OBJECT_HANDLE *obj, ATTR_RECORD *attr_record, ATTR_I
     avl_create(&attr_info->attr_caches, (int (*)(const void *, const void*))compare_cache1, sizeof(INDEX_BLOCK_CACHE),
         OS_OFFSET(INDEX_BLOCK_CACHE, attr_entry));
     OS_RWLOCK_INIT(&attr_info->attr_lock);
+    OS_RWLOCK_INIT(&attr_info->caches_lock);
 }
 
 void get_attr_info(ATTR_INFO *attr_info)
@@ -108,8 +109,9 @@ int32_t put_attr_info(ATTR_INFO *attr_info)
     
     avl_destroy(&attr_info->attr_old_blocks);
 
-    index_release_all_caches_in_attr(attr_info->obj, attr_info);
+    index_release_all_caches_in_attr(attr_info);
     avl_destroy(&attr_info->attr_caches);
+    OS_RWLOCK_DESTROY(&attr_info->caches_lock);
 
     return 0;
 }
@@ -173,13 +175,13 @@ void index_cancel_attr_modification(ATTR_INFO *attr_info)
     }
 
     /* 释放旧块占用的内存 */
-    index_release_all_old_blocks_mem_in_attr(attr_info->obj, attr_info);
+    index_release_all_old_blocks_mem_in_attr(attr_info);
     
     /* 取消所有的脏cache数据 */
-    index_cancel_all_caches_in_attr(attr_info->obj, attr_info);
+    index_cancel_all_caches_in_attr(attr_info);
     
     /* 释放所有的空cache */
-    index_release_all_free_caches_in_attr(attr_info->obj, attr_info);
+    index_release_all_free_caches_in_attr(attr_info);
 
     /* 恢复属性记录 */
     memcpy(&attr_info->attr_record, &attr_info->old_attr_record,
@@ -210,10 +212,10 @@ int32_t index_commit_attr_modification(ATTR_INFO *attr_info)
     ret = flush_inode(attr_info->obj);
 
     /* 释放旧块 */
-    index_release_all_old_blocks_in_attr(attr_info->obj, attr_info);
+    index_release_all_old_blocks_in_attr(attr_info);
     
     /* 释放所有的空cache */
-    index_release_all_free_caches_in_attr(attr_info->obj, attr_info);
+    index_release_all_free_caches_in_attr(attr_info);
 
     /* 备份属性记录 */
     memcpy(&attr_info->old_attr_record, &attr_info->attr_record,

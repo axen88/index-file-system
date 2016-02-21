@@ -191,7 +191,7 @@ int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, NET_PARA_
     
     OS_PRINT(net, "\nCache info:\n");
     OS_PRINT(net, "-----------------------------------------\n");
-    avl_walk_all(&obj->obj_caches, (avl_walk_call_back)print_cache_info, net);
+    avl_walk_all(&obj->attr_info.attr_caches, (avl_walk_call_back)print_cache_info, net);
 
     return ret;
 }

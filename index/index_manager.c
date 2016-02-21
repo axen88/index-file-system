@@ -87,6 +87,19 @@ int32_t close_one_index(void *para, INDEX_HANDLE *index)
     return 0;
 }
 
+int32_t close_one_object(void *para, OBJECT_HANDLE *obj)
+{
+    ASSERT(NULL != obj);
+
+    if (obj->objid == OBJID_OBJ_ID)  // do not close the system object
+    {
+        return 0;
+    }
+
+    close_object(obj);
+    return 0;
+}
+
 void index_exit_system(void)
 {
     if (NULL == g_index_list)
@@ -202,7 +215,7 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
     tmp_index->hnd = hnd;
 
     /* create objid object */
-    ret = create_object(tmp_index, OBJID_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | COLLATE_BINARY, &tmp_index->idlst_obj);
+    ret = create_object(tmp_index, OBJID_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | COLLATE_BINARY, &tmp_index->id_obj);
     if (ret < 0)
     {
         LOG_ERROR("Create root object failed. name(%s)\n", index_name);
@@ -210,8 +223,8 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
         return ret;
     }
 
-    tmp_index->hnd->sb.idlst_obj_inode_no = tmp_index->idlst_obj->inode_no;
-    tmp_index->hnd->sb.idlst_objid = tmp_index->idlst_obj->inode.objid;
+    tmp_index->hnd->sb.idlst_obj_inode_no = tmp_index->id_obj->inode_no;
+    tmp_index->hnd->sb.idlst_objid = tmp_index->id_obj->inode.objid;
     ret = block_update_super_block(tmp_index->hnd);
     if (0 > ret)
     {
@@ -322,7 +335,7 @@ int32_t index_open_nolock(const char *index_name, uint64_t start_lba, INDEX_HAND
     tmp_index->hnd = hnd;
 
     /* open $OBJID object */
-    ret = open_object(tmp_index, tmp_index->hnd->sb.idlst_objid, tmp_index->hnd->sb.idlst_obj_inode_no, &tmp_index->idlst_obj);
+    ret = open_object(tmp_index, tmp_index->hnd->sb.idlst_objid, tmp_index->hnd->sb.idlst_obj_inode_no, &tmp_index->id_obj);
     if (ret < 0)
     {
         LOG_ERROR("Open root object failed. index_name(%s) start_lba(%lld) ret(%d)\n",
@@ -389,16 +402,19 @@ int32_t index_open(const char *index_name, uint64_t start_lba, INDEX_HANDLE **in
 void close_index(INDEX_HANDLE *index)
 {
     ASSERT(NULL != index);
-    
-    /* 关闭队列中所有的对象 */
-    if (index->idlst_obj != NULL)
+
+    // close all user object
+    avl_walk_all(&index->obj_list, (avl_walk_call_back)close_one_object, NULL);
+
+    // close system object
+    if (index->id_obj != NULL)
     {
-        (void)close_object(index->idlst_obj);
+        (void)close_object(index->id_obj);
     }
 
+    // close block manager system
     if (NULL != index->hnd)
     {
-        /* 关闭块管理系统 */
         (void)block_close(index->hnd);
         index->hnd = NULL;
     }
@@ -407,7 +423,6 @@ void close_index(INDEX_HANDLE *index)
     OS_RWLOCK_DESTROY(&index->index_lock);
     avl_remove(g_index_list, index);
 
-    /*  销毁内存 */
     OS_FREE(index);
     index = NULL;
 

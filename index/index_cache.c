@@ -62,18 +62,6 @@ int32_t compare_cache2(const uint64_t *vbn, INDEX_BLOCK_CACHE *cache_node)
     return 0;
 }
 
-
-/*******************************************************************************
-函数名称: alloc_cache
-功能说明: 分配cache
-输入参数:
-    obj: 要操作的树
-输出参数: 无
-返 回 值:
-    ==NULL: 分配失败
-    !=NULL: 分配成功的地址
-说    明: 无
-*******************************************************************************/
 INDEX_BLOCK_CACHE *alloc_cache(ATTR_INFO *attr_info, uint64_t vbn)
 {
     INDEX_BLOCK_CACHE *cache = NULL;
@@ -125,28 +113,15 @@ int32_t index_alloc_cache_and_block(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE **ca
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 
-    OS_RWLOCK_WRLOCK(&attr_info->obj->caches_lock);
+    OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
     avl_add(&attr_info->attr_caches, tmp_cache);
-    avl_add(&attr_info->obj->obj_caches, tmp_cache);
-    OS_RWLOCK_WRUNLOCK(&attr_info->obj->caches_lock);
+    OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
     
     *cache = tmp_cache;
 
     return 0;
 }
 
-/*******************************************************************************
-函数名称: find_free_cache
-功能说明: 查找free cache
-输入参数:
-    entry : cache所在的entry
-    para: 查找cache的参数
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t find_free_cache(INDEX_BLOCK_CACHE **target_cache, INDEX_BLOCK_CACHE *cache)
 {
     ASSERT(NULL != target_cache);
@@ -161,13 +136,13 @@ int32_t find_free_cache(INDEX_BLOCK_CACHE **target_cache, INDEX_BLOCK_CACHE *cac
     return 0;
 }
 
-INDEX_BLOCK_CACHE *index_find_free_cache(OBJECT_HANDLE * obj)
+INDEX_BLOCK_CACHE *index_find_free_cache(ATTR_INFO *attr_info)
 {
-    INDEX_BLOCK_CACHE *cache = NULL;
+    INDEX_BLOCK_CACHE *ibc = NULL;
     
-    (void)avl_walk_all(&obj->obj_caches, (avl_walk_call_back)find_free_cache, &cache);
+    (void)avl_walk_all(&attr_info->attr_caches, (avl_walk_call_back)find_free_cache, &ibc);
 
-    return cache;
+    return ibc;
 }
 
 int32_t flush_cache_in_attr(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
@@ -201,47 +176,9 @@ int32_t flush_cache_in_attr(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
 
 int32_t index_flush_all_caches_in_attr(ATTR_INFO * attr_info)
 {
-    OS_RWLOCK_WRLOCK(&attr_info->obj->caches_lock);
+    OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
     avl_walk_all(&attr_info->attr_caches, (avl_walk_call_back)flush_cache_in_attr, attr_info);
-    OS_RWLOCK_WRUNLOCK(&attr_info->obj->caches_lock);
-
-    return 0;
-}
-
-int32_t flush_cache_in_obj(OBJECT_HANDLE *obj, INDEX_BLOCK_CACHE *cache)
-{
-    int32_t ret = 0;
-
-    ASSERT(NULL != obj);
-    ASSERT(NULL != cache);
-
-    if (DIRTY != cache->state)
-    {
-        return 0;
-    }
-
-    ret = index_update_block_fixup(obj->index->hnd, &cache->ib->head,
-        cache->vbn);
-    if (ret != (int32_t)cache->ib->head.alloc_size)
-    {
-        LOG_ERROR("Update index block failed. name(%s) vbn(%lld) size(%d) ret(%d)\n",
-            obj->obj_name, cache->vbn, cache->ib->head.alloc_size, ret);
-        return -INDEX_ERR_UPDATE;
-    }
-
-    LOG_DEBUG("Update index block success. name(%s) vbn(%lld) size(%d)\n",
-            obj->obj_name, cache->vbn, cache->ib->head.alloc_size);
-    
-    cache->state = CLEAN;
-
-    return 0;
-}
-
-int32_t index_flush_all_caches_in_obj(OBJECT_HANDLE * obj)
-{
-    OS_RWLOCK_WRLOCK(&obj->caches_lock);
-    avl_walk_all(&(obj)->obj_caches, (avl_walk_call_back)flush_cache_in_obj, obj);
-    OS_RWLOCK_WRUNLOCK(&obj->caches_lock);
+    OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
 
     return 0;
 }
@@ -257,7 +194,6 @@ int32_t release_free_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
     }
 
     avl_remove(&attr_info->attr_caches, cache);
-    avl_remove(&attr_info->obj->obj_caches, cache);
     
     OS_FREE(cache->ib);
     cache->ib = NULL;
@@ -267,20 +203,13 @@ int32_t release_free_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
     return 0;
 }
 
-int32_t index_release_all_free_caches_in_attr(OBJECT_HANDLE *obj, ATTR_INFO *attr_info)
+int32_t index_release_all_free_caches_in_attr(ATTR_INFO *attr_info)
 {
-    OS_RWLOCK_WRLOCK(&obj->caches_lock);
+    OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
     avl_walk_all(&attr_info->attr_caches, (avl_walk_call_back)release_free_cache, attr_info);
-    OS_RWLOCK_WRUNLOCK(&obj->caches_lock);
+    OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
 
     return 0;
-}
-
-void index_release_all_free_caches_in_obj(OBJECT_HANDLE * obj)
-{
-    index_release_all_free_caches_in_attr(obj, &obj->attr_info);
-
-    return;
 }
 
 int32_t release_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
@@ -295,7 +224,6 @@ int32_t release_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
     }
 
     avl_remove(&attr_info->attr_caches, cache);
-    avl_remove(&attr_info->obj->obj_caches, cache);
     
     OS_FREE(cache->ib);
     cache->ib = NULL;
@@ -305,18 +233,11 @@ int32_t release_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
     return 0;
 }
 
-int32_t index_release_all_caches_in_attr(OBJECT_HANDLE *obj, ATTR_INFO *attr_info)
+int32_t index_release_all_caches_in_attr(ATTR_INFO *attr_info)
 {
-    OS_RWLOCK_WRLOCK(&obj->caches_lock);
+    OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
     avl_walk_all(&attr_info->attr_caches, (avl_walk_call_back)release_cache, attr_info);
-    OS_RWLOCK_WRUNLOCK(&obj->caches_lock);
-
-    return 0;
-}
-
-int32_t index_release_all_caches_in_obj(OBJECT_HANDLE * obj)
-{
-    index_release_all_caches_in_attr(obj, &obj->attr_info);
+    OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
 
     return 0;
 }
@@ -344,18 +265,11 @@ int32_t cancel_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
     return 0;
 }
 
-int32_t index_cancel_all_caches_in_attr(OBJECT_HANDLE *obj, ATTR_INFO *attr_info)
+int32_t index_cancel_all_caches_in_attr(ATTR_INFO *attr_info)
 {
-    OS_RWLOCK_WRLOCK(&obj->caches_lock);
+    OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
     avl_walk_all(&attr_info->attr_caches, (avl_walk_call_back)cancel_cache, attr_info);
-    OS_RWLOCK_WRUNLOCK(&obj->caches_lock);
-
-    return 0;
-}
-
-int32_t index_cancel_all_caches_in_obj(OBJECT_HANDLE * obj)
-{
-    index_cancel_all_caches_in_attr(obj, &obj->attr_info);
+    OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
 
     return 0;
 }
@@ -374,25 +288,17 @@ int32_t release_old_block(ATTR_INFO *attr_info, INDEX_OLD_BLOCK *old_blk)
     }
 
     avl_remove(&attr_info->attr_old_blocks, old_blk);
-    avl_remove(&attr_info->obj->obj_old_blocks, old_blk);
 
     OS_FREE(old_blk);
 
     return 0;
 }
 
-void index_release_all_old_blocks_in_attr(OBJECT_HANDLE *obj, ATTR_INFO *attr_info)
+void index_release_all_old_blocks_in_attr(ATTR_INFO *attr_info)
 {
-    OS_RWLOCK_WRLOCK(&obj->caches_lock);
+    OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
     avl_walk_all(&attr_info->attr_old_blocks, (avl_walk_call_back)release_old_block, attr_info);
-    OS_RWLOCK_WRUNLOCK(&obj->caches_lock);
-
-    return;
-}
-
-void index_release_all_old_blocks_in_obj(OBJECT_HANDLE * obj)
-{
-    index_release_all_old_blocks_in_attr(obj, &obj->attr_info);
+    OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
 
     return;
 }
@@ -405,76 +311,57 @@ int32_t release_old_block_mem(ATTR_INFO *attr_info, INDEX_OLD_BLOCK *old_blk)
     ASSERT(NULL != old_blk);
 
     avl_remove(&attr_info->attr_old_blocks, old_blk);
-    avl_remove(&attr_info->obj->obj_old_blocks, old_blk);
 
     OS_FREE(old_blk);
 
     return 0;
 }
 
-void index_release_all_old_blocks_mem_in_attr(OBJECT_HANDLE *obj, ATTR_INFO *attr_info)
+void index_release_all_old_blocks_mem_in_attr(ATTR_INFO *attr_info)
 {
-    OS_RWLOCK_WRLOCK(&obj->caches_lock);
+    OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
     avl_walk_all(&attr_info->attr_old_blocks, (avl_walk_call_back)release_old_block_mem, attr_info);
-    OS_RWLOCK_WRUNLOCK(&obj->caches_lock);
+    OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
 
     return;
 }
 
-void index_release_all_old_blocks_mem_in_obj(OBJECT_HANDLE * obj)
-{
-    index_release_all_old_blocks_mem_in_attr(obj, &obj->attr_info);
-
-    return;
-}
-
-
-/*******************************************************************************
-函数名称: index_block_read
-功能说明: 读取指定位置的索引块
-输入参数:
-    tree: 要操作的树
-    vbn  : 要读取的位置
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
-int32_t index_block_read(ATTR_HANDLE * tree, uint64_t vbn)
+int32_t index_block_read(ATTR_HANDLE *attr, uint64_t vbn)
 {
     int32_t ret = 0;
     INDEX_BLOCK *ib = NULL;
     INDEX_BLOCK_CACHE *cache = NULL;
     OBJECT_HANDLE *obj = NULL;
     avl_index_t where = 0;
+    ATTR_INFO *attr_info;
 
     /* 检查输入参数 */
-    ASSERT(NULL != tree);
+    ASSERT(NULL != attr);
     
-    obj = tree->attr_info->obj;
+    attr_info = attr->attr_info;
+    obj = attr_info->obj;
 
-    if (tree->cache->vbn == vbn)
+    if (attr->cache->vbn == vbn)
     {   // 就是当前操作的cache
         return 0;
     }
 
-    OS_RWLOCK_WRLOCK(&obj->caches_lock);
-    cache = avl_find(&obj->obj_caches, (int (*)(const void*, void *))compare_cache2, &vbn, &where);
+    OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
+    cache = avl_find(&attr_info->attr_caches, (int (*)(const void*, void *))compare_cache2, &vbn, &where);
     if (NULL != cache)
     { /* cache命中 */
-        OS_RWLOCK_WRUNLOCK(&obj->caches_lock);
-        tree->cache = cache;
+        OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
+        attr->cache = cache;
         return 0;
     }
 
     //cache = index_find_free_cache(obj);
     //if (NULL == cache)
     //{ /* 未找到了未使用的cache，那么就申请新cache */
-        cache = alloc_cache(tree->attr_info, vbn);
+        cache = alloc_cache(attr_info, vbn);
         if (NULL == cache)
         {
-            OS_RWLOCK_WRUNLOCK(&obj->caches_lock);
+            OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
             LOG_ERROR("Allocate cache failed.\n");
             return -INDEX_ERR_ALLOCATE_MEMORY;
         }
@@ -486,10 +373,9 @@ int32_t index_block_read(ATTR_HANDLE * tree, uint64_t vbn)
     //    cache->vbn = vbn;
     //}
     
-    avl_add(&tree->attr_info->attr_caches, cache);
-    avl_add(&obj->obj_caches, cache);
+    avl_add(&attr->attr_info->attr_caches, cache);
 
-    tree->cache = cache;
+    attr->cache = cache;
     ib = cache->ib;
 
     ret = index_read_block_fixup(obj->index->hnd, &ib->head, vbn,
@@ -498,32 +384,19 @@ int32_t index_block_read(ATTR_HANDLE * tree, uint64_t vbn)
     {   // Read the index block
         LOG_ERROR("Read index block failed. name(%s) ib(%p) vbn(%lld) size(%d) ret(%d)\n",
             obj->obj_name, ib, vbn, obj->index->hnd->sb.block_size, ret);
-        OS_RWLOCK_WRUNLOCK(&obj->caches_lock);
+        OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
         return ret;
     }
 
     LOG_DEBUG("Read index block success. name(%s) ib(%p) vbn(%lld) size(%d)\n",
         obj->obj_name, ib, vbn, obj->index->hnd->sb.block_size);
 
-    tree->cache->state = CLEAN;
-    OS_RWLOCK_WRUNLOCK(&obj->caches_lock);
+    attr->cache->state = CLEAN;
+    OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
 
     return 0;
 }
 
-/*******************************************************************************
-函数名称: index_record_old_block
-功能说明: 将块记录到指定的目标块队列
-输入参数:
-    vbn   : 要记录的块的起始地址
-    blk_cnt: 要记录的块数目
-输出参数:
-    q    : 目标块队列
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_record_old_block(ATTR_INFO *attr_info, uint64_t vbn)
 {
     INDEX_OLD_BLOCK *old_blk = NULL;
@@ -540,10 +413,9 @@ int32_t index_record_old_block(ATTR_INFO *attr_info, uint64_t vbn)
 
     old_blk->vbn = vbn;
 
-    OS_RWLOCK_WRLOCK(&attr_info->obj->caches_lock);
+    OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
     avl_add(&attr_info->attr_old_blocks, old_blk);
-    avl_add(&attr_info->obj->obj_old_blocks, old_blk);
-    OS_RWLOCK_WRUNLOCK(&attr_info->obj->caches_lock);
+    OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
     
     return 0;
 }

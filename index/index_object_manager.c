@@ -115,13 +115,8 @@ int32_t get_object_resource(INDEX_HANDLE *index, uint64_t objid, OBJECT_HANDLE *
     tmp_obj->index = index;
     tmp_obj->objid = objid;
     dlist_init_head(&tmp_obj->attr_hnd_list);
-    avl_create(&tmp_obj->obj_caches, (int (*)(const void *, const void*))compare_cache1, sizeof(INDEX_BLOCK_CACHE),
-        OS_OFFSET(INDEX_BLOCK_CACHE, obj_entry));
-    avl_create(&tmp_obj->obj_old_blocks, (int (*)(const void *, const void*))compare_old_block1, sizeof(INDEX_OLD_BLOCK),
-        OS_OFFSET(INDEX_OLD_BLOCK, obj_entry));
     tmp_obj->obj_ref_cnt = 1;
     OS_RWLOCK_INIT(&tmp_obj->obj_lock);
-    OS_RWLOCK_INIT(&tmp_obj->caches_lock);
 
     avl_add(&index->obj_list, tmp_obj);
     
@@ -130,39 +125,17 @@ int32_t get_object_resource(INDEX_HANDLE *index, uint64_t objid, OBJECT_HANDLE *
     return 0;
 }
 
-int32_t put_all_attr(OBJECT_HANDLE *obj)
-{
-    return 0;
-}
-
 void put_object_resource(OBJECT_HANDLE *obj)
 {
-    /* 检查是否为脏 */
-    
-    put_all_attr(obj);
-    
-    avl_destroy(&obj->obj_caches);
-    avl_destroy(&obj->obj_old_blocks);
-
-    OS_RWLOCK_DESTROY(&obj->caches_lock);
     OS_RWLOCK_DESTROY(&obj->obj_lock);
+    avl_remove(&obj->index->obj_list, obj);
 
     OS_FREE(obj);
 
     return;
 }
 
-int32_t close_extra_attr(void *para, DLIST_ENTRY_S *entry)
-{
-    ATTR_HANDLE *attr = NULL;
-
-    attr = OS_CONTAINER(entry, ATTR_HANDLE, entry);
-
-    return index_close_attr(attr);
-
-}
-
-int32_t close_base_attr(void *para, DLIST_ENTRY_S *entry)
+int32_t close_one_attr(void *para, DLIST_ENTRY_S *entry)
 {
     ATTR_HANDLE *attr = NULL;
 
@@ -205,9 +178,8 @@ int32_t flush_inode(OBJECT_HANDLE * obj)
 
 int32_t close_all_attr(OBJECT_HANDLE *obj)
 {
-    dlist_walk_all(&obj->attr_hnd_list, close_extra_attr, NULL);
-    dlist_walk_all(&obj->attr_hnd_list, close_base_attr, NULL);
-    index_close_attr(obj->attr);
+    dlist_walk_all(&obj->attr_hnd_list, close_one_attr, NULL);
+    obj->attr = NULL; // already closed
     
     return 0;
 }
@@ -314,24 +286,14 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
     return 0;
 }
 
-int32_t close_one_object(OBJECT_HANDLE *obj)
+int32_t close_object(OBJECT_HANDLE *obj)
 {
     index_commit_object_modification(obj);
     close_all_attr(obj);
 
-    //index_release_all_caches_in_obj(obj);
+    index_release_all_caches_in_attr(&obj->attr_info);
     
     put_object_resource(obj);
-
-    return 0;
-}
-
-int32_t close_object(OBJECT_HANDLE *obj)
-{
-    OBJECT_HANDLE *cur_obj = obj;
-    OBJECT_HANDLE *parent_obj = obj;
-    
-    close_one_object(obj);
 
     return 0;
 }
@@ -404,7 +366,7 @@ int32_t index_create_object_nolock(INDEX_HANDLE *index, uint64_t objid, uint16_t
         return -INDEX_ERR_OBJ_EXIST;
     }
 
-    ret = search_key_internal(index->idlst_obj->attr, &objid, sizeof(uint64_t));
+    ret = search_key_internal(index->id_obj->attr, &objid, sizeof(uint64_t));
     if (0 <= ret)
     {
         LOG_ERROR("The obj already exist. obj(%p) objid(%lld) ret(%d)\n", obj, objid, ret);
@@ -424,7 +386,7 @@ int32_t index_create_object_nolock(INDEX_HANDLE *index, uint64_t objid, uint16_t
         return ret;
     }
 
-    ret = index_insert_key_nolock(index->idlst_obj->attr, &objid, sizeof(uint64_t),
+    ret = index_insert_key_nolock(index->id_obj->attr, &objid, sizeof(uint64_t),
         &tmp_obj->inode_no, VBN_SIZE);
     if (ret < 0)
     {
@@ -497,7 +459,7 @@ int32_t index_open_object_nolock(struct _INDEX_HANDLE *index, uint64_t objid, ui
         return 0;
     }
 
-    attr = index->idlst_obj->attr;
+    attr = index->id_obj->attr;
     
     ret = search_key_internal(attr, &objid, sizeof(uint64_t));
     if (0 > ret)
@@ -574,7 +536,7 @@ int32_t recover_attr_record(ATTR_INFO *attr_info)
 
 void index_cancel_object_modification(OBJECT_HANDLE *obj)
 {
-    index_cancel_all_caches_in_obj(obj);
+    index_cancel_all_caches_in_attr(&obj->attr_info);
 
     /* 恢复所有属性记录到修改之前的状态 */
     recover_attr_record(&obj->attr_info);
@@ -583,9 +545,9 @@ void index_cancel_object_modification(OBJECT_HANDLE *obj)
     memcpy(&obj->inode, &obj->old_inode, sizeof(INODE_RECORD));
     INODE_CLR_DIRTY(obj);
 
-    index_release_all_old_blocks_mem_in_obj(obj);
+    index_release_all_old_blocks_mem_in_attr(&obj->attr_info);
 
-    index_release_all_free_caches_in_obj(obj);
+    index_release_all_free_caches_in_attr(&obj->attr_info);
     
     return;
 }
@@ -609,7 +571,7 @@ int32_t index_commit_object_modification(OBJECT_HANDLE *obj)
     validate_attr(&obj->attr_info);
 
     /* 将cache中的脏数据下盘 */
-    ret = index_flush_all_caches_in_obj(obj);
+    ret = index_flush_all_caches_in_attr(&obj->attr_info);
     if (0 > ret)
     {
         LOG_ERROR("Flush index blocks failed. obj_name(%s) ret(%d)\n", obj->obj_name, ret);
@@ -627,9 +589,9 @@ int32_t index_commit_object_modification(OBJECT_HANDLE *obj)
     backup_attr_record(&obj->attr_info);
 
     /* 删除修改过的块对应的旧块，因为前面已经成功了，所以这里是否成功没关系 */
-    index_release_all_old_blocks_in_obj(obj);
+    index_release_all_old_blocks_in_attr(&obj->attr_info);
 
-    index_release_all_free_caches_in_obj(obj);
+    index_release_all_free_caches_in_attr(&obj->attr_info);
 
     return 0;
 }
