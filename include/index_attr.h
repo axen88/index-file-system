@@ -55,7 +55,7 @@ extern int32_t index_truncate_attr(ATTR_HANDLE *attr, uint64_t new_size);
 extern void cancel_attr_modification(ATTR_INFO *attr_info);
 
 /* 提交属性的修改 */
-extern int32_t index_commit_attr_modification(ATTR_INFO *attr_info);
+extern int32_t commit_attr_modification(ATTR_INFO *attr_info);
 
 /* 打开属性 */
 extern int32_t index_open_attr(struct _OBJECT_HANDLE *obj, ATTR_HANDLE **attr);

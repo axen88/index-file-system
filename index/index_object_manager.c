@@ -504,7 +504,7 @@ OBJECT_HANDLE *index_get_object_handle(INDEX_HANDLE *index, uint64_t objid)
     return tmp_obj;
 }
 
-void index_cancel_object_modification(OBJECT_HANDLE *obj)
+void cancel_object_modification(OBJECT_HANDLE *obj)
 {
     ASSERT(obj != NULL);
 
@@ -523,7 +523,7 @@ int32_t commit_object_modification(OBJECT_HANDLE *obj)
     
     ASSERT(obj != NULL);
 
-    return index_commit_attr_modification(&obj->attr_info);
+    return commit_attr_modification(&obj->attr_info);
 }
 
 int32_t index_close_object_nolock(OBJECT_HANDLE *obj)

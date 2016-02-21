@@ -112,7 +112,7 @@ void destroy_attr_info(ATTR_INFO *attr_info)
 {
     LOG_INFO("Now put attr info. obj_name(%s)\n", attr_info->obj->obj_name);
 
-    index_commit_attr_modification(attr_info);
+    commit_attr_modification(attr_info);
     
     avl_destroy(&attr_info->attr_old_blocks);
 
@@ -221,7 +221,7 @@ void cancel_attr_modification(ATTR_INFO *attr_info)
     return;
 }
 
-int32_t index_commit_attr_modification(ATTR_INFO *attr_info)
+int32_t commit_attr_modification(ATTR_INFO *attr_info)
 {
     int32_t ret = 0;
     
