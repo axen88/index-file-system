@@ -155,13 +155,13 @@ int32_t flush_cache_in_attr(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
         cache->vbn);
     if (ret != (int32_t)cache->ib->head.alloc_size)
     {
-        LOG_ERROR("Update index block failed. name(%s) vbn(%lld) size(%d) ret(%d)\n",
-            attr_info->obj->obj_name, cache->vbn, cache->ib->head.alloc_size, ret);
+        LOG_ERROR("Update index block failed. objid(%lld) vbn(%lld) size(%d) ret(%d)\n",
+            attr_info->obj->objid, cache->vbn, cache->ib->head.alloc_size, ret);
         return -INDEX_ERR_UPDATE;
     }
 
-    LOG_DEBUG("Update index block success. name(%s) vbn(%lld) size(%d)\n",
-            attr_info->obj->obj_name, cache->vbn, cache->ib->head.alloc_size);
+    LOG_DEBUG("Update index block success. objid(%lld) vbn(%lld) size(%d)\n",
+            attr_info->obj->objid, cache->vbn, cache->ib->head.alloc_size);
     
     cache->state = CLEAN;
 
@@ -184,8 +184,8 @@ int32_t release_free_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
 
     if (EMPTY != cache->state)
     {
-        LOG_ERROR("The cache is still dirty. name(%s) vbn(%lld)\n",
-            attr_info->obj->obj_name, cache->vbn);
+        LOG_ERROR("The cache is still dirty. objid(%lld) vbn(%lld)\n",
+            attr_info->obj->objid, cache->vbn);
         return 0;
     }
 
@@ -215,8 +215,8 @@ int32_t release_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
 
     if (DIRTY == cache->state)
     {
-        LOG_ERROR("The dirty cache will be released. name(%s) vbn(%lld)\n",
-            attr_info->obj->obj_name, cache->vbn);
+        LOG_ERROR("The dirty cache will be released. objid(%lld) vbn(%lld)\n",
+            attr_info->obj->objid, cache->vbn);
     }
 
     avl_remove(&attr_info->attr_caches, cache);
@@ -377,14 +377,14 @@ int32_t index_block_read(ATTR_HANDLE *attr, uint64_t vbn)
         INDEX_MAGIC, obj->index->hnd->sb.block_size);
     if (ret < 0)
     {   // Read the index block
-        LOG_ERROR("Read index block failed. name(%s) ib(%p) vbn(%lld) size(%d) ret(%d)\n",
-            obj->obj_name, ib, vbn, obj->index->hnd->sb.block_size, ret);
+        LOG_ERROR("Read index block failed. objid(%lld) ib(%p) vbn(%lld) size(%d) ret(%d)\n",
+            obj->objid, ib, vbn, obj->index->hnd->sb.block_size, ret);
         OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
         return ret;
     }
 
-    LOG_DEBUG("Read index block success. name(%s) ib(%p) vbn(%lld) size(%d)\n",
-        obj->obj_name, ib, vbn, obj->index->hnd->sb.block_size);
+    LOG_DEBUG("Read index block success. objid(%lld) ib(%p) vbn(%lld) size(%d)\n",
+        obj->objid, ib, vbn, obj->index->hnd->sb.block_size);
 
     attr->cache->state = CLEAN;
     OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);

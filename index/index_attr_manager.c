@@ -87,9 +87,15 @@ void validate_attr(ATTR_INFO *attr_info)
     return;
 }
 
-void init_attr_info(struct _OBJECT_HANDLE *obj, ATTR_INFO *attr_info)
+void init_attr_info(struct _OBJECT_HANDLE *obj)
 {
-    ATTR_RECORD *attr_record = INODE_GET_ATTR(&obj->inode);
+    ATTR_RECORD *attr_record;
+    ATTR_INFO *attr_info;
+    
+    ASSERT(obj != NULL);
+
+    attr_record = INODE_GET_ATTR(&obj->inode);
+    attr_info = &obj->attr_info;
 
     memset(attr_info, 0, sizeof(ATTR_INFO));
 
@@ -110,7 +116,7 @@ void init_attr_info(struct _OBJECT_HANDLE *obj, ATTR_INFO *attr_info)
 
 void destroy_attr_info(ATTR_INFO *attr_info)
 {
-    LOG_INFO("Now put attr info. obj_name(%s)\n", attr_info->obj->obj_name);
+    LOG_INFO("Now destroy attr info. objid(%lld)\n", attr_info->obj->objid);
 
     commit_attr_modification(attr_info);
     
@@ -123,8 +129,8 @@ void destroy_attr_info(ATTR_INFO *attr_info)
 
 int32_t index_open_attr(struct _OBJECT_HANDLE *obj, ATTR_HANDLE **attr)
 {
-    ATTR_HANDLE *tmp_attr = NULL;
-    int32_t ret = 0;
+    ATTR_HANDLE *tmp_attr;
+    ATTR_INFO *attr_info;
 
     ASSERT(obj != NULL);
     ASSERT(attr != NULL);
@@ -139,14 +145,16 @@ int32_t index_open_attr(struct _OBJECT_HANDLE *obj, ATTR_HANDLE **attr)
 
     memset(tmp_attr, 0, sizeof(ATTR_HANDLE));
 
-    OS_RWLOCK_WRLOCK(&obj->attr_info.attr_lock);
+    attr_info = &obj->attr_info;
 
-    obj->attr_info.attr_ref_cnt++;
-	tmp_attr->attr_info = &obj->attr_info;
-	dlist_add_tail(&obj->attr_info.attr_hnd_list, &tmp_attr->entry);
+    OS_RWLOCK_WRLOCK(&attr_info->attr_lock);
+
+    attr_info->attr_ref_cnt++;
+	tmp_attr->attr_info = attr_info;
+	dlist_add_tail(&attr_info->attr_hnd_list, &tmp_attr->entry);
 
     *attr = tmp_attr;
-    OS_RWLOCK_WRUNLOCK(&obj->attr_info.attr_lock);
+    OS_RWLOCK_WRUNLOCK(&attr_info->attr_lock);
 
     return 0;
 }
@@ -161,7 +169,7 @@ int32_t index_close_attr(ATTR_HANDLE *attr)
 
     OS_RWLOCK_WRLOCK(&attr_info->attr_lock);
     
-    if (attr->attr_info->attr_ref_cnt == 0)
+    if (attr_info->attr_ref_cnt == 0)
     {
         OS_RWLOCK_WRUNLOCK(&attr_info->attr_lock);
         LOG_EMERG("Too many times put attr info.\n");
@@ -169,13 +177,12 @@ int32_t index_close_attr(ATTR_HANDLE *attr)
     }
     else
     {
-        attr->attr_info->attr_ref_cnt--;
+        attr_info->attr_ref_cnt--;
     }
     
-    dlist_remove_entry(&attr->attr_info->attr_hnd_list, &attr->entry);
-    OS_FREE(attr);
-
+    dlist_remove_entry(&attr_info->attr_hnd_list, &attr->entry);
     OS_RWLOCK_WRUNLOCK(&attr_info->attr_lock);
+    OS_FREE(attr);
     
     return 0;
 }
@@ -214,10 +221,6 @@ void cancel_attr_modification(ATTR_INFO *attr_info)
     recover_attr_record(attr_info);
     ATTR_INFO_CLR_DIRTY(attr_info);
         
-    // recover obj inode
-    recover_obj_inode(attr_info->obj);
-    INODE_CLR_DIRTY(attr_info->obj);
-
     return;
 }
 
@@ -234,8 +237,8 @@ int32_t commit_attr_modification(ATTR_INFO *attr_info)
     ret = index_flush_all_caches_in_attr(attr_info);
     if (0 > ret)
     {
-        LOG_ERROR("Flush index block cache failed. obj_name(%s) ret(%d)\n",
-            attr_info->obj->obj_name, ret);
+        LOG_ERROR("Flush index block cache failed. objid(%lld) ret(%d)\n",
+            attr_info->obj->objid, ret);
         return ret;
     }
         
@@ -243,8 +246,8 @@ int32_t commit_attr_modification(ATTR_INFO *attr_info)
     ret = flush_inode(attr_info->obj);
     if (0 > ret)
     {
-        LOG_ERROR("Flush index inode failed. obj_name(%s) ret(%d)\n",
-            attr_info->obj->obj_name, ret);
+        LOG_ERROR("Flush index inode failed. objid(%lld) ret(%d)\n",
+            attr_info->obj->objid, ret);
         return ret;
     }
 

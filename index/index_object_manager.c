@@ -139,13 +139,13 @@ int32_t flush_inode(OBJECT_HANDLE * obj)
     ret = INDEX_UPDATE_INODE(obj);
     if (0 > ret)
     {
-        LOG_ERROR("Update inode failed. name(%s) inode(%p) objid(%lld) ret(%d)\n",
-            obj->obj_name, obj->inode, obj->inode.objid, ret);
+        LOG_ERROR("Update inode failed. objid(%lld) inode(%p) objid(%lld) ret(%d)\n",
+            obj->objid, obj->inode, obj->inode.objid, ret);
         return ret;
     }
 
-    LOG_DEBUG("Update inode success. name(%s) inode(%p) objid(%lld)\n",
-        obj->obj_name, obj->inode, obj->inode.objid);
+    LOG_DEBUG("Update inode success. objid(%lld) inode(%p) objid(%lld)\n",
+        obj->objid, obj->inode, obj->inode.objid);
 
     // set recover dot
     backup_obj_inode(obj);
@@ -229,13 +229,13 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
         memset(attr_record->content, 0, ATTR_RECORD_CONTENT_SIZE);
     }
     
-    init_attr_info(tmp_obj, &tmp_obj->attr_info);
+    init_attr_info(tmp_obj);
     ret = index_open_attr(tmp_obj, &tmp_obj->attr);
     if (ret < 0)
     {
         (void)block_free(index->hnd, inode_no, 1);
         put_object_resource(tmp_obj);
-        LOG_ERROR("Open attr failed. obj_name(%s) ret(%d)\n", tmp_obj->obj_name, ret);
+        LOG_ERROR("Open attr failed. objid(%lld) ret(%d)\n", tmp_obj->objid, ret);
         return ret;
     }
 
@@ -305,12 +305,12 @@ int32_t open_object(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, OBJE
     strncpy(tmp_obj->obj_name, tmp_obj->inode.name, tmp_obj->inode.name_size);
 
     /* open attr */
-	init_attr_info(tmp_obj, &tmp_obj->attr_info);
+	init_attr_info(tmp_obj);
     ret = index_open_attr(tmp_obj, &tmp_obj->attr);
     if (ret < 0)
     {
         put_object_resource(tmp_obj);
-        LOG_ERROR("Open attr failed. obj_name(%s) ret(%d)\n", tmp_obj->obj_name, ret);
+        LOG_ERROR("Open attr failed. objid(%lld) ret(%d)\n", tmp_obj->objid, ret);
         return ret;
     }
 
@@ -508,11 +508,12 @@ void cancel_object_modification(OBJECT_HANDLE *obj)
 {
     ASSERT(obj != NULL);
 
-    // recover the inode content
+    cancel_attr_modification(&obj->attr_info);
+    
+    // recover obj inode
     recover_obj_inode(obj);
     INODE_CLR_DIRTY(obj);
 
-    cancel_attr_modification(&obj->attr_info);
     
     return;
 }

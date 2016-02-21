@@ -61,7 +61,7 @@ extern int32_t commit_attr_modification(ATTR_INFO *attr_info);
 extern int32_t index_open_attr(struct _OBJECT_HANDLE *obj, ATTR_HANDLE **attr);
 // update the attr root cache into inode
 void validate_attr(ATTR_INFO *attr_info);
-extern void init_attr_info(struct _OBJECT_HANDLE *obj, ATTR_INFO *attr_info);
+extern void init_attr_info(struct _OBJECT_HANDLE *obj);
 extern void destroy_attr_info(ATTR_INFO *attr_info);
 
 

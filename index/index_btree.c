@@ -477,7 +477,7 @@ int32_t walk_tree(ATTR_HANDLE *tree, uint8_t flags)
 
     if ((tree->attr_info->attr_record.attr_flags & FLAG_TABLE) == 0)
     {
-        LOG_ERROR("The attr is resident. obj_name(%s)\n", tree->attr_info->obj->obj_name);
+        LOG_ERROR("The attr is resident. objid(%lld)\n", tree->attr_info->obj->objid);
         return -INDEX_ERR_ATTR_RESIDENT;
     }
 
@@ -656,7 +656,7 @@ int32_t index_search_key_nolock(ATTR_HANDLE *tree, const void *key,
 
     if ((tree->attr_info->attr_record.attr_flags & FLAG_TABLE) == 0)
     {
-        LOG_ERROR("The attr is resident. obj_name(%s)\n", tree->attr_info->obj->obj_name);
+        LOG_ERROR("The attr is resident. objid(%lld)\n", tree->attr_info->obj->objid);
         return -INDEX_ERR_ATTR_RESIDENT;
     }
 
@@ -1373,7 +1373,7 @@ int32_t index_remove_key_nolock(ATTR_HANDLE *tree, const void *key,
 
     if ((tree->attr_info->attr_record.attr_flags & FLAG_TABLE) == 0)
     {
-        LOG_ERROR("The attr is resident. obj_name(%s)\n", tree->attr_info->obj->obj_name);
+        LOG_ERROR("The attr is resident. objid(%lld)\n", tree->attr_info->obj->objid);
         return -INDEX_ERR_ATTR_RESIDENT;
     }
 
@@ -1441,7 +1441,7 @@ int32_t index_insert_key_nolock(ATTR_HANDLE *tree, const void *key,
 
     if ((tree->attr_info->attr_record.attr_flags & FLAG_TABLE) == 0)
     {
-        LOG_ERROR("The attr is resident. obj_name(%s)\n", tree->attr_info->obj->obj_name);
+        LOG_ERROR("The attr is resident. objid(%lld)\n", tree->attr_info->obj->objid);
         return -INDEX_ERR_ATTR_RESIDENT;
     }
 
@@ -1456,7 +1456,7 @@ int32_t index_insert_key_nolock(ATTR_HANDLE *tree, const void *key,
     
     if (-INDEX_ERR_KEY_NOT_FOUND != ret)
     {
-        LOG_ERROR("Search key failed. obj_name(%s) ret(%d)\n", tree->attr_info->obj->obj_name, ret);
+        LOG_ERROR("Search key failed. objid(%lld) ret(%d)\n", tree->attr_info->obj->objid, ret);
         return ret;
     }
 
@@ -1529,7 +1529,7 @@ int32_t index_update_value(ATTR_HANDLE *tree, const void *key,
 
     if ((tree->attr_info->attr_record.attr_flags & FLAG_TABLE) == 0)
     {
-        LOG_ERROR("The attr is resident. obj_name(%s)\n", tree->attr_info->obj->obj_name);
+        LOG_ERROR("The attr is resident. objid(%lld)\n", tree->attr_info->obj->objid);
         return -INDEX_ERR_ATTR_RESIDENT;
     }
 

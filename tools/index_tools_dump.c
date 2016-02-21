@@ -97,16 +97,16 @@ static int32_t dump_key(ATTR_HANDLE *tree, const bool_t v_bReverse, NET_PARA_S *
 
 	memset(&para, 0, sizeof(DUMP_PARA_S));
     
-	OS_PRINT(net, "Start dump all keys. obj(%s)\n", tree->attr_info->obj->obj_name);
+	OS_PRINT(net, "Start dump all keys. objid(%lld)\n", tree->attr_info->obj->objid);
 
     para.net = net;
     ret = index_walk_all(tree, v_bReverse, 0, &para, (WalkAllCallBack)dump_callback);
     if (ret < 0)
     {
-        OS_PRINT(net, "Walk tree failed. obj(%s) ret(%d)\n", tree->attr_info->obj->obj_name, ret);
+        OS_PRINT(net, "Walk tree failed. objid(%lld) ret(%d)\n", tree->attr_info->obj->objid, ret);
     }
     
-	OS_PRINT(net, "Finished dump all keys. obj(%s)\n", tree->attr_info->obj->obj_name);
+	OS_PRINT(net, "Finished dump all keys. objid(%lld)\n", tree->attr_info->obj->objid);
     
 	return ret;
 }
