@@ -167,7 +167,7 @@ void read_cb(struct bufferevent *bev, void *arg)
 
         line[0] = '>';
         line[1] = 0;
-        bufferevent_write(net, line, 2);
+        bufferevent_write(bev, line, 2);
     }
 }
 
