@@ -252,7 +252,61 @@
 	#endif
     
 #endif
-    
+
+/* 检测结构体的大小是否等于特定值 */
+ #define    SIZE_OF_TYPE_EQUAL_TO(type, size) \
+ static inline char size_of_##type##_equal_to_##size() \
+ { \
+     char __dummy1[sizeof(type) - size]; \
+     char __dummy2[size - sizeof(type)]; \
+     return __dummy1[-1] + __dummy2[-1]; \
+ }
+ 
+ 
+ 
+/* 检测结构体的大小是否不等于特定值 */
+ #define    SIZE_OF_TYPE_UNEQUAL_TO(type, size) \
+ static inline char size_of_##type##_unequal_to_##size() \
+ { \
+     char __dummy1[0==(10/(sizeof(type)-size))]; \
+     return __dummy1[-1]; \
+ }
+ 
+ 
+ 
+/* 检测结构体的大小是否不大于特定值 */
+ #define    SIZE_OF_TYPE_NOT_LARGER_THAN(type, size) \
+ static inline char size_of_##type##_not_larger_than_##size() \
+ { \
+     char __dummy1[size - sizeof(type)]; \
+     return __dummy1[-1]; \
+ }
+ 
+ 
+ 
+/* 检测结构体的大小是否不小于特定值 */
+ #define    SIZE_OF_TYPE_NOT_SMALLER_THAN(type, size) \
+ static inline char size_of_##type##_not_smaller_than_##size() \
+ { \
+     char __dummy1[sizeof(type) - size]; \
+     return __dummy1[-1]; \
+ }
+ 
+ 
+ 
+/* 检测结构体的大小是否小于特定值 */
+ #define    SIZE_OF_TYPE_SMALLER_THAN(type, size) \
+     SIZE_OF_TYPE_NOT_LARGER_THAN(type, size) \
+     SIZE_OF_TYPE_UNEQUAL_TO(type, size)
+ 
+ 
+ 
+/* 检测结构体的大小是否大于特定值 */
+ #define    SIZE_OF_TYPE_LARGER_THAN(type, size) \
+     SIZE_OF_TYPE_NOT_SMALLER_THAN(type, size) \
+     SIZE_OF_TYPE_UNEQUAL_TO(type, size)
+
+
     //
     // Data type conversion and combination
     //

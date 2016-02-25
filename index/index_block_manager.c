@@ -799,6 +799,9 @@ int32_t block_set_status(BLOCK_HANDLE_S * hnd, uint64_t start_vbn,
     return cnt;
 }
 
+//SIZE_OF_TYPE_EQUAL_TO(BLOCK_BOOT_SECTOR_S, 512)
+
+
 
 EXPORT_SYMBOL(block_set_status);
 EXPORT_SYMBOL(block_alloc);

@@ -2,17 +2,15 @@
 file/object/kv system using kv(index)
 
 
-创建名为i的索引         create -i i
+create index named i      :         create -i i
 
-创建名为o的对象         create -i i -o o
+create object with objid 1:         create -i i -o 1
 
-创建名为a的属性         create -i i -o o -a a
+insert kv in object 1     :         insert -i i -o 1 -k 1 -v abcdjkjkj
 
-在属性a下插入1000个key  insert -i i -o o -a a -k 1000
+dump all kv in object 1   :         dump   -i i -o 1
 
-查看属性a下的所有key    dump   -i i -o o -a a
-
-删除属性a下的1000个key  remove -i i -o o -a a -k 1000
+remove kv in object 1     :         remove -i i -o 1 -k 1
 
 
 

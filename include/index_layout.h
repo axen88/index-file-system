@@ -151,7 +151,7 @@ typedef struct tagBLOCK_BOOT_SECTOR_S
     uint64_t objid_id;
     
     uint64_t snapshot_no;
-    uint8_t aucReserved2[PRV_AREA_SIZE - 16];    // Reserved bytes
+    uint8_t aucReserved2[PRV_AREA_SIZE - 24];    // Reserved bytes
     uint8_t aucReserved[176];            /* 保留区域，供系统扩展使用 */
     uint32_t flags;                    /* 块管理系统的一些标识 */
     uint16_t version;                  /* 版本号 */
