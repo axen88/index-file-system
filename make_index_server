@@ -17,4 +17,4 @@ default:
 	    -Iinclude -Wall -g -Wno-unused -D__EN_FILE_IF__ -lpthread -levent
 	
 clean:
-	rm -f index-tools *.o
+	rm -f index_server *.o
