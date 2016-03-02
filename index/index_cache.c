@@ -20,19 +20,22 @@
  */
 /*******************************************************************************
 
-            版权所有(C), 2011~2014, AXEN工作室
+            Copyright(C), 2016~2019, axen2012@qq.com
 ********************************************************************************
-文 件 名: OS_INDEX_IO.C
-版    本: 1.00
-日    期: 2011年6月19日
-功能描述: 索引区的读写操作
-函数列表: 
+File Name: INDEX_CACHE.C
+Author   : axen.hook
+Version  : 1.00
+Date     : 02/Mar/2016
+Description: 
+Function List: 
     1. ...: 
-修改历史: 
-    版本：1.00  作者: 曾华荣 (zeng_hr@163.com)  日期: 2011年6月19日
+History: 
+    Version: 1.00  Author: axen.hook  Date: 02/Mar/2016
 --------------------------------------------------------------------------------
-    1. 初始版本
+    1. Primary version
 *******************************************************************************/
+
+
 #include "index_if.h"
 
 MODULE(PID_INDEX);
@@ -74,14 +77,32 @@ INDEX_BLOCK_CACHE *alloc_cache(ATTR_INFO *attr_info, uint64_t vbn)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", attr_info->obj->index->hnd->sb.block_size);
         OS_FREE(cache);
-        cache = NULL;
         return NULL;
     }
 
     cache->state = EMPTY;
     cache->vbn = vbn;
+    
+    avl_add(&attr_info->attr_caches, cache);
 
     return cache;
+}
+
+void free_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
+{
+    ASSERT(NULL != attr_info);
+    ASSERT(NULL != cache);
+    
+    avl_remove(&attr_info->attr_caches, cache);
+    
+    if (NULL != cache->ib)
+    {
+        OS_FREE(cache->ib);
+        cache->ib = NULL;
+    }
+    
+    OS_FREE(cache);
+
 }
 
 int32_t index_alloc_cache_and_block(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE **cache)
@@ -99,16 +120,16 @@ int32_t index_alloc_cache_and_block(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE **ca
         return ret;
     }
 
+    OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
     tmp_cache = alloc_cache(attr_info, vbn);
     if (NULL == tmp_cache)
     {
+        OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
         LOG_ERROR("Allocate cache failed.\n");
         block_free(attr_info->obj->index->hnd, vbn, 1);
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 
-    OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
-    avl_add(&attr_info->attr_caches, tmp_cache);
     OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
     
     *cache = tmp_cache;
@@ -116,30 +137,7 @@ int32_t index_alloc_cache_and_block(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE **ca
     return 0;
 }
 
-int32_t find_free_cache(INDEX_BLOCK_CACHE **target_cache, INDEX_BLOCK_CACHE *cache)
-{
-    ASSERT(NULL != target_cache);
-    ASSERT(NULL != cache);
-
-    if (EMPTY == cache->state)
-    {
-        *target_cache = cache;
-        return INDEX_WALK_FINISHED; /* 返回大于0表明已经找到 */
-    }
-
-    return 0;
-}
-
-INDEX_BLOCK_CACHE *index_find_free_cache(ATTR_INFO *attr_info)
-{
-    INDEX_BLOCK_CACHE *ibc = NULL;
-    
-    (void)avl_walk_all(&attr_info->attr_caches, (avl_walk_call_back)find_free_cache, &ibc);
-
-    return ibc;
-}
-
-int32_t flush_cache_in_attr(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
+int32_t flush_dirty_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
 {
     int32_t ret = 0;
 
@@ -151,8 +149,7 @@ int32_t flush_cache_in_attr(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
         return 0;
     }
 
-    ret = index_update_block_fixup(attr_info->obj->index->hnd, &cache->ib->head,
-        cache->vbn);
+    ret = index_update_block_fixup(attr_info->obj->index->hnd, &cache->ib->head, cache->vbn);
     if (ret != (int32_t)cache->ib->head.alloc_size)
     {
         LOG_ERROR("Update index block failed. objid(%lld) vbn(%lld) size(%d) ret(%d)\n",
@@ -168,41 +165,10 @@ int32_t flush_cache_in_attr(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
     return 0;
 }
 
-int32_t index_flush_all_caches_in_attr(ATTR_INFO * attr_info)
+int32_t index_flush_all_dirty_caches(ATTR_INFO *attr_info)
 {
     OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
-    avl_walk_all(&attr_info->attr_caches, (avl_walk_call_back)flush_cache_in_attr, attr_info);
-    OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
-
-    return 0;
-}
-
-int32_t release_free_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
-{
-    ASSERT(NULL != attr_info);
-    ASSERT(NULL != cache);
-
-    if (EMPTY != cache->state)
-    {
-        LOG_ERROR("The cache is still dirty. objid(%lld) vbn(%lld)\n",
-            attr_info->obj->objid, cache->vbn);
-        return 0;
-    }
-
-    avl_remove(&attr_info->attr_caches, cache);
-    
-    OS_FREE(cache->ib);
-    cache->ib = NULL;
-    OS_FREE(cache);
-    cache = NULL;
-
-    return 0;
-}
-
-int32_t index_release_all_free_caches_in_attr(ATTR_INFO *attr_info)
-{
-    OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
-    avl_walk_all(&attr_info->attr_caches, (avl_walk_call_back)release_free_cache, attr_info);
+    avl_walk_all(&attr_info->attr_caches, (avl_walk_call_back)flush_dirty_cache, attr_info);
     OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
 
     return 0;
@@ -213,22 +179,18 @@ int32_t release_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
     ASSERT(NULL != attr_info);
     ASSERT(NULL != cache);
 
-    if (DIRTY == cache->state)
+    if (DIRTY == cache->state)  // all cache should be CLEAN or EMPTY state
     {
         LOG_ERROR("The dirty cache will be released. objid(%lld) vbn(%lld)\n",
             attr_info->obj->objid, cache->vbn);
     }
 
-    avl_remove(&attr_info->attr_caches, cache);
-    
-    OS_FREE(cache->ib);
-    cache->ib = NULL;
-    OS_FREE(cache);
+    free_cache(attr_info, cache);
 
     return 0;
 }
 
-int32_t index_release_all_caches_in_attr(ATTR_INFO *attr_info)
+int32_t index_release_all_caches(ATTR_INFO *attr_info)
 {
     OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
     avl_walk_all(&attr_info->attr_caches, (avl_walk_call_back)release_cache, attr_info);
@@ -237,7 +199,7 @@ int32_t index_release_all_caches_in_attr(ATTR_INFO *attr_info)
     return 0;
 }
 
-int32_t cancel_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
+int32_t release_dirty_block(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
 {
     int32_t ret = 0;
 
@@ -255,18 +217,40 @@ int32_t cancel_cache(ATTR_INFO *attr_info, INDEX_BLOCK_CACHE *cache)
         LOG_ERROR("Free block failed. vbn(%lld) ret(%d)\n", cache->vbn, ret);
     }
 
-    cache->state = EMPTY;
+    free_cache(attr_info, cache);
 
     return 0;
 }
 
-int32_t index_cancel_all_caches_in_attr(ATTR_INFO *attr_info)
+int32_t index_release_all_dirty_blocks(ATTR_INFO *attr_info)
 {
     OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
-    avl_walk_all(&attr_info->attr_caches, (avl_walk_call_back)cancel_cache, attr_info);
+    avl_walk_all(&attr_info->attr_caches, (avl_walk_call_back)release_dirty_block, attr_info);
     OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
 
     return 0;
+}
+
+int32_t release_old_block_mem(ATTR_INFO *attr_info, INDEX_OLD_BLOCK *old_blk)
+{
+    int32_t ret = 0;
+
+    ASSERT(NULL != attr_info);
+    ASSERT(NULL != old_blk);
+
+    avl_remove(&attr_info->attr_old_blocks, old_blk);
+    OS_FREE(old_blk);
+
+    return 0;
+}
+
+void index_release_all_old_blocks_mem(ATTR_INFO *attr_info)
+{
+    OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
+    avl_walk_all(&attr_info->attr_old_blocks, (avl_walk_call_back)release_old_block_mem, attr_info);
+    OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
+
+    return;
 }
 
 int32_t release_old_block(ATTR_INFO *attr_info, INDEX_OLD_BLOCK *old_blk)
@@ -282,40 +266,15 @@ int32_t release_old_block(ATTR_INFO *attr_info, INDEX_OLD_BLOCK *old_blk)
         LOG_ERROR("Free block failed. vbn(%lld) ret(%d)\n", old_blk->vbn, ret);
     }
 
-    avl_remove(&attr_info->attr_old_blocks, old_blk);
-
-    OS_FREE(old_blk);
+    release_old_block_mem(attr_info, old_blk);
 
     return 0;
 }
 
-void index_release_all_old_blocks_in_attr(ATTR_INFO *attr_info)
+void index_release_all_old_blocks(ATTR_INFO *attr_info)
 {
     OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
     avl_walk_all(&attr_info->attr_old_blocks, (avl_walk_call_back)release_old_block, attr_info);
-    OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
-
-    return;
-}
-
-int32_t release_old_block_mem(ATTR_INFO *attr_info, INDEX_OLD_BLOCK *old_blk)
-{
-    int32_t ret = 0;
-
-    ASSERT(NULL != attr_info);
-    ASSERT(NULL != old_blk);
-
-    avl_remove(&attr_info->attr_old_blocks, old_blk);
-
-    OS_FREE(old_blk);
-
-    return 0;
-}
-
-void index_release_all_old_blocks_mem_in_attr(ATTR_INFO *attr_info)
-{
-    OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
-    avl_walk_all(&attr_info->attr_old_blocks, (avl_walk_call_back)release_old_block_mem, attr_info);
     OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
 
     return;
@@ -330,53 +289,40 @@ int32_t index_block_read(ATTR_HANDLE *attr, uint64_t vbn)
     avl_index_t where = 0;
     ATTR_INFO *attr_info;
 
-    /* 检查输入参数 */
     ASSERT(NULL != attr);
     
     attr_info = attr->attr_info;
     obj = attr_info->obj;
 
     if (attr->cache->vbn == vbn)
-    {   // 就是当前操作的cache
+    {
         return 0;
     }
 
     OS_RWLOCK_WRLOCK(&attr_info->caches_lock);
-    cache = avl_find(&attr_info->attr_caches, (int (*)(const void*, void *))compare_cache2, &vbn, &where);
-    if (NULL != cache)
-    { /* cache命中 */
+    cache = avl_find(&attr_info->attr_caches, (avl_find_fn)compare_cache2, &vbn, &where);
+    if (NULL != cache) // block already in the cache
+    {
         OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
         attr->cache = cache;
         return 0;
     }
 
-    //cache = index_find_free_cache(obj);
-    //if (NULL == cache)
-    //{ /* 未找到了未使用的cache，那么就申请新cache */
-        cache = alloc_cache(attr_info, vbn);
-        if (NULL == cache)
-        {
-            OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
-            LOG_ERROR("Allocate cache failed.\n");
-            return -INDEX_ERR_ALLOCATE_MEMORY;
-        }
-    //}
-    //else
-    //{
-    //    avl_remove(&tree->attr_info->attr_caches, cache);
-    //    avl_remove(&obj->obj_caches, cache);
-    //    cache->vbn = vbn;
-    //}
+    cache = alloc_cache(attr_info, vbn);
+    if (NULL == cache)
+    {
+        OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
+        LOG_ERROR("Allocate cache failed.\n");
+        return -INDEX_ERR_ALLOCATE_MEMORY;
+    }
     
-    avl_add(&attr->attr_info->attr_caches, cache);
-
     attr->cache = cache;
     ib = cache->ib;
 
     ret = index_read_block_fixup(obj->index->hnd, &ib->head, vbn,
         INDEX_MAGIC, obj->index->hnd->sb.block_size);
     if (ret < 0)
-    {   // Read the index block
+    {   // Read the block
         LOG_ERROR("Read index block failed. objid(%lld) ib(%p) vbn(%lld) size(%d) ret(%d)\n",
             obj->objid, ib, vbn, obj->index->hnd->sb.block_size, ret);
         OS_RWLOCK_WRUNLOCK(&attr_info->caches_lock);
@@ -396,7 +342,6 @@ int32_t index_record_old_block(ATTR_INFO *attr_info, uint64_t vbn)
 {
     INDEX_OLD_BLOCK *old_blk = NULL;
 
-    /* 检查输入参数 */
     ASSERT(NULL != attr_info);
 
     old_blk = OS_MALLOC(sizeof(INDEX_OLD_BLOCK));

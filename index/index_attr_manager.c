@@ -20,18 +20,19 @@
  */
 /*******************************************************************************
 
-            版权所有(C), 2012~2015, AXEN工作室
+            Copyright(C), 2016~2019, axen2012@qq.com
 ********************************************************************************
-文 件 名: INDEX_ATTR_MANAGER.C
-版    本: 1.00
-日    期: 2012年6月23日
-功能描述: 
-函数列表: 
+File Name: INDEX_ATTR_MANAGER.C
+Author   : axen.hook
+Version  : 1.00
+Date     : 02/Mar/2016
+Description: 
+Function List: 
     1. ...: 
-修改历史: 
-    版本：1.00  作者: 曾华荣 (zeng_hr@163.com)  日期: 2012年6月23日
+History: 
+    Version: 1.00  Author: axen.hook  Date: 02/Mar/2016
 --------------------------------------------------------------------------------
-    1. 初始版本
+    1. Primary version
 *******************************************************************************/
 #include "index_if.h"
 
@@ -134,7 +135,7 @@ void destroy_attr_info(ATTR_INFO *attr_info)
     
     avl_destroy(&attr_info->attr_old_blocks);
 
-    index_release_all_caches_in_attr(attr_info);
+    index_release_all_caches(attr_info);
     avl_destroy(&attr_info->attr_caches);
     OS_RWLOCK_DESTROY(&attr_info->caches_lock);
 }
@@ -209,13 +210,10 @@ void cancel_attr_modification(ATTR_INFO *attr_info)
     }
 
     // free old block memory
-    index_release_all_old_blocks_mem_in_attr(attr_info);
+    index_release_all_old_blocks_mem(attr_info);
     
     // discard all dirty block cache
-    index_cancel_all_caches_in_attr(attr_info);
-    
-    // free all memory
-    index_release_all_free_caches_in_attr(attr_info);
+    index_release_all_dirty_blocks(attr_info);
 
     // recover the attr record
     recover_attr_record(attr_info);
@@ -234,7 +232,7 @@ int32_t commit_attr_modification(ATTR_INFO *attr_info)
     validate_attr(attr_info);
 
     // write index block caches to disk
-    ret = index_flush_all_caches_in_attr(attr_info);
+    ret = index_flush_all_dirty_caches(attr_info);
     if (0 > ret)
     {
         LOG_ERROR("Flush index block cache failed. objid(%lld) ret(%d)\n",
@@ -252,10 +250,7 @@ int32_t commit_attr_modification(ATTR_INFO *attr_info)
     }
 
     // release old blocks
-    index_release_all_old_blocks_in_attr(attr_info);
-    
-    // release free caches
-    index_release_all_free_caches_in_attr(attr_info);
+    index_release_all_old_blocks(attr_info);
 
     return 0;
 }

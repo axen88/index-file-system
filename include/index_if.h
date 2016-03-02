@@ -20,18 +20,19 @@
  */
 /*******************************************************************************
 
-            版权所有(C), 2012~2015, AXEN工作室
+            Copyright(C), 2016~2019, axen2012@qq.com
 ********************************************************************************
-文 件 名: INDEX_IF.H
-版    本: 1.00
-日    期: 2012年8月15日
-功能描述: 
-函数列表: 
+File Name: INDEX_IF.H
+Author   : axen.hook
+Version  : 1.00
+Date     : 02/Mar/2016
+Description: 
+Function List: 
     1. ...: 
-修改历史: 
-    版本：1.00  作者: 曾华荣 (zeng_hr@163.com)  日期: 2012年8月15日
+History: 
+    Version: 1.00  Author: axen.hook  Date: 02/Mar/2016
 --------------------------------------------------------------------------------
-    1. 初始版本
+    1. Primary version
 *******************************************************************************/
 #ifndef __INDEX_IF_H__
 #define __INDEX_IF_H__
@@ -109,8 +110,8 @@ typedef struct _ATTR_INFO
     DLIST_HEAD_S attr_hnd_list;        // all attr handle
     OS_RWLOCK attr_lock;               // lock  
 
-    avl_tree_t attr_caches;            // 
-    avl_tree_t attr_old_blocks;
+    avl_tree_t attr_caches;            // record all new block data
+    avl_tree_t attr_old_blocks;        // record old block info
     OS_RWLOCK caches_lock;
     
     avl_node_t entry;                  // recorded in object
@@ -177,34 +178,23 @@ typedef struct _INDEX_HANDLE
     OS_RWLOCK index_lock;             // lock
 } INDEX_HANDLE;
 
-extern int32_t index_block_read(struct _ATTR_HANDLE * tree, uint64_t vbn);
-
 #define INDEX_UPDATE_INODE(obj) \
     index_update_block_pingpong(obj->index->hnd, &obj->inode.head, obj->inode_no)
     
 #define INDEX_READ_INODE(index, obj, inode_no) \
     index_read_block_pingpong(index->hnd, &obj->inode.head, inode_no, INODE_MAGIC, INODE_SIZE);
 
-extern int32_t index_alloc_cache_and_block(struct _ATTR_INFO *attr_info, INDEX_BLOCK_CACHE **cache);
-int32_t index_release_all_free_caches_in_attr(struct _ATTR_INFO *attr_info);
-int32_t index_cancel_all_caches_in_attr(struct _ATTR_INFO *attr_info);
-
-extern void index_release_all_old_blocks_mem_in_attr(struct _ATTR_INFO *attr_info);
-extern void index_release_all_old_blocks_in_attr(struct _ATTR_INFO *attr_info);
-extern int32_t index_record_old_block(struct _ATTR_INFO *attr_info, uint64_t vbn);
-extern int32_t index_release_all_caches_in_attr(struct _ATTR_INFO *attr_info);
-
-extern int32_t index_flush_all_caches_in_obj(struct _OBJECT_HANDLE * obj);
-
-
-
 #define INDEX_ALLOC_BLOCK(obj, vbn) block_alloc((obj)->index->hnd, 1, vbn)
 #define INDEX_FREE_BLOCK(obj, vbn)  block_free((obj)->index->hnd, vbn, 1)
-extern int32_t IndexIBCacheFlush(struct _ATTR_HANDLE * obj);
-extern void IndexIBCacheFree(struct _ATTR_HANDLE * obj);
-extern void IndexIBCacheInvalidate(struct _ATTR_HANDLE * obj);
-int32_t index_flush_all_caches_in_attr(struct _ATTR_INFO * attr_info);
 
+extern int32_t index_block_read(struct _ATTR_HANDLE * tree, uint64_t vbn);
+extern int32_t index_alloc_cache_and_block(struct _ATTR_INFO *attr_info, INDEX_BLOCK_CACHE **cache);
+extern int32_t index_release_all_dirty_blocks(struct _ATTR_INFO *attr_info);
+extern void index_release_all_old_blocks_mem(struct _ATTR_INFO *attr_info);
+extern void index_release_all_old_blocks(struct _ATTR_INFO *attr_info);
+extern int32_t index_record_old_block(struct _ATTR_INFO *attr_info, uint64_t vbn);
+extern int32_t index_release_all_caches(struct _ATTR_INFO *attr_info);
+extern int32_t index_flush_all_dirty_caches(struct _ATTR_INFO * attr_info);
 
 extern int32_t walk_all_opened_index(
     int32_t (*func)(void *, struct _INDEX_HANDLE *), void *para);

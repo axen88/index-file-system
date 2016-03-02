@@ -20,18 +20,19 @@
  */
 /*******************************************************************************
 
-            版权所有(C), 2011~2014, AXEN工作室
+            Copyright(C), 2016~2019, axen2012@qq.com
 ********************************************************************************
-文 件 名: OS_INDEX_FILE_MAN.C
-版    本: 1.00
-日    期: 2011年6月19日
-功能描述: 索引区管理和索引系统相关操作
-函数列表: 
+File Name: INDEX_MANAGER.C
+Author   : axen.hook
+Version  : 1.00
+Date     : 02/Mar/2016
+Description: 
+Function List: 
     1. ...: 
-修改历史: 
-    版本：1.00  作者: 曾华荣 (zeng_hr@163.com)  日期: 2011年6月19日
+History: 
+    Version: 1.00  Author: axen.hook  Date: 02/Mar/2016
 --------------------------------------------------------------------------------
-    1. 初始版本
+    1. Primary version
 *******************************************************************************/
 #include "index_if.h"
 MODULE(PID_INDEX);
@@ -198,7 +199,7 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
         index_name, total_sectors, start_lba);
 
     /* already opened */
-    tmp_index = avl_find(g_index_list, (int (*)(const void*, void *))compare_index2, index_name, &where);
+    tmp_index = avl_find(g_index_list, (avl_find_fn)compare_index2, index_name, &where);
     if (NULL != tmp_index)
     {
         *index = tmp_index;
@@ -288,7 +289,7 @@ int32_t index_open_nolock(const char *index_name, uint64_t start_lba, INDEX_HAND
     LOG_INFO("Open the index. index_name(%s) start_lba(%lld)\n", index_name, start_lba);
 
     /* 检查是否已经打开 */
-    tmp_index = avl_find(g_index_list, (int (*)(const void*, void *))compare_index2, index_name, &where);
+    tmp_index = avl_find(g_index_list, (avl_find_fn)compare_index2, index_name, &where);
     if (NULL != tmp_index)
     {
         tmp_index->index_ref_cnt++;
@@ -446,7 +447,7 @@ INDEX_HANDLE *index_get_handle(const char * index_name)
     }
 
     OS_RWLOCK_WRLOCK(&g_index_list_rwlock);
-    index = avl_find(g_index_list, (int (*)(const void*, void *))compare_index2, index_name, &where);
+    index = avl_find(g_index_list, (avl_find_fn)compare_index2, index_name, &where);
     OS_RWLOCK_WRUNLOCK(&g_index_list_rwlock);
     
     return index;
