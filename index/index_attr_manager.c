@@ -75,7 +75,7 @@ void recover_attr_record(ATTR_INFO *attr_info)
 {
     ATTR_RECORD *attr_record;
     
-    attr_record = INODE_GET_ATTR(&attr_info->obj->inode);
+    attr_record = INODE_GET_ATTR_RECORD(&attr_info->obj->inode);
     memcpy(&attr_info->attr_record, attr_record, attr_record->record_size);
 }
 
@@ -88,8 +88,8 @@ void validate_attr(ATTR_INFO *attr_info)
     }
     
     ASSERT(attr_info->attr_record.record_size
-        == (INODE_GET_ATTR(&attr_info->obj->inode))->record_size);
-    memcpy((INODE_GET_ATTR(&attr_info->obj->inode)),
+        == (INODE_GET_ATTR_RECORD(&attr_info->obj->inode))->record_size);
+    memcpy((INODE_GET_ATTR_RECORD(&attr_info->obj->inode)),
         &attr_info->attr_record, attr_info->attr_record.record_size);
     
     INODE_SET_DIRTY(attr_info->obj);
@@ -125,19 +125,22 @@ void init_attr_info(struct _OBJECT_HANDLE *obj)
     
     OS_RWLOCK_INIT(&attr_info->attr_lock);
     OS_RWLOCK_INIT(&attr_info->caches_lock);
+    
+    LOG_INFO("init attr info finished. objid(%lld)\n", attr_info->obj->objid);
 }
 
 void destroy_attr_info(ATTR_INFO *attr_info)
 {
-    LOG_INFO("Now destroy attr info. objid(%lld)\n", attr_info->obj->objid);
+    LOG_INFO("destroy attr info start. objid(%lld)\n", attr_info->obj->objid);
 
-    commit_attr_modification(attr_info);
-    
+    index_release_all_old_blocks_mem(attr_info);
     avl_destroy(&attr_info->attr_old_blocks);
 
     index_release_all_caches(attr_info);
     avl_destroy(&attr_info->attr_caches);
+    
     OS_RWLOCK_DESTROY(&attr_info->caches_lock);
+    OS_RWLOCK_DESTROY(&attr_info->attr_lock);
 }
 
 int32_t index_open_attr(struct _OBJECT_HANDLE *obj, ATTR_HANDLE **attr)
@@ -228,10 +231,7 @@ int32_t commit_attr_modification(ATTR_INFO *attr_info)
     
     ASSERT(attr_info != NULL);
 
-    // validate the attribute into inode
-    validate_attr(attr_info);
-
-    // write index block caches to disk
+    // write dirty block caches to disk
     ret = index_flush_all_dirty_caches(attr_info);
     if (0 > ret)
     {
@@ -239,18 +239,9 @@ int32_t commit_attr_modification(ATTR_INFO *attr_info)
             attr_info->obj->objid, ret);
         return ret;
     }
-        
-    // write inode to disk
-    ret = flush_inode(attr_info->obj);
-    if (0 > ret)
-    {
-        LOG_ERROR("Flush index inode failed. objid(%lld) ret(%d)\n",
-            attr_info->obj->objid, ret);
-        return ret;
-    }
 
-    // release old blocks
-    index_release_all_old_blocks(attr_info);
+    // update the attribute root into inode
+    validate_attr(attr_info);
 
     return 0;
 }

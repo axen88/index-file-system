@@ -53,9 +53,10 @@ History:
 
 typedef enum tagCACHE_STATUS_E
 {
-    EMPTY = 0,  /* 无数据 */
-    CLEAN,      /* 数据是干净的 */
-    DIRTY       /* 数据是脏的 */
+    EMPTY = 0,  /* no data in cache */
+    CLEAN,      /* data in buffer is the same to data on disk */
+    DIRTY,      /* data in buffer read from disk is changed */
+    FLUSH       /* the dirty data is flushed to disk */
 } CACHE_STATUS_E;
 
 #define INVALID_OBJID                ((uint64_t)(-1))

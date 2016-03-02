@@ -41,6 +41,8 @@ MODULE(PID_INDEX);
 
 #define DELETE_FLAG    0x01
 
+void cancel_object_modification(OBJECT_HANDLE *obj);
+
 int32_t compare_object2(const void *objid, OBJECT_HANDLE *obj_node)
 {
     if ((uint64_t)objid > obj_node->objid)
@@ -82,8 +84,8 @@ int32_t get_object_resource(INDEX_HANDLE *index, uint64_t objid, OBJECT_HANDLE *
 
 void put_object_resource(OBJECT_HANDLE *obj)
 {
-    OS_RWLOCK_DESTROY(&obj->obj_lock);
     avl_remove(&obj->index->obj_list, obj);
+    OS_RWLOCK_DESTROY(&obj->obj_lock);
 
     OS_FREE(obj);
 
@@ -144,7 +146,6 @@ int32_t close_all_attr(OBJECT_HANDLE *obj)
 {
     dlist_walk_all(&obj->attr_info.attr_hnd_list, close_one_attr, NULL);
     obj->attr = NULL; // already closed
-    destroy_attr_info(&obj->attr_info);
     
     return 0;
 }
@@ -203,7 +204,7 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
     tmp_obj->inode_no = inode_no;
 
     /* init attr */
-    attr_record = INODE_GET_ATTR(&tmp_obj->inode);
+    attr_record = INODE_GET_ATTR_RECORD(&tmp_obj->inode);
     attr_record->record_size = ATTR_RECORD_SIZE;
     attr_record->attr_flags = flags;
     if (flags & FLAG_TABLE)
@@ -252,14 +253,22 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
 
 int32_t close_object(OBJECT_HANDLE *obj)
 {
+    int32_t ret;
+    
     if (0 != obj->obj_ref_cnt)
     {
         LOG_ERROR("There are still object handle not closed. objid(%lld) obj_ref_cnt(%d)\n",
             obj->objid, obj->obj_ref_cnt);
     }
     
-    commit_object_modification(obj);
     close_all_attr(obj);
+    ret = commit_object_modification(obj);
+    if (ret < 0)
+    {
+        cancel_object_modification(obj);
+        LOG_ERROR("commit object modification failed. objid(%lld) ret(%d)\n", obj->objid, ret);
+    }
+    
     put_object_resource(obj);
 
     return 0;
@@ -494,11 +503,12 @@ void cancel_object_modification(OBJECT_HANDLE *obj)
 {
     ASSERT(obj != NULL);
 
-    cancel_attr_modification(&obj->attr_info);
-    
     // recover obj inode
     recover_obj_inode(obj);
     INODE_CLR_DIRTY(obj);
+
+    // recover attr
+    cancel_attr_modification(&obj->attr_info);
     
     return;
 }
@@ -509,7 +519,28 @@ int32_t commit_object_modification(OBJECT_HANDLE *obj)
     
     ASSERT(obj != NULL);
 
-    return commit_attr_modification(&obj->attr_info);
+    ret = commit_attr_modification(&obj->attr_info);
+    if (0 > ret)
+    {
+        LOG_ERROR("commit attr modify failed. objid(%lld) ret(%d)\n",
+            obj->objid, ret);
+        return ret;
+    }
+
+    ret = flush_inode(obj);
+    if (0 > ret)
+    {
+        LOG_ERROR("Flush object inode failed. objid(%lld) ret(%d)\n",
+            obj->objid, ret);
+        return ret;
+    }
+
+    // release old blocks
+    index_release_all_old_blocks(&obj->attr_info);
+    
+    destroy_attr_info(&obj->attr_info);
+
+	return 0;
 }
 
 int32_t index_close_object_nolock(OBJECT_HANDLE *obj)

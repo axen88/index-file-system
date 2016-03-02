@@ -90,7 +90,7 @@ extern "C" {
 #define ATTR_RECORD_SIZE           (INODE_RESERVED_SIZE)
 #define ATTR_RECORD_CONTENT_SIZE   (ATTR_RECORD_SIZE - ATTR_RECORD_HEAD_SIZE)
 
-#define INODE_GET_ATTR(inode)  ((ATTR_RECORD *)((uint8_t *)(inode) + (inode)->first_attr_off))
+#define INODE_GET_ATTR_RECORD(inode)  ((ATTR_RECORD *)((uint8_t *)(inode) + (inode)->first_attr_off))
 
 #define KEY_MAX_SIZE    256
 #define VALUE_MAX_SIZE  1024
