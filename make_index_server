@@ -6,7 +6,7 @@ default:
 	gcc -o index_server $(INDEX_DIR)/index_block_manager.c $(INDEX_DIR)/index_block_rw.c \
 	    $(INDEX_DIR)/index_bitmap.c $(INDEX_DIR)/index_btree.c $(INDEX_DIR)/index_manager.c \
 	    $(INDEX_DIR)/index_cache.c $(INDEX_DIR)/index_utils.c $(INDEX_DIR)/index_attr_manager.c  $(INDEX_DIR)/index_attr_rw.c \
-	    $(INDEX_DIR)/index_object_manager.c \
+	    $(INDEX_DIR)/index_object_manager.c $(INDEX_DIR)/index_verify.c $(INDEX_DIR)/index_fixup.c \
 	    $(UTILS_DIR)/index_tools_verify.c  $(UTILS_DIR)/index_tools_dump.c \
 	    $(UTILS_DIR)/index_tools_debug.c  $(UTILS_DIR)/index_tools_fixup.c \
 	    $(UTILS_DIR)/index_tools_list.c  $(UTILS_DIR)/index_tools_if.c $(UTILS_DIR)/index_server_main.c\
