@@ -296,7 +296,8 @@ int32_t open_object(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, OBJE
         put_object_resource(tmp_obj);
         return ret;
     }
-    
+
+    tmp_obj->inode_no = inode_no;
     strncpy(tmp_obj->obj_name, tmp_obj->inode.name, tmp_obj->inode.name_size);
 
     /* open attr */
@@ -575,16 +576,19 @@ int32_t index_close_object_nolock(OBJECT_HANDLE *obj)
 int32_t index_close_object(OBJECT_HANDLE *obj)
 {
     int32_t ret = 0;
+	INDEX_HANDLE *index;
 
     if (NULL == obj)
     {
         LOG_ERROR("Invalid parameter. obj(%p)\n", obj);
         return -INDEX_ERR_PARAMETER;
     }
+
+	index = obj->index;
     
-    OS_RWLOCK_WRLOCK(&obj->index->index_lock);
+    OS_RWLOCK_WRLOCK(&index->index_lock);
     ret = index_close_object_nolock(obj);
-    OS_RWLOCK_WRUNLOCK(&obj->index->index_lock);
+    OS_RWLOCK_WRUNLOCK(&index->index_lock);
     
     return ret;
 }     
