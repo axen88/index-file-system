@@ -25,4 +25,3 @@ int main(void)
     CU_cleanup_registry();
     return CU_get_error();
 }
-
