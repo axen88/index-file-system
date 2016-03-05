@@ -4,7 +4,6 @@
 
 int add_index_test_case(void);
 
-
 int main(void)
 {
     int ret;
