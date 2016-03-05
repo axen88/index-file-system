@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../include;../CUnit/Headers"
+				AdditionalIncludeDirectories="../include;CUnit/Headers"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;__EN_FILE_IF__;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,7 +63,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="libcunit.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../CUnit/lib"
+				AdditionalLibraryDirectories="CUnit/lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -175,99 +175,99 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\public\avl.c"
+				RelativePath="..\public\avl.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\index\index_attr_manager.c"
+				RelativePath="..\index\index_attr_manager.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\index\index_attr_rw.c"
+				RelativePath="..\index\index_attr_rw.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\index\index_bitmap.c"
+				RelativePath="..\index\index_bitmap.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\index\index_block_manager.c"
+				RelativePath="..\index\index_block_manager.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\index\index_block_rw.c"
+				RelativePath="..\index\index_block_rw.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\index\index_btree.c"
+				RelativePath="..\index\index_btree.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\index\index_cache.c"
+				RelativePath="..\index\index_cache.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\index\index_fixup.c"
+				RelativePath="..\index\index_fixup.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\index\index_manager.c"
+				RelativePath="..\index\index_manager.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\index\index_object_manager.c"
+				RelativePath="..\index\index_object_manager.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\index\index_space_manager.c"
+				RelativePath="..\index\index_space_manager.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\index\index_transaction.c"
+				RelativePath="..\index\index_transaction.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\index\index_utils.c"
+				RelativePath="..\index\index_utils.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\index\index_verify.c"
+				RelativePath="..\index\index_verify.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\public\os_cmd_ui.c"
+				RelativePath="..\public\os_cmd_ui.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\public\os_collate.c"
+				RelativePath="..\public\os_collate.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\public\os_file_if.c"
+				RelativePath="..\public\os_file_if.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\public\os_list_double.c"
+				RelativePath="..\public\os_list_double.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\public\os_list_queue.c"
+				RelativePath="..\public\os_list_queue.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\public\os_log.c"
+				RelativePath="..\public\os_log.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\public\os_queue.c"
+				RelativePath="..\public\os_queue.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\public\os_threads_group.c"
+				RelativePath="..\public\os_threads_group.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\public\os_utils.c"
+				RelativePath="..\public\os_utils.c"
 				>
 			</File>
 		</Filter>
@@ -287,11 +287,19 @@
 			Name="test_case"
 			>
 			<File
-				RelativePath="..\test_case_main.c"
+				RelativePath=".\test_cases\test_block.c"
 				>
 			</File>
 			<File
-				RelativePath=".\test_index.c"
+				RelativePath=".\test_case_main.c"
+				>
+			</File>
+			<File
+				RelativePath=".\test_cases\test_file_bitmap.c"
+				>
+			</File>
+			<File
+				RelativePath=".\test_cases\test_index.c"
 				>
 			</File>
 		</Filter>

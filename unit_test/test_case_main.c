@@ -39,8 +39,11 @@ History:
 #include <stdio.h>
 #include <string.h>
 #include "Basic.h"
+#include "os_adapter.h"
 
 int add_index_test_case(void);
+int add_block_test_suite(void);
+int add_file_bitmap_test_suite(void);
 
 int main(void)
 {
@@ -51,6 +54,18 @@ int main(void)
         return CU_get_error();
 
     // add cases
+    ret = add_file_bitmap_test_suite();
+    if (0 != ret) {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+
+    ret = add_block_test_suite();
+    if (0 != ret) {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+
     ret = add_index_test_case();
     if (0 != ret) {
         CU_cleanup_registry();
@@ -61,5 +76,8 @@ int main(void)
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
     CU_cleanup_registry();
-    return CU_get_error();
+    ret = CU_get_error();
+	system("pause");
+
+    return ret;
 }
