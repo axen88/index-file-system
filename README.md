@@ -12,7 +12,15 @@
   b. run unit_test/index_test.sln to generate unit test program
   
 
-3. demo program usage example
+3. demo program with libevent usage
+
+  a. run index_server
+  
+  b. run "telnet 9999" command to connect to the index server
+  
+  c. input the demo program command
+  
+4. demo program usage example
 
 |description|command example|
 |-----------|---------------|
@@ -23,12 +31,4 @@
 |remove kv in object 1      | remove -i i -o 1 -k 1 |
 
 
-
-4. demo program with libevent usage
-
-  a. run index_server
-  
-  b. run "telnet 9999" command to connect to the index server
-  
-  c. input the demo program command
 
