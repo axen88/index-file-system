@@ -135,8 +135,8 @@ OS_CMD_LIST_S INDEX_CMD_LIST[]
         
 	{do_list_cmd,     {"list",     NULL, NULL}, "[-i index_name] [-o obj_id]"},
 	{do_dump_cmd,     {"dump",     NULL, NULL}, "<-i index_name> [-o obj_id]"},
-	{do_verify_cmd,   {"verify",   NULL, NULL}, "<-i index_name> [-o obj_id]"},
-    {do_fixup_cmd,    {"fixup",    NULL, NULL}, "<-i index_name>"},
+	//{do_verify_cmd,   {"verify",   NULL, NULL}, "<-i index_name> [-o obj_id]"},
+    //{do_fixup_cmd,    {"fixup",    NULL, NULL}, "<-i index_name>"},
         
 	{do_insert_key_cmd,   {"insert",   NULL, NULL}, "<-i index_name> [-o obj_id] [-k key] [-v value]"},
     {do_remove_key_cmd,   {"remove",   NULL, NULL}, "<-i index_name> [-o obj_id] [-k key]"},
