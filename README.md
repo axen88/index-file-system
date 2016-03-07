@@ -1,17 +1,13 @@
-compile at linux
+1. compile on linux
+  a. run "make -f make_index_tools" to generate demo program  
+  b. run "make -f make_index_server" to generate demo program with libevent, you master install libevent first
 
-  1. run "make -f make_index_tools" to generate demo program
-  
-  2. run "make -f make_index_server" to generate demo program with libevent, you master install libevent first
-
-
-compile at linux
-  1. run vs2008 IDE, open win_proj/index_tools.sln to generate demo program
-
-  2. run unit_test/index_test.sln to generate unit test program
+2. compile on windows
+  a. run vs2008 IDE, open win_proj/index_tools.sln to generate demo program
+  b. run unit_test/index_test.sln to generate unit test program
   
 
-demo program usage example
+3. demo program usage example
 
 |description|command example|
 |-----------|---------------|
@@ -23,11 +19,8 @@ demo program usage example
 
 
 
-demo program with libevent usage
-
-  1. run index_server
-  
-  2. run "telnet 9999" command to connect to the index server
-  
-  3. input the demo program command
+4. demo program with libevent usage
+  a. run index_server
+  b. run "telnet 9999" command to connect to the index server
+  c. input the demo program command
 
