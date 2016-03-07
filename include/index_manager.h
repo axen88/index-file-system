@@ -60,6 +60,10 @@ extern int32_t index_get_opened_attr_num(ATTR_HANDLE * tree);
 
 extern INDEX_HANDLE *index_get_handle(const char * index_name);
 
+extern int32_t fixup_index_by_name(char *index_name, uint64_t start_lba);
+extern int32_t verify_index(char *index_name, uint64_t start_lba);
+extern int32_t index_verify_attr_by_name(char *index_name, uint64_t start_lba, uint64_t objid);
+
 
 /* 以下是索引系统初始化和退出接口，线程不安全 */
 extern int32_t index_init_system(void);

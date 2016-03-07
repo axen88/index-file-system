@@ -51,6 +51,7 @@ History:
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #define OSStrToUll(pcBuf, end, base)   strtoull(pcBuf, end, base)
 #define OS_SLEEP_SECOND(x)               sleep(x)

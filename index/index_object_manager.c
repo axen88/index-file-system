@@ -45,11 +45,11 @@ void cancel_object_modification(OBJECT_HANDLE *obj);
 
 int32_t compare_object2(const void *objid, OBJECT_HANDLE *obj_node)
 {
-    if ((uint64_t)objid > obj_node->objid)
+    if ((*(uint64_t *)objid) > obj_node->objid)
     {
         return 1;
     }
-    else if ((uint64_t)objid == obj_node->objid)
+    else if ((*(uint64_t *)objid) == obj_node->objid)
     {
         return 0;
     }
@@ -334,7 +334,7 @@ int32_t index_create_object_nolock(INDEX_HANDLE *index, uint64_t objid, uint16_t
 
     LOG_INFO("Create the obj. obj(%p) objid(%lld)\n", tmp_obj, objid);
 
-    tmp_obj = avl_find(&index->obj_list, (avl_find_fn)compare_object2, (void *)objid, &where);
+    tmp_obj = avl_find(&index->obj_list, (avl_find_fn)compare_object2, &objid, &where);
     if (NULL != tmp_obj)
     {
         LOG_ERROR("The obj already exist. obj(%p) objid(%lld) ret(%d)\n", obj, objid, ret);
@@ -411,7 +411,7 @@ int32_t index_open_object_nolock(struct _INDEX_HANDLE *index, uint64_t objid, ui
 
     LOG_INFO("Open the obj. objid(%lld)\n", objid);
 
-    tmp_obj = avl_find(&index->obj_list, (avl_find_fn)compare_object2, (void *)objid, &where);
+    tmp_obj = avl_find(&index->obj_list, (avl_find_fn)compare_object2, &objid, &where);
     if (NULL != tmp_obj)
     {
         if (0 != (open_flags & DELETE_FLAG))
@@ -494,7 +494,7 @@ OBJECT_HANDLE *index_get_object_handle(INDEX_HANDLE *index, uint64_t objid)
     ASSERT(!OBJID_IS_INVALID(objid));
 
     OS_RWLOCK_RDLOCK(&index->index_lock);
-    tmp_obj = avl_find(&index->obj_list, (avl_find_fn)compare_object2, (void *)objid, &where);
+    tmp_obj = avl_find(&index->obj_list, (avl_find_fn)compare_object2, &objid, &where);
     OS_RWLOCK_RDLOCK(&index->index_lock);
 
     return tmp_obj;
