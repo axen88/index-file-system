@@ -37,6 +37,10 @@ History:
 #ifndef __INDEX_OBJECT_H__
 #define __INDEX_OBJECT_H__
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 /* open object */
 extern int32_t index_open_object(struct _INDEX_HANDLE *index, uint64_t objid, OBJECT_HANDLE **obj);
 
@@ -63,6 +67,10 @@ extern int32_t compare_attr_info2(const char *attr_name, ATTR_INFO *attr_info_no
 int32_t flush_inode(OBJECT_HANDLE * obj);
 void recover_obj_inode(OBJECT_HANDLE *obj);
 void backup_obj_inode(OBJECT_HANDLE *obj);
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif
 

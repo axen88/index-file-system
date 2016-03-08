@@ -37,6 +37,10 @@ History:
 #ifndef __OS_INDEX_CLI_H__
 #define __OS_INDEX_CLI_H__
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 #define TMP_BUF_SIZE   32
 #define CMD_SIZE       16
 
@@ -80,5 +84,8 @@ extern int do_remove_key_cmd(int argc, char *argv[], NET_PARA_S *net);
 extern int do_performance_cmd(int argc, char *argv[], NET_PARA_S *net);
 extern void parse_all_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para);
 
+#ifdef	__cplusplus
+}
+#endif
 
 #endif

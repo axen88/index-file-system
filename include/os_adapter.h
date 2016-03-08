@@ -38,6 +38,7 @@ History:
 #ifndef __OS_ADAPTER_H__
 #define __OS_ADAPTER_H__
 
+
 //#define __KERNEL__
 
 #include "os_types.h"
@@ -57,6 +58,11 @@ History:
 
 #include "os_linux_user.h"
 
+#endif
+
+
+#ifdef	__cplusplus
+extern "C" {
 #endif
 
 #if 0
@@ -408,5 +414,9 @@ enum
 
 //static uint32_t g_pid = PID_INDEX;
 #define MODULE(pid)  static uint32_t g_pid = (pid)    
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif /* End of __OS_ADAPTER_H__ */

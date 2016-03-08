@@ -51,6 +51,10 @@ History:
 #include "index_bitmap.h"
 #include "index_block_if.h"
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 typedef enum tagCACHE_STATUS_E
 {
     EMPTY = 0,  /* no data in cache */
@@ -201,19 +205,17 @@ extern int32_t walk_all_opened_index(
     int32_t (*func)(void *, struct _INDEX_HANDLE *), void *para);
 
 
+
+#ifdef	__cplusplus
+}
+#endif
+
 #include "index_attr.h"
 #include "index_tree.h"
 #include "index_object.h"
 #include "index_manager.h"
 
 #include "index_tools_if.h"
-
-#ifdef __KERNEL__
-#include "os_mml.h"
-#undef OS_PRINT
-#define OS_PRINT(...)        MML_Print(__VA_ARGS__)
-#endif
-
 
 #endif
 

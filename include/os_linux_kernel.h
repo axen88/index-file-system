@@ -37,6 +37,7 @@ History:
 #ifndef __OS_LINUX_KERNEL_H__
 #define __OS_LINUX_KERNEL_H__
 
+
 #include <linux/slab.h>
 #include <linux/sched.h>
 #include <linux/version.h>
@@ -49,6 +50,10 @@ History:
 #endif
 #include <linux/kthread.h>
 #include <linux/delay.h>
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 //#define OS_MALLOC                vmalloc
 //#define OS_FREE                  vfree
@@ -83,5 +88,10 @@ typedef struct task_struct *        OS_THREAD_T;
 #define OS_RWLOCK_DESTROY(v_pMutex)
 
 #define ASSERT(x)
+
+#ifdef	__cplusplus
+}
+#endif
+
 
 #endif

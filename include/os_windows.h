@@ -47,6 +47,11 @@ History:
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 #define OS_MALLOC   malloc
 #define OS_FREE     free
@@ -88,10 +93,13 @@ do { \
     ((uint8_t *)buf)[size - 1] = 0; \
 } while (0)
     
-#include <assert.h>
 #define ASSERT(x) assert(x)
 #define EXPORT_SYMBOL(x)
 #define module_init(x)
 #define module_exit(x)
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif

@@ -38,6 +38,10 @@ History:
 #ifndef __OS_ERRORS_H__
 #define __OS_ERRORS_H__
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 typedef enum tagERRORS_CODE_E
 {
     // FILE_IO errors
@@ -129,5 +133,9 @@ typedef enum tagERRORS_CODE_E
     INDEX_ERR_IS_OPENED,
     INDEX_ERR_NOT_OPENED,
 } ERRORS_CODE_E;
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif

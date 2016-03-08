@@ -39,9 +39,14 @@ History:
 #ifndef __OS_DISK_IF_H__
 #define __OS_DISK_IF_H__
 
+
 #ifdef __EN_FILE_IF__
 
 #include "os_file_if.h"
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 #define os_disk_open(hnd, path)    os_file_open(hnd, path)
 #define os_disk_create(hnd, path)  os_file_create(hnd, path)
@@ -53,8 +58,13 @@ History:
 #define os_disk_pread(hnd, buf, size, start_lba) \
     os_file_pread(hnd, buf, size, (start_lba) << BYTES_PER_SECTOR_SHIFT)
 
+#ifdef	__cplusplus
+}
+#endif
+
 #else
 
 #endif
+
 
 #endif

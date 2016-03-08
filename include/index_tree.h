@@ -38,6 +38,9 @@ History:
 #ifndef __INDEX_TREE_H__
 #define __INDEX_TREE_H__
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 /* 函数IndexWalk中v_flags参数允许的值 */
 #define INDEX_GET_FIRST      0x01 /* 获取第一个key，如果为0，表明是获取下一个 */
@@ -98,6 +101,10 @@ extern int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY * v_pstIE,
     const void * key, uint16_t key_len);
 extern int32_t search_key_internal(ATTR_HANDLE * obj, const void * key,
     uint16_t key_len);
+
+#ifdef	__cplusplus
+}
+#endif
 
 
 #endif

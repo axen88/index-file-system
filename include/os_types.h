@@ -38,6 +38,10 @@ History:
 #ifndef _OS_TYPES_H_
 #define _OS_TYPES_H_
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 //==========================================================
 // Complier options
 //  1. System options
@@ -54,7 +58,6 @@ typedef unsigned int         bool_t;
 typedef unsigned char        uint8_t;   // unsigned 8-bit
 typedef unsigned short       uint16_t;  // unsigned 16-bit
 typedef unsigned int         uint32_t;  // unsigned 32-bit
-typedef unsigned long long   uint64_t;  // unsigned 64-bit
 
 typedef short                int16_t;  // signed 16-bit
 typedef int                  int32_t;  // signed 32-bit
@@ -63,6 +66,7 @@ typedef int                  int32_t;  // signed 32-bit
 typedef char                 int8_t;   // signed 8-bit
 typedef unsigned long long       ptr_t;  // pointer
 typedef long long            int64_t;  // signed 64-bit
+typedef unsigned long long   uint64_t;  // unsigned 64-bit
 #else
 typedef unsigned long            ptr_t;  // pointer
 #endif
@@ -72,6 +76,10 @@ typedef unsigned long            ptr_t;  // pointer
 
 #ifndef SUCCESS
 #define SUCCESS 0
+#endif
+
+#ifdef	__cplusplus
+}
 #endif
 
 #endif /* End of _OS_TYPES_H_ */

@@ -37,13 +37,6 @@ History:
 #ifndef __OS_LINUX_USER_H__
 #define __OS_LINUX_USER_H__
 
-#define OS_MALLOC   malloc
-#define OS_FREE     free
-#define OS_PRINT(n, fmt, ...)   (n)->print((n)->net, fmt, ##__VA_ARGS__)
-#define OS_VSNPRINTF             vsnprintf
-    
-#define _CrtDumpMemoryLeaks()
-
 #include <pthread.h>
 #include <unistd.h>
 
@@ -52,6 +45,17 @@ History:
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
+#define OS_MALLOC   malloc
+#define OS_FREE     free
+#define OS_PRINT(n, fmt, ...)   (n)->print((n)->net, fmt, ##__VA_ARGS__)
+#define OS_VSNPRINTF             vsnprintf
+    
+#define _CrtDumpMemoryLeaks()
 
 #define OSStrToUll(pcBuf, end, base)   strtoull(pcBuf, end, base)
 #define OS_SLEEP_SECOND(x)               sleep(x)
@@ -83,5 +87,10 @@ typedef pthread_t                   OS_THREAD_T;
 #define EXPORT_SYMBOL(x)
 #define module_init(x)
 #define module_exit(x)
+
+#ifdef	__cplusplus
+}
+#endif
+
 
 #endif

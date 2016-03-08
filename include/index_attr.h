@@ -37,6 +37,10 @@ History:
 
 #ifndef __INDEX_ATTR_H__
 #define __INDEX_ATTR_H__
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
     
 /* πÿ±’ Ù–‘ */
 extern int32_t index_close_attr(ATTR_HANDLE *attr);
@@ -65,6 +69,9 @@ void validate_attr(ATTR_INFO *attr_info);
 extern void init_attr_info(struct _OBJECT_HANDLE *obj);
 extern void destroy_attr_info(ATTR_INFO *attr_info);
 
+#ifdef	__cplusplus
+}
+#endif
 
 #endif
 
