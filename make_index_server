@@ -21,7 +21,7 @@ LIB_OBJS = $(INDEX_DIR)/index_block_manager.o $(INDEX_DIR)/index_block_rw.o \
 	    
 TARGET_OBJS = $(UTILS_DIR)/index_tools_verify.o  $(UTILS_DIR)/index_tools_dump.o \
 	    $(UTILS_DIR)/index_tools_debug.o  $(UTILS_DIR)/index_tools_fixup.o \
-	    $(UTILS_DIR)/index_tools_list.o  $(UTILS_DIR)/index_tools_if.o $(UTILS_DIR)/index_tools_main.o\
+	    $(UTILS_DIR)/index_tools_list.o  $(UTILS_DIR)/index_tools_if.o $(UTILS_DIR)/index_server_main.o\
 	    $(UTILS_DIR)/index_tools_tree.o  $(UTILS_DIR)/index_tools_performace.o 
 	    
 
