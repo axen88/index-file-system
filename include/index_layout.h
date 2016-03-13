@@ -78,7 +78,7 @@ enum
     CR_BUTT
 } COLLATE_RULE_E;
 
-#define CR_MASK               0x0F
+#define CR_MASK               0x000F
 
 #define BLOCK_SIZE            (4 * 1024)
 #define INODE_SIZE            (2 * 1024)

@@ -287,6 +287,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\test_cases\test_collate.c"
+				>
+			</File>
+			<File
 				RelativePath=".\test_cases\test_file_bitmap.c"
 				>
 			</File>

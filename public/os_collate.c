@@ -255,11 +255,37 @@ uint32_t os_u64_to_bstr(uint64_t u64, uint8_t *b)
         *b = *uc;
         b++;
         uc++;
+		pos++;
     }
     
     return b_size;
 }
 
+// little endian u64
+uint32_t os_u64_size(uint64_t u64)
+{
+    uint8_t *uc = (uint8_t *)&u64;
+    uint32_t b_size = sizeof(uint64_t);
+    uint32_t pos = sizeof(uint64_t) - 1;
+
+    while (pos > 0)
+    {
+        if (uc[pos] != 0)
+        {
+            break;
+        }
+        
+        b_size--;
+        pos--;
+    }
+
+    if (b_size == 0)
+    {
+        b_size = 1;
+    }
+
+    return b_size;
+}
 
 	
 /*

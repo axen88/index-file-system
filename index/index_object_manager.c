@@ -531,7 +531,8 @@ int32_t index_create_object_nolock(INDEX_HANDLE *index, uint64_t objid, uint16_t
         return ret;
     }
 
-    ret = index_insert_key_nolock(index->id_obj, &objid, sizeof(uint64_t), &obj->obj_info->inode_no, VBN_SIZE);
+    ret = index_insert_key_nolock(index->id_obj, &objid, os_u64_size(objid),
+        &obj->obj_info->inode_no, os_u64_size(obj->obj_info->inode_no));
     if (ret < 0)
     {
         LOG_ERROR("Insert obj failed. obj(%p) objid(%lld) ret(%d)\n",
