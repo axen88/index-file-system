@@ -75,7 +75,7 @@ static int32_t cmd_create(INDEX_TOOLS_PARA_S *para)
     }
 
     // create object
-    ret = index_create_object(index, para->objid, FLAG_TABLE | COLLATE_ANSI_STRING, &obj);
+    ret = index_create_object(index, para->objid, FLAG_TABLE | CR_ANSI_STRING | (CR_ANSI_STRING << 4), &obj);
     if (ret < 0)
     {
         OS_PRINT(para->net, "Create obj failed. objid(%lld) ret(%d)\n", para->objid, ret);

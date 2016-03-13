@@ -229,7 +229,7 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
     tmp_index->hnd = hnd;
 
     /* create objid object */
-    ret = create_object(tmp_index, OBJID_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | COLLATE_BINARY, &tmp_index->id_obj);
+    ret = create_object(tmp_index, OBJID_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_U64 | (CR_U64 << 4), &tmp_index->id_obj);
     if (ret < 0)
     {
         LOG_ERROR("Create root object failed. name(%s)\n", index_name);

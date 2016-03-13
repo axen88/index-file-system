@@ -477,7 +477,7 @@ int32_t walk_tree(OBJECT_HANDLE *tree, uint8_t flags)
         return -INDEX_ERR_PARAMETER;
     }
 
-    ASSERT(tree->obj_info->attr_record.attr_flags & FLAG_TABLE);
+    ASSERT(tree->obj_info->attr_record.flags & FLAG_TABLE);
 
     if (flags & (INDEX_GET_FIRST | INDEX_GET_LAST))
     {   /* Get to the root's first entry */
@@ -515,24 +515,28 @@ int32_t walk_tree(OBJECT_HANDLE *tree, uint8_t flags)
 int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY *ie,
     const void *key, uint16_t key_len)
 {
-    ASSERT(COLLATE_UNICODE_STRING >= (collate_rule & COLLATE_RULE_MASK2));
+    ASSERT(CR_BUTT > (collate_rule & CR_MASK));
     ASSERT(NULL != ie);
     ASSERT(NULL != key);
     ASSERT(0 != key_len);
     
-    switch (collate_rule & COLLATE_RULE_MASK2)
+    switch (collate_rule & CR_MASK)
     {
-        case COLLATE_BINARY:
-            return os_collate_binary((uint8_t *) IEGetKey(ie), ie->key_len,
-                (uint8_t *) key, key_len);
+        case CR_BINARY:
+            return os_collate_binary((uint8_t *)IEGetKey(ie), ie->key_len,
+                (uint8_t *)key, key_len);
 
-        case COLLATE_ANSI_STRING:
+        case CR_ANSI_STRING:
             return os_collate_ansi_string((char *) IEGetKey(ie),
                 ie->key_len, (char *) key, key_len);
 
-        case COLLATE_UNICODE_STRING:
+        case CR_UNICODE_STRING:
             return os_collate_unicode_string((UNICODE_CHAR *) IEGetKey(ie),
                 ie->key_len, (UNICODE_CHAR *) key, key_len);
+
+        case CR_U64:
+            return os_collate_u64((uint8_t *)IEGetKey(ie), ie->key_len,
+                (uint8_t *)key, key_len);
 
         default:
             break;
@@ -567,7 +571,7 @@ int32_t search_key_internal(OBJECT_HANDLE *tree, const void *key,
     {
         while (0 == (tree->ie->flags & INDEX_ENTRY_END))
         {       /* It is not the Index END */
-            ret = collate_key(tree->obj_info->attr_record.attr_flags, tree->ie,
+            ret = collate_key(tree->obj_info->attr_record.flags, tree->ie,
                 key, key_len);
             if (0 < ret)
             {   /* key比要找的key大 */
@@ -652,7 +656,7 @@ int32_t index_search_key_nolock(OBJECT_HANDLE *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    ASSERT(tree->obj_info->attr_record.attr_flags & FLAG_TABLE);
+    ASSERT(tree->obj_info->attr_record.flags & FLAG_TABLE);
 
     ret = search_key_internal(tree, key, key_len);
     if (-INDEX_ERR_KEY_NOT_FOUND == ret)
@@ -1365,7 +1369,7 @@ int32_t index_remove_key_nolock(OBJECT_HANDLE *tree, const void *key,
 
     PRINT_KEY("Remove key start", tree, key, key_len);
 
-    ASSERT(tree->obj_info->attr_record.attr_flags & FLAG_TABLE);
+    ASSERT(tree->obj_info->attr_record.flags & FLAG_TABLE);
 
     /* 搜索是否有此key */
     ret = search_key_internal(tree, key, key_len);
@@ -1429,7 +1433,7 @@ int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    ASSERT(tree->obj_info->attr_record.attr_flags & FLAG_TABLE);
+    ASSERT(tree->obj_info->attr_record.flags & FLAG_TABLE);
 
     PRINT_KEY("Insert key start", tree, key, key_len);
 
@@ -1513,7 +1517,7 @@ int32_t index_update_value(OBJECT_HANDLE *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    ASSERT(tree->obj_info->attr_record.attr_flags & FLAG_TABLE);
+    ASSERT(tree->obj_info->attr_record.flags & FLAG_TABLE);
 
     OS_RWLOCK_WRLOCK(&tree->obj_info->attr_lock);
     ret = index_remove_key_nolock(tree, key, key_len);

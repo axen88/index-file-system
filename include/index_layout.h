@@ -41,39 +41,44 @@ History:
 extern "C" {
 #endif
 
-#define VERSION             100         /* 版本号: V1.00 */
-#define SUPER_BLOCK_ID      0x4B4C4253  /* 字符串: SBLK */
+#define VERSION             100         /* version: 1.00 */
+#define SUPER_BLOCK_ID      0x4B4C4253  // "SBLK"
 #define BLOCK_MAGIC_NUMBER  0xAA55      /* 0x55, 0xAA */
 #define SUPER_BLOCK_VBN     ((uint64_t)0)
-#define SUPER_BLOCK_SIZE    512         /* 超级块大小 */
+#define SUPER_BLOCK_SIZE    512         
 
-/* 结构体BLOCK_BOOT_SECTOR_S中uiFlags各个位的含义 */
-#define FLAG_FIXUP       0x00000001     /* 是否需要修复标记 */
+/* flags in BLOCK_BOOT_SECTOR_S */
+#define FLAG_FIXUP       0x00000001     /* need fixup */
 
-#define INODE_MAGIC                0x45444F4E   // "NODE"
+#define INODE_MAGIC                0x454A424F   // "OBJE"
 #define INDEX_MAGIC                0x58444E49   // "INDX"
 
 #define ENTRY_END_SIZE    sizeof(INDEX_ENTRY)
 #define ENTRY_BEGIN_SIZE  sizeof(INDEX_ENTRY)
 
-#define PRV_AREA_SIZE       256         /* 私有区域大小 */
-#define FILE_NAME_SIZE            256
-#define OBJ_NAME_SIZE            256
+#define PRV_AREA_SIZE          256       
+#define FILE_NAME_SIZE         256
+#define OBJ_NAME_SIZE          256
 
 #define DEFAULT_OBJ_NAME       "NO_NAME"
 #define DEFAULT_OBJ_NAME_SIZE  (sizeof(DEFAULT_OBJ_NAME) - 1)
 
-/* attr_flags中的字段定义 */
+/* flags */
 #define FLAG_SYSTEM        0x8000 /* 1: system attr  0: non-system attr */
 #define FLAG_TABLE         0x4000 /* 1: table        0: data stream */
 
-#define COLLATE_BINARY          0x0000
-#define COLLATE_ANSI_STRING     0x0001
-#define COLLATE_UNICODE_STRING  0x0002
+// collate rules
+enum
+{
+    CR_BINARY = 0,
+    CR_ANSI_STRING,
+    CR_UNICODE_STRING,
+    CR_U64,
+    
+    CR_BUTT
+} COLLATE_RULE_E;
 
-#define COLLATE_RULE_MASK       0x000F
-#define COLLATE_RULE_MASK2      0x0007
-#define COLLATE_REPEAT          0x0008
+#define CR_MASK               0x0F
 
 #define BLOCK_SIZE            (4 * 1024)
 #define INODE_SIZE            (2 * 1024)
@@ -118,70 +123,69 @@ extern "C" {
 
 
 
-#pragma pack(1) /* 按1字节对齐 */
+#pragma pack(1) /* aligned by 1 byte */
 
 typedef struct tagOBJECT_HEADER_S
 {
-    uint32_t blk_id;              /* 对象id */
-    uint32_t alloc_size;          /* 对象占用的大小 */
-    uint32_t real_size;           /* 对象实际的大小 */
-    uint16_t seq_no;              /* 当前对象更新的序号 */
-    uint16_t fixup;            /* 用来做数据完整性校验 */
+    uint32_t blk_id;              /* obj id */
+    uint32_t alloc_size;          /* allocated size */
+    uint32_t real_size;           /* real size */
+    uint16_t seq_no;              /* update sequence no. */
+    uint16_t fixup;               /* do integrity verify */
 } OBJECT_HEADER_S;
 
-/* 超级块定义 */
+/* super block  */
 typedef struct tagBLOCK_BOOT_SECTOR_S
 {
-    OBJECT_HEADER_S head;           /* 超级块对象头 */
+    OBJECT_HEADER_S head;               /* header */
 
-    uint32_t block_size_shift;           /* 以字节为单位的块大小的幂 */
-    uint32_t block_size;                /* 块大小，以字节为单位 */
-    uint32_t sectors_per_block;          /* 块大小，以扇区为单位 */
+    uint32_t block_size_shift;          
+    uint32_t block_size;                /* by bytes */
+    uint32_t sectors_per_block;         /* by sectors */
 
-    uint32_t bitmap_blocks;             /* 位图区域占用的块数目 */
-    uint64_t bitmap_start_block;        /* 位图区域的起始块号 */
+    uint32_t bitmap_blocks;             /* bitmap blocks */
+    uint64_t bitmap_start_block;        /* start block of bitmap */
 
-    uint64_t total_blocks;             /* 总块数=保留块数目+位图块数目+数据块数目 */
+    uint64_t total_blocks;              /* total blocks = reserved blocks + bitmap blocks + data blocks */
 
-    uint64_t free_blocks;              /* 空数据块数目 */
-    uint64_t first_free_block;          /* 第一个可能为空的数据块 */
+    uint64_t free_blocks;               /* total free blocks */
+    uint64_t first_free_block;          /* first possible free block */
 
-    uint64_t start_lba;                /* super block所在的lba位置 */
+    uint64_t start_lba;                 /* super block's lba */
     
     uint64_t objid_inode_no;
     uint64_t objid_id;
     
     uint64_t snapshot_no;
     uint8_t aucReserved2[PRV_AREA_SIZE - 24];    // Reserved bytes
-    uint8_t aucReserved[176];            /* 保留区域，供系统扩展使用 */
-    uint32_t flags;                    /* 块管理系统的一些标识 */
-    uint16_t version;                  /* 版本号 */
-    uint16_t magic_num;                 /* 格式化标识: 0x55AA */
+    uint8_t aucReserved[176];            
+    uint32_t flags;                     /* flags */
+    uint16_t version;                   /* version */
+    uint16_t magic_num;                 /* 0x55AA */
 } BLOCK_BOOT_SECTOR_S;
 
 typedef struct _INDEX_ENTRY
 {
-    uint16_t len;              // Byte size of this index entry
+    uint16_t len;               // Byte size of this index entry
     uint16_t prev_len;          // Byte size of this index entry
 
     uint16_t key_len;           // Byte size of the key, no this field in INDEX_ENTRY_END entry
     uint16_t value_len;         // Byte size of the c, no this field in INDEX_ENTRY_END entry
 
-    uint8_t flags;             // Bits field of INDEX_ENTRY ucFlags
+    uint8_t flags;              // Bits field of INDEX_ENTRY ucFlags
     
-    //OS_U8 key[];         // The key
-    //OS_U8 c[];       // The c
-    //OS_U64 ullVBN;      // Virtual index number of child index block
+    //uint8_t key[];            // The key
+    //uint8_t value[];          // The value
+    //uint64_t vbn;             // Virtual index number of child index block
 } INDEX_ENTRY;
 
 typedef struct _INDEX_BLOCK
 {
-    /* 头部 */
     OBJECT_HEADER_S head;
 
     uint16_t first_entry_off;       // Byte offset to first INDEX_ENTRY
-    uint8_t node_type;             // The ucFlags of current index block
-    uint8_t padding[5];       // Reserved/align to 8-byte boundary
+    uint8_t node_type;              // The ucFlags of current index block
+    uint8_t padding[5];             // Reserved/align to 8-byte boundary
 
     INDEX_ENTRY begin_entry;
     //INDEX_ENTRY entries;
@@ -191,16 +195,17 @@ typedef struct _INDEX_BLOCK
 
 typedef struct _ATTR_RECORD
 {
-    uint16_t record_size; /* 此记录的长度 */
-    uint16_t attr_flags;   /* 常驻/非常驻, 流/表 */
-    uint64_t attr_size;   /* 属性大小 */
+    uint16_t record_size; // record size, include this head
+    uint16_t flags;        // table/stream, resident/non-resident
+    //uint8_t  cr;          // collate rule, high 4bits: value cr, low 4bits: key cr
+    uint64_t attr_size;   // attr size
 
-    uint8_t content[ATTR_RECORD_MAX_SIZE];  /* 常驻属性内容、表、目录或块表的根 */
+    uint8_t content[ATTR_RECORD_MAX_SIZE];  // the attr record content
 } ATTR_RECORD;
 
 typedef struct _INODE_RECORD
 {                               /* total 2KB bytes */
-    /* 头部 0 */
+    /* 0 */
     OBJECT_HEADER_S head;
 
     /* 16 */
@@ -226,7 +231,7 @@ typedef struct _INODE_RECORD
 
     /* 104 */
     uint16_t name_size;
-    char name[OBJ_NAME_SIZE];      // The tree acName
+    char name[OBJ_NAME_SIZE];      // The tree name
 
     /* 616 */
     uint8_t reserved[INODE_RESERVED_SIZE]; /* make the inode to 2KB length */

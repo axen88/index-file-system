@@ -47,7 +47,7 @@ typedef struct tagDUMP_PARA_S
 static int32_t dump_callback(void *in_tree, DUMP_PARA_S *para)
 {
     uint32_t i = 0;
-    uint8_t *pucDat = NULL;
+    uint8_t *uc = NULL;
     OBJECT_HANDLE *tree = in_tree;
 
     ASSERT(NULL != tree);
@@ -65,23 +65,47 @@ static int32_t dump_callback(void *in_tree, DUMP_PARA_S *para)
     OS_PRINT(para->net, "%-7d(%d, %d) ", ++para->no,
         tree->ie->prev_len, tree->ie->len);
 
-    pucDat = IEGetKey(tree->ie);
-    for (i = 0; i < tree->ie->key_len; i++)
+    uc = IEGetKey(tree->ie);
+    switch (tree->obj_info->attr_record.flags & CR_MASK)
     {
-        OS_PRINT(para->net, (COLLATE_BINARY == (tree->obj_info->attr_record.attr_flags & COLLATE_RULE_MASK2))
-            ? "%02X" : "%c", pucDat[i]);
+        case CR_ANSI_STRING:
+            for (i = 0; i < tree->ie->key_len; i++)
+            {
+                OS_PRINT(para->net, "%c", uc[i]);
+            }
+            break;
+        case CR_U64:
+            OS_PRINT(para->net, "%8lld", os_bstr_to_u64(uc, tree->ie->key_len));
+            break;
+        default:
+            for (i = 0; i < tree->ie->key_len; i++)
+            {
+                OS_PRINT(para->net, "%02X", uc[i]);
+            }
+            break;
     }
+    
 
-    OS_PRINT(para->net, "%s", " = ");
+    OS_PRINT(para->net, "%s", " : ");
 
-    pucDat = IEGetValue(tree->ie);
-    for (i = 0; i < tree->ie->value_len;)
+    uc = IEGetValue(tree->ie);
+    switch ((tree->obj_info->attr_record.flags >> 4) & CR_MASK)
     {
-        OS_PRINT(para->net, "%02X", pucDat[i++]);
-        if (0 == (i % 8))
-        {
-            OS_PRINT(para->net, "%c", ' ');
-        }
+        case CR_ANSI_STRING:
+            for (i = 0; i < tree->ie->value_len; i++)
+            {
+                OS_PRINT(para->net, "%c", uc[i]);
+            }
+            break;
+        case CR_U64:
+            OS_PRINT(para->net, "%8lld", os_bstr_to_u64(uc, tree->ie->value_len));
+            break;
+        default:
+            for (i = 0; i < tree->ie->value_len; i++)
+            {
+                OS_PRINT(para->net, "%02X", uc[i]);
+            }
+            break;
     }
 
     OS_PRINT(para->net, "%s", "\n");

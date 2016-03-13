@@ -394,7 +394,7 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
     /* init attr */
     attr_record = INODE_GET_ATTR_RECORD(&obj_info->inode);
     attr_record->record_size = ATTR_RECORD_SIZE;
-    attr_record->attr_flags = flags;
+    attr_record->flags = flags;
     if (flags & FLAG_TABLE)
     { /* table */
         init_ib((INDEX_BLOCK *)&attr_record->content, INDEX_BLOCK_SMALL, ATTR_RECORD_CONTENT_SIZE);
@@ -611,7 +611,8 @@ int32_t index_open_object_nolock(struct _INDEX_HANDLE *index, uint64_t objid, ui
         return -INDEX_ERR_CHAOS;
     }
     
-    memcpy(&inode_no, IEGetValue(id_obj->ie), VBN_SIZE);
+    //memcpy(&inode_no, IEGetValue(id_obj->ie), VBN_SIZE);
+    inode_no = os_bstr_to_u64(IEGetValue(id_obj->ie), id_obj->ie->value_len);
 
     ret = open_object(index, objid, inode_no, &obj);
     if (0 > ret)

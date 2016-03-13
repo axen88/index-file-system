@@ -50,6 +50,10 @@ extern int32_t os_collate_unicode_string(const UNICODE_CHAR *str1, uint32_t str1
     const UNICODE_CHAR *str2, uint32_t str2_size);
 extern int32_t os_collate_ansi_string(const char *str1, uint32_t str1_size,
     const char *str2, uint32_t str2_size);
+uint32_t os_u64_to_bstr(uint64_t u64, uint8_t *b);
+uint64_t os_bstr_to_u64(const uint8_t *b, uint32_t b_size);
+int32_t os_collate_u64(const uint8_t *b1, uint32_t b1_size,
+    const uint8_t *b2, uint32_t b2_size);
 
 #ifdef  __cplusplus
 }

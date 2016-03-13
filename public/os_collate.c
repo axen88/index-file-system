@@ -36,32 +36,15 @@ History:
 *******************************************************************************/
 #include "os_types.h"
 #include "os_collate.h"
+#include "os_adapter.h"
     
 #ifdef __KERNEL__
 
-/*******************************************************************************
-函数名称: os_to_upper
-功能说明: 将ANSI字符转换成大写的ANSI字符
-输入参数:
-    c: 需转换的ANSI字符
-输出参数: 无
-返 回 值: 大写的ANSI字符
-说    明: 无
-*******************************************************************************/
 char os_to_upper(char c)
 {
     return (((c <= 'z') && (c >= 'a')) ? (c - ('a' - 'A')) : c);
 }
 
-/*******************************************************************************
-函数名称: os_to_wupper
-功能说明: 将UNICODE字符转换成大写的UNICODE字符
-输入参数:
-    c: 需转换的UNICODE字符
-输出参数: 无
-返 回 值: 大写的UNICODE字符
-说    明: 无
-*******************************************************************************/
 UNICODE_CHAR os_to_wupper(UNICODE_CHAR c)
 {
     return (((c <= 'z') && (c >= 'a')) ? (c - ('a' - 'A')) : c);
@@ -76,32 +59,26 @@ UNICODE_CHAR os_to_wupper(UNICODE_CHAR c)
 
 #endif
 	
-/*******************************************************************************
-函数名称: OSCollateBinary
-功能说明: 比较二进制字串
-输入参数:
-    b1   : 要比较的第一个二进制字串
-    b1_size: 第一个二进制字串的长度
-    b2   : 要比较的第二个二进制字串
-    b2_size: 第二个二进制字串的长度
-输出参数: 无
-返 回 值:
+/*
+return value:
     <0: b1 < b2
     =0: b1 == b2
     >0: b1 > b2
-说    明: 无
-*******************************************************************************/
+*/
 int32_t os_collate_binary(const uint8_t *b1, uint32_t b1_size,
     const uint8_t *b2, uint32_t b2_size)
 {
-    /* 去掉以0开头的二进制字符 */
+    ASSERT(b1_size > 0);
+    ASSERT(b2_size > 0);
+
+    /* discard the beginning 0 */
 	while ((0 == *b1) && (b1_size > 0))
 	{
 		b1++;
 		b1_size--;
 	}
 	
-    /* 去掉以0开头的二进制字符 */
+    /* discard the beginning 0 */
 	while ((0 == *b2) && (b2_size > 0))
 	{
 		b2++;
@@ -118,7 +95,6 @@ int32_t os_collate_binary(const uint8_t *b1, uint32_t b1_size,
 		return -1;
 	}
     
-    /* 比较字串，此时v_uiSizeB1 == v_uiSizeB2 */
 	while (0 != b1_size)
 	{
 		if (*b1 > *b2)
@@ -139,28 +115,21 @@ int32_t os_collate_binary(const uint8_t *b1, uint32_t b1_size,
 	return 0;
 }
 
-/*******************************************************************************
-函数名称: OSCollateUnicodeString
-功能说明: 比较unicode字串
-输入参数:
-    str1   : 要比较的第一个unicode字串
-    str1_size: 第一个unicode字串的长度
-    str2   : 要比较的第二个unicode字串
-    str2_size: 第二个unicode字串的长度
-输出参数: 无
-返 回 值:
+/*
+return value
     <0: str1 < str2
     =0: str1 == str2
     >0: str1 > str2
-说    明: 无
-*******************************************************************************/
+*/
 int32_t os_collate_unicode_string(const UNICODE_CHAR *str1, uint32_t str1_size,
 	const UNICODE_CHAR *str2, uint32_t str2_size)
 {
 	UNICODE_CHAR c1 = 0;
     UNICODE_CHAR c2 = 0;
 
-    /* 比较字串 */
+    ASSERT(str1_size > 0);
+    ASSERT(str2_size > 0);
+
 	while ((0 != str1_size) && (0 != str2_size))
 	{
 		c1 = os_to_wupper(*str1);
@@ -194,28 +163,20 @@ int32_t os_collate_unicode_string(const UNICODE_CHAR *str1, uint32_t str1_size,
 	return 0;
 }
 
-/*******************************************************************************
-函数名称: OSCollateAnsiString
-功能说明: 比较ansi字串
-输入参数:
-    str1   : 要比较的第一个ansi字串
-    str1_size: 第一个ansi字串的长度
-    str2   : 要比较的第二个ansi字串
-    str2_size: 第二个ansi字串的长度
-输出参数: 无
-返 回 值:
+/*
     <0: str1 < str2
     =0: str1 == str2
     >0: str1 > str2
-说    明: 无
-*******************************************************************************/
+*/
 int32_t os_collate_ansi_string(const char *str1, uint32_t str1_size,
 	const char *str2, uint32_t str2_size)
 {
 	char c1 = 0;
     char c2 = 0;
 
-    /* 比较字串 */
+    ASSERT(str1_size > 0);
+    ASSERT(str2_size > 0);
+
 	while ((0 != str1_size) && (0 != str2_size))
 	{
 		c1 = os_to_upper(*str1);
@@ -249,4 +210,80 @@ int32_t os_collate_ansi_string(const char *str1, uint32_t str1_size,
 	return 0;
 } 
 
+// little endian u64
+uint64_t os_bstr_to_u64(const uint8_t *b, uint32_t b_size)
+{
+    uint64_t u64 = 0;
+    uint8_t *uc = (uint8_t *)&u64;
+
+    while (b_size--)
+    {
+        *uc = *b;
+        uc++;
+        b++;
+    }
+
+    return u64;
+}
+
+// little endian u64
+uint32_t os_u64_to_bstr(uint64_t u64, uint8_t *b)
+{
+    uint8_t *uc = (uint8_t *)&u64;
+    uint32_t b_size = sizeof(uint64_t);
+    uint32_t pos = sizeof(uint64_t) - 1;
+
+    while (pos > 0)
+    {
+        if (uc[pos] != 0)
+        {
+            break;
+        }
+        
+        b_size--;
+        pos--;
+    }
+
+    if (b_size == 0)
+    {
+        b_size = 1;
+    }
+
+    pos = 0;
+    while (pos < b_size)
+    {
+        *b = *uc;
+        b++;
+        uc++;
+    }
+    
+    return b_size;
+}
+
+
+	
+/*
+return value:
+    <0: b1 < b2
+    =0: b1 == b2
+    >0: b1 > b2
+*/
+int32_t os_collate_u64(const uint8_t *b1, uint32_t b1_size,
+    const uint8_t *b2, uint32_t b2_size)
+{
+    uint64_t u64_1 = os_bstr_to_u64(b1, b1_size);
+    uint64_t u64_2 = os_bstr_to_u64(b2, b2_size);
+	
+    if (u64_1 > u64_2)
+	{
+		return 1;
+	}
+
+	if (u64_1 < u64_2)
+	{
+		return -1;
+	}
+
+	return 0;
+}
 
