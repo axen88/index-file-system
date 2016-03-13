@@ -154,6 +154,8 @@ void put_object_info(OBJECT_INFO *obj_info)
     OS_RWLOCK_DESTROY(&obj_info->attr_lock);
     OS_RWLOCK_DESTROY(&obj_info->obj_hnd_lock);
     OS_RWLOCK_DESTROY(&obj_info->obj_lock);
+
+    OS_FREE(obj_info);
 }
 
 int32_t get_object_handle(OBJECT_INFO *obj_info, OBJECT_HANDLE **obj_out)
@@ -306,15 +308,22 @@ int32_t commit_object_modification(OBJECT_INFO *obj_info)
 	return 0;
 }
 
+void put_all_object_handle(OBJECT_INFO *obj_info)
+{
+    OBJECT_HANDLE *obj;
+    
+    while (obj_info->obj_ref_cnt != 0)
+    {
+        obj = OS_CONTAINER(obj_info->obj_hnd_list.head.next, OBJECT_HANDLE, entry);
+        put_object_handle(obj);
+    }
+}
+
 int32_t close_object(OBJECT_INFO *obj_info)
 {
     int32_t ret;
     
-    if (0 != obj_info->obj_ref_cnt)
-    {
-        LOG_ERROR("There are still object handle not closed. objid(%lld) obj_ref_cnt(%d)\n",
-            obj_info->objid, obj_info->obj_ref_cnt);
-    }
+    put_all_object_handle(obj_info);
     
     ret = commit_object_modification(obj_info);
     if (ret < 0)
