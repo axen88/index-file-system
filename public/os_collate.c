@@ -35,8 +35,8 @@ History:
     1. Primary version
 *******************************************************************************/
 #include "os_types.h"
-#include "os_collate.h"
 #include "os_adapter.h"
+#include "os_collate.h"
     
 #ifdef __KERNEL__
 

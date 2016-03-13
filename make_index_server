@@ -1,20 +1,48 @@
+
+CC = gcc
+CXX = g++
+AR = ar
+LD = ld
+
 PUBLIC_DIR := public
 UTILS_DIR := tools
 INDEX_DIR := index
 
-default:
-	gcc -o index_server $(INDEX_DIR)/index_block_manager.c $(INDEX_DIR)/index_block_rw.c \
-	    $(INDEX_DIR)/index_bitmap.c $(INDEX_DIR)/index_btree.c $(INDEX_DIR)/index_manager.c \
-	    $(INDEX_DIR)/index_cache.c $(INDEX_DIR)/index_utils.c $(INDEX_DIR)/index_attr_manager.c  $(INDEX_DIR)/index_attr_rw.c \
-	    $(INDEX_DIR)/index_object_manager.c $(INDEX_DIR)/index_verify.c $(INDEX_DIR)/index_fixup.c \
-	    $(UTILS_DIR)/index_tools_verify.c  $(UTILS_DIR)/index_tools_dump.c \
-	    $(UTILS_DIR)/index_tools_debug.c  $(UTILS_DIR)/index_tools_fixup.c \
-	    $(UTILS_DIR)/index_tools_list.c  $(UTILS_DIR)/index_tools_if.c $(UTILS_DIR)/index_server_main.c\
-	    $(UTILS_DIR)/index_tools_tree.c  $(UTILS_DIR)/index_tools_performace.c \
-	    $(PUBLIC_DIR)/os_queue.c $(PUBLIC_DIR)/os_list_double.c $(PUBLIC_DIR)/avl.c \
-	    $(PUBLIC_DIR)/os_log.c  $(PUBLIC_DIR)/os_utils.c $(PUBLIC_DIR)/os_file_if.c \
-	    $(PUBLIC_DIR)/os_cmd_ui.c $(PUBLIC_DIR)/os_threads_group.c  $(PUBLIC_DIR)/os_collate.c \
-	    -Iinclude -Wall -g -Wno-unused -D__EN_FILE_IF__ -lpthread -levent
+CFLAGS = -Iinclude -Wall -g -Wno-unused  -D__EN_FILE_IF__
+
+LIB_OBJS = $(INDEX_DIR)/index_block_manager.o $(INDEX_DIR)/index_block_rw.o \
+	    $(INDEX_DIR)/index_bitmap.o $(INDEX_DIR)/index_btree.o $(INDEX_DIR)/index_manager.o \
+	    $(INDEX_DIR)/index_cache.o $(INDEX_DIR)/index_utils.o  \
+	    $(INDEX_DIR)/index_object_manager.o $(INDEX_DIR)/index_verify.o $(INDEX_DIR)/index_fixup.o \
+	    $(PUBLIC_DIR)/os_queue.o $(PUBLIC_DIR)/os_list_double.o $(PUBLIC_DIR)/avl.o \
+	    $(PUBLIC_DIR)/os_log.o  $(PUBLIC_DIR)/os_utils.o $(PUBLIC_DIR)/os_file_if.o \
+	    $(PUBLIC_DIR)/os_cmd_ui.o $(PUBLIC_DIR)/os_threads_group.o  $(PUBLIC_DIR)/os_collate.o
+	    
+	    
+TARGET_OBJS = $(UTILS_DIR)/index_tools_verify.o  $(UTILS_DIR)/index_tools_dump.o \
+	    $(UTILS_DIR)/index_tools_debug.o  $(UTILS_DIR)/index_tools_fixup.o \
+	    $(UTILS_DIR)/index_tools_list.o  $(UTILS_DIR)/index_tools_if.o $(UTILS_DIR)/index_tools_main.o\
+	    $(UTILS_DIR)/index_tools_tree.o  $(UTILS_DIR)/index_tools_performace.o 
+	    
+
+INDEX_LIB = libindex.a
+INDEX_SERVER = index_server
+
+TARGET_ALL = $(INDEX_LIB) $(INDEX_SERVER)
+
+all: $(TARGET_ALL)
+
+%o:%c
+	$(CC) -c $(CFLAGS) $< -o $@
+
+%o:%cpp
+	$(CXX) -c $(CFLAGS) $< -o $@
+
+$(INDEX_LIB): $(LIB_OBJS)
+	$(AR) rcs $@ $^
+
+$(INDEX_SERVER): $(LIB_OBJS) $(TARGET_OBJS)
+	$(CC) -o $@ $^ -lpthread -levent
 	
 clean:
-	rm -f index_server *.o
+	rm -f $(LIB_OBJS) $(TARGET_OBJS) $(TARGET_ALL)
