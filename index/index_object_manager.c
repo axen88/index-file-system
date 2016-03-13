@@ -459,6 +459,7 @@ int32_t open_object(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, OBJE
     strncpy(obj_info->obj_name, obj_info->inode.name, obj_info->inode.name_size);
 
     backup_obj_inode(obj_info);
+    init_attr(obj_info, inode_no);
     
     ret = get_object_handle(obj_info, &obj);
     if (ret < 0)
