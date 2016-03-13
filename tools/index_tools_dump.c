@@ -48,7 +48,7 @@ static int32_t dump_callback(void *in_tree, DUMP_PARA_S *para)
 {
     uint32_t i = 0;
     uint8_t *pucDat = NULL;
-    ATTR_HANDLE *tree = in_tree;
+    OBJECT_HANDLE *tree = in_tree;
 
     ASSERT(NULL != tree);
     ASSERT(NULL != para);
@@ -68,7 +68,7 @@ static int32_t dump_callback(void *in_tree, DUMP_PARA_S *para)
     pucDat = IEGetKey(tree->ie);
     for (i = 0; i < tree->ie->key_len; i++)
     {
-        OS_PRINT(para->net, (COLLATE_BINARY == (tree->attr_info->attr_record.attr_flags & COLLATE_RULE_MASK2))
+        OS_PRINT(para->net, (COLLATE_BINARY == (tree->obj_info->attr_record.attr_flags & COLLATE_RULE_MASK2))
             ? "%02X" : "%c", pucDat[i]);
     }
 
@@ -89,7 +89,7 @@ static int32_t dump_callback(void *in_tree, DUMP_PARA_S *para)
     return 0;
 }
 
-static int32_t dump_key(ATTR_HANDLE *tree, const bool_t v_bReverse, NET_PARA_S *net)
+static int32_t dump_key(OBJECT_HANDLE *tree, const bool_t v_bReverse, NET_PARA_S *net)
 {
     int32_t ret = 0;
     DUMP_PARA_S para;
@@ -98,16 +98,16 @@ static int32_t dump_key(ATTR_HANDLE *tree, const bool_t v_bReverse, NET_PARA_S *
 
 	memset(&para, 0, sizeof(DUMP_PARA_S));
     
-	OS_PRINT(net, "Start dump all keys. objid(%lld)\n", tree->attr_info->obj->objid);
+	OS_PRINT(net, "Start dump all keys. objid(%lld)\n", tree->obj_info->objid);
 
     para.net = net;
     ret = index_walk_all(tree, v_bReverse, 0, &para, (WalkAllCallBack)dump_callback);
     if (ret < 0)
     {
-        OS_PRINT(net, "Walk tree failed. objid(%lld) ret(%d)\n", tree->attr_info->obj->objid, ret);
+        OS_PRINT(net, "Walk tree failed. objid(%lld) ret(%d)\n", tree->obj_info->objid, ret);
     }
     
-	OS_PRINT(net, "Finished dump all keys. objid(%lld)\n", tree->attr_info->obj->objid);
+	OS_PRINT(net, "Finished dump all keys. objid(%lld)\n", tree->obj_info->objid);
     
 	return ret;
 }
@@ -116,7 +116,6 @@ void dump_cmd(INDEX_TOOLS_PARA_S *para)
 {
     INDEX_HANDLE *index = NULL;
     OBJECT_HANDLE *obj = NULL;
-    ATTR_HANDLE *attr = NULL;
     int32_t ret = 0;
     
     ASSERT (NULL != para);
@@ -149,19 +148,8 @@ void dump_cmd(INDEX_TOOLS_PARA_S *para)
 		return;
     }
 
-    ret = index_open_attr(obj, &attr);
-    if (0 > ret)
-    {
-        OS_PRINT(para->net, "Open obj failed. index_name(%s) start_lba(%lld) objid(%lld) ret(%d)\n",
-            para->index_name, para->start_lba, para->objid, ret);
-        (void)index_close_object(obj);
-        (void)index_close(index);
-		return;
-    }
+    ret = dump_key(obj, para->flags & TOOLS_FLAGS_REVERSE, para->net);
 
-    ret = dump_key(attr, para->flags & TOOLS_FLAGS_REVERSE, para->net);
-
-    (void)index_close_attr(attr);
     (void)index_close_object(obj);
 	(void)index_close(index);
 	

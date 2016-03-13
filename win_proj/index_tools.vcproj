@@ -177,14 +177,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\index\index_attr_manager.c"
-				>
-			</File>
-			<File
-				RelativePath="..\index\index_attr_rw.c"
-				>
-			</File>
-			<File
 				RelativePath="..\index\index_bitmap.c"
 				>
 			</File>

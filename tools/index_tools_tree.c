@@ -41,7 +41,6 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
     int32_t ret = 0;
     INDEX_HANDLE *index = NULL;
     OBJECT_HANDLE *obj = NULL;
-    ATTR_HANDLE *attr = NULL;
 
     ASSERT(NULL != para);
 
@@ -77,17 +76,7 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
         return ret;
     }
 
-    ret = index_open_attr(obj, &attr);
-    if (0 > ret)
-    {
-        OS_PRINT(para->net, "Open obj failed. index_name(%s) start_lba(%lld) objid(%lld) ret(%d)\n",
-            para->index_name, para->start_lba, para->objid, ret);
-        (void)index_close_object(obj);
-        (void)index_close(index);
-		return ret;
-    }
-
-    ret = index_insert_key(attr, para->key, strlen(para->key),
+    ret = index_insert_key(obj, para->key, strlen(para->key),
         para->value, strlen(para->value));
     if (0 > ret)
     {
@@ -95,7 +84,6 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
             para->key, para->value, ret);
     }
 
-    (void)index_close_attr(attr);
     (void)index_close_object(obj);
     (void)index_close(index);
     
@@ -107,7 +95,6 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
     int32_t ret = 0;
     INDEX_HANDLE *index = NULL;
     OBJECT_HANDLE *obj = NULL;
-    ATTR_HANDLE *attr = NULL;
 
     ASSERT(NULL != para);
 
@@ -141,24 +128,13 @@ static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
         return ret;
     }
 
-    ret = index_open_attr(obj, &attr);
-    if (0 > ret)
-    {
-        OS_PRINT(para->net, "Open obj failed. index_name(%s) start_lba(%lld) objid(%lld) ret(%d)\n",
-            para->index_name, para->start_lba, para->objid, ret);
-        (void)index_close_object(obj);
-        (void)index_close(index);
-		return ret;
-    }
-
-    ret = index_remove_key(attr, para->key, strlen(para->key));
+    ret = index_remove_key(obj, para->key, strlen(para->key));
     if (0 > ret)
     {
         OS_PRINT(para->net, "Remove key failed. key(%s) ret(%d)\n",
             para->key, ret);
     }
 
-    (void)index_close_attr(attr);
     (void)index_close_object(obj);
     (void)index_close(index);
     

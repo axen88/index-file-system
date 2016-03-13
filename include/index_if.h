@@ -79,9 +79,9 @@ typedef enum tagCACHE_STATUS_E
 
 #define INDEX_MAX_DEPTH           16
 
-#define ATTR_INFO_DIRTY(attr_info)   IBC_DIRTY(&(attr_info)->root_ibc)
-#define ATTR_INFO_SET_DIRTY(attr_info) IBC_SET_DIRTY(&(attr_info)->root_ibc)
-#define ATTR_INFO_CLR_DIRTY(attr_info) IBC_SET_CLEAN(&(attr_info)->root_ibc)
+#define ATTR_INFO_DIRTY(obj_info)   IBC_DIRTY(&(obj_info)->root_ibc)
+#define ATTR_INFO_SET_DIRTY(obj_info) IBC_SET_DIRTY(&(obj_info)->root_ibc)
+#define ATTR_INFO_CLR_DIRTY(obj_info) IBC_SET_CLEAN(&(obj_info)->root_ibc)
 
 #define OBJ_FLAG_DIRTY   0x01
 
@@ -94,55 +94,16 @@ typedef struct _INDEX_BLOCK_CACHE
 	uint64_t vbn;
 	uint32_t state;
 	struct _INDEX_BLOCK *ib;
-	avl_node_t attr_entry;
+	avl_node_t entry;
 } INDEX_BLOCK_CACHE;
 
 typedef struct _INDEX_OLD_BLOCK
 {
 	uint64_t vbn;
-	avl_node_t attr_entry;
+	avl_node_t entry;
 } INDEX_OLD_BLOCK;
 
-typedef struct _ATTR_INFO
-{
-    struct _OBJECT_HANDLE *obj;        // object handle
-
-    ATTR_RECORD attr_record;           // attr record
-
-    INDEX_BLOCK_CACHE root_ibc;
-    
-    uint32_t attr_ref_cnt;             // reference count
-    DLIST_HEAD_S attr_hnd_list;        // all attr handle
-    OS_RWLOCK attr_lock;               // lock  
-
-    avl_tree_t attr_caches;            // record all new block data
-    avl_tree_t attr_old_blocks;        // record old block info
-    OS_RWLOCK caches_lock;
-    
-    avl_node_t entry;                  // recorded in object
-} ATTR_INFO;
-
-typedef struct _ATTR_HANDLE
-{
-    ATTR_INFO *attr_info;             /* 属性信息 */
-
-    //OS_U64 offset;
-    DLIST_ENTRY_S entry;               /* recorded in object */
-
-    /* 树操作相关信息 */
-    uint8_t max_depth;
-    uint8_t depth;             // Number of the parent nodes
-    INDEX_BLOCK_CACHE *cache_stack[INDEX_MAX_DEPTH];
-
-    uint64_t position_stack[INDEX_MAX_DEPTH];
-
-    INDEX_BLOCK_CACHE *cache;
-    uint64_t position;
-    INDEX_ENTRY *ie;        
-} ATTR_HANDLE;
-
-
-typedef struct _OBJECT_HANDLE
+typedef struct _OBJECT_INFO
 {
     struct _INDEX_HANDLE *index;       // index handle
     
@@ -158,12 +119,38 @@ typedef struct _OBJECT_HANDLE
     
     avl_node_t entry;                  // register in index handle
 
-    ATTR_INFO attr_info;
-    ATTR_HANDLE *attr;                 // default attr handle
+    ATTR_RECORD attr_record;           // attr record
+    OS_RWLOCK attr_lock;               // lock  tree handle
 
+    
+    DLIST_HEAD_S obj_hnd_list;        // all object handle
+    OS_RWLOCK    obj_hnd_lock;        // lock the obj_hnd_list operation
+
+    INDEX_BLOCK_CACHE root_ibc;
+    avl_tree_t caches;            // record all new block data
+    avl_tree_t old_blocks;        // record old block info
+    OS_RWLOCK caches_lock;
+    
     uint32_t obj_ref_cnt;
     
     OS_RWLOCK obj_lock;
+} OBJECT_INFO;
+
+typedef struct _OBJECT_HANDLE
+{
+    struct _INDEX_HANDLE *index;       // index handle
+    OBJECT_INFO *obj_info;
+
+    // tree handle structure
+    uint8_t max_depth;
+    uint8_t depth;             // Number of the parent nodes
+    INDEX_BLOCK_CACHE *cache_stack[INDEX_MAX_DEPTH];
+    uint64_t position_stack[INDEX_MAX_DEPTH];
+    INDEX_BLOCK_CACHE *cache;
+    uint64_t position;
+    INDEX_ENTRY *ie;        
+
+    DLIST_ENTRY_S entry;
 } OBJECT_HANDLE;
 
 typedef struct _INDEX_HANDLE
@@ -176,7 +163,7 @@ typedef struct _INDEX_HANDLE
     //OBJECT_HANDLE *space_obj;
     
     uint32_t index_ref_cnt;
-    avl_tree_t obj_list;              // all opened object
+    avl_tree_t obj_list;              // all opened object info
 
     avl_node_t entry;
     
@@ -192,14 +179,14 @@ typedef struct _INDEX_HANDLE
 #define INDEX_ALLOC_BLOCK(obj, vbn) block_alloc((obj)->index->hnd, 1, vbn)
 #define INDEX_FREE_BLOCK(obj, vbn)  block_free((obj)->index->hnd, vbn, 1)
 
-extern int32_t index_block_read(struct _ATTR_HANDLE * tree, uint64_t vbn);
-extern int32_t index_alloc_cache_and_block(struct _ATTR_INFO *attr_info, INDEX_BLOCK_CACHE **cache);
-extern int32_t index_release_all_dirty_blocks(struct _ATTR_INFO *attr_info);
-extern void index_release_all_old_blocks_mem(struct _ATTR_INFO *attr_info);
-extern void index_release_all_old_blocks(struct _ATTR_INFO *attr_info);
-extern int32_t index_record_old_block(struct _ATTR_INFO *attr_info, uint64_t vbn);
-extern int32_t index_release_all_caches(struct _ATTR_INFO *attr_info);
-extern int32_t index_flush_all_dirty_caches(struct _ATTR_INFO * attr_info);
+extern int32_t index_block_read(struct _OBJECT_HANDLE *obj, uint64_t vbn);
+extern int32_t index_alloc_cache_and_block(struct _OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE **cache);
+extern int32_t index_release_all_dirty_blocks(struct _OBJECT_INFO *obj_info);
+extern void index_release_all_old_blocks_mem(struct _OBJECT_INFO *obj_info);
+extern void index_release_all_old_blocks(struct _OBJECT_INFO *obj_info);
+extern int32_t index_record_old_block(struct _OBJECT_INFO *obj_info, uint64_t vbn);
+extern int32_t index_release_all_caches(struct _OBJECT_INFO *obj_info);
+extern int32_t index_flush_all_dirty_caches(struct _OBJECT_INFO * obj_info);
 
 extern int32_t walk_all_opened_index(
     int32_t (*func)(void *, struct _INDEX_HANDLE *), void *para);
@@ -210,7 +197,6 @@ extern int32_t walk_all_opened_index(
 }
 #endif
 
-#include "index_attr.h"
 #include "index_tree.h"
 #include "index_object.h"
 #include "index_manager.h"

@@ -41,7 +41,7 @@ static int32_t cmd_create(INDEX_TOOLS_PARA_S *para)
     int32_t ret = 0;
     INDEX_HANDLE *index = NULL;
     OBJECT_HANDLE *obj = NULL;
-    ATTR_HANDLE *attr = NULL;
+    OBJECT_HANDLE *attr = NULL;
 
     ASSERT(NULL != para);
 
@@ -131,7 +131,7 @@ static int32_t cmd_open(INDEX_TOOLS_PARA_S *para)
     }
 
     OS_PRINT(para->net, "Open obj success. objid(%lld) obj(%p) ref_cnt(%d)\n",
-        para->objid, obj, obj->obj_ref_cnt);
+        para->objid, obj, obj->obj_info->obj_ref_cnt);
  
     return 0;
 }

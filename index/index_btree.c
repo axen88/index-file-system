@@ -64,7 +64,7 @@ MODULE(PID_INDEX);
 #endif
 
 /* 设置当前块一直到根节点块cache数据为脏数据 */
-static int32_t set_ib_dirty(ATTR_HANDLE *tree, uint64_t vbn, uint8_t depth)
+static int32_t set_ib_dirty(OBJECT_HANDLE *tree, uint64_t vbn, uint8_t depth)
 {
     uint64_t new_vbn = 0;
     int32_t ret = 0;
@@ -77,7 +77,7 @@ static int32_t set_ib_dirty(ATTR_HANDLE *tree, uint64_t vbn, uint8_t depth)
     {
         if ((0 != depth) && (DIRTY != tree->cache_stack[depth]->state))
         {   /* 分配新块以便写修改后的数据 */
-            ret = INDEX_ALLOC_BLOCK(tree->attr_info->obj, &new_vbn);
+            ret = INDEX_ALLOC_BLOCK(tree->obj_info, &new_vbn);
             if (0 > ret)
             {
                 LOG_ERROR("Allocate new block failed. ret(%d)\n", ret);
@@ -85,13 +85,13 @@ static int32_t set_ib_dirty(ATTR_HANDLE *tree, uint64_t vbn, uint8_t depth)
             }
             
             /* 将原来的块放入旧块队列以便事务处理 */
-            ret = index_record_old_block(tree->attr_info, tree->cache_stack[depth]->vbn);
+			ret = index_record_old_block(tree->obj_info, tree->cache_stack[depth]->vbn);
             
-            OS_RWLOCK_WRLOCK(&tree->attr_info->caches_lock);
-            avl_remove(&tree->attr_info->attr_caches, tree->cache_stack[depth]);
+            OS_RWLOCK_WRLOCK(&tree->obj_info->caches_lock);
+            avl_remove(&tree->obj_info->caches, tree->cache_stack[depth]);
             tree->cache_stack[depth]->vbn = new_vbn;
-            avl_add(&tree->attr_info->attr_caches, tree->cache_stack[depth]);
-            OS_RWLOCK_WRUNLOCK(&tree->attr_info->caches_lock);
+            avl_add(&tree->obj_info->caches, tree->cache_stack[depth]);
+            OS_RWLOCK_WRUNLOCK(&tree->obj_info->caches_lock);
             
             if (0 > ret)
             {
@@ -121,7 +121,7 @@ static int32_t set_ib_dirty(ATTR_HANDLE *tree, uint64_t vbn, uint8_t depth)
     return 0;
 }
 
-static void get_last_ie(ATTR_HANDLE * tree)
+static void get_last_ie(OBJECT_HANDLE * tree)
 {
     uint32_t last_ie_len = ENTRY_END_SIZE;
     
@@ -138,12 +138,12 @@ static void get_last_ie(ATTR_HANDLE * tree)
     return;
 }
 
-static void reset_cache_stack(ATTR_HANDLE * tree, uint8_t flags)
+static void reset_cache_stack(OBJECT_HANDLE * tree, uint8_t flags)
 {
     ASSERT(NULL != tree);
     
     /* 使当前指针指向根节点的第一个entry */
-    tree->cache = &tree->attr_info->root_ibc;
+    tree->cache = &tree->obj_info->root_ibc;
     tree->cache_stack[0] = tree->cache;
     tree->depth = 0;
 
@@ -162,7 +162,7 @@ static void reset_cache_stack(ATTR_HANDLE * tree, uint8_t flags)
 /*******************************************************************************
 树往下深入一级
 *******************************************************************************/
-static int32_t push_cache_stack(ATTR_HANDLE *tree, uint8_t flags)
+static int32_t push_cache_stack(OBJECT_HANDLE *tree, uint8_t flags)
 {
     uint64_t vbn = 0;
     int32_t ret = 0;
@@ -217,7 +217,7 @@ static int32_t push_cache_stack(ATTR_HANDLE *tree, uint8_t flags)
 /*******************************************************************************
 树的当前指针指向前一个entry
 *******************************************************************************/
-static int32_t get_prev_ie(ATTR_HANDLE *tree)
+static int32_t get_prev_ie(OBJECT_HANDLE *tree)
 {
     ASSERT(NULL != tree);
     
@@ -248,7 +248,7 @@ static int32_t get_prev_ie(ATTR_HANDLE *tree)
 /*******************************************************************************
 树往上回退一级
 *******************************************************************************/
-static int32_t pop_cache_stack(ATTR_HANDLE *tree, uint8_t flags)
+static int32_t pop_cache_stack(OBJECT_HANDLE *tree, uint8_t flags)
 {
     ASSERT(NULL != tree);
     
@@ -356,7 +356,7 @@ static void make_ib_small(INDEX_BLOCK *ib)
 /*******************************************************************************
 获取树的下一个entry
 *******************************************************************************/
-static int32_t get_next_ie(ATTR_HANDLE *tree)
+static int32_t get_next_ie(OBJECT_HANDLE *tree)
 {
     ASSERT(NULL != tree);
 
@@ -378,7 +378,7 @@ static int32_t get_next_ie(ATTR_HANDLE *tree)
     return 0;
 }    
 
-static int32_t add_or_remove_ib(ATTR_HANDLE *tree, uint8_t flags)
+static int32_t add_or_remove_ib(OBJECT_HANDLE *tree, uint8_t flags)
 {
     int32_t ret = 0;
 
@@ -386,7 +386,7 @@ static int32_t add_or_remove_ib(ATTR_HANDLE *tree, uint8_t flags)
         
     if (flags & INDEX_REMOVE_BLOCK)
     {
-        ret = index_record_old_block(tree->attr_info, tree->cache->vbn);
+        ret = index_record_old_block(tree->obj_info, tree->cache->vbn);
         if (0 > ret)
         {
             LOG_ERROR("Record old block failed. vbn(%lld) ret(%d)\n", tree->cache->vbn, ret);
@@ -395,7 +395,7 @@ static int32_t add_or_remove_ib(ATTR_HANDLE *tree, uint8_t flags)
     }
     else if (flags & INDEX_ADD_BLOCK)
     {
-        ret = block_set_status(tree->attr_info->obj->index->hnd, tree->cache->vbn,
+        ret = block_set_status(tree->obj_info->index->hnd, tree->cache->vbn,
             1, B_TRUE);
         if (0 > ret)
         {
@@ -410,7 +410,7 @@ static int32_t add_or_remove_ib(ATTR_HANDLE *tree, uint8_t flags)
 /*******************************************************************************
 将entry指针指向当前key
 *******************************************************************************/
-static int32_t get_current_ie(ATTR_HANDLE *tree, uint8_t flags)
+static int32_t get_current_ie(OBJECT_HANDLE *tree, uint8_t flags)
 {
     int32_t ret = 0;
 
@@ -467,7 +467,7 @@ static int32_t get_current_ie(ATTR_HANDLE *tree, uint8_t flags)
     return 0;
 }
 
-int32_t walk_tree(ATTR_HANDLE *tree, uint8_t flags)
+int32_t walk_tree(OBJECT_HANDLE *tree, uint8_t flags)
 {
     int32_t ret = 0;
 
@@ -477,7 +477,7 @@ int32_t walk_tree(ATTR_HANDLE *tree, uint8_t flags)
         return -INDEX_ERR_PARAMETER;
     }
 
-    ASSERT(tree->attr_info->attr_record.attr_flags & FLAG_TABLE);
+    ASSERT(tree->obj_info->attr_record.attr_flags & FLAG_TABLE);
 
     if (flags & (INDEX_GET_FIRST | INDEX_GET_LAST))
     {   /* Get to the root's first entry */
@@ -546,7 +546,7 @@ int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY *ie,
 /*******************************************************************************
 搜索指定key，无加锁
 *******************************************************************************/
-int32_t search_key_internal(ATTR_HANDLE *tree, const void *key,
+int32_t search_key_internal(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len)
 {
     int32_t ret = 0;
@@ -567,7 +567,7 @@ int32_t search_key_internal(ATTR_HANDLE *tree, const void *key,
     {
         while (0 == (tree->ie->flags & INDEX_ENTRY_END))
         {       /* It is not the Index END */
-            ret = collate_key(tree->attr_info->attr_record.attr_flags, tree->ie,
+            ret = collate_key(tree->obj_info->attr_record.attr_flags, tree->ie,
                 key, key_len);
             if (0 < ret)
             {   /* key比要找的key大 */
@@ -613,7 +613,7 @@ int32_t search_key_internal(ATTR_HANDLE *tree, const void *key,
 /*******************************************************************************
 将树key指针指向离当前位置最近的key
 *******************************************************************************/
-static void get_to_near_key(ATTR_HANDLE *tree)
+static void get_to_near_key(OBJECT_HANDLE *tree)
 {
     int32_t ret = 0;
 
@@ -639,7 +639,7 @@ static void get_to_near_key(ATTR_HANDLE *tree)
 /*******************************************************************************
 搜索指定key，无加锁
 *******************************************************************************/
-int32_t index_search_key_nolock(ATTR_HANDLE *tree, const void *key,
+int32_t index_search_key_nolock(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len)
 {
     int32_t ret = 0;
@@ -652,7 +652,7 @@ int32_t index_search_key_nolock(ATTR_HANDLE *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    ASSERT(tree->attr_info->attr_record.attr_flags & FLAG_TABLE);
+    ASSERT(tree->obj_info->attr_record.attr_flags & FLAG_TABLE);
 
     ret = search_key_internal(tree, key, key_len);
     if (-INDEX_ERR_KEY_NOT_FOUND == ret)
@@ -666,7 +666,7 @@ int32_t index_search_key_nolock(ATTR_HANDLE *tree, const void *key,
 /*******************************************************************************
 搜索指定key，有加锁
 *******************************************************************************/
-int32_t index_search_key(ATTR_HANDLE *tree, const void *key,
+int32_t index_search_key(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len)
 {
     int32_t ret = 0;
@@ -678,9 +678,9 @@ int32_t index_search_key(ATTR_HANDLE *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    OS_RWLOCK_WRLOCK(&tree->attr_info->attr_lock);
+    OS_RWLOCK_WRLOCK(&tree->obj_info->attr_lock);
     ret = index_search_key_nolock(tree, key, key_len);
-    OS_RWLOCK_WRUNLOCK(&tree->attr_info->attr_lock);
+    OS_RWLOCK_WRUNLOCK(&tree->obj_info->attr_lock);
 
     return ret;
 }
@@ -917,7 +917,7 @@ static void cut_ib_tail(INDEX_BLOCK *src_ib, INDEX_ENTRY *ie)
 将当前索引块分裂成2个，并将其中间entry提出来，然后将指定entry插入
 其中一个索引块
 *******************************************************************************/
-static INDEX_ENTRY *split_ib(ATTR_HANDLE *tree, INDEX_ENTRY *ie)
+static INDEX_ENTRY *split_ib(OBJECT_HANDLE *tree, INDEX_ENTRY *ie)
 {
     INDEX_ENTRY *mid_ie = NULL;
     INDEX_ENTRY *new_ie = NULL;
@@ -931,7 +931,7 @@ static INDEX_ENTRY *split_ib(ATTR_HANDLE *tree, INDEX_ENTRY *ie)
 
     mid_ie = get_middle_ie(tree->cache->ib);
 
-    ret = index_alloc_cache_and_block(tree->attr_info, &new_ibc);
+    ret = index_alloc_cache_and_block(tree->obj_info, &new_ibc);
     if (0 > ret)
     {
         LOG_ERROR("Allocate cache failed.\n");
@@ -993,7 +993,7 @@ static INDEX_ENTRY *split_ib(ATTR_HANDLE *tree, INDEX_ENTRY *ie)
 /*******************************************************************************
 将根节点中的entry挪到新的节点中来，从而使根节点所在vbn不变
 *******************************************************************************/
-static int32_t reparent_root(ATTR_HANDLE * tree)
+static int32_t reparent_root(OBJECT_HANDLE * tree)
 {
     INDEX_ENTRY *ie = NULL;
     INDEX_BLOCK *new_ib = NULL;
@@ -1015,7 +1015,7 @@ static int32_t reparent_root(ATTR_HANDLE * tree)
     old_ib = tree->cache->ib;
     alloc_size = old_ib->head.alloc_size;
     
-    ret = index_alloc_cache_and_block(tree->attr_info, &new_ibc);
+    ret = index_alloc_cache_and_block(tree->obj_info, &new_ibc);
     if (0 > ret)
     {
         LOG_ERROR("Allocate cache failed.\n");
@@ -1025,7 +1025,7 @@ static int32_t reparent_root(ATTR_HANDLE * tree)
     new_ib = new_ibc->ib;
 
     memcpy(new_ib, old_ib, old_ib->head.real_size);
-    new_ib->head.alloc_size = tree->attr_info->obj->index->hnd->sb.block_size;
+    new_ib->head.alloc_size = tree->obj_info->index->hnd->sb.block_size;
 
     new_ibc->state = DIRTY;
 
@@ -1057,7 +1057,7 @@ static int32_t reparent_root(ATTR_HANDLE * tree)
 /*******************************************************************************
 在树的当前位置插入指定entry
 *******************************************************************************/
-static int32_t tree_insert_ie(ATTR_HANDLE *tree, INDEX_ENTRY **new_ie)
+static int32_t tree_insert_ie(OBJECT_HANDLE *tree, INDEX_ENTRY **new_ie)
 {
     uint32_t uiNewSize = 0;
     INDEX_ENTRY *ie = NULL;
@@ -1103,7 +1103,7 @@ static int32_t tree_insert_ie(ATTR_HANDLE *tree, INDEX_ENTRY **new_ie)
 /*******************************************************************************
 检查是否需要删除索引块
 *******************************************************************************/
-int32_t check_removed_ib(ATTR_HANDLE * tree)
+int32_t check_removed_ib(OBJECT_HANDLE * tree)
 {
     int32_t ret = 0;
     INDEX_ENTRY *ie = IBGetFirst(tree->cache->ib);
@@ -1121,7 +1121,7 @@ int32_t check_removed_ib(ATTR_HANDLE * tree)
 
     for (;;)
     {
-        ret = index_record_old_block(tree->attr_info, tree->cache->vbn);
+        ret = index_record_old_block(tree->obj_info, tree->cache->vbn);
         if (0 > ret)
         {
             LOG_ERROR("Record old block failed. ret(%d)\n", ret);
@@ -1161,7 +1161,7 @@ int32_t check_removed_ib(ATTR_HANDLE * tree)
 /*******************************************************************************
 删除一个叶子entry
 *******************************************************************************/
-int32_t remove_leaf(ATTR_HANDLE *tree)
+int32_t remove_leaf(OBJECT_HANDLE *tree)
 {
     INDEX_ENTRY *ie = NULL;
     INDEX_ENTRY *prev_ie = NULL;        /* The previous entry */
@@ -1240,7 +1240,7 @@ int32_t remove_leaf(ATTR_HANDLE *tree)
 /*******************************************************************************
 删除一个node，也就是带子树的entry
 *******************************************************************************/
-int32_t remove_node(ATTR_HANDLE *tree)
+int32_t remove_node(OBJECT_HANDLE *tree)
 {
     INDEX_ENTRY *succ_ie = NULL;        /* The successor entry */
     uint16_t len = 0;
@@ -1324,7 +1324,7 @@ int32_t remove_node(ATTR_HANDLE *tree)
 /*******************************************************************************
 删除树当前指向的entry
 *******************************************************************************/
-int32_t tree_remove_ie(ATTR_HANDLE *tree)
+int32_t tree_remove_ie(OBJECT_HANDLE *tree)
 {
     /* 检查输入参数 */
     if (NULL == tree)
@@ -1351,7 +1351,7 @@ int32_t tree_remove_ie(ATTR_HANDLE *tree)
 /*******************************************************************************
 删除指定key，无锁
 *******************************************************************************/
-int32_t index_remove_key_nolock(ATTR_HANDLE *tree, const void *key,
+int32_t index_remove_key_nolock(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len)
 {
     int32_t ret = 0;
@@ -1365,7 +1365,7 @@ int32_t index_remove_key_nolock(ATTR_HANDLE *tree, const void *key,
 
     PRINT_KEY("Remove key start", tree, key, key_len);
 
-    ASSERT(tree->attr_info->attr_record.attr_flags & FLAG_TABLE);
+    ASSERT(tree->obj_info->attr_record.attr_flags & FLAG_TABLE);
 
     /* 搜索是否有此key */
     ret = search_key_internal(tree, key, key_len);
@@ -1391,7 +1391,7 @@ int32_t index_remove_key_nolock(ATTR_HANDLE *tree, const void *key,
 /*******************************************************************************
 删除指定key
 *******************************************************************************/
-int32_t index_remove_key(ATTR_HANDLE *tree, const void *key,
+int32_t index_remove_key(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len)
 {
     int32_t ret = 0;
@@ -1403,9 +1403,9 @@ int32_t index_remove_key(ATTR_HANDLE *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    OS_RWLOCK_WRLOCK(&((ATTR_HANDLE *)tree)->attr_info->attr_lock);
+    OS_RWLOCK_WRLOCK(&tree->obj_info->attr_lock);
     ret = index_remove_key_nolock(tree, key, key_len);
-    OS_RWLOCK_WRUNLOCK(&((ATTR_HANDLE *)tree)->attr_info->attr_lock);
+    OS_RWLOCK_WRUNLOCK(&tree->obj_info->attr_lock);
 
     return ret;
 }
@@ -1413,7 +1413,7 @@ int32_t index_remove_key(ATTR_HANDLE *tree, const void *key,
 /*******************************************************************************
 插入指定的key和value, 无锁
 *******************************************************************************/
-int32_t index_insert_key_nolock(ATTR_HANDLE *tree, const void *key,
+int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len, const void *c, uint16_t value_len)
 {
     INDEX_ENTRY *ie = NULL;
@@ -1429,7 +1429,7 @@ int32_t index_insert_key_nolock(ATTR_HANDLE *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    ASSERT(tree->attr_info->attr_record.attr_flags & FLAG_TABLE);
+    ASSERT(tree->obj_info->attr_record.attr_flags & FLAG_TABLE);
 
     PRINT_KEY("Insert key start", tree, key, key_len);
 
@@ -1442,7 +1442,7 @@ int32_t index_insert_key_nolock(ATTR_HANDLE *tree, const void *key,
     
     if (-INDEX_ERR_KEY_NOT_FOUND != ret)
     {
-        LOG_ERROR("Search key failed. objid(%lld) ret(%d)\n", tree->attr_info->obj->objid, ret);
+        LOG_ERROR("Search key failed. objid(%lld) ret(%d)\n", tree->obj_info->objid, ret);
         return ret;
     }
 
@@ -1482,7 +1482,7 @@ int32_t index_insert_key_nolock(ATTR_HANDLE *tree, const void *key,
 /*******************************************************************************
 插入指定的key和value
 *******************************************************************************/
-int32_t index_insert_key(ATTR_HANDLE *tree, const void *key,
+int32_t index_insert_key(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len, const void *c, uint16_t value_len)
 {
     int32_t ret = 0;
@@ -1494,14 +1494,14 @@ int32_t index_insert_key(ATTR_HANDLE *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    OS_RWLOCK_WRLOCK(&((ATTR_HANDLE *)tree)->attr_info->attr_lock);
+    OS_RWLOCK_WRLOCK(&tree->obj_info->attr_lock);
     ret = index_insert_key_nolock(tree, key, key_len, c, value_len);
-    OS_RWLOCK_WRUNLOCK(&((ATTR_HANDLE *)tree)->attr_info->attr_lock);
+    OS_RWLOCK_WRUNLOCK(&tree->obj_info->attr_lock);
 
     return ret;
 }
 
-int32_t index_update_value(ATTR_HANDLE *tree, const void *key,
+int32_t index_update_value(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len, const void *value, uint16_t value_len)
 {
     int32_t ret = 0;
@@ -1513,12 +1513,12 @@ int32_t index_update_value(ATTR_HANDLE *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    ASSERT(tree->attr_info->attr_record.attr_flags & FLAG_TABLE);
+    ASSERT(tree->obj_info->attr_record.attr_flags & FLAG_TABLE);
 
-    OS_RWLOCK_WRLOCK(&tree->attr_info->attr_lock);
+    OS_RWLOCK_WRLOCK(&tree->obj_info->attr_lock);
     ret = index_remove_key_nolock(tree, key, key_len);
     ret = index_insert_key_nolock(tree, key, key_len, value, value_len);
-    OS_RWLOCK_WRUNLOCK(&tree->attr_info->attr_lock);
+    OS_RWLOCK_WRUNLOCK(&tree->obj_info->attr_lock);
 
     return ret;
 }

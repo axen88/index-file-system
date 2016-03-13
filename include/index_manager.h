@@ -50,13 +50,13 @@ extern int32_t index_create(const char *index_name, uint64_t total_sectors, uint
     INDEX_HANDLE **index);
 
 /* 扩容索引区 */
-extern int32_t index_expand(ATTR_HANDLE *tree, uint64_t v_ullAdditionalSectors);
+extern int32_t index_expand(OBJECT_HANDLE *tree, uint64_t v_ullAdditionalSectors);
 
 /* 关闭索引区 */
 extern int32_t index_close(INDEX_HANDLE *index);
 
 
-extern int32_t index_get_opened_attr_num(ATTR_HANDLE * tree);
+extern int32_t index_get_opened_attr_num(OBJECT_HANDLE * tree);
 
 extern INDEX_HANDLE *index_get_handle(const char * index_name);
 

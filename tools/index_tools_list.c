@@ -46,12 +46,12 @@ int32_t print_index_info(NET_PARA_S *net, INDEX_HANDLE *index)
     return 0;
 }
 
-int32_t print_obj_info(NET_PARA_S *net, OBJECT_HANDLE *obj)
+int32_t print_obj_info(NET_PARA_S *net, OBJECT_INFO *obj_info)
 {
-    ASSERT(NULL != obj);
+    ASSERT(NULL != obj_info);
 
-    OS_PRINT(net, "obj: %p, objid: %lld, inode_no: %lld, obj_state: 0x%x, ref_cnt: %u, name: %s\n",
-        obj, obj->objid, obj->inode_no, obj->obj_state, obj->obj_ref_cnt, obj->obj_name);
+    OS_PRINT(net, "obj_info: %p, objid: %lld, inode_no: %lld, obj_state: 0x%x, ref_cnt: %u, name: %s\n",
+        obj_info, obj_info->objid, obj_info->inode_no, obj_info->obj_state, obj_info->obj_ref_cnt, obj_info->obj_name);
 
     return 0;
 }
@@ -66,12 +66,12 @@ int32_t print_cache_info(NET_PARA_S *net, INDEX_BLOCK_CACHE *cache)
     return 0;
 }
 
-int32_t print_attr_info(NET_PARA_S *net, ATTR_INFO *attr_info)
+int32_t print_attr_info(NET_PARA_S *net, OBJECT_INFO *obj_info)
 {
-    ASSERT(NULL != attr_info);
+    ASSERT(NULL != obj_info);
 
-    OS_PRINT(net, "attr_info: %p, state: %d, ref_cnt: %d\n",
-        attr_info, attr_info->root_ibc.state, attr_info->attr_ref_cnt);
+    OS_PRINT(net, "obj_info: %p, state: %d, ref_cnt: %d\n",
+        obj_info, obj_info->root_ibc.state, obj_info->obj_ref_cnt);
 
     return 0;
 }
@@ -180,19 +180,19 @@ int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, NET_PARA_
 
     OS_PRINT(net, "Obj info:\n");
     OS_PRINT(net, "-----------------------------------------\n");
-    OS_PRINT(net, "objid                  : %lld\n", obj->objid);
-    OS_PRINT(net, "inode_no               : %lld\n", obj->inode_no);
-    OS_PRINT(net, "obj_name               : %s\n",   obj->obj_name);
-    OS_PRINT(net, "state                  : 0x%x\n", obj->obj_state);
-    OS_PRINT(net, "ref_cnt                : %d\n",   obj->obj_ref_cnt);
+    OS_PRINT(net, "objid                  : %lld\n", obj->obj_info->objid);
+    OS_PRINT(net, "inode_no               : %lld\n", obj->obj_info->inode_no);
+    OS_PRINT(net, "obj_name               : %s\n",   obj->obj_info->obj_name);
+    OS_PRINT(net, "state                  : 0x%x\n", obj->obj_info->obj_state);
+    OS_PRINT(net, "ref_cnt                : %d\n",   obj->obj_info->obj_ref_cnt);
     
     OS_PRINT(net, "\nAttr info:\n");
     OS_PRINT(net, "-----------------------------------------\n");
-    print_attr_info(net, &obj->attr_info);
+    print_attr_info(net, obj->obj_info);
     
     OS_PRINT(net, "\nCache info:\n");
     OS_PRINT(net, "-----------------------------------------\n");
-    avl_walk_all(&obj->attr_info.attr_caches, (avl_walk_call_back)print_cache_info, net);
+    avl_walk_all(&obj->obj_info->caches, (avl_walk_call_back)print_cache_info, net);
 
     return ret;
 }

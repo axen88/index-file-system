@@ -58,7 +58,7 @@ extern "C" {
 
 #define PRV_AREA_SIZE       256         /* 私有区域大小 */
 #define FILE_NAME_SIZE            256
-#define OBJ_NAME_SIZE            512
+#define OBJ_NAME_SIZE            256
 
 #define DEFAULT_OBJ_NAME       "NO_NAME"
 #define DEFAULT_OBJ_NAME_SIZE  (sizeof(DEFAULT_OBJ_NAME) - 1)
@@ -79,7 +79,7 @@ extern "C" {
 #define INODE_SIZE            (2 * 1024)
 
 
-#define INODE_RESERVED_SIZE  1430
+#define INODE_RESERVED_SIZE  1686
 #define INODE_HEAD_SIZE      OS_OFFSET(INODE_RECORD, reserved)
 
 #define OBJID_OBJ_NAME            "$OBJID"

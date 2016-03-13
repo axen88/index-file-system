@@ -90,7 +90,7 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
 
     for (key = 0; key < keys_num; key++)
     {
-        ret = index_insert_key(obj->attr, &key, TEST_KEY_LEN,
+        ret = index_insert_key(obj, &key, TEST_KEY_LEN,
             c, TEST_VALUE_LEN);
         if (0 > ret)
         {
@@ -156,7 +156,7 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
 
     for (key = 0; key < keys_num; key++)
     {
-        ret = index_remove_key(obj->attr, &key, TEST_KEY_LEN);
+        ret = index_remove_key(obj, &key, TEST_KEY_LEN);
         if (0 > ret)
         {
             OS_PRINT(net, "Remove key failed. objid(%lld) key(%lld) ret(%d)\n", objid, key, ret);

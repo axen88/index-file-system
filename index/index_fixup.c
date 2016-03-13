@@ -42,7 +42,7 @@ MODULE(PID_INDEX);
 int32_t fixup_callback(void *tree, void *para)
 {
 #if 0
-    ATTR_HANDLE *pstTree = tree;
+    OBJECT_HANDLE *pstTree = tree;
 
     /* Ìø¹ýÄ¿Â¼Ê÷ */
     if (0 != (pstTree->pstInode->flags & TREE_FLAGS_DIR))
@@ -54,7 +54,7 @@ int32_t fixup_callback(void *tree, void *para)
     return 0;
 }
 
-int32_t fixup_attr(ATTR_HANDLE *tree, void *para)
+int32_t fixup_attr(OBJECT_HANDLE *tree, void *para)
 {
 #if 0
     int32_t ret = 0;

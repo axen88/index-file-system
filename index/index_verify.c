@@ -51,7 +51,7 @@ static int32_t verify_callback(void *tree, void *para)
 {
 #if 0
     VERIFY_PARA_S *para = para;
-    ATTR_HANDLE *obj = tree;
+    OBJECT_HANDLE *obj = tree;
     int32_t ret = 0;
 
     if (0 == para->no++)
@@ -100,7 +100,7 @@ static int32_t verify_callback(void *tree, void *para)
 	return 0;
 }
 
-int32_t index_verify_attr(ATTR_HANDLE *tree, void *para)
+int32_t index_verify_attr(OBJECT_HANDLE *tree, void *para)
 {
 #if 0
     int32_t ret = 0;
@@ -191,7 +191,7 @@ int32_t index_verify_attr_by_name(char *index_name, uint64_t start_lba, uint64_t
         return ret;
     }
 
-    ret = index_verify_attr(obj->attr, NULL);
+    ret = index_verify_attr(obj, NULL);
     
     (void)index_close_object(obj);
     (void)index_close(index);

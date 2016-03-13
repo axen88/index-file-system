@@ -43,7 +43,7 @@ extern int32_t FixupTree(void *tree, void *para);
 /*******************************************************************************
 获取当前树总共有多少个key
 *******************************************************************************/
-int64_t index_get_total_key(ATTR_HANDLE *tree)
+int64_t index_get_total_key(OBJECT_HANDLE *tree)
 {
     int64_t cnt = 0;
     
@@ -67,7 +67,7 @@ int64_t index_get_total_key(ATTR_HANDLE *tree)
 /*******************************************************************************
 获取指定序号的key
 *******************************************************************************/
-int64_t index_get_target_key(ATTR_HANDLE *tree, uint64_t target)
+int64_t index_get_target_key(OBJECT_HANDLE *tree, uint64_t target)
 {
 	int64_t cnt = 0;
 	
@@ -106,7 +106,7 @@ int64_t index_get_target_key(ATTR_HANDLE *tree, uint64_t target)
     < 0: 错误代码
 说    明: 无
 *******************************************************************************/
-int32_t index_walk_all(ATTR_HANDLE *tree, bool_t v_bReverse, uint8_t flags,
+int32_t index_walk_all(OBJECT_HANDLE *tree, bool_t v_bReverse, uint8_t flags,
     void *para, WalkAllCallBack v_pCallBack)
 {
     int32_t ret = 0;
@@ -125,7 +125,7 @@ int32_t index_walk_all(ATTR_HANDLE *tree, bool_t v_bReverse, uint8_t flags,
     ucIfFlag |= (flags & ~INDEX_WALK_MASK);
     ucWhileFlag |= (flags & ~INDEX_WALK_MASK);
     
-    OS_RWLOCK_WRLOCK(&tree->attr_info->attr_lock);
+    OS_RWLOCK_WRLOCK(&tree->obj_info->attr_lock);
     
     if (walk_tree(tree, ucIfFlag) == 0)
     {
@@ -136,13 +136,13 @@ int32_t index_walk_all(ATTR_HANDLE *tree, bool_t v_bReverse, uint8_t flags,
             {
                 LOG_ERROR("Call back failed. tree(%p) para(%p) ret(%d)\n",
                     tree, para, ret);
-                OS_RWLOCK_WRUNLOCK(&tree->attr_info->attr_lock);
+                OS_RWLOCK_WRUNLOCK(&tree->obj_info->attr_lock);
                 return ret;
             }
 	    } while (walk_tree(tree, ucWhileFlag) == 0);
     }
     
-    OS_RWLOCK_WRUNLOCK(&tree->attr_info->attr_lock);
+    OS_RWLOCK_WRUNLOCK(&tree->obj_info->attr_lock);
     
     return 0;
 }
@@ -156,7 +156,7 @@ static int32_t tree_callback(void *tree, void *para)
     int32_t ret = 0;
     char name[OBJ_NAME_SIZE];
     WALK_ALL_TREES_PARA_S *para = para;
-    ATTR_HANDLE *tree = NULL;
+    OBJECT_HANDLE *tree = NULL;
 
     ASSERT(NULL != tree);
     ASSERT(NULL != para);
@@ -204,7 +204,7 @@ static int32_t tree_callback(void *tree, void *para)
     < 0: 错误代码
 说    明: 无
 *******************************************************************************/
-int32_t index_walk_all_attrs(ATTR_HANDLE *dir_tree,
+int32_t index_walk_all_attrs(OBJECT_HANDLE *dir_tree,
     WALK_ALL_TREES_PARA_S *para)
 {
 #if 0
@@ -228,9 +228,9 @@ int32_t index_walk_all_attrs(ATTR_HANDLE *dir_tree,
     }
     else if (FixupTree == para->pCallBack)
     { /* 如果存储体有多份,那么需要写两次,保证每个存储体里面的数据都一样 */
-        SET_TREE_DIRTY((ATTR_HANDLE *)dir_tree);
+        SET_TREE_DIRTY((OBJECT_HANDLE *)dir_tree);
         INDEX_CommitTreeTransNoLock(dir_tree, COMMIT_FLAG_FORCE);
-        SET_TREE_DIRTY((ATTR_HANDLE *)dir_tree);
+        SET_TREE_DIRTY((OBJECT_HANDLE *)dir_tree);
         INDEX_CommitTreeTransNoLock(dir_tree, COMMIT_FLAG_FORCE);
     }
 
@@ -258,7 +258,7 @@ int32_t index_walk_all_attrs(ATTR_HANDLE *dir_tree,
     < 0: 错误代码
 说    明: 无
 *******************************************************************************/
-int32_t index_get_opened_attr_num(ATTR_HANDLE * tree)
+int32_t index_get_opened_attr_num(OBJECT_HANDLE * tree)
 {
 #if 0
     int32_t ret = 0;
@@ -270,9 +270,9 @@ int32_t index_get_opened_attr_num(ATTR_HANDLE * tree)
         return -INDEX_ERR_PARAMETER;
     }
 
-    OS_RWLOCK_WRLOCK(&((ATTR_HANDLE *)tree)->index->rwlock);
-    ret = dlist_count(&((ATTR_HANDLE *)tree)->index->stTreesList);
-    OS_RWLOCK_WRUNLOCK(&((ATTR_HANDLE *)tree)->index->rwlock);
+    OS_RWLOCK_WRLOCK(&((OBJECT_HANDLE *)tree)->index->rwlock);
+    ret = dlist_count(&((OBJECT_HANDLE *)tree)->index->stTreesList);
+    OS_RWLOCK_WRUNLOCK(&((OBJECT_HANDLE *)tree)->index->rwlock);
 
     return ret;
 #endif

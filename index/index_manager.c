@@ -58,13 +58,13 @@ int32_t compare_index2(const char *index_name, INDEX_HANDLE *index_node)
 }
 
 
-int32_t compare_object1(const OBJECT_HANDLE *obj, const OBJECT_HANDLE *obj_node)
+int32_t compare_object1(const OBJECT_INFO *obj_info, const OBJECT_INFO *target_obj_info)
 {
-    if (obj->objid > obj_node->objid)
+    if (obj_info->objid > target_obj_info->objid)
     {
         return 1;
     }
-    else if (obj->objid == obj_node->objid)
+    else if (obj_info->objid == target_obj_info->objid)
     {
         return 0;
     }
@@ -103,16 +103,16 @@ int32_t close_one_index(void *para, INDEX_HANDLE *index)
     return 0;
 }
 
-int32_t close_one_object(void *para, OBJECT_HANDLE *obj)
+int32_t close_one_object(void *para, OBJECT_INFO *obj_info)
 {
-    ASSERT(NULL != obj);
+    ASSERT(NULL != obj_info);
 
-    if (obj->objid == OBJID_OBJ_ID)  // do not close the system object
+    if (obj_info->objid == OBJID_OBJ_ID)  // do not close the system object
     {
         return 0;
     }
 
-    close_object(obj);
+    close_object(obj_info);
     return 0;
 }
 
@@ -165,8 +165,8 @@ int32_t init_index_resource(INDEX_HANDLE ** index, const char * index_name)
     strncpy(tmp_index->name, index_name, INDEX_NAME_SIZE);
     OS_RWLOCK_INIT(&tmp_index->index_lock);
     tmp_index->index_ref_cnt = 1;
-    avl_create(&tmp_index->obj_list, (int (*)(const void *, const void*))compare_object1, sizeof(OBJECT_HANDLE),
-        OS_OFFSET(OBJECT_HANDLE, entry));
+    avl_create(&tmp_index->obj_list, (int (*)(const void *, const void*))compare_object1, sizeof(OBJECT_INFO),
+        OS_OFFSET(OBJECT_INFO, entry));
     avl_add(g_index_list, tmp_index);
 
     *index = tmp_index;
@@ -237,8 +237,8 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
         return ret;
     }
 
-    tmp_index->hnd->sb.objid_inode_no = tmp_index->id_obj->inode_no;
-    tmp_index->hnd->sb.objid_id = tmp_index->id_obj->inode.objid;
+    tmp_index->hnd->sb.objid_inode_no = tmp_index->id_obj->obj_info->inode_no;
+    tmp_index->hnd->sb.objid_id = tmp_index->id_obj->obj_info->inode.objid;
     ret = block_update_super_block(tmp_index->hnd);
     if (0 > ret)
     {
@@ -371,7 +371,7 @@ void close_index(INDEX_HANDLE *index)
     // close system object
     if (index->id_obj != NULL)
     {
-        (void)close_object(index->id_obj);
+        (void)close_object(index->id_obj->obj_info);
     }
 
     // close block manager system
