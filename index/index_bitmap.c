@@ -45,28 +45,16 @@ MODULE(PID_BITMAP);
 
 typedef enum tagBUF_STATUS_E
 {
-    EMPTY = 0,  /* 无数据 */
-    CLEAN,      /* 数据是干净的 */
-    DIRTY       /* 数据是脏的 */
+    EMPTY = 0,  // no data
+    CLEAN,      // clean data
+    DIRTY       // dirty data
 } BUF_STATUS_E;
 
 
-/*******************************************************************************
-函数名称: flush_buffer
-功能说明: 将内存中的脏数据刷盘
-输入参数:
-    hnd: 要操作的文件句柄
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t flush_buffer(BITMAP_HANDLE * hnd)
 {
     int32_t ret = 0;
 
-    /* 检查输入参数 */
     ASSERT(NULL != hnd);
 
     if (DIRTY == hnd->status)
@@ -87,23 +75,11 @@ int32_t flush_buffer(BITMAP_HANDLE * hnd)
     return 0;
 }
 
-/*******************************************************************************
-函数名称: pre_flush
-功能说明: 设置cache所在位置为全占用，并下盘
-输入参数:
-    hnd: 要操作的文件句柄
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t pre_flush(BITMAP_HANDLE * hnd)
 {
     int32_t ret = 0;
     uint8_t *buf = NULL;
 
-    /* 检查输入参数 */
     ASSERT(NULL != hnd);
 
     buf = OS_MALLOC(hnd->dat_size);
@@ -132,22 +108,8 @@ int32_t pre_flush(BITMAP_HANDLE * hnd)
 }
 
 
-
-/*******************************************************************************
-函数名称: get_buf
-功能说明: 读取指定位置的数据到cache中来
-输入参数:
-    hnd      : 要操作的文件句柄
-    dat_addr: 数据所在的地址
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t get_buf(BITMAP_HANDLE * hnd, uint64_t dat_addr)
 {
-    /* 检查输入参数 */
     ASSERT(NULL != hnd);
 
     if ((EMPTY == hnd->status) || (dat_addr != hnd->dat_addr))
@@ -183,42 +145,15 @@ int32_t get_buf(BITMAP_HANDLE * hnd, uint64_t dat_addr)
     return 0;
 }
 
-/*******************************************************************************
-函数名称: os_check_bit
-功能说明: 检查内存中某个位是否为1
-输入参数:
-    buf: 内存起始地址
-    position : 在内存中的位地址
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 uint8_t os_check_bit(uint8_t * buf, uint32_t position)
 {
-    /* 检查输入参数 */
     ASSERT(NULL != buf);
 
     return buf[position >> 3] & ((uint8_t) 1 << ((uint8_t) (position & 0x07)));
 }
 
-/*******************************************************************************
-函数名称: os_set_bit
-功能说明: 设置内存中某个位为指定值
-输入参数:
-    buf  : 内存起始地址
-    position   : 在内存中的位地址
-    v_ucValue : 要设置的值
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 void os_set_bit(uint8_t * buf, uint32_t position, bool_t is_used)
 {
-    /* 检查输入参数 */
     ASSERT(NULL != buf);
 
     if (B_FALSE == is_used)
@@ -231,23 +166,8 @@ void os_set_bit(uint8_t * buf, uint32_t position, bool_t is_used)
     }
 }
 
-/*******************************************************************************
-函数名称: os_set_nbits
-功能说明: 设置内存中某个位为指定值
-输入参数:
-    buf  : 内存起始地址
-    position   : 在内存中的位地址
-    num   : 要设置的位数目
-    v_ucValue : 要设置的值
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 void os_set_nbits(uint8_t * buf, uint32_t position, uint32_t num, bool_t is_used)
 {
-    /* 检查输入参数 */
     ASSERT(NULL != buf);
 
     while (num--)
@@ -258,20 +178,6 @@ void os_set_nbits(uint8_t * buf, uint32_t position, uint32_t num, bool_t is_used
     return;
 }
 
-/*******************************************************************************
-函数名称: init_bitmap_blocks
-功能说明: 初始化位图区域的内容
-输入参数:
-    file_hnd          : 文件操作句柄
-    v_blockSize   : 块大小
-    v_bitmapLBA   : 位图区域的起始扇区
-    v_bitmapBlocks: 位图区域占用的块数目
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t init_bitmap_blocks(void * file_hnd, uint32_t block_size,
     uint64_t bitmap_start_lba, uint32_t bitmap_blocks)
 {
@@ -279,7 +185,6 @@ int32_t init_bitmap_blocks(void * file_hnd, uint32_t block_size,
     uint32_t sectors_per_block = block_size / BYTES_PER_SECTOR;
     int32_t ret = 0;
 
-    /* 检查输入参数 */
     ASSERT(NULL != file_hnd);
 
     dat = OS_MALLOC(block_size);
@@ -310,20 +215,8 @@ int32_t init_bitmap_blocks(void * file_hnd, uint32_t block_size,
     return 0;
 }
 
-/*******************************************************************************
-函数名称: bitmap_clean
-功能说明: 将位图设置成全0
-输入参数:
-    hnd: 位图操作句柄
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t bitmap_clean(BITMAP_HANDLE * hnd)
 {
-    /* 检查输入参数 */
     if (NULL == hnd)
     {
         LOG_ERROR("Invalid parameter. hnd(%p)\n", hnd);
@@ -338,26 +231,10 @@ int32_t bitmap_clean(BITMAP_HANDLE * hnd)
 }
 
 
-/*******************************************************************************
-函数名称: bitmap_init
-功能说明: 初始化文件位图缓存系统
-输入参数:
-    file_hnd          : 要操作的文件句柄
-    start_lba    : 位图区域在文件中的起始地址
-    total_sectors: 位图区域占用的总扇区数目
-    total_bits   : 位图区域有效的位数
-输出参数:
-    hnd         : 获取到的位图文件句柄
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t bitmap_init(BITMAP_HANDLE ** hnd, void * file_hnd, uint64_t start_lba, uint32_t total_sectors, uint64_t total_bits)
 {
     BITMAP_HANDLE *tmp_hnd = NULL;
 
-    /* 检查输入参数 */
     if ((NULL == hnd) || (NULL == file_hnd) || (0 == total_sectors))
     {
         LOG_ERROR("Invalid parameter. hnd(%p) file_hnd(%p) total_sectors(%d)\n",
@@ -393,27 +270,14 @@ int32_t bitmap_init(BITMAP_HANDLE ** hnd, void * file_hnd, uint64_t start_lba, u
     return 0;
 }
 
-/*******************************************************************************
-函数名称: bitmap_destroy
-功能说明: 销毁位图操作句柄
-输入参数:
-    hnd      : 要操作的文件句柄
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t bitmap_destroy(BITMAP_HANDLE * hnd)
 {
-    /* 检查输入参数 */
     if (NULL == hnd)
     {
         LOG_ERROR("Invalid parameter. hnd(%p)\n", hnd);
         return -FILE_BITMAP_ERR_INVALID_PARA;
     }
 
-    /* 不需要判断返回值 */
     (void)flush_buffer(hnd);
 
     if (NULL != hnd->cache)
@@ -426,23 +290,10 @@ int32_t bitmap_destroy(BITMAP_HANDLE * hnd)
     return 0;
 }
 
-/*******************************************************************************
-函数名称: bitmap_check_bit
-功能说明: 检查文件中位图区域某个位是0还是1
-输入参数:
-    hnd : 要操作的文件句柄
-    position: 在位图中的位置
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t bitmap_check_bit(BITMAP_HANDLE * hnd, uint64_t position)
 {
     int32_t ret = 0;
 
-    /* 检查输入参数 */
     if (NULL == hnd)
     {
         LOG_ERROR("Invalid parameter. hnd(%p)\n", hnd);
@@ -459,27 +310,12 @@ int32_t bitmap_check_bit(BITMAP_HANDLE * hnd, uint64_t position)
         (uint32_t) (position - ((hnd->dat_addr * hnd->cache_size_by_bytes) << 3)));
 }
 
-/*******************************************************************************
-函数名称: bitmap_set_nbits
-功能说明: 设置文件中位图区域连续的某些位为0或1
-输入参数:
-    hnd      : 要操作的文件句柄
-    start_position: 要设置的起始位位置
-    nbits   : 要设置多少位
-    v_ucValue   : 要设置成的值
-输出参数: 无
-返 回 值:
-    >=0: 设置成功的位数目
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t bitmap_set_nbits(BITMAP_HANDLE * hnd, uint64_t start_position, uint32_t nbits,
     bool_t is_used)
 {
     int32_t ret = 0;
     int32_t count = 0;
 
-    /* 检查输入参数 */
     if ((NULL == hnd) || (0 == nbits))
     {
         LOG_ERROR("Invalid parameter. hnd(%p) nbits(%d)\n", hnd, nbits);
@@ -516,20 +352,6 @@ int32_t bitmap_set_nbits(BITMAP_HANDLE * hnd, uint64_t start_position, uint32_t 
     return count;
 }
 
-/*******************************************************************************
-函数名称: bitmap_get_free_bits
-功能说明: 查询文件中位图区域为0的区域
-输入参数:
-    hnd      : 要操作的文件句柄
-    start_position: 要查询的起始位位置
-    required_bits: 要获取多少位
-输出参数: 无
-    real_start_position: 获取到的为0的起始位置
-返 回 值:
-    >=0: 获取到的位数目
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t bitmap_get_free_bits(BITMAP_HANDLE * hnd, uint64_t start_position,
     uint32_t required_bits, uint64_t * real_start_position)
 {
@@ -537,7 +359,6 @@ int32_t bitmap_get_free_bits(BITMAP_HANDLE * hnd, uint64_t start_position,
     uint64_t total_bits = hnd->total_bits;
     int32_t real_bits = 0;
 
-    /* 检查输入参数 */
     if ((NULL == hnd) || (0 == required_bits) || (NULL == real_start_position))
     {
         LOG_ERROR("Invalid parameter. hnd(%p) required_bits(%d) real_start_position(%p)\n",

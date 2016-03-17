@@ -70,11 +70,11 @@ typedef struct tagQUEUE_S
 
 typedef struct tagQUEUE_S
 {
-    uint64_t *pullMemb; /* 存储内容的内存 */
-    uint32_t uiHead;    /* 读指针 */
-    uint32_t uiTail;    /* 写指针 */
-    uint32_t num;     /* 当前有效的成员数目 */
-    uint32_t max_member;     /* 支持的最大成员数目 */
+    uint64_t *pullMemb;
+    uint32_t uiHead;  
+    uint32_t uiTail;
+    uint32_t num; 
+    uint32_t max_member; 
 } QUEUE_S;
 
 

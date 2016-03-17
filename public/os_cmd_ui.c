@@ -68,7 +68,6 @@ void get_cmd(char *cmd, uint32_t size)
 
 #else
 
-/* 获取用户的一行输入 */
 void get_cmd(char *cmd, uint32_t size)
 {
     printf(">");
@@ -82,7 +81,6 @@ void get_cmd(char *cmd, uint32_t size)
 
 #endif
 
-/* 从字符串中解析出所有的字段*/
 uint32_t parse_cmd(char *cmd, char *argv[], uint32_t argc)
 {
     uint32_t cnt = 0;
@@ -91,33 +89,28 @@ uint32_t parse_cmd(char *cmd, char *argv[], uint32_t argc)
     c = cmd;
     for (;;)
     {
-        /* 换行符 */
         if (('\n' == *c) || ('\r' == *c))
         {
             *c = '\0';
             break;
         }
         
-        /* 字符串结束符 */
         if ('\0' == *c)
         {
             break;
         }
         
-        /* 去掉空格 */
         while (' ' == *c)
         {
             *c++ = '\0';
         }
         
-        /* 找到了有效参数 */
         argv[cnt++] = c;
         if (cnt >= argc)
         {
             break;
         }
         
-        /* 过滤掉有效字符，这些字符属于参数 */
         while ((' ' != *c) && ('\0' != *c) && ('\n' != *c) && ('\r' != *c))
         {
             c++;
@@ -173,7 +166,6 @@ void show_cmd_list(OS_CMD_LIST_S *cmd_list, NET_PARA_S *net)
 	OS_PRINT(net, "quit : quit the system\n");
 }
 
-/* 比较是什么命令，并执行 */
 int32_t execute_cmd(int32_t argc, char *argv[], OS_CMD_LIST_S *cmd_list, NET_PARA_S *net)
 {
     int32_t level;
@@ -260,7 +252,6 @@ int32_t execute_cmd(int32_t argc, char *argv[], OS_CMD_LIST_S *cmd_list, NET_PAR
     return CMD_OTHER;
 }
 
-/* 获取指定指定参数的内容 */
 int32_t os_parse_para(int argc, char *argv[], char *para,
     char *content, uint32_t content_size)
 {
@@ -275,12 +266,12 @@ int32_t os_parse_para(int argc, char *argv[], char *para,
     }
 
     if (i == argc)
-    { /* 参数没有找到 */
+    {
         return -2;
     }
 
     if (i == (argc - 1))
-    { /* 参数找到了，但是无内容 */
+    {
         if (NULL == content)
         {
             return 0;
@@ -326,20 +317,6 @@ int32_t parse_and_exec_cmd(char *cmd, OS_CMD_LIST_S cmd_list[], NET_PARA_S *net)
     return CMD_QUIT;
 }
 
-
-/*******************************************************************************
-函数名称: OSCmdUI
-功能说明: 解析用户从命令行中带入的命令，如果没有带入，那么进入交互界面
-输入参数:
-    argc   : 从命令行带入的命令字段的数目
-    v_pcArgv  : 从命令行带入的各命令字段的起始地址
-    v_pDoCmd  : 用户命令
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 void os_cmd_ui(OS_CMD_LIST_S cmd_list[], NET_PARA_S *net)
 {
     int32_t i = 0;

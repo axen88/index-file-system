@@ -138,7 +138,7 @@ void do_accept(evutil_socket_t listener, short event, void *arg)
         perror("accept");
         return;
     }
-    if (fd > FD_SETSIZE) { //这个if是参考了那个ROT13的例子，貌似是官方的疏漏，从select-based例子里抄过来忘了改
+    if (fd > FD_SETSIZE) {
         perror("fd > FD_SETSIZE\n");
         return;
     }

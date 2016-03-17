@@ -42,22 +42,20 @@ extern "C"
 {
 #endif
 
-/* 结构体BLOCK_HANDLE_S中uiFlags各个位的含义 */
-#define FLAG_NOSPACE     0x00000002     /* 是否无空间标记 */
-#define FLAG_DIRTY       0x00000001     /* 有标记发生了变化 */
+/* BLOCK_HANDLE_S.flags */
+#define FLAG_NOSPACE     0x00000002     // no space
+#define FLAG_DIRTY       0x00000001     // dirty
 
-/* 块管理系统操作结构 */
 typedef struct tagBLOCK_HANDLE_S
 {
-    void *file_hnd;                       /* 文件操作句柄 */
-    BITMAP_HANDLE *bitmap_hnd;                     /* 位图操作句柄 */
-    char name[FILE_NAME_SIZE];      /* 文件名 */
-    BLOCK_BOOT_SECTOR_S sb;           /* 超级块 */
-    uint32_t flags;                    /* 块管理系统的一些标识 */
-    OS_RWLOCK rwlock;                        /* 锁超级块和位图操作 */
+    void *file_hnd;                       // file handle
+    BITMAP_HANDLE *bitmap_hnd;            // bitmap handle
+    char name[FILE_NAME_SIZE];            // file name
+    BLOCK_BOOT_SECTOR_S sb;               // super block
+    uint32_t flags;                       
+    OS_RWLOCK rwlock;                     
 } BLOCK_HANDLE_S;
 
-/* 块管理区域创建、打开、关闭等操作 */
 extern int32_t block_create(BLOCK_HANDLE_S ** hnd, const char * path,
     uint64_t total_blocks, uint32_t block_size_shift, uint32_t reserved_sectors,
     uint64_t start_lba);
@@ -68,7 +66,6 @@ extern int32_t block_reset_bitmap(BLOCK_HANDLE_S * hnd);
 extern bool_t block_need_fixup(BLOCK_HANDLE_S * hnd);
 extern int32_t block_finish_fixup(BLOCK_HANDLE_S * hnd);
 
-/* 块分配与释放接口 */
 extern int32_t block_set_status(BLOCK_HANDLE_S * hnd, uint64_t start_vbn, uint32_t blk_cnt,
     bool_t is_used);
 extern int32_t block_alloc(BLOCK_HANDLE_S * hnd, uint32_t blk_cnt,
@@ -76,7 +73,6 @@ extern int32_t block_alloc(BLOCK_HANDLE_S * hnd, uint32_t blk_cnt,
 #define block_free(hnd, start_vbn, blk_cnt) \
     block_set_status(hnd, start_vbn, blk_cnt, B_FALSE)
 
-/* 原始块数据读写接口 */
 extern int32_t index_write_block(BLOCK_HANDLE_S * hnd, void * buf,
     uint32_t size, uint32_t start_lba, uint64_t * vbn);
 extern int32_t index_update_block(BLOCK_HANDLE_S * hnd, void * buf,
@@ -84,7 +80,6 @@ extern int32_t index_update_block(BLOCK_HANDLE_S * hnd, void * buf,
 extern int32_t index_read_block(BLOCK_HANDLE_S * hnd, void * buf,
     uint32_t size, uint32_t start_lba, uint64_t vbn);
 
-/* 带fixup特性的块数据读写接口 */
 extern int32_t index_write_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     uint64_t * vbn);
 extern int32_t index_update_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
@@ -92,7 +87,6 @@ extern int32_t index_update_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * 
 extern int32_t index_read_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
      uint64_t vbn, uint32_t objid, uint32_t alloc_size);
 
-/* 带pingpong特性的块数据读写接口 */
 extern int32_t index_update_block_pingpong_init(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     uint64_t vbn);
 extern int32_t index_update_block_pingpong(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
@@ -100,13 +94,11 @@ extern int32_t index_update_block_pingpong(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S
 extern int32_t index_read_block_pingpong(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     uint64_t vbn, uint32_t objid, uint32_t alloc_size);
 
-/* 直接读写lba地址 */
 extern int32_t index_update_sectors(BLOCK_HANDLE_S * f, void * buf,
     uint32_t size, uint64_t lba);
 extern int32_t index_read_sectors(BLOCK_HANDLE_S * f, void * buf,
     uint32_t size, uint64_t lba);
 
-/* 超级块相关操作，内部函数 */
 extern int32_t block_update_super_block(BLOCK_HANDLE_S * hnd);
 
 extern int32_t check_and_set_fixup_flag(BLOCK_HANDLE_S * hnd);

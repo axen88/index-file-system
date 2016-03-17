@@ -39,20 +39,6 @@ History:
 #define TEST_KEY_LEN   8
 #define TEST_VALUE_LEN 20
 
-/*******************************************************************************
-函数名称: test_insert_key_performance
-功能说明: 测试树的key插入性能
-输入参数:
-    index_name: 要操作的树所在的索引区名称
-    start_lba: 索引区的起始lba
-    obj_name  : 要操作的树名称
-    keys_num : 要操作的key数目
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
     uint64_t objid, uint64_t keys_num, NET_PARA_S *net)
 {
@@ -108,20 +94,6 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
     return 0;
 }
 
-/*******************************************************************************
-函数名称: test_remove_key_performance
-功能说明: 测试树的key删除性能
-输入参数:
-    index_name: 要操作的树所在的索引区名称
-    start_lba: 索引区的起始lba
-    obj_name  : 要操作的树名称
-    keys_num : 要操作的key数目
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
     uint64_t objid, uint64_t keys_num, NET_PARA_S *net)
 {
@@ -173,15 +145,6 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
     return 0;
 }
 
-/*******************************************************************************
-函数名称: test_performance_thread
-功能说明: 评估性能线程
-输入参数:
-    para: 评估参数
-输出参数: 无
-返 回 值: 无意义
-说    明: 无
-*******************************************************************************/
 void *test_performance_thread(void *para)
 {
     INDEX_TOOLS_PARA_S *tmp_para = para;
@@ -213,16 +176,6 @@ void *test_performance_thread(void *para)
     return NULL;
 }
 
-/*******************************************************************************
-函数名称: test_performance
-功能说明: 无
-输入参数: 无
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t test_performance(INDEX_TOOLS_PARA_S *para,
     bool_t v_bInsert)
 {
@@ -284,13 +237,10 @@ int do_performance_cmd(int argc, char *argv[], NET_PARA_S *net)
     
     if (0 == para->threads_num)
     {
-        para->threads_num = 1; // 至少1个线程
+        para->threads_num = 1;
     }
 
-    /* 多线程测试插入性能 */
     (void)test_performance(para, B_TRUE);
-    
-    /* 多线程测试删除性能 */
     (void)test_performance(para, B_FALSE);
 
     OS_FREE(para);

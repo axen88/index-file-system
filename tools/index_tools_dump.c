@@ -38,9 +38,9 @@ History:
 
 typedef struct tagDUMP_PARA_S
 {
-    uint8_t depth;   /* 树的深度 */
-    uint64_t vbn;   /* 当前entry所在的VBN号 */
-    uint32_t no;     /* 当前entry序号 */
+    uint8_t depth; 
+    uint64_t vbn;  
+    uint32_t no;  
     NET_PARA_S *net;
 } DUMP_PARA_S;
 

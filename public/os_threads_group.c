@@ -57,9 +57,6 @@ typedef struct tagTHREAD_ARRAY_S
     OS_THREAD_T *pPids;
 } THREAD_ARRAY_S;
 
-/*******************************************************************************
-创建一个线程组
-*******************************************************************************/
 void *threads_group_create(uint32_t num, void *(*func)(void *),
     void *para, char *thread_name)
 {
@@ -124,9 +121,6 @@ void *threads_group_create(uint32_t num, void *(*func)(void *),
     return pstThreadGroup;
 }
 
-/*******************************************************************************
-获取真正创建成功的线程
-*******************************************************************************/
 int32_t threads_group_get_real_num(void *threads_group)
 {
     if (NULL == threads_group)
@@ -137,9 +131,6 @@ int32_t threads_group_get_real_num(void *threads_group)
     return (int32_t)((THREAD_ARRAY_S *)threads_group)->uiRealNum;
 }
 
-/*******************************************************************************
-销毁线程组
-*******************************************************************************/
 void threads_group_destroy(void *threads_group, uint32_t force,
     uint64_t over_time_ms)
 {

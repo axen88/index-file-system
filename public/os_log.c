@@ -81,31 +81,20 @@ History:
 
 typedef struct tagLOG_S
 {
-    char  dir[LOG_NAME_LEN];              // 日志文件所在的目录
-    char  name[LOG_NAME_LEN];         // 日志文件名
-    char  version[LOG_VERSION_LEN];        // 版本信息
-    int32_t total_lines;                      // 总行数计数
-    uint32_t mode;                       // 日志输出位置：nul,文件,屏幕,both
-    uint32_t levels[PIDS_NUM];  // 日志级别
+    char  dir[LOG_NAME_LEN];      
+    char  name[LOG_NAME_LEN];      
+    char  version[LOG_VERSION_LEN];    
+    int32_t total_lines;             
+    uint32_t mode;                 
+    uint32_t levels[PIDS_NUM]; 
     
     char date_time[DATA_TIME_STR_LEN];
     char buf[BUF_LEN];
     
-    OS_RWLOCK   rwlock;                            // 日志锁
-    void *file_hnd;                             // 日志文件句柄
+    OS_RWLOCK   rwlock;                  
+    void *file_hnd;  
 } LOG_S; 
 
-/*******************************************************************************
-函数名称: open_log
-功能说明: 创建日志文件
-输入参数:
-    log: 日志操作句柄
-输出参数: 无
-返 回 值:
-    !=NULL: 成功，文件的操作句柄
-    ==NULL: 失败
-说    明: 无
-*******************************************************************************/
 static void *open_log(LOG_S *log)
 {
     char name[LOG_NAME_LEN];
@@ -129,17 +118,6 @@ static void *open_log(LOG_S *log)
 
 #ifdef __KERNEL__
 
-/*******************************************************************************
-函数名称: backup_log
-功能说明: 备份日志
-输入参数:
-    log: 日志操作句柄
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 static int32_t backup_log(LOG_S *log)
 {
     int32_t ret = 0;
@@ -165,17 +143,6 @@ static int32_t backup_log(LOG_S *log)
 
 #else
 
-/*******************************************************************************
-函数名称: backup_log
-功能说明: 备份日志
-输入参数:
-    log: 日志操作句柄
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 static int32_t backup_log(LOG_S *log)
 {
     int32_t ret = 0;
@@ -210,7 +177,6 @@ static int32_t backup_log(LOG_S *log)
     OS_SNPRINTF(name, LOG_NAME_LEN, "%s/%s.log",
         log->dir, log->name);
 
-    /* 关闭之前已经打开的文件 */
     if (NULL != log->file_hnd)
     {
         os_file_close(log->file_hnd);
@@ -234,17 +200,6 @@ static int32_t backup_log(LOG_S *log)
 
 #endif
 
-/*******************************************************************************
-函数名称: log_set_level
-功能说明: 调整日志级别
-输入参数:
-    log: 日志操作句柄
-    pid: 要调整的模块id
-    level: 要调整到的日志级别
-输出参数: 无
-返 回 值: 无
-说    明: 无
-*******************************************************************************/
 void log_set_level(void *log, uint32_t pid, uint32_t level)
 {
     if ((NULL == log) || (pid >= PIDS_NUM))
@@ -257,16 +212,6 @@ void log_set_level(void *log, uint32_t pid, uint32_t level)
     return;
 }
 
-/*******************************************************************************
-函数名称: log_get_level
-功能说明: 获取日志级别
-输入参数:
-    log: 日志操作句柄
-    pid: 要调整的模块id
-输出参数: 无
-返 回 值: 无
-说    明: 无
-*******************************************************************************/
 int32_t log_get_level(void *log, uint32_t pid)
 {
     if ((NULL == log) || (pid >= PIDS_NUM))
@@ -277,20 +222,6 @@ int32_t log_get_level(void *log, uint32_t pid)
     return ((LOG_S *)log)->levels[pid];
 }
 
-/*******************************************************************************
-函数名称: log_open
-功能说明: 初始化日志文件
-输入参数:
-    file_name: 要创建的日志文件的名称
-    version : 版本信息
-    dir     : 日志文件所在的目录
-    mode: 日志模式
-输出参数: 无
-返 回 值:
-    !=NULL: 成功，日志操作句柄
-    ==NULL: 失败
-说    明: 无
-*******************************************************************************/
 void *log_open(const char *file_name, const char *version, const char *dir, uint32_t mode)
 {
     LOG_S *log = NULL;
@@ -333,15 +264,6 @@ void *log_open(const char *file_name, const char *version, const char *dir, uint
     return log;
 }
 
-/*******************************************************************************
-函数名称: log_close
-功能说明: 关闭日志文件
-输入参数:
-    log: 日志文件句柄
-输出参数: 无
-返 回 值: 无
-说    明: 无
-*******************************************************************************/
 void log_close(void *log)
 {
     LOG_S *tmp_log = (LOG_S *)log;
@@ -365,18 +287,6 @@ void log_close(void *log)
     OS_FREE(tmp_log);
 }
 
-/*******************************************************************************
-函数名称: log_trace
-功能说明: 添加一条日志
-输入参数:
-    log : 日志操作句柄
-    pid: 模块号
-    level: 当前这一条日志的级别
-    format : 日志格式
-输出参数: 无
-返 回 值: 无
-说    明: 无
-*******************************************************************************/
 void log_trace(void *log, uint32_t pid, uint32_t level, const char *format, ...)
 {
     LOG_S *tmp_log = (LOG_S *)log;

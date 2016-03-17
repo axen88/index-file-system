@@ -40,9 +40,6 @@ MODULE(PID_INDEX);
 
 extern int32_t FixupTree(void *tree, void *para);
 
-/*******************************************************************************
-获取当前树总共有多少个key
-*******************************************************************************/
 int64_t index_get_total_key(OBJECT_HANDLE *tree)
 {
     int64_t cnt = 0;
@@ -64,9 +61,6 @@ int64_t index_get_total_key(OBJECT_HANDLE *tree)
     return cnt;
 }
 
-/*******************************************************************************
-获取指定序号的key
-*******************************************************************************/
 int64_t index_get_target_key(OBJECT_HANDLE *tree, uint64_t target)
 {
 	int64_t cnt = 0;
@@ -92,20 +86,6 @@ int64_t index_get_target_key(OBJECT_HANDLE *tree, uint64_t target)
     return cnt;
 }
 
-/*******************************************************************************
-函数名称: index_walk_all
-功能说明: 遍历所有的entry，并执行指定的操作
-输入参数:
-    v_pTree    : 要操作的树
-    v_uiFlags    : 遍历标记
-    para    : 回调函数的输入参数
-    v_pCallBack: 在每个entry时执行的回调函数
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_walk_all(OBJECT_HANDLE *tree, bool_t v_bReverse, uint8_t flags,
     void *para, WalkAllCallBack v_pCallBack)
 {
@@ -147,9 +127,6 @@ int32_t index_walk_all(OBJECT_HANDLE *tree, bool_t v_bReverse, uint8_t flags,
     return 0;
 }
 
-/*******************************************************************************
-对指定的树进行操作
-*******************************************************************************/
 static int32_t tree_callback(void *tree, void *para)
 {
 #if 0
@@ -178,7 +155,7 @@ static int32_t tree_callback(void *tree, void *para)
             tree->pstInode->name, ret);
     }
     else if (FixupTree == para->pCallBack)
-    { /* 如果存储体有多份,那么需要写两次,保证每个存储体里面的数据都一样 */
+    {
         SET_TREE_DIRTY(tree);
         INDEX_CommitTreeTransNoLock(tree, COMMIT_FLAG_FORCE);
         SET_TREE_DIRTY(tree);
@@ -192,25 +169,12 @@ static int32_t tree_callback(void *tree, void *para)
 	return 0;
 }
 
-/*******************************************************************************
-函数名称: IndexWalkAllTrees
-功能说明: 遍历指定目录树和目录树下所有的子树，并执行指定的操作
-输入参数:
-    dir_tree: 目录树句柄
-    para: 遍历参数
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_walk_all_attrs(OBJECT_HANDLE *dir_tree,
     WALK_ALL_TREES_PARA_S *para)
 {
 #if 0
     int32_t ret = 0;
     
-    /* 检查输入参数 */
     if ((NULL == dir_tree) || (NULL == para)
         || (NULL == para->pCallBack))
     {
@@ -219,7 +183,6 @@ int32_t index_walk_all_attrs(OBJECT_HANDLE *dir_tree,
         return -INDEX_ERR_PARAMETER;
     }
 
-    /* 对目录树进行操作 */
     ret = para->pCallBack(dir_tree, para);
     if (0 > ret)
     {
@@ -227,7 +190,7 @@ int32_t index_walk_all_attrs(OBJECT_HANDLE *dir_tree,
             dir_tree->pstInode->name, ret);
     }
     else if (FixupTree == para->pCallBack)
-    { /* 如果存储体有多份,那么需要写两次,保证每个存储体里面的数据都一样 */
+    {
         SET_TREE_DIRTY((OBJECT_HANDLE *)dir_tree);
         INDEX_CommitTreeTransNoLock(dir_tree, COMMIT_FLAG_FORCE);
         SET_TREE_DIRTY((OBJECT_HANDLE *)dir_tree);
@@ -247,23 +210,11 @@ int32_t index_walk_all_attrs(OBJECT_HANDLE *dir_tree,
 	return 0;
 }
 
-/*******************************************************************************
-函数名称: IndexGetOpenedTreesNum
-功能说明: 获取指定索引区中已经打开树的数目
-输入参数:
-    v_pIndex: 要操作的索引区
-输出参数: 无
-返 回 值:
-    >=0: 树的数目
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_get_opened_attr_num(OBJECT_HANDLE * tree)
 {
 #if 0
     int32_t ret = 0;
     
-    /* 检查输入参数 */
     if (NULL == tree)
     {
         LOG_ERROR("Invalid parameter. tree(%p)\n", tree);

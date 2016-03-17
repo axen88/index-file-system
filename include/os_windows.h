@@ -37,7 +37,7 @@ History:
 #ifndef __OS_WINDOWS_H__
 #define __OS_WINDOWS_H__
 
-// WindowsÏÂÄÚ´æĞ¹Â¶¼ì²â
+// detect the leackage on windows
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>

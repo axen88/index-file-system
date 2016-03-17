@@ -44,7 +44,6 @@ int32_t fixup_callback(void *tree, void *para)
 #if 0
     OBJECT_HANDLE *pstTree = tree;
 
-    /* 跳过目录树 */
     if (0 != (pstTree->pstInode->flags & TREE_FLAGS_DIR))
     {
         LOG_INFO("Got a directory tree. name(%s)\n", pstTree->pstInode->name);
@@ -103,7 +102,6 @@ int32_t fixup_index(INDEX_HANDLE *index)
     int32_t ret = 0;
     WALK_ALL_TREES_PARA_S para;
     
-    /* 检查输入参数 */
     ASSERT (NULL != index);
 
     LOG_INFO("Start fixup index. tree(%p)\n", index);
@@ -140,7 +138,6 @@ int32_t fixup_index_by_name(char *index_name, uint64_t start_lba)
     INDEX_HANDLE *index = NULL;
     int32_t ret = 0;
     
-    /* 检查输入参数 */
     ASSERT (NULL != index_name);
     ASSERT (0 != strlen(index_name));
 

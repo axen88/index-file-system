@@ -82,5 +82,5 @@ typedef unsigned long            ptr_t;  // pointer
 }
 #endif
 
-#endif /* End of _OS_TYPES_H_ */
+#endif
 
