@@ -16,7 +16,7 @@
 
 1. run index_server
   
-2. run "telnet IP_ADDRESS 9999" command to connect to the index server, if it is on the local machine, the IP_ADDRESS may be "127.0.0.1"
+2. run "telnet IP_ADDRESS 9999" command to connect to the index server, if it is on the local machine, the IP_ADDRESS may be "127.0.0.1"  (to quit the telnet, please press "ctrl+]" keys, and then input "quit")
   
 3. input the demo program command like the flowing section
   
