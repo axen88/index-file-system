@@ -1,22 +1,22 @@
 # compile on linux
 
-* run "make -f make_index_tools" to generate demo program  
+* run "make -f make_index_tools" to generate the demo program  
   
-* run "make -f make_index_server" to generate demo program with libevent, you master install libevent first
+* run "make -f make_index_server" to generate the demo program with libevent, you must install libevent first
 
 
 # compile on windows
 
-* run vs2008 IDE, open win_proj/index_tools.sln to generate demo program
+* run vs2008 IDE, open win_proj/index_tools.sln to generate the demo program
   
-* run unit_test/index_test.sln to generate unit test program
+* run vs2008 IDE, open unit_test/index_test.sln to generate the unit test program
   
 
-# demo program with libevent usage
+# demo program with libevent usage(only support linux now)
 
 1. run index_server
   
-2. run "telnet 9999" command to connect to the index server
+2. run "telnet IP_ADDRESS 9999" command to connect to the index server, if it is on the local machine, the IP_ADDRESS may be "127.0.0.1"
   
 3. input the demo program command like the flowing section
   
