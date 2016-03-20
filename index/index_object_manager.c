@@ -606,10 +606,10 @@ int32_t index_open_object_nolock(struct _INDEX_HANDLE *index, uint64_t objid, ui
         return ret;
     }
     
-    if (id_obj->ie->value_len != VBN_SIZE)
+   // if (id_obj->ie->value_len != VBN_SIZE)
     {
-        LOG_ERROR("The attr chaos. obj(%p) objid(%lld) value_len(%d)\n", obj, objid, id_obj->ie->value_len);
-        return -INDEX_ERR_CHAOS;
+       // LOG_ERROR("The attr chaos. obj(%p) objid(%lld) value_len(%d)\n", obj, objid, id_obj->ie->value_len);
+      //  return -INDEX_ERR_CHAOS;
     }
     
     //memcpy(&inode_no, IEGetValue(id_obj->ie), VBN_SIZE);

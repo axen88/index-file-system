@@ -216,6 +216,9 @@ uint64_t os_bstr_to_u64(const uint8_t *b, uint32_t b_size)
     uint64_t u64 = 0;
     uint8_t *uc = (uint8_t *)&u64;
 
+    ASSERT(0 != b_size);
+    ASSERT(sizeof(uint64_t) >= b_size);
+
     while (b_size--)
     {
         *uc = *b;
@@ -224,41 +227,6 @@ uint64_t os_bstr_to_u64(const uint8_t *b, uint32_t b_size)
     }
 
     return u64;
-}
-
-// little endian u64
-uint32_t os_u64_to_bstr(uint64_t u64, uint8_t *b)
-{
-    uint8_t *uc = (uint8_t *)&u64;
-    uint32_t b_size = sizeof(uint64_t);
-    uint32_t pos = sizeof(uint64_t) - 1;
-
-    while (pos > 0)
-    {
-        if (uc[pos] != 0)
-        {
-            break;
-        }
-        
-        b_size--;
-        pos--;
-    }
-
-    if (b_size == 0)
-    {
-        b_size = 1;
-    }
-
-    pos = 0;
-    while (pos < b_size)
-    {
-        *b = *uc;
-        b++;
-        uc++;
-		pos++;
-    }
-    
-    return b_size;
 }
 
 // little endian u64
@@ -284,6 +252,27 @@ uint32_t os_u64_size(uint64_t u64)
         b_size = 1;
     }
 
+    return b_size;
+}
+
+// little endian u64
+uint32_t os_u64_to_bstr(uint64_t u64, uint8_t *b)
+{
+    uint8_t *uc = (uint8_t *)&u64;
+    uint32_t b_size;
+    uint32_t pos = sizeof(uint64_t) - 1;
+
+    b_size = os_u64_size(u64);
+
+    pos = 0;
+    while (pos < b_size)
+    {
+        *b = *uc;
+        b++;
+        uc++;
+		pos++;
+    }
+    
     return b_size;
 }
 
