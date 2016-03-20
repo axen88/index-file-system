@@ -42,17 +42,13 @@ History:
 extern "C" {
 #endif
 
-/* 打开索引区 */
 extern int32_t index_open(const char *index_name, uint64_t start_lba, INDEX_HANDLE **index);
 
-/* 创建索引区 */
 extern int32_t index_create(const char *index_name, uint64_t total_sectors, uint64_t start_lba,
     INDEX_HANDLE **index);
 
-/* 扩容索引区 */
 extern int32_t index_expand(OBJECT_HANDLE *tree, uint64_t v_ullAdditionalSectors);
 
-/* 关闭索引区 */
 extern int32_t index_close(INDEX_HANDLE *index);
 
 
@@ -64,7 +60,6 @@ extern int32_t fixup_index_by_name(char *index_name, uint64_t start_lba);
 extern int32_t verify_index(char *index_name, uint64_t start_lba);
 extern int32_t index_verify_attr_by_name(char *index_name, uint64_t start_lba, uint64_t objid);
 
-/* 以下是索引系统初始化和退出接口，线程不安全 */
 extern int32_t index_init_system(void);
 extern void index_exit_system(void);
 

@@ -45,18 +45,18 @@ extern "C"
 typedef struct _BITMAP_HANDLE
 {
     void *cache;
-    uint32_t cache_size_by_bytes;   /* 缓存的大小，以字节为单位 */
-    uint32_t cache_size_by_sectors; /* 缓存的大小，以sector为单位 */
-    uint32_t dat_size;           /* 被缓存数据的大小 */
-    uint64_t dat_addr;           /* 内存中的数据位置，从0开始、按cache大小编号 */
-    uint8_t status;        /* cache的状态 */
-    bool_t pre_flush;         /* 是否需要做预刷盘动作 */
+    uint32_t cache_size_by_bytes;   
+    uint32_t cache_size_by_sectors; 
+    uint32_t dat_size;           // data size
+    uint64_t dat_addr;           // data address
+    uint8_t status;              // cache state
+    bool_t pre_flush;            // need pre flush?
 
-    void *file_hnd;               /* bitmap所在的文件操作句柄 */
-    uint64_t start_lba;           /* bitmap区域在文件中的起始位置 */
-    uint32_t total_sectors;       /* bitmap区域的大小 */
+    void *file_hnd;               // file handle
+    uint64_t start_lba;           // bitmap zone's start lba in the file
+    uint32_t total_sectors;       // bitmap zone's size
 
-    uint64_t total_bits;          /* bitmap区域管理的总块数 */
+    uint64_t total_bits;          // total usable bits
 } BITMAP_HANDLE;
 
 extern int32_t bitmap_init(BITMAP_HANDLE ** hnd, void * file_hnd, uint64_t start_lba, uint32_t total_sectors, uint64_t total_bits);

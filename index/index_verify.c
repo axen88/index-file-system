@@ -41,10 +41,10 @@ MODULE(PID_INDEX);
 
 typedef struct tagVERIFY_PARA_S
 {
-    bool_t bReverse;    /* 顺向或逆向 */
-    uint32_t no;         /* 当前key的序号 */
-    char *pcKey;        /* 之前的key */
-    uint32_t uiKeySize;    /* 之前的key的长度 */
+    bool_t bReverse;  
+    uint32_t no;      
+    char *pcKey;  
+    uint32_t uiKeySize; 
 } VERIFY_PARA_S;
 
 static int32_t verify_callback(void *tree, void *para)
@@ -65,7 +65,7 @@ static int32_t verify_callback(void *tree, void *para)
     ret = collate_key(obj->pstInode->ucCollateRule, obj->ie,
         para->pcKey, (uint16_t)para->uiKeySize);
     if (0 < ret)
-    {   /* key比要找的key大 */
+    { 
         if (B_FALSE == para->bReverse)
         {
             memcpy(para->pcKey, IEGetKey(obj->ie), obj->ie->key_len);
@@ -79,13 +79,12 @@ static int32_t verify_callback(void *tree, void *para)
     }
     
     if (0 == ret)
-    {   /* 已经找到了 */
+    { 
         OS_PRINT("The same key found. tree(%p) no(%d)\n",
             tree, para->no);
         return -2;
     }
     
-    /* key比要找的key小 */
     if (B_FALSE != para->bReverse)
     {
         memcpy(para->pcKey, IEGetKey(obj->ie), obj->ie->key_len);
@@ -108,7 +107,6 @@ int32_t index_verify_attr(OBJECT_HANDLE *tree, void *para)
     char *pcKey = NULL;
     uint16_t usKeyMaxSize = 0;
 
-    /* 检查输入参数 */
     ASSERT(NULL != tree);
 
     usKeyMaxSize = KEY_MAX_SIZE;
@@ -122,7 +120,6 @@ int32_t index_verify_attr(OBJECT_HANDLE *tree, void *para)
 
     tmp_para.pcKey = pcKey;
 
-    /* 正向遍历 */
     tmp_para.bReverse = B_FALSE;
     tmp_para.no = 0;
     ret = index_walk_all(tree, tmp_para.bReverse, 0, &tmp_para, verify_callback);
@@ -138,7 +135,6 @@ int32_t index_verify_attr(OBJECT_HANDLE *tree, void *para)
     OS_PRINT("Verify sequence success. index(%s) tree(%s)\n",
         tree->index->name, tree->pstInode->name);
     
-    /* 反向遍历 */
     tmp_para.bReverse = B_TRUE;
     tmp_para.no = 0;
     ret = index_walk_all(tree, tmp_para.bReverse, 0, &tmp_para, verify_callback);
@@ -166,7 +162,6 @@ int32_t index_verify_attr_by_name(char *index_name, uint64_t start_lba, uint64_t
     INDEX_HANDLE *index = NULL;
     int32_t ret = 0;
 
-    /* 检查输入参数 */
     if ((NULL == index_name) || (0 == objid))
     {
         LOG_ERROR("Invalid parameter. index_name(%p) objid(%lld)\n",
@@ -205,7 +200,6 @@ int32_t verify_index(char *index_name, uint64_t start_lba)
     int32_t ret = 0;
     WALK_ALL_TREES_PARA_S para;
     
-    /* 检查输入参数 */
     ASSERT (NULL != index_name);
     ASSERT (0 != strlen(index_name));
 

@@ -63,7 +63,7 @@ MODULE(PID_INDEX);
 
 #endif
 
-/* 设置当前块一直到根节点块cache数据为脏数据 */
+// set the block from current block to root block as dirty
 static int32_t set_ib_dirty(OBJECT_HANDLE *tree, uint64_t vbn, uint8_t depth)
 {
     uint64_t new_vbn = 0;
@@ -76,7 +76,7 @@ static int32_t set_ib_dirty(OBJECT_HANDLE *tree, uint64_t vbn, uint8_t depth)
     do
     {
         if ((0 != depth) && (DIRTY != tree->cache_stack[depth]->state))
-        {   /* 分配新块以便写修改后的数据 */
+        {   // allocate new block for modified data
             ret = INDEX_ALLOC_BLOCK(tree->obj_info, &new_vbn);
             if (0 > ret)
             {
@@ -84,7 +84,7 @@ static int32_t set_ib_dirty(OBJECT_HANDLE *tree, uint64_t vbn, uint8_t depth)
                 return ret;
             }
             
-            /* 将原来的块放入旧块队列以便事务处理 */
+            // record old block to rollback
 			ret = index_record_old_block(tree->obj_info, tree->cache_stack[depth]->vbn);
             
             OS_RWLOCK_WRLOCK(&tree->obj_info->caches_lock);
@@ -102,13 +102,12 @@ static int32_t set_ib_dirty(OBJECT_HANDLE *tree, uint64_t vbn, uint8_t depth)
 
         if (0 != vbn)
         {
-            /* 修改entry指向的索引块地址 */
+            
             ie = (INDEX_ENTRY *) ((uint8_t *) tree->cache_stack[depth]->ib
                 + tree->position_stack[depth]);
             IESetVBN(ie, vbn);
         }
 
-        /* 已经修改过的节点之上的节点都不需要再进行修改 */
         if (DIRTY == tree->cache_stack[depth]->state)
         {
             return 0;
@@ -142,7 +141,7 @@ static void reset_cache_stack(OBJECT_HANDLE * tree, uint8_t flags)
 {
     ASSERT(NULL != tree);
     
-    /* 使当前指针指向根节点的第一个entry */
+    /* get to first entry */
     tree->cache = &tree->obj_info->root_ibc;
     tree->cache_stack[0] = tree->cache;
     tree->depth = 0;
@@ -159,9 +158,7 @@ static void reset_cache_stack(OBJECT_HANDLE * tree, uint8_t flags)
     return;
 }   
 
-/*******************************************************************************
-树往下深入一级
-*******************************************************************************/
+// go to next level depth
 static int32_t push_cache_stack(OBJECT_HANDLE *tree, uint8_t flags)
 {
     uint64_t vbn = 0;
@@ -169,19 +166,18 @@ static int32_t push_cache_stack(OBJECT_HANDLE *tree, uint8_t flags)
 
     ASSERT(NULL != tree);
     
-    /* 判断是否超出了最大深度 */
+    /* get to max depth */
     if (tree->depth >= (INDEX_MAX_DEPTH - 1))
     {
         LOG_ERROR("Depth get to MAX. depth(%d)\n", tree->depth);
         return -INDEX_ERR_MAX_DEPTH;
     }
 
-    /* 获取下一级节点的vbn */
+    // get the vbn of the new block
     vbn = IEGetVBN(tree->ie);
 
     LOG_DEBUG("Depth increase. depth(%d) vbn(%lld) pos(%d)\n", tree->depth, vbn, tree->position);
 
-    /* 读取当前entry所指向的节点 */
     ret = index_block_read(tree, vbn);
     if (0 > ret)
     {
@@ -207,16 +203,14 @@ static int32_t push_cache_stack(OBJECT_HANDLE *tree, uint8_t flags)
         return 0;
     }
 
-    /* 指向新节点的头部 */
+    // go to the first entry of the new block
     tree->position = tree->cache->ib->first_entry_off;
     tree->ie = IBGetFirst(tree->cache->ib);
 
     return 0;
 }
 
-/*******************************************************************************
-树的当前指针指向前一个entry
-*******************************************************************************/
+// go to prev entry
 static int32_t get_prev_ie(OBJECT_HANDLE *tree)
 {
     ASSERT(NULL != tree);
@@ -245,9 +239,7 @@ static int32_t get_prev_ie(OBJECT_HANDLE *tree)
     return 0;
 }
 
-/*******************************************************************************
-树往上回退一级
-*******************************************************************************/
+// go to top level
 static int32_t pop_cache_stack(OBJECT_HANDLE *tree, uint8_t flags)
 {
     ASSERT(NULL != tree);
@@ -265,8 +257,8 @@ static int32_t pop_cache_stack(OBJECT_HANDLE *tree, uint8_t flags)
     LOG_DEBUG("Depth decrease. depth(%d) vbn(%lld) pos(%d)\n", tree->depth,
         tree->cache->vbn, tree->position);
 
-    /* 恢复上层节点的相关信息 */
-    tree->ie = (INDEX_ENTRY *) ((uint8_t *) tree->cache->ib
+    // recover the entry
+    tree->ie = (INDEX_ENTRY *)((uint8_t *)tree->cache->ib
         + tree->position);
 
     if (flags & INDEX_GET_PREV)
@@ -277,8 +269,7 @@ static int32_t pop_cache_stack(OBJECT_HANDLE *tree, uint8_t flags)
     return 0;
 }      
 
-void init_ib(INDEX_BLOCK *ib, uint8_t node_type,
-    uint32_t aloc_size)
+void init_ib(INDEX_BLOCK *ib, uint8_t node_type, uint32_t aloc_size)
 {
     INDEX_ENTRY *ie = NULL;
 
@@ -291,11 +282,11 @@ void init_ib(INDEX_BLOCK *ib, uint8_t node_type,
     
     ib->first_entry_off = sizeof(INDEX_BLOCK);
     if (node_type & INDEX_BLOCK_LARGE)
-    {   /* 有子节点 */
+    {   // have child node
         ib->head.real_size = sizeof(INDEX_BLOCK) + ENTRY_END_SIZE + VBN_SIZE;
     }
     else
-    {   /* 无子节点 */
+    {   // no child node
         ib->head.real_size = sizeof(INDEX_BLOCK) + ENTRY_END_SIZE;
     }
 
@@ -304,12 +295,12 @@ void init_ib(INDEX_BLOCK *ib, uint8_t node_type,
     ie = IBGetFirst(ib);
 
     if (node_type & INDEX_BLOCK_LARGE)
-    {   /* 有子节点 */
+    {   // have child node
         ie->flags = INDEX_ENTRY_END | INDEX_ENTRY_NODE;
         ie->len = ENTRY_END_SIZE + VBN_SIZE;
     }
     else
-    {   /* 无子节点 */
+    {   // no child node
         ie->flags = INDEX_ENTRY_END;
         ie->len = ENTRY_END_SIZE;
     }
@@ -324,9 +315,7 @@ void init_ib(INDEX_BLOCK *ib, uint8_t node_type,
     return;
 }
 
-/*******************************************************************************
-将指定索引块变成不带子树的索引块
-*******************************************************************************/
+// make the block no child
 static void make_ib_small(INDEX_BLOCK *ib)
 {
     INDEX_ENTRY *ie = NULL;
@@ -353,15 +342,13 @@ static void make_ib_small(INDEX_BLOCK *ib)
     return;
 }     
 
-/*******************************************************************************
-获取树的下一个entry
-*******************************************************************************/
+// get the next entry
 static int32_t get_next_ie(OBJECT_HANDLE *tree)
 {
     ASSERT(NULL != tree);
 
     if (0 != (tree->ie->flags & INDEX_ENTRY_END))
-    { /* 正常结束的entry */
+    { // the last entry
         return -INDEX_ERR_NEXT_ENTRY;
     }
     
@@ -407,25 +394,23 @@ static int32_t add_or_remove_ib(OBJECT_HANDLE *tree, uint8_t flags)
     return 0;
 }
     
-/*******************************************************************************
-将entry指针指向当前key
-*******************************************************************************/
+// go to current entry
 static int32_t get_current_ie(OBJECT_HANDLE *tree, uint8_t flags)
 {
     int32_t ret = 0;
 
     while (tree->ie->flags & INDEX_ENTRY_NODE)
-    {   /* Have children */
+    { /* Have children */
         ret = push_cache_stack(tree, flags);
         if (ret < 0)
-        {       /* Push the information OS_S32o the history, and read new index block */
+        { /* Push the information OS_S32o the history, and read new index block */
             LOG_ERROR("Go to child node failed. ret(%d)\n", ret);
             return ret;
         }
     }
 
     while (tree->ie->flags & (INDEX_ENTRY_END | INDEX_ENTRY_BEGIN))
-    {   /* The Index END */
+    { /* The Index END */
         ret = add_or_remove_ib(tree, flags);
         if (0 > ret)
         {
@@ -454,7 +439,7 @@ static int32_t get_current_ie(OBJECT_HANDLE *tree, uint8_t flags)
 
         ret = pop_cache_stack(tree, flags);
         if (ret < 0)
-        {       /* Up to parent failed */
+        { /* Up to parent failed */
             if (ret != -INDEX_ERR_ROOT)
             {
                 LOG_ERROR("Go to parent node failed. ret(%d)\n", ret);
@@ -484,7 +469,7 @@ int32_t walk_tree(OBJECT_HANDLE *tree, uint8_t flags)
         reset_cache_stack(tree, flags);
     }
     else if (flags & INDEX_GET_PREV)
-    {  /* 获取上一个 */
+    {  /* get prev */
         if (!(tree->ie->flags & INDEX_ENTRY_NODE))
         {
             ret = get_prev_ie(tree);
@@ -496,7 +481,7 @@ int32_t walk_tree(OBJECT_HANDLE *tree, uint8_t flags)
         }
     }
     else if (!(flags & INDEX_GET_CURRENT))
-    {  /* 获取下一个 */
+    {  /* get next */
         ret = get_next_ie(tree);
         if (0 > ret)
         {
@@ -504,14 +489,11 @@ int32_t walk_tree(OBJECT_HANDLE *tree, uint8_t flags)
             return ret;
         }
     }
-    /* 不需要处理else */
 
     return get_current_ie(tree, flags);
 }
 
-/*******************************************************************************
-比较key
-*******************************************************************************/
+// collate key
 int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY *ie,
     const void *key, uint16_t key_len)
 {
@@ -547,15 +529,12 @@ int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY *ie,
     return -INDEX_ERR_COLLATE;
 }
 
-/*******************************************************************************
-搜索指定key，无加锁
-*******************************************************************************/
+// search key
 int32_t search_key_internal(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len)
 {
     int32_t ret = 0;
 
-    /* 检查输入参数 */
     ASSERT(NULL != tree);
     ASSERT(NULL != key);
 
@@ -574,12 +553,12 @@ int32_t search_key_internal(OBJECT_HANDLE *tree, const void *key,
             ret = collate_key(tree->obj_info->attr_record.flags, tree->ie,
                 key, key_len);
             if (0 < ret)
-            {   /* key比要找的key大 */
+            { // get a key larger
                 break;
             }
             
             if (0 == ret)
-            {   /* 已经找到了 */
+            { // found
                 return 0;
             }
 
@@ -588,7 +567,7 @@ int32_t search_key_internal(OBJECT_HANDLE *tree, const void *key,
                 return ret;
             }
             
-            /* key比要找的key小 */
+            // get a key smaller
             ret = get_next_ie(tree);
             if (0 > ret)
             {
@@ -614,9 +593,7 @@ int32_t search_key_internal(OBJECT_HANDLE *tree, const void *key,
     return -INDEX_ERR_KEY_NOT_FOUND;
 }
 
-/*******************************************************************************
-将树key指针指向离当前位置最近的key
-*******************************************************************************/
+// go to the near key
 static void get_to_near_key(OBJECT_HANDLE *tree)
 {
     int32_t ret = 0;
@@ -640,15 +617,11 @@ static void get_to_near_key(OBJECT_HANDLE *tree)
     return;
 }
 
-/*******************************************************************************
-搜索指定key，无加锁
-*******************************************************************************/
 int32_t index_search_key_nolock(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len)
 {
     int32_t ret = 0;
 
-    /* 检查输入参数 */
     if ((NULL == tree) || (NULL == key) || (0 == key_len))
     {
         LOG_ERROR("Invalid parameter. tree(%p) key(%p) key_len(%d)\n", tree, key,
@@ -667,15 +640,11 @@ int32_t index_search_key_nolock(OBJECT_HANDLE *tree, const void *key,
     return ret;
 }
 
-/*******************************************************************************
-搜索指定key，有加锁
-*******************************************************************************/
 int32_t index_search_key(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len)
 {
     int32_t ret = 0;
 
-    /* 检查输入参数 */
     if ((NULL == tree) || (NULL == key) || (0 == key_len))
     {
         LOG_ERROR("Invalid parameter. tree(%p) key(%p) key_len(%d)\n", tree, key, key_len);
@@ -689,9 +658,6 @@ int32_t index_search_key(OBJECT_HANDLE *tree, const void *key,
     return ret;
 }
 
-/*******************************************************************************
-获取索引块的中间entry
-*******************************************************************************/
 static INDEX_ENTRY *get_middle_ie(INDEX_BLOCK *ib)
 {
     INDEX_ENTRY *ie = NULL;
@@ -717,9 +683,7 @@ static INDEX_ENTRY *get_middle_ie(INDEX_BLOCK *ib)
     return ie;
 }  
 
-/*******************************************************************************
-计算指定entry到结束的长度
-*******************************************************************************/
+// get the length from current entry to the end entry
 uint32_t get_entries_length(INDEX_ENTRY *ie)
 {
     uint32_t len = 0;
@@ -746,9 +710,7 @@ uint32_t get_entries_length(INDEX_ENTRY *ie)
     return len;
 }      
 
-/*******************************************************************************
-获取指定索引块的最后一个entry
-*******************************************************************************/
+// get the last entry
 static INDEX_ENTRY *ib_get_last_ie(INDEX_BLOCK *ib)
 {
     uint32_t last_ie_len = ENTRY_END_SIZE;
@@ -763,9 +725,6 @@ static INDEX_ENTRY *ib_get_last_ie(INDEX_BLOCK *ib)
     return (INDEX_ENTRY *)(IBGetEnd(ib) - last_ie_len);
 }
 
-/*******************************************************************************
-删除索引块中指定的entry
-*******************************************************************************/
 static void remove_ie(INDEX_BLOCK * ib, INDEX_ENTRY * ie)
 {
     INDEX_ENTRY *next_ie = NULL;
@@ -781,9 +740,6 @@ static void remove_ie(INDEX_BLOCK * ib, INDEX_ENTRY * ie)
     return;
 }
 
-/*******************************************************************************
-在索引块中插入指定的entry
-*******************************************************************************/
 void insert_ie(INDEX_BLOCK * ib, INDEX_ENTRY * ie,
     INDEX_ENTRY * pos)
 {
@@ -803,9 +759,7 @@ void insert_ie(INDEX_BLOCK * ib, INDEX_ENTRY * ie,
     return;
 }
 
-/*******************************************************************************
-将指定entry加上vbn字段，生成一个新的entry
-*******************************************************************************/
+// add vbn to an entry
 static INDEX_ENTRY *dump_ie_add_vbn(INDEX_ENTRY * ie, uint64_t vbn)
 {
     INDEX_ENTRY *new_ie = NULL;
@@ -819,7 +773,7 @@ static INDEX_ENTRY *dump_ie_add_vbn(INDEX_ENTRY * ie, uint64_t vbn)
         size += VBN_SIZE;
     }
 
-    new_ie = (INDEX_ENTRY *) OS_MALLOC(size);
+    new_ie = (INDEX_ENTRY *)OS_MALLOC(size);
     if (NULL == new_ie)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", size);
@@ -834,9 +788,7 @@ static INDEX_ENTRY *dump_ie_add_vbn(INDEX_ENTRY * ie, uint64_t vbn)
     return new_ie;
 }  
 
-/*******************************************************************************
-将指定entry删除vbn字段，生成一个新的entry
-*******************************************************************************/
+// delete vbn from an entry
 static INDEX_ENTRY *dump_ie_del_vbn(INDEX_ENTRY * ie)
 {
     INDEX_ENTRY *new_ie = NULL;
@@ -850,7 +802,7 @@ static INDEX_ENTRY *dump_ie_del_vbn(INDEX_ENTRY * ie)
         size -= VBN_SIZE;
     }
 
-    new_ie = (INDEX_ENTRY *) OS_MALLOC(size);
+    new_ie = (INDEX_ENTRY *)OS_MALLOC(size);
     if (NULL == new_ie)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", size);
@@ -864,9 +816,7 @@ static INDEX_ENTRY *dump_ie_del_vbn(INDEX_ENTRY * ie)
     return new_ie;
 }      
 
-/*******************************************************************************
-将源索引块中从指定位置到结束位置的所有entry拷贝到目标索引块中
-*******************************************************************************/
+// copy the last half entries
 void copy_ib_tail(INDEX_BLOCK * dst_ib, INDEX_BLOCK * src_ib,
     INDEX_ENTRY * mid_ie)
 {
@@ -889,9 +839,7 @@ void copy_ib_tail(INDEX_BLOCK * dst_ib, INDEX_BLOCK * src_ib,
     return;
 }
 
-/*******************************************************************************
-将源索引块中从指定位置到结束位置的所有entry都删除
-*******************************************************************************/
+// remove the last half entries
 static void cut_ib_tail(INDEX_BLOCK *src_ib, INDEX_ENTRY *ie)
 {
     uint8_t *start = NULL;
@@ -917,10 +865,7 @@ static void cut_ib_tail(INDEX_BLOCK *src_ib, INDEX_ENTRY *ie)
         + src_ib->first_entry_off;
 }
 
-/*******************************************************************************
-将当前索引块分裂成2个，并将其中间entry提出来，然后将指定entry插入
-其中一个索引块
-*******************************************************************************/
+// split one block into two block, and get the middle entry
 static INDEX_ENTRY *split_ib(OBJECT_HANDLE *tree, INDEX_ENTRY *ie)
 {
     INDEX_ENTRY *mid_ie = NULL;
@@ -958,7 +903,6 @@ static INDEX_ENTRY *split_ib(OBJECT_HANDLE *tree, INDEX_ENTRY *ie)
 
     //LOG_DEBUG("Write new index block success. vbn(%lld)\n", new_ibc->vbn);
 
-    /* 先设置成脏，因为上层块链接会变化 */
     ret = set_ib_dirty(tree, (uint64_t)0, tree->depth);
     if (0 > ret)
     {
@@ -966,9 +910,7 @@ static INDEX_ENTRY *split_ib(OBJECT_HANDLE *tree, INDEX_ENTRY *ie)
         return NULL;
     }
 
-    /* */
-    /* Cut block tail and whether insert the @pstIE OS_S32o the old index block */
-    /* */
+    // Cut block tail and whether insert the @pstIE OS_S32o the old index block
     new_ie = dump_ie_add_vbn(mid_ie, tree->cache->vbn);
     if (NULL == new_ie)
     {
@@ -978,7 +920,7 @@ static INDEX_ENTRY *split_ib(OBJECT_HANDLE *tree, INDEX_ENTRY *ie)
 
     cut_ib_tail(tree->cache->ib, mid_ie);
     if (pos >= 0)
-    {   /* Insert the entry OS_S32o old index block */
+    {   /* Insert the entry onto old index block */
         insert_ie(tree->cache->ib, ie, tree->ie);
     }
 
@@ -994,9 +936,7 @@ static INDEX_ENTRY *split_ib(OBJECT_HANDLE *tree, INDEX_ENTRY *ie)
     return new_ie;
 }
 
-/*******************************************************************************
-将根节点中的entry挪到新的节点中来，从而使根节点所在vbn不变
-*******************************************************************************/
+// copy the root entries into new block
 static int32_t reparent_root(OBJECT_HANDLE * tree)
 {
     INDEX_ENTRY *ie = NULL;
@@ -1058,9 +998,6 @@ static int32_t reparent_root(OBJECT_HANDLE * tree)
     return 0;
 }    
 
-/*******************************************************************************
-在树的当前位置插入指定entry
-*******************************************************************************/
 static int32_t tree_insert_ie(OBJECT_HANDLE *tree, INDEX_ENTRY **new_ie)
 {
     uint32_t uiNewSize = 0;
@@ -1104,22 +1041,18 @@ static int32_t tree_insert_ie(OBJECT_HANDLE *tree, INDEX_ENTRY **new_ie)
     }
 }
 
-/*******************************************************************************
-检查是否需要删除索引块
-*******************************************************************************/
 int32_t check_removed_ib(OBJECT_HANDLE * tree)
 {
     int32_t ret = 0;
     INDEX_ENTRY *ie = IBGetFirst(tree->cache->ib);
     
     if (0 == (ie->flags & INDEX_ENTRY_END))
-    { /* 在当前节点中还有entry */
+    {
         return 0;
     }
 
-    /* 在当前节点中已经没有了entry */
     if (0 == tree->depth)
-    {   /* 根节点 */
+    { // root node
         return 0;
     }
 
@@ -1134,7 +1067,7 @@ int32_t check_removed_ib(OBJECT_HANDLE * tree)
 
         //LOG_DEBUG("delete index block success. vbn(%lld)\n", tree->cache->vbn);
 
-        /* 清除IB的dirty标志，因为此块已经被删除，数据无效，不需要更新此块 */
+        // this block will be deleted
         tree->cache->state = EMPTY;
 
         ret = pop_cache_stack(tree, 0);
@@ -1146,14 +1079,13 @@ int32_t check_removed_ib(OBJECT_HANDLE * tree)
 
         ie = IBGetFirst(tree->cache->ib);
         if ((ie->flags & INDEX_ENTRY_END) == 0)
-        { /* 在节点中有entry */
+        { // there are entries in this node
             break;
         }
 
-        /* 在父节点中没有任何entry */
+        // there are no entries in this node
         if (0 == tree->depth)
-        {   /* 是根节点 */
-            /* cache 缩减 */
+        {   /* root node */
             make_ib_small(tree->cache->ib);
             return set_ib_dirty(tree, (uint64_t)0, tree->depth);
         }
@@ -1162,9 +1094,6 @@ int32_t check_removed_ib(OBJECT_HANDLE * tree)
     return 1;
 }
 
-/*******************************************************************************
-删除一个叶子entry
-*******************************************************************************/
 int32_t remove_leaf(OBJECT_HANDLE *tree)
 {
     INDEX_ENTRY *ie = NULL;
@@ -1184,12 +1113,12 @@ int32_t remove_leaf(OBJECT_HANDLE *tree)
 
     ret = check_removed_ib(tree);
     if (ret < 0)
-    { /* 错误 */
+    {
         LOG_ERROR("Check and remove node failed. ret(%d)\n", ret);
         return ret;
     }
     else if (0 == ret)
-    { /* 根节点或被删entry所在节点的entry数目不为0 */
+    { // it is root node, or the node have some entries
         return 0;
     }
 
@@ -1241,9 +1170,6 @@ int32_t remove_leaf(OBJECT_HANDLE *tree)
     return ret;
 }
 
-/*******************************************************************************
-删除一个node，也就是带子树的entry
-*******************************************************************************/
 int32_t remove_node(OBJECT_HANDLE *tree)
 {
     INDEX_ENTRY *succ_ie = NULL;        /* The successor entry */
@@ -1254,9 +1180,7 @@ int32_t remove_node(OBJECT_HANDLE *tree)
 
     ASSERT(NULL != tree);
 
-    /* */
     /* Record the current entry's information */
-    /* */
     depth = tree->depth;
     len = tree->ie->len;
     vbn = IEGetVBN(tree->ie);
@@ -1268,7 +1192,7 @@ int32_t remove_node(OBJECT_HANDLE *tree)
         return ret;
     }
 
-    /* 获取紧接着的entry，并在后面加上vbn */
+    /* get the success entry, and add the vbn */
     succ_ie = dump_ie_add_vbn(tree->ie, vbn);
     if (NULL == succ_ie)
     {
@@ -1276,7 +1200,7 @@ int32_t remove_node(OBJECT_HANDLE *tree)
         return -INDEX_ERR_ADD_VBN;
     }
     
-    /* 恢复成原来的节点 */
+    // recover the old node
     while (tree->depth > depth)
     {
         ret = pop_cache_stack(tree, 0);
@@ -1288,11 +1212,11 @@ int32_t remove_node(OBJECT_HANDLE *tree)
         }
     }
 
-    /* 获取前一个entry的信息 */
-    tree->ie = (INDEX_ENTRY *) ((uint8_t *) tree->ie - len);
+    // get the old entry
+    tree->ie = (INDEX_ENTRY *)((uint8_t *)tree->ie - len);
     tree->position -= len;
     
-    /* 删除旧entry */
+    /* remove the old entry */
     remove_ie(tree->cache->ib, tree->ie);
     ret = set_ib_dirty(tree, (uint64_t)0, tree->depth);
     if (0 > ret)
@@ -1302,7 +1226,7 @@ int32_t remove_node(OBJECT_HANDLE *tree)
         return ret;
     }
 
-    /* 插入新entry */
+    /* insert the new entry */
     ret = tree_insert_ie(tree, &succ_ie);
     if (0 > ret)
     {  
@@ -1313,7 +1237,7 @@ int32_t remove_node(OBJECT_HANDLE *tree)
     
     OS_FREE(succ_ie);
 
-    /* 获取紧接着的entry */
+    /* get the next entry */
     ret = walk_tree(tree, 0);
     if (0 > ret)
     { 
@@ -1321,16 +1245,12 @@ int32_t remove_node(OBJECT_HANDLE *tree)
         return ret;
     }
     
-    /* 删除紧接着的entry */
+    /* remove the next entry */
     return (remove_leaf(tree)); 
 }
 
-/*******************************************************************************
-删除树当前指向的entry
-*******************************************************************************/
 int32_t tree_remove_ie(OBJECT_HANDLE *tree)
 {
-    /* 检查输入参数 */
     if (NULL == tree)
     {
         LOG_ERROR("Invalid parameter. tree(%p)\n", tree);
@@ -1338,29 +1258,24 @@ int32_t tree_remove_ie(OBJECT_HANDLE *tree)
     }
 
     if (tree->ie->flags & (INDEX_ENTRY_END | INDEX_ENTRY_BEGIN))
-    {   /* 要删除的entry是begin或end entry */
+    {
         LOG_ERROR("You can not remove begin or end entry. flags(0x%x)\n", tree->ie->flags);
         return -INDEX_ERR_END_ENTRY;
     }
 
     if (tree->ie->flags & INDEX_ENTRY_NODE)
-    { /* 删除带子树的entry */
+    {
         return (remove_node(tree));
     }
 
-    /* 删除不带子树的entry */
     return (remove_leaf(tree));
 }
 
-/*******************************************************************************
-删除指定key，无锁
-*******************************************************************************/
 int32_t index_remove_key_nolock(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len)
 {
     int32_t ret = 0;
 
-    /* 检查输入参数 */
     if ((NULL == tree) || (NULL == key) || (0 == key_len))
     {
         LOG_ERROR("Invalid parameter. tree(%p) key(%p) key_len(%d)\n", tree, key, key_len);
@@ -1371,7 +1286,6 @@ int32_t index_remove_key_nolock(OBJECT_HANDLE *tree, const void *key,
 
     ASSERT(tree->obj_info->attr_record.flags & FLAG_TABLE);
 
-    /* 搜索是否有此key */
     ret = search_key_internal(tree, key, key_len);
     if (0 > ret)
     {
@@ -1379,7 +1293,6 @@ int32_t index_remove_key_nolock(OBJECT_HANDLE *tree, const void *key,
         return ret;
     }
 
-    /* 删除此entry */
     ret = tree_remove_ie(tree);
     if (0 > ret)
     {
@@ -1392,15 +1305,11 @@ int32_t index_remove_key_nolock(OBJECT_HANDLE *tree, const void *key,
     return ret;
 }
 
-/*******************************************************************************
-删除指定key
-*******************************************************************************/
 int32_t index_remove_key(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len)
 {
     int32_t ret = 0;
 
-    /* 检查输入参数 */
     if (NULL == tree)
     {
         LOG_ERROR("Invalid parameter. tree(%p)\n", tree);
@@ -1414,9 +1323,6 @@ int32_t index_remove_key(OBJECT_HANDLE *tree, const void *key,
     return ret;
 }
 
-/*******************************************************************************
-插入指定的key和value, 无锁
-*******************************************************************************/
 int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len, const void *c, uint16_t value_len)
 {
@@ -1424,7 +1330,6 @@ int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
     uint16_t len = 0;
     int32_t ret = 0;
 
-    /* 检查输入参数 */
     if ((NULL == tree) || (NULL == key) || (NULL == c)
         || (0 == key_len) || (0 == value_len))
     {
@@ -1437,7 +1342,6 @@ int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
 
     PRINT_KEY("Insert key start", tree, key, key_len);
 
-    /* 搜索是否已经存在此key */
     ret = search_key_internal(tree, key, key_len);
     if (ret >= 0)
     {
@@ -1459,7 +1363,6 @@ int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 
-    /* 生成entry */
     ie->flags = 0;
     ie->len = len;
     ie->key_len = key_len;
@@ -1467,7 +1370,6 @@ int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
     memcpy(IEGetKey(ie), key, key_len);
     memcpy(IEGetValue(ie), c, value_len);
 
-    /* 将此entry插入树中 */
     ret = tree_insert_ie(tree, &ie);
     if (0 > ret)
     {
@@ -1483,15 +1385,11 @@ int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
     return ret;
 }
 
-/*******************************************************************************
-插入指定的key和value
-*******************************************************************************/
 int32_t index_insert_key(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len, const void *c, uint16_t value_len)
 {
     int32_t ret = 0;
 
-    /* 检查输入参数 */
     if (NULL == tree)
     {
         LOG_ERROR("Invalid parameter. tree(%p)\n", tree);
@@ -1510,7 +1408,6 @@ int32_t index_update_value(OBJECT_HANDLE *tree, const void *key,
 {
     int32_t ret = 0;
 
-    /* 检查输入参数 */
     if (NULL == tree)
     {
         LOG_ERROR("Invalid parameter. tree(%p)\n", tree);
@@ -1536,10 +1433,7 @@ EXPORT_SYMBOL(index_search_key);
 EXPORT_SYMBOL(walk_tree);
 EXPORT_SYMBOL(index_insert_key);
 EXPORT_SYMBOL(index_remove_key);
-EXPORT_SYMBOL(tree_remove_ie);
 EXPORT_SYMBOL(index_walk_all);
-
-EXPORT_SYMBOL(index_find_handle);
 
 EXPORT_SYMBOL(index_search_key_nolock);
 EXPORT_SYMBOL(index_insert_key_nolock);

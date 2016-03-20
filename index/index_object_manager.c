@@ -212,7 +212,6 @@ int32_t flush_inode(OBJECT_INFO *obj_info)
         return 0;
     }
 
-    /* Ë¢ÈëÔàÊı¾İ */
     ret = INDEX_UPDATE_INODE(obj_info);
     if (0 > ret)
     {

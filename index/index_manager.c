@@ -38,7 +38,6 @@ History:
 MODULE(PID_INDEX);
 #include "os_log.h"
 
-/* 索引区句柄列表和锁 */
 avl_tree_t *g_index_list = NULL;
 OS_RWLOCK g_index_list_rwlock;
 
@@ -124,10 +123,8 @@ void index_exit_system(void)
         return;
     }
 
-    /* 关闭队列中所有的索引区句柄 */
     (void)avl_walk_all(g_index_list, (avl_walk_call_back)close_one_index, NULL);
 
-    /* 销毁索引区链表和锁 */
     OS_FREE(g_index_list);
     g_index_list = NULL;
     OS_RWLOCK_DESTROY(&g_index_list_rwlock);
@@ -288,7 +285,6 @@ int32_t index_open_nolock(const char *index_name, uint64_t start_lba, INDEX_HAND
 
     LOG_INFO("Open the index. index_name(%s) start_lba(%lld)\n", index_name, start_lba);
 
-    /* 检查是否已经打开 */
     tmp_index = avl_find(g_index_list, (avl_find_fn)compare_index2, index_name, &where);
     if (NULL != tmp_index)
     {
@@ -299,7 +295,6 @@ int32_t index_open_nolock(const char *index_name, uint64_t start_lba, INDEX_HAND
         return 0;
     }
 
-    /* 申请操作索引系统需要的资源 */
     ret = init_index_resource(&tmp_index, index_name);
     if (0 > ret)
     {
@@ -308,7 +303,6 @@ int32_t index_open_nolock(const char *index_name, uint64_t start_lba, INDEX_HAND
         return ret;
     }
 
-    /* 打开块管理文件 */
     ret = block_open(&hnd, index_name, start_lba);
     if (0 > ret)
     {

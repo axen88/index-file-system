@@ -42,14 +42,14 @@ History:
 extern "C" {
 #endif
 
-/* 函数IndexWalk中v_flags参数允许的值 */
-#define INDEX_GET_FIRST      0x01 /* 获取第一个key，如果为0，表明是获取下一个 */
-#define INDEX_GET_LAST       0x02 /* 获取最后一个key */
-#define INDEX_GET_PREV       0x04 /* 获取前一个key */
-#define INDEX_GET_CURRENT    0x08 /* 获取当前key (仅在内部使用) */
-#define INDEX_GET_LAST_ENTRY 0x10 /* 获取最后一个entry */
-#define INDEX_REMOVE_BLOCK   0x20 /* 删除key所在的块 */
-#define INDEX_ADD_BLOCK      0x40 /* 将key所在的块设置为已用，修复模式时使用 */
+/* flags in index_walk_all routine */
+#define INDEX_GET_FIRST      0x01 /* 0: get the next key, 1: get the first */
+#define INDEX_GET_LAST       0x02 /* get the last key */
+#define INDEX_GET_PREV       0x04 /* get the prev key */
+#define INDEX_GET_CURRENT    0x08 /* get the current key */
+#define INDEX_GET_LAST_ENTRY 0x10 /* get the last entry */
+#define INDEX_REMOVE_BLOCK   0x20 /* remove the block of the current key occupied */
+#define INDEX_ADD_BLOCK      0x40 /* add the block of the current key occupied */
 #define INDEX_WALK_MASK      0x1F
 
 
@@ -81,8 +81,6 @@ extern int32_t walk_tree(OBJECT_HANDLE *obj, uint8_t flags);
 extern int64_t index_get_total_key(OBJECT_HANDLE *obj);
 extern int64_t index_get_target_key(OBJECT_HANDLE *obj, uint64_t target);
 
-/* 以下是内部接口，仅供测试，非指定情况请勿使用，线程不安全 */
-extern int32_t tree_remove_ie(OBJECT_HANDLE *obj);
 
 typedef struct tagWALK_ALL_TREES_PARA_S
 {

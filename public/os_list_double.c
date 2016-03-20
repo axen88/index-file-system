@@ -38,15 +38,6 @@ History:
 #include "os_adapter.h"
 #include "os_list_double.h"
 
-/*******************************************************************************
-函数名称: DListInitEntry
-功能说明: 初始化entry
-输入参数:
-    entry: 要初始化的entry
-输出参数: 无
-返 回 值: 无
-说    明: 无
-*******************************************************************************/
 void dlist_init_entry(DLIST_ENTRY_S * entry)
 {
     ASSERT(NULL != entry);
@@ -55,15 +46,6 @@ void dlist_init_entry(DLIST_ENTRY_S * entry)
     entry->prev = entry;
 }
 
-/*******************************************************************************
-函数名称: DListInitHead
-功能说明: 初始化head
-输入参数:
-    head: 要初始化的head
-输出参数: 无
-返 回 值: 无
-说    明: 无
-*******************************************************************************/
 void dlist_init_head(DLIST_HEAD_S * head)
 {
     ASSERT(NULL != head);
@@ -72,17 +54,6 @@ void dlist_init_head(DLIST_HEAD_S * head)
     dlist_init_entry(&head->head);
 }
 
-/*******************************************************************************
-函数名称: add_entry
-功能说明: 将entry添加到链表中去
-输入参数:
-    entry: 要添加的entry
-    prev : 要添加的entry的前一个entry
-    next : 要添加的entry的后一个entry
-输出参数: 无
-返 回 值: 无
-说    明: 无
-*******************************************************************************/
 static void add_entry(DLIST_ENTRY_S * entry, DLIST_ENTRY_S * prev,
     DLIST_ENTRY_S * next)
 {
@@ -96,17 +67,6 @@ static void add_entry(DLIST_ENTRY_S * entry, DLIST_ENTRY_S * prev,
     prev->next = entry;
 }
 
-/*******************************************************************************
-函数名称: remove_entry
-功能说明: 删除entry
-输入参数:
-    entry: 要删除的entry
-    prev : 要删除的entry的前一个entry
-    next : 要删除的entry的后一个entry
-输出参数: 无
-返 回 值: 无
-说    明: 无
-*******************************************************************************/
 static void remove_entry(DLIST_ENTRY_S * entry, DLIST_ENTRY_S * prev,
     DLIST_ENTRY_S * next)
 {
@@ -118,16 +78,6 @@ static void remove_entry(DLIST_ENTRY_S * entry, DLIST_ENTRY_S * prev,
     dlist_init_entry(entry);
 }
 
-/*******************************************************************************
-函数名称: DListAddHead
-功能说明: 在链表的头部位置添加一个entry
-输入参数:
-    head : 要操作的链表
-    entry: 要添加的entry
-输出参数: 无
-返 回 值: 无
-说    明: 无
-*******************************************************************************/
 void dlist_add_head(DLIST_HEAD_S * head, DLIST_ENTRY_S * entry)
 {
     ASSERT(NULL != head);
@@ -138,16 +88,6 @@ void dlist_add_head(DLIST_HEAD_S * head, DLIST_ENTRY_S * entry)
     head->num++;
 }
 
-/*******************************************************************************
-函数名称: DListAddTail
-功能说明: 在链表的尾部位置添加一个entry
-输入参数:
-    head : 要操作的链表
-    entry: 要添加的entry
-输出参数: 无
-返 回 值: 无
-说    明: 无
-*******************************************************************************/
 void dlist_add_tail(DLIST_HEAD_S * head, DLIST_ENTRY_S * entry)
 {
     ASSERT(NULL != head);
@@ -158,16 +98,6 @@ void dlist_add_tail(DLIST_HEAD_S * head, DLIST_ENTRY_S * entry)
     head->num++;
 }
 
-/*******************************************************************************
-函数名称: DListremove_entry
-功能说明: 删除指定entry
-输入参数:
-    head : 要操作的链表
-    entry: 要添加的entry
-输出参数: 无
-返 回 值: 无
-说    明: 无
-*******************************************************************************/
 void dlist_remove_entry(DLIST_HEAD_S * head, DLIST_ENTRY_S * entry)
 {
     ASSERT(NULL != entry);
@@ -181,18 +111,6 @@ void dlist_remove_entry(DLIST_HEAD_S * head, DLIST_ENTRY_S * entry)
     }
 }
 
-/*******************************************************************************
-函数名称: DListGetEntry
-功能说明: 获取指定位置处的entry
-输入参数:
-    head : 要操作的链表
-    position   : 指定的位置
-输出参数: 无
-返 回 值:
-    !=NULL: 获取成功，获取到的entry指针
-    ==NULL: 获取失败
-说    明: 无
-*******************************************************************************/
 DLIST_ENTRY_S *dlist_get_entry(DLIST_HEAD_S * head, uint32_t position)
 {
     uint32_t cnt = 0;
@@ -219,18 +137,6 @@ DLIST_ENTRY_S *dlist_get_entry(DLIST_HEAD_S * head, uint32_t position)
     return NULL;
 }
 
-/*******************************************************************************
-函数名称: DListRemoveTargetEntry
-功能说明: 删除指定位置处的entry
-输入参数:
-    head : 要操作的链表
-    position   : 指定的位置
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t dlist_remove_target_entry(DLIST_HEAD_S * head, uint32_t position)
 {
     DLIST_ENTRY_S *entry = NULL;
@@ -248,19 +154,6 @@ int32_t dlist_remove_target_entry(DLIST_HEAD_S * head, uint32_t position)
     return -1;
 }
 
-/*******************************************************************************
-函数名称: DListWalkAll
-功能说明: 遍历链表
-输入参数:
-    head : 要操作的链表
-    func   : 对每个链表成员操作的回调函数
-    para   : 回调函数的其中一个参数
-输出参数: 无
-返 回 值:
-    ==0: 全部遍历完成
-    !=0: 中途退出遍历，返回值为回调函数的返回值
-说    明: 无
-*******************************************************************************/
 int32_t dlist_walk_all(DLIST_HEAD_S * head,
     int32_t (*func)(void *, DLIST_ENTRY_S *), void * para)
 {
@@ -294,19 +187,6 @@ int32_t dlist_walk_all(DLIST_HEAD_S * head,
     return 0;
 }
 
-/*******************************************************************************
-函数名称: DListWalkAllReverse
-功能说明: 遍历链表
-输入参数:
-    head : 要操作的链表
-    func   : 对每个链表成员操作的回调函数
-    para   : 回调函数的其中一个参数
-输出参数: 无
-返 回 值:
-    ==0: 全部遍历完成
-    !=0: 中途退出遍历，返回值为回调函数的返回值
-说    明: 无
-*******************************************************************************/
 int32_t dlist_walk_all_reverse(DLIST_HEAD_S * head,
     int32_t (*func)(void *, DLIST_ENTRY_S *), void * para)
 {
@@ -340,16 +220,6 @@ int32_t dlist_walk_all_reverse(DLIST_HEAD_S * head,
     return 0;
 }
 
-/*******************************************************************************
-函数名称: DListCount
-功能说明: 链表中成员的个数
-输入参数:
-    head : 要操作的链表
-输出参数: 无
-返 回 值:
-    >=0: 数目
-说    明: 无
-*******************************************************************************/
 int32_t dlist_count(DLIST_HEAD_S * head)
 {
     ASSERT(NULL != head);
@@ -357,17 +227,6 @@ int32_t dlist_count(DLIST_HEAD_S * head)
     return (int32_t)head->num;
 }
 
-/*******************************************************************************
-函数名称: DListIsEmpty
-功能说明: 判断链表是否为空
-输入参数:
-    head : 要操作的链表
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 bool_t dlist_is_empty(DLIST_HEAD_S * head)
 {
     ASSERT(NULL != head);

@@ -276,7 +276,6 @@ extern "C" {
     
 #endif
 
-/* 检测结构体的大小是否等于特定值 */
  #define    SIZE_OF_TYPE_EQUAL_TO(type, size) \
  static inline char size_of_##type##_equal_to_##size() \
  { \
@@ -287,7 +286,6 @@ extern "C" {
  
  
  
-/* 检测结构体的大小是否不等于特定值 */
  #define    SIZE_OF_TYPE_UNEQUAL_TO(type, size) \
  static inline char size_of_##type##_unequal_to_##size() \
  { \
@@ -297,7 +295,6 @@ extern "C" {
  
  
  
-/* 检测结构体的大小是否不大于特定值 */
  #define    SIZE_OF_TYPE_NOT_LARGER_THAN(type, size) \
  static inline char size_of_##type##_not_larger_than_##size() \
  { \
@@ -307,7 +304,6 @@ extern "C" {
  
  
  
-/* 检测结构体的大小是否不小于特定值 */
  #define    SIZE_OF_TYPE_NOT_SMALLER_THAN(type, size) \
  static inline char size_of_##type##_not_smaller_than_##size() \
  { \
@@ -317,14 +313,12 @@ extern "C" {
  
  
  
-/* 检测结构体的大小是否小于特定值 */
- #define    SIZE_OF_TYPE_SMALLER_THAN(type, size) \
+#define    SIZE_OF_TYPE_SMALLER_THAN(type, size) \
      SIZE_OF_TYPE_NOT_LARGER_THAN(type, size) \
      SIZE_OF_TYPE_UNEQUAL_TO(type, size)
  
  
  
-/* 检测结构体的大小是否大于特定值 */
  #define    SIZE_OF_TYPE_LARGER_THAN(type, size) \
      SIZE_OF_TYPE_NOT_SMALLER_THAN(type, size) \
      SIZE_OF_TYPE_UNEQUAL_TO(type, size)
@@ -350,7 +344,7 @@ extern "C" {
 #define GetBits(x, bs) ((x) & (bs))
     
 #define ArraySize(a)           (sizeof(a) / sizeof(a[0])) // Get array size
-/* 0x1234是为了防止pclint报错 */
+
 #define OS_OFFSET(type, member) \
     (((ptr_t)(&(((type *)0x1234)->member))) - 0x1234)
 #define OS_CONTAINER(ptr, type, member) \
@@ -419,4 +413,5 @@ enum
 }
 #endif
 
-#endif /* End of __OS_ADAPTER_H__ */
+#endif
+

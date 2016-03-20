@@ -40,12 +40,12 @@ History:
 
 #ifdef __cplusplus
 extern "C" {
-#endif /* End of __cplusplus */
+#endif
 
 typedef enum tagTHREADS_GROUP_ERROR_CODE_E
 {
     ERR_THREADS_GROUP_INVALID_PARA = 300,
-} THREADS_ARRAY_ERROR_CODE_E; /* End of tagTHREADS_ARRAY_ERROR_CODE_E */
+} THREADS_ARRAY_ERROR_CODE_E;
 
 extern void *threads_group_create(uint32_t num, void *(*func)(void *),
     void *para, char *thread_name);
@@ -56,7 +56,7 @@ extern void threads_group_destroy(void *threads_group, uint32_t force,
 
 #ifdef __cplusplus
 }
-#endif /* End of __cplusplus */
+#endif
 
-#endif /* End of __OSP_THREDS_GROUP_H__ */
+#endif
 

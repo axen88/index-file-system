@@ -38,28 +38,12 @@ History:
 MODULE(PID_INDEX);
 #include "os_log.h"
 
-/*******************************************************************************
-函数名称: index_write_block
-功能说明: 分配一个块写入数据，不对数据做更改
-输入参数:
-    hnd         : 块管理系统操作句柄
-    buf       : 要写入的数据
-    size     : 要写入数据的大小，以字节为单位
-    start_lba: 要写入的数据在块中的起始位置
-输出参数:
-    vbn    : 写入的块地址
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_write_block(BLOCK_HANDLE_S * hnd, void * buf, uint32_t size,
     uint32_t start_lba, uint64_t * vbn)
 {
     int32_t ret = 0;
     uint64_t tmp_start_lba = 0;
 
-    /* 检查输入参数 */
     if ((NULL == hnd) || (NULL == buf) || (0 >= (int32_t) size)
         || (NULL == vbn))
     {
@@ -68,7 +52,6 @@ int32_t index_write_block(BLOCK_HANDLE_S * hnd, void * buf, uint32_t size,
         return -FILE_BLOCK_ERR_PARAMETER;
     }
 
-    /* 分配1个块 */
     ret = block_alloc(hnd, 1, vbn);
     if (ret < 0)
     {
@@ -80,7 +63,6 @@ int32_t index_write_block(BLOCK_HANDLE_S * hnd, void * buf, uint32_t size,
     tmp_start_lba = start_lba + *vbn * hnd->sb.sectors_per_block
         + hnd->sb.start_lba;
 
-    /* 写块数据 */
     ret = os_disk_pwrite(hnd->file_hnd, buf, size, tmp_start_lba);
     if (ret != (int32_t) size)
     {
@@ -93,28 +75,12 @@ int32_t index_write_block(BLOCK_HANDLE_S * hnd, void * buf, uint32_t size,
     return 0;
 }
 
-/*******************************************************************************
-函数名称: index_update_block
-功能说明: 更新指定块中的数据，不对数据做更改
-输入参数:
-    hnd      : 块管理系统操作句柄
-    buf    : 要写入的数据
-    size    : 要写入数据的大小，以字节为单位
-    start_lba: 要写入的数据在块中的起始位置
-    vbn     : 要写入的块地址
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_update_block(BLOCK_HANDLE_S * hnd, void * buf, uint32_t size,
     uint32_t start_lba, uint64_t vbn)
 {
     int32_t ret = 0;
     uint64_t tmp_start_lba = 0;
 
-    /* 检查输入参数 */
     if ((NULL == hnd) || (NULL == buf) || (0 >= (int32_t) size))
     {
         LOG_ERROR("Invalid parameter. hnd(%p) buf(%p) size(%d)\n", hnd, buf, size);
@@ -133,28 +99,12 @@ int32_t index_update_block(BLOCK_HANDLE_S * hnd, void * buf, uint32_t size,
     return ret;
 }
 
-/*******************************************************************************
-函数名称: index_read_block
-功能说明: 读取指定块中的数据，不对数据做更改
-输入参数:
-    hnd         : 块管理系统操作句柄
-    buf       : 读出的数据存储的位置
-    size     : 要读出数据的大小，以字节为单位
-    start_lba: 要读出的数据在块中的起始位置
-    vbn     : 要读取的块地址
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_read_block(BLOCK_HANDLE_S * hnd, void * buf, uint32_t size,
     uint32_t start_lba, uint64_t vbn)
 {
     int32_t ret = 0;
     uint64_t tmp_start_lba = 0;
 
-    /* 检查输入参数 */
     if ((NULL == hnd) || (NULL == buf) || (0 >= (int32_t) size))
     {
         LOG_ERROR("Invalid parameter. hnd(%p) buf(%p) size(%d)\n", hnd, buf, size);
@@ -173,20 +123,10 @@ int32_t index_read_block(BLOCK_HANDLE_S * hnd, void * buf, uint32_t size,
     return ret;
 }
 
-/*******************************************************************************
-函数名称: assemble_object
-功能说明: 将数据组装成可以检查是否写完整的格式
-输入参数:
-    obj   : 要操作的块数据
-输出参数: 无
-返 回 值: 无
-说    明: 无
-*******************************************************************************/
 void assemble_object(OBJECT_HEADER_S * obj)
 {
-    uint16_t *foot = NULL;  /* 最后2个字节所在的地址 */
+    uint16_t *foot = NULL; // the last 2 bytes
 
-    /* 检查输入参数 */
     ASSERT(NULL != obj);
     ASSERT(obj->alloc_size >= obj->real_size);
 
@@ -198,22 +138,10 @@ void assemble_object(OBJECT_HEADER_S * obj)
     return;
 }
 
-/*******************************************************************************
-函数名称: fixup_object
-功能说明: 将块数据还原出来
-输入参数:
-    obj   : 要操作的块数据
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t fixup_object(OBJECT_HEADER_S * obj)
 {
-    uint16_t *foot = NULL;  /* 最后2个字节所在的地址 */
+    uint16_t *foot = NULL; // the last 2 bytes
 
-    /* 检查输入参数 */
     ASSERT(NULL != obj);
     ASSERT(obj->alloc_size >= obj->real_size);
 
@@ -224,7 +152,7 @@ int32_t fixup_object(OBJECT_HEADER_S * obj)
         *foot = obj->fixup;
     }
     else
-    {   /* 说明数据不完整 */
+    {
         LOG_ERROR("Found invalid object. obj(%p)\n", obj);
         return -FILE_BLOCK_ERR_INVALID_OBJECT;
     }
@@ -234,19 +162,6 @@ int32_t fixup_object(OBJECT_HEADER_S * obj)
     return 0;
 }
 
-/*******************************************************************************
-函数名称: verify_object
-功能说明: 校验对象是否合法
-输入参数:
-    obj     : 要操作的块数据
-    objid    : 对象应有的id
-    alloc_size: 对象的占用空间
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t verify_object(OBJECT_HEADER_S * obj, uint32_t objid,
     uint32_t alloc_size)
 {
@@ -279,44 +194,26 @@ int32_t verify_object(OBJECT_HEADER_S * obj, uint32_t objid,
     return 0;
 }
 
-/*******************************************************************************
-函数名称: index_write_block_fixup
-功能说明: 分配一个块写入数据，并对数据做fixup处理
-输入参数:
-    hnd        : 块管理系统操作句柄
-    obj    : 要写入的数据
-输出参数:
-    vbn   : 写入的块地址
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_write_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     uint64_t * vbn)
 {
     int32_t ret = 0;
     int32_t ret2 = 0;
 
-    /* 检查输入参数 */
     if ((NULL == hnd) || (NULL == obj) || (NULL == vbn))
     {
         LOG_ERROR("Invalid parameter. hnd(%p) obj(%p) vbn(%p)\n", hnd, obj, vbn);
         return -FILE_BLOCK_ERR_PARAMETER;
     }
 
-    /* 做好保护准备下盘 */
     assemble_object(obj);
 
-    /* 数据下盘 */
     ret = index_write_block(hnd, obj, obj->alloc_size, 0, vbn);
     if (0 > ret)
     {
         LOG_ERROR("Write object failed. hnd(%p) obj(%p) ret(%d)\n", hnd, obj, ret);
-        /* 失败不能返回return */
     }
 
-    /* 将内存中的数据修复 */
     ret2 = fixup_object(obj);
     if (0 > ret2)
     {
@@ -327,45 +224,27 @@ int32_t index_write_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     return ret;
 }
 
-/*******************************************************************************
-函数名称: index_update_block_fixup
-功能说明: 更新指定块中的数据，并对数据做fixup处理
-输入参数:
-    hnd      : 块管理系统操作句柄
-    obj  : 要写入的数据
-    vbn  : 要写入的块地址
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_update_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     uint64_t vbn)
 {
     int32_t ret = 0;
     int32_t ret2 = 0;
 
-    /* 检查输入参数 */
     if ((NULL == hnd) || (NULL == obj))
     {
         LOG_ERROR("Invalid parameter. hnd(%p) obj(%p)\n", hnd, obj);
         return -FILE_BLOCK_ERR_PARAMETER;
     }
 
-    /* 做好保护准备下盘 */
     assemble_object(obj);
 
-    /* 数据下盘 */
     ret = index_update_block(hnd, obj, obj->alloc_size, 0, vbn);
     if (0 > ret)
     {
         LOG_ERROR("Update object failed. hnd(%p) obj(%p) ret(%d)\n",
             hnd, obj, ret);
-        /* 失败不能返回return */
     }
 
-    /* 将内存中的数据修复 */
     ret2 = fixup_object(obj);
     if (0 > ret2)
     {
@@ -376,34 +255,17 @@ int32_t index_update_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     return ret;
 }
 
-/*******************************************************************************
-函数名称: index_read_block_fixup
-功能说明: 读取指定块中的数据，并对数据做fixup处理
-输入参数:
-    hnd         : 块管理系统操作句柄
-    obj     : 要读出的对象存储的位置
-    objid    : 对象id
-    alloc_size: 要读出数据的大小，以字节为单位
-    vbn     : 要写入的块地址
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_read_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     uint64_t vbn, uint32_t objid, uint32_t alloc_size)
 {
     int32_t ret = 0;
 
-    /* 检查输入参数 */
     if ((NULL == hnd) || (NULL == obj))
     {
         LOG_ERROR("Invalid parameter. hnd(%p) obj(%p)\n", hnd, obj);
         return -FILE_BLOCK_ERR_PARAMETER;
     }
 
-    /* 数据读取 */
     ret = index_read_block(hnd, obj, alloc_size, 0, vbn);
     if (0 > ret)
     {
@@ -420,25 +282,11 @@ int32_t index_read_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
         return ret;
     }
 
-    /* 将内存中的数据修复 */
     return fixup_object(obj);
 }
 
-/*******************************************************************************
-函数名称: check_obj
-功能说明: 检查输入参数合法性，并获取块大小
-输入参数:
-    hnd      : 块管理系统操作句柄
-    obj  : 数据存储的位置
-输出参数: 无
-返 回 值:
-    >=0: 块大小
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t check_obj(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj)
 {
-    /* 检查输入参数 */
     if ((NULL == hnd) || (NULL == obj))
     {
         LOG_ERROR("Invalid parameter. hnd(%p) obj(%p)\n", hnd, obj);
@@ -456,19 +304,6 @@ int32_t check_obj(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj)
     return 0;
 }
 
-/*******************************************************************************
-函数名称: index_update_block_pingpong_init
-功能说明: 写入数据，并对数据做pingpong处理
-输入参数:
-    hnd      : 块管理系统操作句柄
-    obj  : 要写入的数据
-    vbn : 写入的块地址
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_update_block_pingpong_init(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     uint64_t vbn)
 {
@@ -493,19 +328,16 @@ int32_t index_update_block_pingpong_init(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S *
         return -FILE_BLOCK_ERR_ALLOCATE_MEMORY;
     }
 
-    /* 做好保护准备下盘 */
     assemble_object(obj);
 
     memset(buf, 0, block_size);
     memcpy(buf + (obj->alloc_size * (obj->seq_no % (block_size / obj->alloc_size))), obj, obj->real_size);       /*lint !e414 */
 
-    /* 数据下盘 */
     ret = index_update_block(hnd, buf, block_size, 0, vbn);
 
     OS_FREE(buf);
     buf = NULL;
 
-    /* 将内存中的数据修复 */
     ret2 = fixup_object(obj);
     if (0 > ret2)
     {
@@ -523,20 +355,6 @@ int32_t index_update_block_pingpong_init(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S *
     return 0;
 }
 
-/*******************************************************************************
-函数名称: index_update_block_pingpong
-功能说明: 更新指定块中的数据，并对数据做pingpong处理
-输入参数:
-    hnd      : 块管理系统操作句柄
-    obj  : 要写入的数据
-    vbn  : 要写入的块地址
-输出参数: 无
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_update_block_pingpong(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     uint64_t vbn)
 {
@@ -554,15 +372,12 @@ int32_t index_update_block_pingpong(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
 
     block_size = hnd->sb.block_size;
 
-    /* 做好保护准备下盘 */
     assemble_object(obj);
 
-    /* 数据下盘 */
     update_lba = (obj->alloc_size * (obj->seq_no % (block_size / obj->alloc_size))) >> BYTES_PER_SECTOR_SHIFT;    /*lint !e414 */
 
     ret = index_update_block(hnd, obj, obj->alloc_size, update_lba, vbn);
 
-    /* 将内存中的数据修复 */
     ret2 = fixup_object(obj);
     if (0 > ret2)
     {
@@ -580,20 +395,6 @@ int32_t index_update_block_pingpong(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     return 0;
 }
 
-/*******************************************************************************
-函数名称: get_last_correct_dat
-功能说明: 从块中获取一份合适的正确的数据
-输入参数:
-    buf       : 数据存储的位置
-    objid     : 对象id
-    alloc_size : 对象占用空间大小，以字节为单位
-    cnt       : 当前buf中存储的对象数目
-输出参数: 无
-返 回 值:
-    !=NULL: 成功
-    ==NULL: 错误
-说    明: 无
-*******************************************************************************/
 OBJECT_HEADER_S *get_last_correct_dat(uint8_t * buf, uint32_t objid,
     uint32_t alloc_size, uint32_t cnt)
 {
@@ -611,12 +412,12 @@ OBJECT_HEADER_S *get_last_correct_dat(uint8_t * buf, uint32_t objid,
         obj = (OBJECT_HEADER_S *)(buf + alloc_size * i);
 
         if (0 == obj->blk_id)
-        {       /* 找到了未写过的区域 */
+        { // not written yet
             break;
         }
 
         if ((0 != i) && ((prev_seq_no + 1) != obj->seq_no))
-        {       /* 当前和后面的数据不是最新的 */
+        { // current and next data is not the newest
             break;
         }
 
@@ -624,24 +425,23 @@ OBJECT_HEADER_S *get_last_correct_dat(uint8_t * buf, uint32_t objid,
         prev_i = i;
     }
 
-    /* 检查一致性并修复数据 */
     for (i = 0; i < cnt; i++)
     {
         obj = (OBJECT_HEADER_S *)(buf + alloc_size * prev_i);
 
         if (0 == obj->blk_id)
-        {       /* 找到了未写过的区域 */
+        { // not written yet
             break;
         }
 
         ret = verify_object(obj, objid, alloc_size);
         if (0 > ret)
-        {       /* 校验失败 */
+        {
             LOG_ERROR("Verify object failed. buf(%p) obj(%p) objid(%x) alloc_size(%d) ret(%d)\n",
                 buf, obj, objid, alloc_size, ret);
         }
         else
-        {       /* 将内存中的数据修复 */
+        {
             ret = fixup_object(obj);
             if (0 <= ret)
             {
@@ -665,21 +465,6 @@ OBJECT_HEADER_S *get_last_correct_dat(uint8_t * buf, uint32_t objid,
     return NULL;
 }
 
-/*******************************************************************************
-函数名称: index_read_block_pingpong
-功能说明: 读取指定块中的数据，并对数据做pingpong处理
-输入参数:
-    hnd           : 块管理系统操作句柄
-    obj       : 读出的数据存储的位置
-    vbn       : 对象所在的块地址
-    objid      : 对象id
-    alloc_size  : 要读出数据的大小，以字节为单位
-输出参数: 无
-返 回 值:
-    >=0: 成功
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_read_block_pingpong(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     uint64_t vbn, uint32_t objid, uint32_t alloc_size)
 {
@@ -688,7 +473,6 @@ int32_t index_read_block_pingpong(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     uint8_t *buf = NULL;
     OBJECT_HEADER_S * tmp_obj = NULL;
 
-    /* 检查输入参数 */
     if ((NULL == hnd) || (NULL == obj) || (0 == alloc_size))
     {
         LOG_ERROR("Invalid parameter. hnd(%p) obj(%p) alloc_size(%d)\n", hnd, obj, alloc_size);
@@ -710,7 +494,6 @@ int32_t index_read_block_pingpong(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
         return -FILE_BLOCK_ERR_ALLOCATE_MEMORY;
     }
 
-    /* 数据读取 */
     ret = index_read_block(hnd, buf, block_size, 0, vbn);
     if (0 > ret)
     {
@@ -733,26 +516,11 @@ int32_t index_read_block_pingpong(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     return 0;
 }
 
-/*******************************************************************************
-函数名称: index_update_sectors
-功能说明: 写入数据到指定扇区中
-输入参数:
-    hnd         : 块管理系统操作句柄
-    buf       : 要写入的数据
-    size     : 要写入数据的大小，以字节为单位
-    start_lba: 要写入的数据的起始扇区地址
-输出参数: 无
-返 回 值:
-    >=0: 成功的扇区数
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_update_sectors(BLOCK_HANDLE_S * hnd, void * buf, uint32_t size,
     uint64_t start_lba)
 {
     int32_t ret = 0;
 
-    /* 检查输入参数 */
     if ((NULL == hnd) || (NULL == buf) || (0 >= (int32_t) size))
     {
         LOG_ERROR("Invalid parameter. hnd(%p) buf(%p) size(%d)\n", hnd, buf, size);
@@ -770,26 +538,11 @@ int32_t index_update_sectors(BLOCK_HANDLE_S * hnd, void * buf, uint32_t size,
     return ret;
 }
 
-/*******************************************************************************
-函数名称: index_read_sectors
-功能说明: 从指定扇区读出数据
-输入参数:
-    hnd         : 块管理系统操作句柄
-    buf       : 要读出的数据
-    size     : 要读出数据的大小，以字节为单位
-    start_lba: 要读出的数据的起始扇区地址
-输出参数: 无
-返 回 值:
-    >=0: 成功的扇区数
-    < 0: 错误代码
-说    明: 无
-*******************************************************************************/
 int32_t index_read_sectors(BLOCK_HANDLE_S * hnd, void * buf, uint32_t size,
     uint64_t start_lba)
 {
     int32_t ret = 0;
 
-    /* 检查输入参数 */
     if ((NULL == hnd) || (NULL == buf) || (0 >= (int32_t) size))
     {
         LOG_ERROR("Invalid parameter. hnd(%p) buf(%p) size(%d)\n", hnd, buf, size);
