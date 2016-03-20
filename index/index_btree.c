@@ -105,7 +105,7 @@ static int32_t set_ib_dirty(OBJECT_HANDLE *tree, uint64_t vbn, uint8_t depth)
             
             ie = (INDEX_ENTRY *) ((uint8_t *) tree->cache_stack[depth]->ib
                 + tree->position_stack[depth]);
-            IESetVBN(ie, vbn);
+            SET_IE_VBN(ie, vbn);
         }
 
         if (DIRTY == tree->cache_stack[depth]->state)
@@ -131,7 +131,7 @@ static void get_last_ie(OBJECT_HANDLE * tree)
         last_ie_len += VBN_SIZE;
     }
 
-    tree->ie = (INDEX_ENTRY *)(IBGetEnd(tree->cache->ib) - last_ie_len);
+    tree->ie = (INDEX_ENTRY *)(GET_END_IE(tree->cache->ib) - last_ie_len);
     tree->position = tree->cache->ib->head.real_size - last_ie_len;
 
     return;
@@ -152,7 +152,7 @@ static void reset_cache_stack(OBJECT_HANDLE * tree, uint8_t flags)
         return;
     }
 
-    tree->ie = IBGetFirst(tree->cache->ib);
+    tree->ie = GET_FIRST_IE(tree->cache->ib);
     tree->position = tree->cache->ib->first_entry_off;
 
     return;
@@ -174,7 +174,7 @@ static int32_t push_cache_stack(OBJECT_HANDLE *tree, uint8_t flags)
     }
 
     // get the vbn of the new block
-    vbn = IEGetVBN(tree->ie);
+    vbn = GET_IE_VBN(tree->ie);
 
     LOG_DEBUG("Depth increase. depth(%d) vbn(%lld) pos(%d)\n", tree->depth, vbn, tree->position);
 
@@ -205,7 +205,7 @@ static int32_t push_cache_stack(OBJECT_HANDLE *tree, uint8_t flags)
 
     // go to the first entry of the new block
     tree->position = tree->cache->ib->first_entry_off;
-    tree->ie = IBGetFirst(tree->cache->ib);
+    tree->ie = GET_FIRST_IE(tree->cache->ib);
 
     return 0;
 }
@@ -216,7 +216,7 @@ static int32_t get_prev_ie(OBJECT_HANDLE *tree)
     ASSERT(NULL != tree);
     
     tree->position -= tree->ie->prev_len;
-    tree->ie = IEGetPrev(tree->ie);
+    tree->ie = GET_PREV_IE(tree->ie);
     if ((uint8_t *) tree->ie < (uint8_t *) &tree->cache->ib->begin_entry)
     {   /* Check valid */
         LOG_ERROR("The ie is invalid. ie(%p) begin_entry(%p)\n",
@@ -292,7 +292,7 @@ void init_ib(INDEX_BLOCK *ib, uint8_t node_type, uint32_t aloc_size)
 
     ib->node_type = node_type;
 
-    ie = IBGetFirst(ib);
+    ie = GET_FIRST_IE(ib);
 
     if (node_type & INDEX_BLOCK_LARGE)
     {   // have child node
@@ -325,7 +325,7 @@ static void make_ib_small(INDEX_BLOCK *ib)
     ib->head.real_size = sizeof(INDEX_BLOCK) + ENTRY_END_SIZE;
     ib->node_type = INDEX_BLOCK_SMALL;
     
-    ie = IBGetFirst(ib);
+    ie = GET_FIRST_IE(ib);
     ie->len = ENTRY_END_SIZE;
     ie->prev_len = ENTRY_BEGIN_SIZE;
     ie->key_len = 0;
@@ -353,8 +353,8 @@ static int32_t get_next_ie(OBJECT_HANDLE *tree)
     }
     
     tree->position += tree->ie->len;
-    tree->ie = IEGetNext(tree->ie);
-    if (((uint8_t *) tree->ie >= IBGetEnd(tree->cache->ib))
+    tree->ie = GET_NEXT_IE(tree->ie);
+    if (((uint8_t *) tree->ie >= GET_END_IE(tree->cache->ib))
         || (0 == tree->ie->len))
     {   /* Check valid */
         LOG_ERROR("The ie is invalid. len(%d) ib real_size(%d)\n",
@@ -505,19 +505,19 @@ int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY *ie,
     switch (collate_rule & CR_MASK)
     {
         case CR_BINARY:
-            return os_collate_binary((uint8_t *)IEGetKey(ie), ie->key_len,
+            return os_collate_binary((uint8_t *)GET_IE_KEY(ie), ie->key_len,
                 (uint8_t *)key, key_len);
 
         case CR_ANSI_STRING:
-            return os_collate_ansi_string((char *) IEGetKey(ie),
+            return os_collate_ansi_string((char *) GET_IE_KEY(ie),
                 ie->key_len, (char *) key, key_len);
 
         case CR_UNICODE_STRING:
-            return os_collate_unicode_string((UNICODE_CHAR *) IEGetKey(ie),
+            return os_collate_unicode_string((UNICODE_CHAR *) GET_IE_KEY(ie),
                 ie->key_len, (UNICODE_CHAR *) key, key_len);
 
         case CR_U64:
-            return os_collate_u64((uint8_t *)IEGetKey(ie), ie->key_len,
+            return os_collate_u64((uint8_t *)GET_IE_KEY(ie), ie->key_len,
                 (uint8_t *)key, key_len);
 
         default:
@@ -666,13 +666,13 @@ static INDEX_ENTRY *get_middle_ie(INDEX_BLOCK *ib)
     ASSERT(NULL != ib);
     
     uiMidPos = (ib->head.real_size - sizeof(INDEX_BLOCK)) >> 1;
-    ie = IBGetFirst(ib);
+    ie = GET_FIRST_IE(ib);
     while (!(ie->flags & INDEX_ENTRY_END))
     {
         if (uiMidPos > ie->len)
         {
             uiMidPos -= ie->len;
-            ie = IEGetNext(ie);
+            ie = GET_NEXT_IE(ie);
         }
         else
         {
@@ -704,7 +704,7 @@ uint32_t get_entries_length(INDEX_ENTRY *ie)
         }
 
         len += ie->len;
-        ie = IEGetNext(ie);
+        ie = GET_NEXT_IE(ie);
     }
 
     return len;
@@ -722,7 +722,7 @@ static INDEX_ENTRY *ib_get_last_ie(INDEX_BLOCK *ib)
         last_ie_len += VBN_SIZE;
     }
 
-    return (INDEX_ENTRY *)(IBGetEnd(ib) - last_ie_len);
+    return (INDEX_ENTRY *)(GET_END_IE(ib) - last_ie_len);
 }
 
 static void remove_ie(INDEX_BLOCK * ib, INDEX_ENTRY * ie)
@@ -733,7 +733,7 @@ static void remove_ie(INDEX_BLOCK * ib, INDEX_ENTRY * ie)
     ASSERT(NULL != ie);
     
     ib->head.real_size -= ie->len;
-    next_ie = IEGetNext(ie);
+    next_ie = GET_NEXT_IE(ie);
     next_ie->prev_len = ie->prev_len;
     memcpy(ie, next_ie, get_entries_length(next_ie));
 
@@ -783,7 +783,7 @@ static INDEX_ENTRY *dump_ie_add_vbn(INDEX_ENTRY * ie, uint64_t vbn)
     memcpy(new_ie, ie, ie->len);
     new_ie->len = size;
     new_ie->flags |= INDEX_ENTRY_NODE;
-    IESetVBN(new_ie, vbn);
+    SET_IE_VBN(new_ie, vbn);
 
     return new_ie;
 }  
@@ -827,12 +827,12 @@ void copy_ib_tail(INDEX_BLOCK * dst_ib, INDEX_BLOCK * src_ib,
     ASSERT(NULL != mid_ie);
     
     init_ib(dst_ib, src_ib->node_type, src_ib->head.alloc_size);
-    mid_ie = IEGetNext(mid_ie);
+    mid_ie = GET_NEXT_IE(mid_ie);
 
     mid_ie->prev_len = ENTRY_BEGIN_SIZE;
 
-    tail_size = (uint32_t)((uint8_t *) IBGetEnd(src_ib) - (uint8_t *) mid_ie);
-    memcpy(IBGetFirst(dst_ib), mid_ie, tail_size);
+    tail_size = (uint32_t)((uint8_t *) GET_END_IE(src_ib) - (uint8_t *) mid_ie);
+    memcpy(GET_FIRST_IE(dst_ib), mid_ie, tail_size);
 
     dst_ib->head.real_size = tail_size + dst_ib->first_entry_off;
 
@@ -849,15 +849,15 @@ static void cut_ib_tail(INDEX_BLOCK *src_ib, INDEX_ENTRY *ie)
     ASSERT(NULL != src_ib);
     ASSERT(NULL != ie);
     
-    start = (uint8_t *)IBGetFirst(src_ib);
+    start = (uint8_t *)GET_FIRST_IE(src_ib);
 
     last_ie = ib_get_last_ie(src_ib);
     if (last_ie->flags & INDEX_ENTRY_NODE)
     {
-        IESetVBN(last_ie, IEGetVBN(ie));
+        SET_IE_VBN(last_ie, GET_IE_VBN(ie));
     }
 
-    prev_ie = IEGetPrev(ie);
+    prev_ie = GET_PREV_IE(ie);
     last_ie->prev_len = prev_ie->len;
 
     memcpy(ie, last_ie, last_ie->len);
@@ -895,7 +895,7 @@ static INDEX_ENTRY *split_ib(OBJECT_HANDLE *tree, INDEX_ENTRY *ie)
     if (pos < 0)
     {   /* Insert the entry OS_S32o newIB */
         insert_ie(new_ib, ie,
-            (INDEX_ENTRY *) (((uint8_t *) IBGetFirst(new_ib) - pos)
+            (INDEX_ENTRY *) (((uint8_t *) GET_FIRST_IE(new_ib) - pos)
                 - mid_ie->len));
     }
 
@@ -931,7 +931,7 @@ static INDEX_ENTRY *split_ib(OBJECT_HANDLE *tree, INDEX_ENTRY *ie)
         return NULL;
     }
 
-    IESetVBN(tree->ie, new_ibc->vbn);     /* Change the link */
+    SET_IE_VBN(tree->ie, new_ibc->vbn);     /* Change the link */
 
     return new_ie;
 }
@@ -976,8 +976,8 @@ static int32_t reparent_root(OBJECT_HANDLE * tree)
     //LOG_DEBUG("Write new index block success. vbn(%lld)\n", new_ibc->vbn);
 
     init_ib(old_ib, INDEX_BLOCK_LARGE, alloc_size);
-    ie = IBGetFirst(old_ib);
-    IESetVBN(ie, new_ibc->vbn);
+    ie = GET_FIRST_IE(old_ib);
+    SET_IE_VBN(ie, new_ibc->vbn);
     
     ret = set_ib_dirty(tree, (uint64_t)0, tree->depth);
     if (0 > ret)
@@ -1044,7 +1044,7 @@ static int32_t tree_insert_ie(OBJECT_HANDLE *tree, INDEX_ENTRY **new_ie)
 int32_t check_removed_ib(OBJECT_HANDLE * tree)
 {
     int32_t ret = 0;
-    INDEX_ENTRY *ie = IBGetFirst(tree->cache->ib);
+    INDEX_ENTRY *ie = GET_FIRST_IE(tree->cache->ib);
     
     if (0 == (ie->flags & INDEX_ENTRY_END))
     {
@@ -1077,7 +1077,7 @@ int32_t check_removed_ib(OBJECT_HANDLE * tree)
             return ret;
         }
 
-        ie = IBGetFirst(tree->cache->ib);
+        ie = GET_FIRST_IE(tree->cache->ib);
         if ((ie->flags & INDEX_ENTRY_END) == 0)
         { // there are entries in this node
             break;
@@ -1124,8 +1124,8 @@ int32_t remove_leaf(OBJECT_HANDLE *tree)
 
     if ((tree->ie->flags & INDEX_ENTRY_END))
     {   /* It is the end key, change the ullVBN link and take out the entry */
-        prev_ie = IEGetPrev(tree->ie);
-        IESetVBN(tree->ie, IEGetVBN(prev_ie));
+        prev_ie = GET_PREV_IE(tree->ie);
+        SET_IE_VBN(tree->ie, GET_IE_VBN(prev_ie));
         is_end = B_TRUE;    /* Set insert OS_S32o the block's last entry position */
     }
     else
@@ -1183,7 +1183,7 @@ int32_t remove_node(OBJECT_HANDLE *tree)
     /* Record the current entry's information */
     depth = tree->depth;
     len = tree->ie->len;
-    vbn = IEGetVBN(tree->ie);
+    vbn = GET_IE_VBN(tree->ie);
 
     ret = walk_tree(tree, 0);
     if (0 > ret)
@@ -1367,8 +1367,8 @@ int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
     ie->len = len;
     ie->key_len = key_len;
     ie->value_len = value_len;
-    memcpy(IEGetKey(ie), key, key_len);
-    memcpy(IEGetValue(ie), c, value_len);
+    memcpy(GET_IE_KEY(ie), key, key_len);
+    memcpy(GET_IE_VALUE(ie), c, value_len);
 
     ret = tree_insert_ie(tree, &ie);
     if (0 > ret)

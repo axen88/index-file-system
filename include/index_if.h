@@ -153,6 +153,17 @@ typedef struct _OBJECT_HANDLE
     DLIST_ENTRY_S entry;
 } OBJECT_HANDLE;
 
+
+typedef struct _space_manager
+{
+    OBJECT_HANDLE *free_blk_obj;
+    uint64_t total_free_blocks;
+    uint64_t total_blocks;
+
+    uint64_t possible_free_block;
+    uint32_t block_num;
+} space_manager_t;
+
 typedef struct _INDEX_HANDLE
 {
     BLOCK_HANDLE_S *hnd;               // The block file handle
@@ -161,6 +172,8 @@ typedef struct _INDEX_HANDLE
     OBJECT_HANDLE *id_obj;
     //OBJECT_HANDLE *log_obj;
     //OBJECT_HANDLE *space_obj;
+    
+    space_manager_t sm;
     
     uint32_t index_ref_cnt;
     avl_tree_t obj_list;              // all opened object info
@@ -200,6 +213,7 @@ extern int32_t walk_all_opened_index(
 #include "index_tree.h"
 #include "index_object.h"
 #include "index_manager.h"
+#include "index_space_manager.h"
 
 #include "index_tools_if.h"
 

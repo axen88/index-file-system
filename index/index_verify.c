@@ -56,7 +56,7 @@ static int32_t verify_callback(void *tree, void *para)
 
     if (0 == para->no++)
     {
-        memcpy(para->pcKey, IEGetKey(obj->ie), obj->ie->key_len);
+        memcpy(para->pcKey, GET_IE_KEY(obj->ie), obj->ie->key_len);
         para->uiKeySize = obj->ie->key_len;
 
         return 0;
@@ -68,7 +68,7 @@ static int32_t verify_callback(void *tree, void *para)
     { 
         if (B_FALSE == para->bReverse)
         {
-            memcpy(para->pcKey, IEGetKey(obj->ie), obj->ie->key_len);
+            memcpy(para->pcKey, GET_IE_KEY(obj->ie), obj->ie->key_len);
             para->uiKeySize = obj->ie->key_len;
             return 0;
         }
@@ -87,7 +87,7 @@ static int32_t verify_callback(void *tree, void *para)
     
     if (B_FALSE != para->bReverse)
     {
-        memcpy(para->pcKey, IEGetKey(obj->ie), obj->ie->key_len);
+        memcpy(para->pcKey, GET_IE_KEY(obj->ie), obj->ie->key_len);
         para->uiKeySize = obj->ie->key_len;
         return 0;
     }

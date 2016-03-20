@@ -611,8 +611,8 @@ int32_t index_open_object_nolock(struct _INDEX_HANDLE *index, uint64_t objid, ui
       //  return -INDEX_ERR_CHAOS;
     }
     
-    //memcpy(&inode_no, IEGetValue(id_obj->ie), VBN_SIZE);
-    inode_no = os_bstr_to_u64(IEGetValue(id_obj->ie), id_obj->ie->value_len);
+    //memcpy(&inode_no, GET_IE_VALUE(id_obj->ie), VBN_SIZE);
+    inode_no = os_bstr_to_u64(GET_IE_VALUE(id_obj->ie), id_obj->ie->value_len);
 
     ret = open_object(index, objid, inode_no, &obj);
     if (0 > ret)

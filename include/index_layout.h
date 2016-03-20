@@ -88,7 +88,9 @@ enum
 #define INODE_HEAD_SIZE      OS_OFFSET(INODE_RECORD, reserved)
 
 #define OBJID_OBJ_NAME            "$OBJID"
+#define FREEBLK_OBJ_NAME          "$FREEBLK"
 #define OBJID_OBJ_ID              0ULL
+#define FREEBLK_OBJ_ID            1ULL
 
 #define ATTR_RECORD_HEAD_SIZE       OS_OFFSET(ATTR_RECORD, content)
 
@@ -112,14 +114,14 @@ enum
 
 #define VBN_SIZE                  sizeof(uint64_t)
 
-#define IBGetFirst(ib)     ((INDEX_ENTRY *)((uint8_t*)(ib) + ((INDEX_BLOCK *)(ib))->first_entry_off))
-#define IBGetEnd(ib)       ((uint8_t *)(ib) + ((INDEX_BLOCK *)(ib))->head.real_size)
-#define IEGetNext(ie)      ((INDEX_ENTRY *)((uint8_t*)(ie) + ((INDEX_ENTRY *)(ie))->len))
-#define IEGetPrev(ie)      ((INDEX_ENTRY *)((uint8_t*)(ie) - ((INDEX_ENTRY *)(ie))->prev_len))
-#define IEGetVBN(ie)       (*(uint64_t*)((uint8_t *)(ie)+ (((INDEX_ENTRY *)(ie))->len - VBN_SIZE)))
-#define IESetVBN(ie, vbn)  (IEGetVBN(ie) = vbn)
-#define IEGetKey(ie)       ((uint8_t*)(ie) + sizeof(INDEX_ENTRY))
-#define IEGetValue(ie)     ((uint8_t*)(ie) + sizeof(INDEX_ENTRY) + (((INDEX_ENTRY *)(ie))->key_len))
+#define GET_FIRST_IE(ib)     ((INDEX_ENTRY *)((uint8_t*)(ib) + ((INDEX_BLOCK *)(ib))->first_entry_off))
+#define GET_END_IE(ib)       ((uint8_t *)(ib) + ((INDEX_BLOCK *)(ib))->head.real_size)
+#define GET_NEXT_IE(ie)      ((INDEX_ENTRY *)((uint8_t*)(ie) + ((INDEX_ENTRY *)(ie))->len))
+#define GET_PREV_IE(ie)      ((INDEX_ENTRY *)((uint8_t*)(ie) - ((INDEX_ENTRY *)(ie))->prev_len))
+#define GET_IE_VBN(ie)       (*(uint64_t*)((uint8_t *)(ie)+ (((INDEX_ENTRY *)(ie))->len - VBN_SIZE)))
+#define SET_IE_VBN(ie, vbn)  (GET_IE_VBN(ie) = vbn)
+#define GET_IE_KEY(ie)       ((uint8_t*)(ie) + sizeof(INDEX_ENTRY))
+#define GET_IE_VALUE(ie)     ((uint8_t*)(ie) + sizeof(INDEX_ENTRY) + (((INDEX_ENTRY *)(ie))->key_len))
 
 
 

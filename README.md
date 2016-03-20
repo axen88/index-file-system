@@ -1,3 +1,5 @@
+This project comes from https://github.com/axenhook/index-file-system
+
 # compile on linux
 
 * run "make -f make_index_tools" to generate the demo program  
