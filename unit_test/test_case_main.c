@@ -46,6 +46,7 @@ int add_block_test_suite(void);
 int add_file_bitmap_test_suite(void);
 int add_kv_test_case(void);
 int add_collate_test_case(void);
+int add_space_manager_test_case(void);
 
 int main(void)
 {
@@ -81,6 +82,12 @@ int main(void)
     }
 
     ret = add_collate_test_case();
+    if (0 != ret) {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+
+    ret = add_space_manager_test_case();
     if (0 != ret) {
         CU_cleanup_registry();
         return CU_get_error();

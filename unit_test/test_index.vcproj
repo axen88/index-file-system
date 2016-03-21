@@ -302,6 +302,10 @@
 				RelativePath=".\test_cases\test_kv.c"
 				>
 			</File>
+			<File
+				RelativePath=".\test_cases\test_space_manager.c"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath="..\index\Makefile"

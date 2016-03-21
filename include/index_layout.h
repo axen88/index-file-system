@@ -91,6 +91,7 @@ enum
 #define FREEBLK_OBJ_NAME          "$FREEBLK"
 #define OBJID_OBJ_ID              0ULL
 #define FREEBLK_OBJ_ID            1ULL
+#define RESERVED_OBJ_ID           256ULL
 
 #define ATTR_RECORD_HEAD_SIZE       OS_OFFSET(ATTR_RECORD, content)
 
@@ -157,10 +158,13 @@ typedef struct tagBLOCK_BOOT_SECTOR_S
     
     uint64_t objid_inode_no;
     uint64_t objid_id;
+
+    uint64_t free_blk_inode_no;
+    uint64_t free_blk_id;
     
     uint64_t snapshot_no;
     uint8_t aucReserved2[PRV_AREA_SIZE - 24];    // Reserved bytes
-    uint8_t aucReserved[176];            
+    uint8_t aucReserved[160];            
     uint32_t flags;                     /* flags */
     uint16_t version;                   /* version */
     uint16_t magic_num;                 /* 0x55AA */

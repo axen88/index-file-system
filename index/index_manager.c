@@ -106,7 +106,7 @@ int32_t close_one_object(void *para, OBJECT_INFO *obj_info)
 {
     ASSERT(NULL != obj_info);
 
-    if (obj_info->objid == OBJID_OBJ_ID)  // do not close the system object
+    if (obj_info->objid < RESERVED_OBJ_ID)  // do not close the system object
     {
         return 0;
     }
@@ -178,7 +178,7 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
     int32_t ret = 0;
     BLOCK_HANDLE_S *hnd = NULL;
     avl_index_t where = 0;
-    OBJECT_HANDLE *free_blk_obj;
+    OBJECT_HANDLE *obj;
 
     if ((NULL == index) || (0 == total_sectors) || (NULL == index_name))
     {
@@ -227,7 +227,7 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
     tmp_index->hnd = hnd;
 
     /* create free blk object */
-    ret = create_object(tmp_index, FREEBLK_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_U64 | (CR_U64 << 4), &free_blk_obj);
+    ret = create_object(tmp_index, FREEBLK_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_U64 | (CR_U64 << 4), &obj);
     if (ret < 0)
     {
         LOG_ERROR("Create root object failed. name(%s)\n", index_name);
@@ -235,11 +235,14 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
         return ret;
     }
 
-    tmp_index->sm.free_blk_obj = free_blk_obj;
+    tmp_index->sm.free_blk_obj = obj;
+    tmp_index->hnd->sb.free_blk_inode_no = obj->obj_info->inode_no;
+    tmp_index->hnd->sb.free_blk_id = obj->obj_info->inode.objid;
+    
     tmp_index->sm.total_free_blocks = tmp_index->hnd->sb.free_blocks;
 
     /* create objid object */
-    ret = create_object(tmp_index, OBJID_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_U64 | (CR_U64 << 4), &tmp_index->id_obj);
+    ret = create_object(tmp_index, OBJID_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_U64 | (CR_U64 << 4), &obj);
     if (ret < 0)
     {
         LOG_ERROR("Create root object failed. name(%s)\n", index_name);
@@ -247,8 +250,10 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
         return ret;
     }
 
-    tmp_index->hnd->sb.objid_inode_no = tmp_index->id_obj->obj_info->inode_no;
-    tmp_index->hnd->sb.objid_id = tmp_index->id_obj->obj_info->inode.objid;
+    tmp_index->id_obj = obj;
+    tmp_index->hnd->sb.objid_inode_no = obj->obj_info->inode_no;
+    tmp_index->hnd->sb.objid_id = obj->obj_info->inode.objid;
+    
     ret = block_update_super_block(tmp_index->hnd);
     if (0 > ret)
     {
@@ -327,11 +332,21 @@ int32_t index_open_nolock(const char *index_name, uint64_t start_lba, INDEX_HAND
 
     tmp_index->hnd = hnd;
 
+    /* open FREEBLK object */
+    ret = open_object(tmp_index, tmp_index->hnd->sb.free_blk_id, tmp_index->hnd->sb.free_blk_inode_no, &tmp_index->sm.free_blk_obj);
+    if (ret < 0)
+    {
+        LOG_ERROR("Open free block object failed. index_name(%s) start_lba(%lld) ret(%d)\n",
+            index_name, start_lba, ret);
+        close_index(tmp_index);
+        return ret;
+    }
+
     /* open $OBJID object */
     ret = open_object(tmp_index, tmp_index->hnd->sb.objid_id, tmp_index->hnd->sb.objid_inode_no, &tmp_index->id_obj);
     if (ret < 0)
     {
-        LOG_ERROR("Open root object failed. index_name(%s) start_lba(%lld) ret(%d)\n",
+        LOG_ERROR("Open objid object failed. index_name(%s) start_lba(%lld) ret(%d)\n",
             index_name, start_lba, ret);
         close_index(tmp_index);
         return ret;
@@ -379,6 +394,11 @@ void close_index(INDEX_HANDLE *index)
     if (index->id_obj != NULL)
     {
         (void)close_object(index->id_obj->obj_info);
+    }
+
+    if (index->sm.free_blk_obj != NULL)
+    {
+        (void)close_object(index->sm.free_blk_obj->obj_info);
     }
 
     // close block manager system
