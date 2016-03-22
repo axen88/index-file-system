@@ -197,6 +197,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\index\index_collate.c"
+				>
+			</File>
+			<File
 				RelativePath="..\index\index_fixup.c"
 				>
 			</File>
@@ -265,10 +269,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\public\os_collate.c"
-				>
-			</File>
-			<File
 				RelativePath="..\public\os_file_if.c"
 				>
 			</File>
@@ -319,6 +319,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\index_collate.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\index_if.h"
 				>
 			</File>
@@ -335,6 +339,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\index_space_manager.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\index_tools_if.h"
 				>
 			</File>
@@ -348,10 +356,6 @@
 			</File>
 			<File
 				RelativePath="..\include\os_cmd_ui.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\os_collate.h"
 				>
 			</File>
 			<File

@@ -22,7 +22,7 @@
 
             Copyright(C), 2016~2019, axen.hook@foxmail.com
 ********************************************************************************
-File Name: OS_COLLATE.C
+File Name: INDEX_COLLATE.C
 Author   : axen.hook
 Version  : 1.00
 Date     : 02/Mar/2016
@@ -36,7 +36,8 @@ History:
 *******************************************************************************/
 #include "os_types.h"
 #include "os_adapter.h"
-#include "os_collate.h"
+
+#include "index_if.h"
     
 #ifdef __KERNEL__
 
@@ -301,4 +302,52 @@ int32_t os_collate_u64(const uint8_t *b1, uint32_t b1_size,
 
 	return 0;
 }
+
+uint32_t os_extent_to_extent_pair(const index_extent_t *ext, uint8_t *ext_pair)
+{
+    uint8_t addr_size = *ext_pair;
+
+    addr_size = os_u64_to_bstr(ext->addr, ext_pair + 1);
+    ext_pair[0] = addr_size;
+    return (addr_size + os_u64_to_bstr(ext->len, ext_pair + 1 + addr_size));
+}
+
+void os_extent_pair_to_extent(const uint8_t *ext_pair, uint32_t ext_pair_size, index_extent_t *ext)
+{
+    uint8_t addr_size = *ext_pair;
+
+    ASSERT(ext_pair_size > addr_size);
+
+    ext->addr = os_bstr_to_u64(ext_pair + 1, addr_size);
+    ext->len = os_bstr_to_u64(ext_pair + 1 + addr_size, ext_pair_size - addr_size);
+}
+
+/*
+return value:
+    <0: b1 < b2
+    =0: b1 == b2
+    >0: b1 > b2
+*/
+int32_t os_collate_extent(const uint8_t *b1, uint32_t b1_size,
+    const uint8_t *b2, uint32_t b2_size)
+{
+    index_extent_t ext1;
+    index_extent_t ext2;
+
+    os_extent_pair_to_extent(b1, b1_size, &ext1);
+    os_extent_pair_to_extent(b2, b2_size, &ext2);
+	
+    if (ext1.addr >= (ext2.addr + ext2.len))
+	{
+		return 1;
+	}
+
+	if ((ext1.addr + ext1.len) <= ext2.addr)
+	{
+		return -1;
+	}
+
+	return 0; // overlap
+}
+
 

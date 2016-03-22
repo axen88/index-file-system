@@ -55,7 +55,7 @@ extern "C" {
 
 typedef int32_t (*DeleteFunc) (void *hnd,
     const void *key, uint16_t key_len,
-    const void *c, uint16_t value_len);
+    const void *value, uint16_t value_len);
 typedef int32_t (*WalkAllCallBack) (void *obj, void *para);
 
 extern int32_t index_search_key_nolock(OBJECT_HANDLE * obj, const void * key,
@@ -63,16 +63,16 @@ extern int32_t index_search_key_nolock(OBJECT_HANDLE * obj, const void * key,
 extern int32_t index_remove_key_nolock(OBJECT_HANDLE * obj, const void * key,
     uint16_t key_len);
 extern int32_t index_insert_key_nolock(OBJECT_HANDLE * obj, const void * key,
-    uint16_t key_len, const void * c, uint16_t value_len);
+    uint16_t key_len, const void *value, uint16_t value_len);
 
 extern int32_t index_search_key(OBJECT_HANDLE *obj, const void *key,
     uint16_t key_len);
 extern int32_t index_remove_key(OBJECT_HANDLE *obj, const void *key,
     uint16_t key_len);
 extern int32_t index_insert_key(OBJECT_HANDLE *obj, const void *key,
-    uint16_t key_len, const void *c, uint16_t value_len);
+    uint16_t key_len, const void *value, uint16_t value_len);
 extern int32_t index_update_value(OBJECT_HANDLE * tree, const void * key,
-    uint16_t key_len, const void * c, uint16_t value_len);
+    uint16_t key_len, const void *value, uint16_t value_len);
 
 extern int32_t index_walk_all(OBJECT_HANDLE *obj, bool_t v_bReverse,
     uint8_t flags, void *para, WalkAllCallBack v_pCallBack);

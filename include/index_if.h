@@ -39,7 +39,6 @@ History:
 
 #include "avl.h"
 #include "os_adapter.h"
-#include "os_collate.h"
 #include "os_list_double.h"
 #include "os_queue.h"
 #include "os_disk_if.h"
@@ -48,6 +47,7 @@ History:
 #include "os_cmd_ui.h"
 
 #include "index_layout.h"
+#include "index_collate.h"
 #include "index_bitmap.h"
 #include "index_block_if.h"
 

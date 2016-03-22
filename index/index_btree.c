@@ -520,6 +520,10 @@ int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY *ie,
             return os_collate_u64((uint8_t *)GET_IE_KEY(ie), ie->key_len,
                 (uint8_t *)key, key_len);
 
+        case CR_EXTENT:
+            return os_collate_extent((uint8_t *)GET_IE_KEY(ie), ie->key_len,
+                (uint8_t *)key, key_len);
+            
         default:
             break;
     }
@@ -1323,18 +1327,18 @@ int32_t index_remove_key(OBJECT_HANDLE *tree, const void *key,
     return ret;
 }
 
+// value can be NULL, or value_len can be 0
 int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
-    uint16_t key_len, const void *c, uint16_t value_len)
+    uint16_t key_len, const void *value, uint16_t value_len)
 {
     INDEX_ENTRY *ie = NULL;
     uint16_t len = 0;
     int32_t ret = 0;
 
-    if ((NULL == tree) || (NULL == key) || (NULL == c)
-        || (0 == key_len) || (0 == value_len))
+    if ((NULL == tree) || (NULL == key) || (0 == key_len))
     {
-        LOG_ERROR("Invalid parameter. tree(%p) key(%p) c(%p) key_len(%d) value_len(%d)\n",
-            tree, key, c, key_len, value_len);
+        LOG_ERROR("Invalid parameter. tree(%p) key(%p) value(%p) key_len(%d) value_len(%d)\n",
+            tree, key, value, key_len, value_len);
         return -INDEX_ERR_PARAMETER;
     }
 
@@ -1356,7 +1360,7 @@ int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
 
     len = sizeof(INDEX_ENTRY) + key_len + value_len;
 
-    ie = (INDEX_ENTRY *) OS_MALLOC(len);
+    ie = (INDEX_ENTRY *)OS_MALLOC(len);
     if (NULL == ie)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", len);
@@ -1368,7 +1372,10 @@ int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
     ie->key_len = key_len;
     ie->value_len = value_len;
     memcpy(GET_IE_KEY(ie), key, key_len);
-    memcpy(GET_IE_VALUE(ie), c, value_len);
+    if ((value != NULL) && (value_len != 0))
+    {
+        memcpy(GET_IE_VALUE(ie), value, value_len);
+    }
 
     ret = tree_insert_ie(tree, &ie);
     if (0 > ret)
@@ -1386,7 +1393,7 @@ int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
 }
 
 int32_t index_insert_key(OBJECT_HANDLE *tree, const void *key,
-    uint16_t key_len, const void *c, uint16_t value_len)
+    uint16_t key_len, const void *value, uint16_t value_len)
 {
     int32_t ret = 0;
 
@@ -1397,7 +1404,7 @@ int32_t index_insert_key(OBJECT_HANDLE *tree, const void *key,
     }
 
     OS_RWLOCK_WRLOCK(&tree->obj_info->attr_lock);
-    ret = index_insert_key_nolock(tree, key, key_len, c, value_len);
+    ret = index_insert_key_nolock(tree, key, key_len, value, value_len);
     OS_RWLOCK_WRUNLOCK(&tree->obj_info->attr_lock);
 
     return ret;

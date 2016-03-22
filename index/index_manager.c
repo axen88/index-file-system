@@ -240,6 +240,7 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
     tmp_index->hnd->sb.free_blk_id = obj->obj_info->inode.objid;
     
     tmp_index->sm.total_free_blocks = tmp_index->hnd->sb.free_blocks;
+    //index_insert_key(obj, tmp_index->hnd->sb.first_free_block);
 
     /* create objid object */
     ret = create_object(tmp_index, OBJID_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_U64 | (CR_U64 << 4), &obj);

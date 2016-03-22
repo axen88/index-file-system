@@ -16,7 +16,7 @@ LIB_OBJS = $(INDEX_DIR)/index_block_manager.o $(INDEX_DIR)/index_block_rw.o \
 	    $(INDEX_DIR)/index_object_manager.o $(INDEX_DIR)/index_verify.o $(INDEX_DIR)/index_fixup.o \
 	    $(PUBLIC_DIR)/os_queue.o $(PUBLIC_DIR)/os_list_double.o $(PUBLIC_DIR)/avl.o \
 	    $(PUBLIC_DIR)/os_log.o  $(PUBLIC_DIR)/os_utils.o $(PUBLIC_DIR)/os_file_if.o \
-	    $(PUBLIC_DIR)/os_cmd_ui.o $(PUBLIC_DIR)/os_threads_group.o  $(PUBLIC_DIR)/os_collate.o
+	    $(PUBLIC_DIR)/os_cmd_ui.o $(PUBLIC_DIR)/os_threads_group.o  $(INDEX_DIR)/index_collate.o
 	    
 	    
 TARGET_OBJS = $(UTILS_DIR)/index_tools_verify.o  $(UTILS_DIR)/index_tools_dump.o \

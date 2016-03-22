@@ -229,7 +229,16 @@ test_kv_pair_t test_kv_pairs[]
     {"wsdgkjheaoifewjfopiehrjseonjsldkdgjropie", TEST_V3},
     {"xsdgkjheaoifewjfopiehrjseonjsldkdgjropie", TEST_V3},
     {"ysdgkjheaoifewjfopiehrjseonjsldkdgjropie", TEST_V3},
-    {"zsdgkjheaoifewjfopiehrjseonjsldkdgjropie", TEST_V3}
+    {"zsdgkjheaoifewjfopiehrjseonjsldkdgjropie", TEST_V3},
+
+
+    {"tdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"udlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"vdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"wdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"xdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL}
+
+
 };
 
 
@@ -240,25 +249,32 @@ void test_kv_1(void)
     int32_t i;
     
     // create index and object, insert key
-    CU_ASSERT(0 == index_create("index0", 1000, 0, &index));
+    CU_ASSERT(0 == index_create("idx0", 1000, 0, &index));
     CU_ASSERT(0 == index_create_object(index, 500, FLAG_TABLE | CR_ANSI_STRING | (CR_ANSI_STRING << 4), &obj));
 
     for (i = 0; i < ArraySize(test_kv_pairs); i++)
     {
-        CU_ASSERT(0 == index_insert_key(obj, test_kv_pairs[i].key, strlen(test_kv_pairs[i].key),
-            test_kv_pairs[i].value, strlen(test_kv_pairs[i].value)));
+        if (test_kv_pairs[i].value != NULL)
+        {
+            CU_ASSERT(0 == index_insert_key(obj, test_kv_pairs[i].key, strlen(test_kv_pairs[i].key),
+                test_kv_pairs[i].value, strlen(test_kv_pairs[i].value)));
+        }
+        else
+        {
+            CU_ASSERT(0 == index_insert_key(obj, test_kv_pairs[i].key, strlen(test_kv_pairs[i].key), NULL, 0));
+        }
     }
 
     CU_ASSERT(0 == index_close_object(obj));
     CU_ASSERT(0 == index_close(index));
 
     // open index and object, remove key
-    CU_ASSERT(0 == index_open("index0", 0, &index));
+    CU_ASSERT(0 == index_open("idx0", 0, &index));
     CU_ASSERT(0 == index_open_object(index, 500, &obj));
 
     for (i = 0; i < ArraySize(test_kv_pairs); i++)
     {
-        CU_ASSERT(0 == index_remove_key(obj, test_kv_pairs[i].key, strlen(test_kv_pairs[i].key)));
+        //CU_ASSERT(0 == index_remove_key(obj, test_kv_pairs[i].key, strlen(test_kv_pairs[i].key)));
     }
     
     CU_ASSERT(0 == index_close_object(obj));

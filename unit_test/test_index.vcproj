@@ -199,6 +199,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\index\index_collate.c"
+				>
+			</File>
+			<File
 				RelativePath="..\index\index_fixup.c"
 				>
 			</File>
@@ -228,10 +232,6 @@
 			</File>
 			<File
 				RelativePath="..\public\os_cmd_ui.c"
-				>
-			</File>
-			<File
-				RelativePath="..\public\os_collate.c"
 				>
 			</File>
 			<File
