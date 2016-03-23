@@ -19,16 +19,19 @@ LIB_OBJS = $(INDEX_DIR)/index_block_manager.o $(INDEX_DIR)/index_block_rw.o \
 	    $(PUBLIC_DIR)/os_cmd_ui.o $(PUBLIC_DIR)/os_threads_group.o  $(INDEX_DIR)/index_collate.o
 	    
 	    
-TARGET_OBJS = $(UTILS_DIR)/index_tools_verify.o  $(UTILS_DIR)/index_tools_dump.o \
+SERVER_OBJS = $(UTILS_DIR)/index_tools_verify.o  $(UTILS_DIR)/index_tools_dump.o \
 	    $(UTILS_DIR)/index_tools_debug.o  $(UTILS_DIR)/index_tools_fixup.o \
 	    $(UTILS_DIR)/index_tools_list.o  $(UTILS_DIR)/index_tools_if.o $(UTILS_DIR)/index_server_main.o\
 	    $(UTILS_DIR)/index_tools_tree.o  $(UTILS_DIR)/index_tools_performace.o 
 	    
+CLIENT_OBJS = $(UTILS_DIR)/index_client_main.o
+	    
 
 INDEX_LIB = libindex.a
 INDEX_SERVER = index_server
+INDEX_CLIENT = index_client
 
-TARGET_ALL = $(INDEX_LIB) $(INDEX_SERVER)
+TARGET_ALL = $(INDEX_LIB) $(INDEX_SERVER) $(INDEX_CLIENT)
 
 all: $(TARGET_ALL)
 
@@ -41,8 +44,11 @@ all: $(TARGET_ALL)
 $(INDEX_LIB): $(LIB_OBJS)
 	$(AR) rcs $@ $^
 
-$(INDEX_SERVER): $(LIB_OBJS) $(TARGET_OBJS)
+$(INDEX_SERVER): $(LIB_OBJS) $(SERVER_OBJS)
 	$(CC) -o $@ $^ -lpthread -levent
 	
+$(INDEX_CLIENT): $(CLIENT_OBJS)
+	$(CC) -o $@ $^ -levent
+	
 clean:
-	rm -f $(LIB_OBJS) $(TARGET_OBJS) $(TARGET_ALL)
+	rm -f $(LIB_OBJS) $(SERVER_OBJS) $(TARGET_ALL)
