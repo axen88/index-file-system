@@ -34,16 +34,18 @@ This project comes from https://github.com/axenhook/index-file-system
 
 # feature
 1. support multi fs
-2. support variant length key or value
-3. support NULL value or zero length value
+2. support multi object(table) in a single fs
+3. support multi type object(table) in a single fs
+4. support variant length key or value
+5. support NULL value or zero length value
 
 # TODO
 1. using btree manager the space instead of bitmap
-2. support snapshot
-3. the data on disk is consistent at any time
-4. object read/write
-5. big value
-6. file system AI
-7. ...
+2. support both b tree and b+ tree
+3. support snapshot management
+4. support the data on disk is consistent at any time
+5. support object read/write
+6. support big value
+7. support file system operation
 
 
