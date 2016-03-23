@@ -64,6 +64,8 @@ enum
 
 #define CR_MASK               0x000F
 
+#define EXT_PAIR_HEADER_SIZE    sizeof(uint8_t)  // ext_pair: header, addr, len
+
 extern int32_t os_collate_binary(const uint8_t *b1, uint32_t v_sizeB1,
     const uint8_t *b2, uint32_t b2_size);
 extern int32_t os_collate_unicode_string(const UNICODE_CHAR *str1, uint32_t str1_size,
@@ -76,7 +78,7 @@ int32_t os_collate_u64(const uint8_t *b1, uint32_t b1_size,
     const uint8_t *b2, uint32_t b2_size);
 uint32_t os_u64_size(uint64_t u64);
 uint32_t os_extent_to_extent_pair(const index_extent_t *ext, uint8_t *ext_pair);
-void os_extent_pair_to_extent(const uint8_t *ext_pair, uint32_t ext_pair_size, index_extent_t *ext);
+uint64_t os_extent_pair_to_extent(const uint8_t *ext_pair, uint32_t ext_pair_size, uint64_t *addr);
 int32_t os_collate_extent(const uint8_t *b1, uint32_t b1_size,
     const uint8_t *b2, uint32_t b2_size);
 

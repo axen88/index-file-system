@@ -305,21 +305,29 @@ int32_t os_collate_u64(const uint8_t *b1, uint32_t b1_size,
 
 uint32_t os_extent_to_extent_pair(const index_extent_t *ext, uint8_t *ext_pair)
 {
-    uint8_t addr_size = *ext_pair;
+    uint8_t addr_size;
 
-    addr_size = os_u64_to_bstr(ext->addr, ext_pair + 1);
+    if (ext->len == 0) // invalid extent
+    {
+        return 0;
+    }
+    
+    addr_size = os_u64_to_bstr(ext->addr, ext_pair + EXT_PAIR_HEADER_SIZE);
     ext_pair[0] = addr_size;
-    return (addr_size + os_u64_to_bstr(ext->len, ext_pair + 1 + addr_size));
+    return (EXT_PAIR_HEADER_SIZE + addr_size + os_u64_to_bstr(ext->len, ext_pair + EXT_PAIR_HEADER_SIZE + addr_size));
 }
 
-void os_extent_pair_to_extent(const uint8_t *ext_pair, uint32_t ext_pair_size, index_extent_t *ext)
+uint64_t os_extent_pair_to_extent(const uint8_t *ext_pair, uint32_t ext_pair_size, uint64_t *addr)
 {
     uint8_t addr_size = *ext_pair;
 
-    ASSERT(ext_pair_size > addr_size);
+    if (ext_pair_size <= addr_size + EXT_PAIR_HEADER_SIZE) // invalid extent pair
+    {
+        return 0;
+    }
 
-    ext->addr = os_bstr_to_u64(ext_pair + 1, addr_size);
-    ext->len = os_bstr_to_u64(ext_pair + 1 + addr_size, ext_pair_size - addr_size);
+    *addr = os_bstr_to_u64(ext_pair + EXT_PAIR_HEADER_SIZE, addr_size);
+    return os_bstr_to_u64(ext_pair + EXT_PAIR_HEADER_SIZE + addr_size, ext_pair_size - addr_size - EXT_PAIR_HEADER_SIZE);
 }
 
 /*
@@ -334,8 +342,10 @@ int32_t os_collate_extent(const uint8_t *b1, uint32_t b1_size,
     index_extent_t ext1;
     index_extent_t ext2;
 
-    os_extent_pair_to_extent(b1, b1_size, &ext1);
-    os_extent_pair_to_extent(b2, b2_size, &ext2);
+    ext1.len = os_extent_pair_to_extent(b1, b1_size, &ext1.addr);
+    ext2.len = os_extent_pair_to_extent(b2, b2_size, &ext2.addr);
+    ASSERT(ext1.len != 0);
+    ASSERT(ext2.len != 0);
 	
     if (ext1.addr >= (ext2.addr + ext2.len))
 	{
