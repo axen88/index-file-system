@@ -377,12 +377,12 @@ int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY *ie,
                 (uint8_t *)key, key_len);
 
         case CR_ANSI_STRING:
-            return os_collate_ansi_string((char *) GET_IE_KEY(ie),
-                ie->key_len, (char *) key, key_len);
+            return os_collate_ansi_string((char *)GET_IE_KEY(ie),
+                ie->key_len, (char *)key, key_len);
 
         case CR_UNICODE_STRING:
-            return os_collate_unicode_string((UNICODE_CHAR *) GET_IE_KEY(ie),
-                ie->key_len, (UNICODE_CHAR *) key, key_len);
+            return os_collate_unicode_string((UNICODE_CHAR *)GET_IE_KEY(ie),
+                ie->key_len, (UNICODE_CHAR *)key, key_len);
 
         case CR_U64:
             return os_collate_u64((uint8_t *)GET_IE_KEY(ie), ie->key_len,

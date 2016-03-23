@@ -82,8 +82,8 @@ uint64_t os_extent_pair_to_extent(const uint8_t *ext_pair, uint32_t ext_pair_siz
 int32_t os_collate_extent(const uint8_t *b1, uint32_t b1_size,
     const uint8_t *b2, uint32_t b2_size);
 
-extern int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY * v_pstIE,
-    const void * key, uint16_t key_len);
+extern int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY *ie,
+    const void *key, uint16_t key_len);
 
 
 #ifdef  __cplusplus
