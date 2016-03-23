@@ -44,6 +44,26 @@ extern "C"
 
 typedef uint16_t UNICODE_CHAR;
 
+typedef struct _index_extent
+{
+    uint64_t addr;  // start address
+    uint64_t len;         // length
+} index_extent_t;
+
+// collate rules
+enum
+{
+    CR_BINARY = 0,
+    CR_ANSI_STRING,
+    CR_UNICODE_STRING,
+    CR_U64,
+    CR_EXTENT,
+    
+    CR_BUTT
+} COLLATE_RULE_E;
+
+#define CR_MASK               0x000F
+
 extern int32_t os_collate_binary(const uint8_t *b1, uint32_t v_sizeB1,
     const uint8_t *b2, uint32_t b2_size);
 extern int32_t os_collate_unicode_string(const UNICODE_CHAR *str1, uint32_t str1_size,
@@ -59,6 +79,10 @@ uint32_t os_extent_to_extent_pair(const index_extent_t *ext, uint8_t *ext_pair);
 void os_extent_pair_to_extent(const uint8_t *ext_pair, uint32_t ext_pair_size, index_extent_t *ext);
 int32_t os_collate_extent(const uint8_t *b1, uint32_t b1_size,
     const uint8_t *b2, uint32_t b2_size);
+
+extern int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY * v_pstIE,
+    const void * key, uint16_t key_len);
+
 
 #ifdef  __cplusplus
 }

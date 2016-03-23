@@ -67,34 +67,6 @@ extern "C" {
 #define FLAG_SYSTEM        0x8000 /* 1: system attr  0: non-system attr */
 #define FLAG_TABLE         0x4000 /* 1: table        0: data stream */
 
-typedef struct _index_extent
-{
-    uint64_t addr;  // start address
-    uint64_t len;         // length
-} index_extent_t;
-
-typedef struct _extent_pair
-{
-    uint8_t addr_size;
-    uint8_t len_size;
-    //uint8_t addr[addr_size];
-    //uint8_t len[len_size];
-} extent_pair_t;
-
-// collate rules
-enum
-{
-    CR_BINARY = 0,
-    CR_ANSI_STRING,
-    CR_UNICODE_STRING,
-    CR_U64,
-    CR_EXTENT,
-    
-    CR_BUTT
-} COLLATE_RULE_E;
-
-#define CR_MASK               0x000F
-
 #define BLOCK_SIZE            (4 * 1024)
 #define INODE_SIZE            (2 * 1024)
 

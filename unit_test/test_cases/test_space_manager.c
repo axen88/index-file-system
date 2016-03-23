@@ -60,7 +60,7 @@ static int clean_suite(void)
 void test_space_manager_1(void)
 {
     INDEX_HANDLE *index;
-    uint64_t start_blk;
+   // uint64_t start_blk;
     
     CU_ASSERT(0 == index_create("index0", 1000, 0, &index));
 

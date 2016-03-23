@@ -351,3 +351,41 @@ int32_t os_collate_extent(const uint8_t *b1, uint32_t b1_size,
 }
 
 
+// collate key
+int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY *ie,
+    const void *key, uint16_t key_len)
+{
+    ASSERT(CR_BUTT > (collate_rule));
+    ASSERT(NULL != ie);
+    ASSERT(NULL != key);
+    ASSERT(0 != key_len);
+    
+    switch (collate_rule)
+    {
+        case CR_BINARY:
+            return os_collate_binary((uint8_t *)GET_IE_KEY(ie), ie->key_len,
+                (uint8_t *)key, key_len);
+
+        case CR_ANSI_STRING:
+            return os_collate_ansi_string((char *) GET_IE_KEY(ie),
+                ie->key_len, (char *) key, key_len);
+
+        case CR_UNICODE_STRING:
+            return os_collate_unicode_string((UNICODE_CHAR *) GET_IE_KEY(ie),
+                ie->key_len, (UNICODE_CHAR *) key, key_len);
+
+        case CR_U64:
+            return os_collate_u64((uint8_t *)GET_IE_KEY(ie), ie->key_len,
+                (uint8_t *)key, key_len);
+
+        case CR_EXTENT:
+            return os_collate_extent((uint8_t *)GET_IE_KEY(ie), ie->key_len,
+                (uint8_t *)key, key_len);
+            
+        default:
+            break;
+    }
+
+    return -INDEX_ERR_COLLATE;
+}
+

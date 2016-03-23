@@ -493,46 +493,6 @@ int32_t walk_tree(OBJECT_HANDLE *tree, uint8_t flags)
     return get_current_ie(tree, flags);
 }
 
-// collate key
-int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY *ie,
-    const void *key, uint16_t key_len)
-{
-    ASSERT(CR_BUTT > (collate_rule & CR_MASK));
-    ASSERT(NULL != ie);
-    ASSERT(NULL != key);
-    ASSERT(0 != key_len);
-    
-    switch (collate_rule & CR_MASK)
-    {
-        case CR_BINARY:
-            return os_collate_binary((uint8_t *)GET_IE_KEY(ie), ie->key_len,
-                (uint8_t *)key, key_len);
-
-        case CR_ANSI_STRING:
-            return os_collate_ansi_string((char *) GET_IE_KEY(ie),
-                ie->key_len, (char *) key, key_len);
-
-        case CR_UNICODE_STRING:
-            return os_collate_unicode_string((UNICODE_CHAR *) GET_IE_KEY(ie),
-                ie->key_len, (UNICODE_CHAR *) key, key_len);
-
-        case CR_U64:
-            return os_collate_u64((uint8_t *)GET_IE_KEY(ie), ie->key_len,
-                (uint8_t *)key, key_len);
-
-        case CR_EXTENT:
-            return os_collate_extent((uint8_t *)GET_IE_KEY(ie), ie->key_len,
-                (uint8_t *)key, key_len);
-            
-        default:
-            break;
-    }
-
-    LOG_ERROR("Collate rule is invalid. collate_rule(%d)\n", collate_rule);
-    
-    return -INDEX_ERR_COLLATE;
-}
-
 // search key
 int32_t search_key_internal(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len)
@@ -554,26 +514,28 @@ int32_t search_key_internal(OBJECT_HANDLE *tree, const void *key,
     {
         while (0 == (tree->ie->flags & INDEX_ENTRY_END))
         {       /* It is not the Index END */
-            ret = collate_key(tree->obj_info->attr_record.flags, tree->ie,
-                key, key_len);
-            if (0 < ret)
+            uint16_t collate_rule = tree->obj_info->attr_record.flags & CR_MASK;
+            
+            ret = collate_key(collate_rule, tree->ie, key, key_len);
+            if (ret > 0)
             { // get a key larger
                 break;
             }
             
-            if (0 == ret)
+            if (ret == 0)
             { // found
                 return 0;
             }
 
-            if (-INDEX_ERR_COLLATE == ret)
+            if (ret == -INDEX_ERR_COLLATE)
             {
+                LOG_ERROR("Collate rule is invalid. collate_rule(%d)\n", collate_rule);
                 return ret;
             }
             
             // get a key smaller
             ret = get_next_ie(tree);
-            if (0 > ret)
+            if (ret < 0)
             {
                 LOG_ERROR("Get next entry failed. ret(%d)\n", ret);
                 return ret;

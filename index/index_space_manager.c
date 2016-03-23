@@ -47,7 +47,7 @@
 int32_t index_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *start_blk)
 {
     uint64_t blk;
-    uint32_t blk_num;
+    uint64_t blk_num;
     int32_t ret;
     OBJECT_HANDLE *obj = sm->free_blk_obj;
 
