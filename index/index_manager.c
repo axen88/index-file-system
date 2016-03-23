@@ -227,10 +227,10 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
     tmp_index->hnd = hnd;
 
     /* create free blk object */
-    ret = create_object(tmp_index, FREEBLK_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_U64 | (CR_U64 << 4), &obj);
+    ret = create_object(tmp_index, FREEBLK_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_EXTENT | (CR_BINARY << 4), &obj);
     if (ret < 0)
     {
-        LOG_ERROR("Create root object failed. name(%s)\n", index_name);
+        LOG_ERROR("Create free block object failed. name(%s)\n", index_name);
         close_index(tmp_index);
         return ret;
     }
@@ -246,7 +246,7 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
     ret = create_object(tmp_index, OBJID_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_U64 | (CR_U64 << 4), &obj);
     if (ret < 0)
     {
-        LOG_ERROR("Create root object failed. name(%s)\n", index_name);
+        LOG_ERROR("Create objid object failed. name(%s)\n", index_name);
         close_index(tmp_index);
         return ret;
     }

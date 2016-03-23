@@ -20,7 +20,7 @@ This project comes from https://github.com/axenhook/index-file-system
   
 2. run "telnet IP_ADDRESS 9999" command to connect to the index server, if it is on the local machine, the IP_ADDRESS may be "127.0.0.1"  (to quit the telnet, please press "ctrl+]" keys, and then input "quit")
   
-3. input the demo program command like the flowing section
+3. input the demo program command like the following section
   
 # demo program usage example
 
@@ -32,5 +32,18 @@ This project comes from https://github.com/axenhook/index-file-system
 |dump all kv in object 1    | dump   -i i -o 1 |
 |remove kv in object 1      | remove -i i -o 1 -k 1 |
 
+# feature
+1. support multi fs
+2. support variant length key or value
+3. support NULL value or zero length value
+
+# TODO
+1. using btree manager the space instead of bitmap
+2. support snapshot
+3. the data on disk is consistent at any time
+4. object read/write
+5. big value
+6. file system AI
+7. ...
 
 
