@@ -160,7 +160,7 @@ typedef struct _space_manager
     uint64_t total_free_blocks;
     uint64_t total_blocks;
 
-    uint64_t possible_free_block;
+    uint64_t first_free_block;
     uint32_t block_num;
 } space_manager_t;
 

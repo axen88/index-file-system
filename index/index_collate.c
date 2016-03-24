@@ -317,6 +317,20 @@ uint32_t os_extent_to_extent_pair(const index_extent_t *ext, uint8_t *ext_pair)
     return (EXT_PAIR_HEADER_SIZE + addr_size + os_u64_to_bstr(ext->len, ext_pair + EXT_PAIR_HEADER_SIZE + addr_size));
 }
 
+uint32_t os_extent_to_extent_pair2(uint64_t addr, uint64_t len, uint8_t *ext_pair)
+{
+    uint8_t addr_size;
+
+    if (len == 0) // invalid extent
+    {
+        return 0;
+    }
+    
+    addr_size = os_u64_to_bstr(addr, ext_pair + EXT_PAIR_HEADER_SIZE);
+    ext_pair[0] = addr_size;
+    return (EXT_PAIR_HEADER_SIZE + addr_size + os_u64_to_bstr(len, ext_pair + EXT_PAIR_HEADER_SIZE + addr_size));
+}
+
 uint64_t os_extent_pair_to_extent(const uint8_t *ext_pair, uint32_t ext_pair_size, uint64_t *addr)
 {
     uint8_t addr_size = *ext_pair;
@@ -332,27 +346,29 @@ uint64_t os_extent_pair_to_extent(const uint8_t *ext_pair, uint32_t ext_pair_siz
 
 /*
 return value:
-    <0: b1 < b2
-    =0: b1 == b2
-    >0: b1 > b2
+    <0: k1 < k2
+    =0: overlap
+    >0: k1 > k2
 */
-int32_t os_collate_extent(const uint8_t *b1, uint32_t b1_size,
-    const uint8_t *b2, uint32_t b2_size)
+int32_t os_collate_extent(const uint8_t *k1, uint32_t k1_size, const uint8_t *v1, uint32_t v1_size,
+    const uint8_t *k2, uint32_t k2_size, const uint8_t *v2, uint32_t v2_size)
 {
-    index_extent_t ext1;
-    index_extent_t ext2;
+    uint64_t addr1, addr2;
+    uint64_t len1, len2;
 
-    ext1.len = os_extent_pair_to_extent(b1, b1_size, &ext1.addr);
-    ext2.len = os_extent_pair_to_extent(b2, b2_size, &ext2.addr);
-    ASSERT(ext1.len != 0);
-    ASSERT(ext2.len != 0);
+    addr1 = os_bstr_to_u64(k1, k1_size);
+    len1 = os_bstr_to_u64(v1, v1_size);
+    addr2 = os_bstr_to_u64(k2, k2_size);
+    len2 = os_bstr_to_u64(v2, v2_size);
+    ASSERT(len1 != 0);
+    ASSERT(len2 != 0);
 	
-    if (ext1.addr >= (ext2.addr + ext2.len))
+    if (addr1 >= (addr2 + len2))
 	{
 		return 1;
 	}
 
-	if ((ext1.addr + ext1.len) <= ext2.addr)
+	if ((addr1 + len1) <= addr2)
 	{
 		return -1;
 	}
@@ -363,7 +379,7 @@ int32_t os_collate_extent(const uint8_t *b1, uint32_t b1_size,
 
 // collate key
 int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY *ie,
-    const void *key, uint16_t key_len)
+    const void *key, uint16_t key_len, const void *value, uint16_t value_len)
 {
     ASSERT(CR_BUTT > (collate_rule));
     ASSERT(NULL != ie);
@@ -389,8 +405,8 @@ int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY *ie,
                 (uint8_t *)key, key_len);
 
         case CR_EXTENT:
-            return os_collate_extent((uint8_t *)GET_IE_KEY(ie), ie->key_len,
-                (uint8_t *)key, key_len);
+            return os_collate_extent((uint8_t *)GET_IE_KEY(ie), ie->key_len, (uint8_t *)GET_IE_VALUE(ie), ie->value_len,
+                (uint8_t *)key, key_len, (uint8_t *)value, value_len);
             
         default:
             break;

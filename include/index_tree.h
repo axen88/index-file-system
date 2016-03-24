@@ -95,8 +95,8 @@ extern int32_t index_walk_all_attrs(OBJECT_HANDLE *dir_tree,
 extern void init_ib(INDEX_BLOCK * v_pstIB, uint8_t v_ucNodeType,
     uint32_t alloc_size);
 
-extern int32_t search_key_internal(OBJECT_HANDLE * obj, const void * key,
-    uint16_t key_len);
+extern int32_t search_key_internal(OBJECT_HANDLE *tree, const void *key,
+    uint16_t key_len, const void *value, uint16_t value_len);
 
 #ifdef	__cplusplus
 }

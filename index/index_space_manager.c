@@ -46,26 +46,45 @@
 // <  0: error code
 int32_t index_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *start_blk)
 {
-    uint64_t blk;
-    uint64_t blk_num;
     int32_t ret;
     OBJECT_HANDLE *obj = sm->free_blk_obj;
+    uint8_t addr_str[U64_MAX_SIZE];
+    uint8_t len_str[U64_MAX_SIZE];
+    uint16_t addr_size;
+    uint16_t len_size;
+    uint64_t addr;
+    uint64_t len;
 
     if (0 == sm->total_free_blocks)
     {
         return -INDEX_ERR_NO_FREE_BLOCKS;
     }
 
-    ret = index_search_key_nolock(obj, &sm->possible_free_block, os_u64_size(sm->possible_free_block));
+    addr_size = os_u64_to_bstr(sm->first_free_block, addr_str);
+    len_size = os_u64_to_bstr(blk_cnt, len_str);
+    
+    ret = search_key_internal(obj, addr_str, addr_size, len_str, len_size);
+    if (ret != 0)
+    {
+        return ret;
+    }
 
+    addr = os_bstr_to_u64(GET_IE_KEY(obj->ie), obj->ie->key_len);
+    len = os_bstr_to_u64(GET_IE_VALUE(obj->ie), obj->ie->value_len);
+    
+
+//    tree_remove_ie(obj);
+    if (addr < sm->first_free_block)
+    {
+        
+    }
+
+    
     ret = walk_tree(obj, INDEX_GET_CURRENT);
     if (0 != ret)
     {
         return ret;
     }
-
-    blk = os_bstr_to_u64(GET_IE_KEY(obj->ie), obj->ie->key_len);
-    blk_num = os_bstr_to_u64(GET_IE_VALUE(obj->ie), obj->ie->value_len);
     
     return 0;
 }
@@ -74,12 +93,18 @@ int32_t index_free_space(space_manager_t *sm, uint64_t start_blk, uint32_t blk_c
 {
     OBJECT_HANDLE *obj = sm->free_blk_obj;
     int32_t ret;
+    uint8_t addr_str[U64_MAX_SIZE];
+    uint8_t len_str[U64_MAX_SIZE];
+    uint16_t addr_size;
+    uint16_t len_size;
 
-    ret = index_search_key_nolock(obj, &start_blk, os_u64_size(start_blk));
-    if (ret == 0) // key exist
+    addr_size = os_u64_to_bstr(start_blk, addr_str);
+    len_size = os_u64_to_bstr(blk_cnt, len_str);
+    
+    ret = search_key_internal(obj, addr_str, addr_size, len_str, len_size);
+    if (0 != ret)
     {
-        LOG_ERROR("the key exist. start_blk(%lld) blk_cnt(%d)\n", start_blk, blk_cnt);
-        return -INDEX_ERR_KEY_EXIST;
+        return ret;
     }
 
     ret = walk_tree(obj, INDEX_GET_CURRENT);

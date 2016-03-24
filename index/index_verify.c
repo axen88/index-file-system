@@ -63,7 +63,7 @@ static int32_t verify_callback(void *tree, void *para)
     }
 
     ret = collate_key(obj->pstInode->ucCollateRule, obj->ie,
-        para->pcKey, (uint16_t)para->uiKeySize);
+        para->pcKey, (uint16_t)para->uiKeySize, NULL, 0);
     if (0 < ret)
     { 
         if (B_FALSE == para->bReverse)

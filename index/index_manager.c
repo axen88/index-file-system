@@ -171,6 +171,52 @@ int32_t init_index_resource(INDEX_HANDLE ** index, const char * index_name)
     return 0;
 }
 
+int32_t create_system_objects(INDEX_HANDLE *index)
+{
+    int32_t ret;
+    OBJECT_HANDLE *obj;
+    uint8_t addr_str[U64_MAX_SIZE];
+    uint8_t len_str[U64_MAX_SIZE];
+    uint16_t addr_size;
+    uint16_t len_size;
+    
+    /* create free blk object */
+    ret = create_object(index, FREEBLK_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_EXTENT | (CR_BINARY << 4), &obj);
+    if (ret < 0)
+    {
+        LOG_ERROR("Create free block object failed. name(%s)\n", index->name);
+        return ret;
+    }
+
+    index->sm.free_blk_obj = obj;
+    index->hnd->sb.free_blk_inode_no = obj->obj_info->inode_no;
+    index->hnd->sb.free_blk_id = obj->obj_info->inode.objid;
+    
+    index->sm.total_free_blocks = index->hnd->sb.free_blocks;
+    addr_size = os_u64_to_bstr(index->hnd->sb.first_free_block, addr_str);
+    len_size = os_u64_to_bstr(index->hnd->sb.free_blocks, len_str);
+    ret = index_insert_key(obj, addr_str, addr_size, len_str, len_size); // record the free space 
+    if (ret < 0)
+    {
+        LOG_ERROR("Insert ext_pair failed. name(%s)\n", index->name);
+        return ret;
+    }
+
+    /* create objid object */
+    ret = create_object(index, OBJID_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_U64 | (CR_U64 << 4), &obj);
+    if (ret < 0)
+    {
+        LOG_ERROR("Create objid object failed. name(%s)\n", index->name);
+        return ret;
+    }
+
+    index->id_obj = obj;
+    index->hnd->sb.objid_inode_no = obj->obj_info->inode_no;
+    index->hnd->sb.objid_id = obj->obj_info->inode.objid;
+
+    return 0;
+}
+
 int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint64_t start_lba,
     INDEX_HANDLE **index)
 {
@@ -178,7 +224,6 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
     int32_t ret = 0;
     BLOCK_HANDLE_S *hnd = NULL;
     avl_index_t where = 0;
-    OBJECT_HANDLE *obj;
 
     if ((NULL == index) || (0 == total_sectors) || (NULL == index_name))
     {
@@ -226,34 +271,14 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
 
     tmp_index->hnd = hnd;
 
-    /* create free blk object */
-    ret = create_object(tmp_index, FREEBLK_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_EXTENT | (CR_BINARY << 4), &obj);
-    if (ret < 0)
+    ret = create_system_objects(tmp_index);
+    if (0 > ret)
     {
-        LOG_ERROR("Create free block object failed. name(%s)\n", index_name);
+        LOG_ERROR("create system objects failed. hnd(%p) ret(%d)\n", tmp_index->hnd, ret);
         close_index(tmp_index);
         return ret;
     }
 
-    tmp_index->sm.free_blk_obj = obj;
-    tmp_index->hnd->sb.free_blk_inode_no = obj->obj_info->inode_no;
-    tmp_index->hnd->sb.free_blk_id = obj->obj_info->inode.objid;
-    
-    tmp_index->sm.total_free_blocks = tmp_index->hnd->sb.free_blocks;
-    //index_insert_key(obj, tmp_index->hnd->sb.first_free_block);
-
-    /* create objid object */
-    ret = create_object(tmp_index, OBJID_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_U64 | (CR_U64 << 4), &obj);
-    if (ret < 0)
-    {
-        LOG_ERROR("Create objid object failed. name(%s)\n", index_name);
-        close_index(tmp_index);
-        return ret;
-    }
-
-    tmp_index->id_obj = obj;
-    tmp_index->hnd->sb.objid_inode_no = obj->obj_info->inode_no;
-    tmp_index->hnd->sb.objid_id = obj->obj_info->inode.objid;
     
     ret = block_update_super_block(tmp_index->hnd);
     if (0 > ret)

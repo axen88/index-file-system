@@ -510,7 +510,7 @@ int32_t index_create_object_nolock(INDEX_HANDLE *index, uint64_t objid, uint16_t
         return -INDEX_ERR_OBJ_EXIST;
     }
 
-    ret = search_key_internal(index->id_obj, &objid, sizeof(uint64_t));
+    ret = search_key_internal(index->id_obj, &objid, sizeof(uint64_t), NULL, 0);
     if (0 <= ret)
     {
         LOG_ERROR("The obj already exist. obj(%p) objid(%lld) ret(%d)\n", obj, objid, ret);
@@ -598,7 +598,7 @@ int32_t index_open_object_nolock(struct _INDEX_HANDLE *index, uint64_t objid, ui
 
     id_obj = index->id_obj;
     
-    ret = search_key_internal(id_obj, &objid, sizeof(uint64_t));
+    ret = search_key_internal(id_obj, &objid, sizeof(uint64_t), NULL, 0);
     if (0 > ret)
     {
         LOG_DEBUG("Search for obj failed. obj(%p) objid(%lld) ret(%d)\n", obj, objid, ret);

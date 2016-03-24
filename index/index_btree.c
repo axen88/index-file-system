@@ -495,7 +495,7 @@ int32_t walk_tree(OBJECT_HANDLE *tree, uint8_t flags)
 
 // search key
 int32_t search_key_internal(OBJECT_HANDLE *tree, const void *key,
-    uint16_t key_len)
+    uint16_t key_len, const void *value, uint16_t value_len)
 {
     int32_t ret = 0;
 
@@ -516,7 +516,7 @@ int32_t search_key_internal(OBJECT_HANDLE *tree, const void *key,
         {       /* It is not the Index END */
             uint16_t collate_rule = tree->obj_info->attr_record.flags & CR_MASK;
             
-            ret = collate_key(collate_rule, tree->ie, key, key_len);
+            ret = collate_key(collate_rule, tree->ie, key, key_len, value, value_len);
             if (ret > 0)
             { // get a key larger
                 break;
@@ -597,7 +597,7 @@ int32_t index_search_key_nolock(OBJECT_HANDLE *tree, const void *key,
 
     ASSERT(tree->obj_info->attr_record.flags & FLAG_TABLE);
 
-    ret = search_key_internal(tree, key, key_len);
+    ret = search_key_internal(tree, key, key_len, NULL, 0);
     if (-INDEX_ERR_KEY_NOT_FOUND == ret)
     {
         get_to_near_key(tree);
@@ -1252,7 +1252,7 @@ int32_t index_remove_key_nolock(OBJECT_HANDLE *tree, const void *key,
 
     ASSERT(tree->obj_info->attr_record.flags & FLAG_TABLE);
 
-    ret = search_key_internal(tree, key, key_len);
+    ret = search_key_internal(tree, key, key_len, NULL, 0);
     if (0 > ret)
     {
         LOG_ERROR("The key not found. ret(%d)\n", ret);
@@ -1308,7 +1308,7 @@ int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
 
     PRINT_KEY("Insert key start", tree, key, key_len);
 
-    ret = search_key_internal(tree, key, key_len);
+    ret = search_key_internal(tree, key, key_len, NULL, 0);
     if (ret >= 0)
     {
         return -INDEX_ERR_KEY_EXIST;

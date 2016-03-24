@@ -284,61 +284,50 @@ void test_cr_extent_2(void)
 
 void test_cr_extent_3(void)
 {
-    index_extent_t ext1;
-    index_extent_t ext2;
-    uint8_t ext_pair1[32];
-    uint8_t ext_pair2[32];
-    uint32_t ext_pair1_size;
-    uint32_t ext_pair2_size;
+    uint8_t addr1[32];
+    uint8_t addr2[32];
+    uint8_t len1[32];
+    uint8_t len2[32];
+    uint16_t addr1_size, addr2_size, len1_size, len2_size;
 
-    ext1.addr = 100;
-    ext1.len = 50;
-    ext_pair1_size = os_extent_to_extent_pair(&ext1, ext_pair1);
+    addr1_size = os_u64_to_bstr(100, addr1);
+    len1_size = os_u64_to_bstr(50, len1);
     
-    ext2.addr = 100;
-    ext2.len = 50;
-    ext_pair2_size = os_extent_to_extent_pair(&ext2, ext_pair2);
-    CU_ASSERT(os_collate_extent(ext_pair1, ext_pair1_size, ext_pair2, ext_pair2_size) == 0);
+    addr2_size = os_u64_to_bstr(100, addr2);
+    len2_size = os_u64_to_bstr(50, len2);
+    CU_ASSERT(os_collate_extent(addr1, addr1_size, len1, len1_size, addr2, addr2_size, len2, len2_size) == 0);
 
-    ext2.addr = 100;
-    ext2.len = 1;
-    ext_pair2_size = os_extent_to_extent_pair(&ext2, ext_pair2);
-    CU_ASSERT(os_collate_extent(ext_pair1, ext_pair1_size, ext_pair2, ext_pair2_size) == 0);
+    addr2_size = os_u64_to_bstr(100, addr2);
+    len2_size = os_u64_to_bstr(1, len2);
+    CU_ASSERT(os_collate_extent(addr1, addr1_size, len1, len1_size, addr2, addr2_size, len2, len2_size) == 0);
 
-    ext2.addr = 149;
-    ext2.len = 1;
-    ext_pair2_size = os_extent_to_extent_pair(&ext2, ext_pair2);
-    CU_ASSERT(os_collate_extent(ext_pair1, ext_pair1_size, ext_pair2, ext_pair2_size) == 0);
+    addr2_size = os_u64_to_bstr(149, addr2);
+    len2_size = os_u64_to_bstr(1, len2);
+    CU_ASSERT(os_collate_extent(addr1, addr1_size, len1, len1_size, addr2, addr2_size, len2, len2_size) == 0);
 
-    ext2.addr = 120;
-    ext2.len = 10;
-    ext_pair2_size = os_extent_to_extent_pair(&ext2, ext_pair2);
-    CU_ASSERT(os_collate_extent(ext_pair1, ext_pair1_size, ext_pair2, ext_pair2_size) == 0);
+    addr2_size = os_u64_to_bstr(120, addr2);
+    len2_size = os_u64_to_bstr(10, len2);
+    CU_ASSERT(os_collate_extent(addr1, addr1_size, len1, len1_size, addr2, addr2_size, len2, len2_size) == 0);
 
-    ext2.addr = 149;
-    ext2.len = 2;
-    ext_pair2_size = os_extent_to_extent_pair(&ext2, ext_pair2);
-    CU_ASSERT(os_collate_extent(ext_pair1, ext_pair1_size, ext_pair2, ext_pair2_size) == 0);
+    addr2_size = os_u64_to_bstr(149, addr2);
+    len2_size = os_u64_to_bstr(2, len2);
+    CU_ASSERT(os_collate_extent(addr1, addr1_size, len1, len1_size, addr2, addr2_size, len2, len2_size) == 0);
 
-    ext2.addr = 99;
-    ext2.len = 2;
-    ext_pair2_size = os_extent_to_extent_pair(&ext2, ext_pair2);
-    CU_ASSERT(os_collate_extent(ext_pair1, ext_pair1_size, ext_pair2, ext_pair2_size) == 0);
+    addr2_size = os_u64_to_bstr(99, addr2);
+    len2_size = os_u64_to_bstr(2, len2);
+    CU_ASSERT(os_collate_extent(addr1, addr1_size, len1, len1_size, addr2, addr2_size, len2, len2_size) == 0);
 
-    ext2.addr = 150;
-    ext2.len = 1;
-    ext_pair2_size = os_extent_to_extent_pair(&ext2, ext_pair2);
-    CU_ASSERT(os_collate_extent(ext_pair1, ext_pair1_size, ext_pair2, ext_pair2_size) == -1);
+    addr2_size = os_u64_to_bstr(150, addr2);
+    len2_size = os_u64_to_bstr(1, len2);
+    CU_ASSERT(os_collate_extent(addr1, addr1_size, len1, len1_size, addr2, addr2_size, len2, len2_size) == -1);
 
-    ext2.addr = 151;
-    ext2.len = 10;
-    ext_pair2_size = os_extent_to_extent_pair(&ext2, ext_pair2);
-    CU_ASSERT(os_collate_extent(ext_pair1, ext_pair1_size, ext_pair2, ext_pair2_size) == -1);
+    addr2_size = os_u64_to_bstr(151, addr2);
+    len2_size = os_u64_to_bstr(10, len2);
+    CU_ASSERT(os_collate_extent(addr1, addr1_size, len1, len1_size, addr2, addr2_size, len2, len2_size) == -1);
 
-    ext2.addr = 80;
-    ext2.len = 10;
-    ext_pair2_size = os_extent_to_extent_pair(&ext2, ext_pair2);
-    CU_ASSERT(os_collate_extent(ext_pair1, ext_pair1_size, ext_pair2, ext_pair2_size) == 1);
+    addr2_size = os_u64_to_bstr(80, addr2);
+    len2_size = os_u64_to_bstr(10, len2);
+    CU_ASSERT(os_collate_extent(addr1, addr1_size, len1, len1_size, addr2, addr2_size, len2, len2_size) == 1);
 }
 
 int add_collate_test_case(void)
