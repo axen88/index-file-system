@@ -75,6 +75,7 @@ static int32_t dump_callback(void *in_tree, DUMP_PARA_S *para)
             }
             break;
         case CR_U64:
+        case CR_EXTENT:
             OS_PRINT(para->net, "%8lld", os_bstr_to_u64(uc, tree->ie->key_len));
             break;
         default:
@@ -98,6 +99,7 @@ static int32_t dump_callback(void *in_tree, DUMP_PARA_S *para)
             }
             break;
         case CR_U64:
+        case CR_EXTENT:
             OS_PRINT(para->net, "%8lld", os_bstr_to_u64(uc, tree->ie->value_len));
             break;
         default:

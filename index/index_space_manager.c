@@ -40,59 +40,126 @@
  MODULE(PID_INDEX);
 #include "os_log.h"
 
-// return value:
-// >  0: real blk cnt
-// == 0: no free blk
-// <  0: error code
-int32_t index_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *start_blk)
+int64_t alloc_space(OBJECT_HANDLE *obj, uint64_t start_blk, uint64_t blk_cnt, uint64_t *real_start_blk)
 {
-    int32_t ret;
-    OBJECT_HANDLE *obj = sm->free_blk_obj;
+    uint64_t addr;
+    uint64_t len;
+    uint64_t end;
+    uint64_t end_blk;
     uint8_t addr_str[U64_MAX_SIZE];
     uint8_t len_str[U64_MAX_SIZE];
     uint16_t addr_size;
     uint16_t len_size;
-    uint64_t addr;
-    uint64_t len;
+    int32_t ret;
 
-    if (0 == sm->total_free_blocks)
-    {
-        return -INDEX_ERR_NO_FREE_BLOCKS;
-    }
+    ASSERT(blk_cnt != 0);
 
-    addr_size = os_u64_to_bstr(sm->first_free_block, addr_str);
+    addr_size = os_u64_to_bstr(start_blk, addr_str);
     len_size = os_u64_to_bstr(blk_cnt, len_str);
     
-    ret = search_key_internal(obj, addr_str, addr_size, len_str, len_size);
-    if (ret != 0)
+    ret = index_search_key_nolock(obj, addr_str, addr_size, len_str, len_size);
+    if (ret < 0)
     {
-        return ret;
-    }
+        if (ret != -INDEX_ERR_KEY_NOT_FOUND)
+        {
+            LOG_ERROR("Search key failed. objid(0x%llx) ret(%d)\n", obj->obj_info->objid, ret);
+            return ret;
+        }
 
-    addr = os_bstr_to_u64(GET_IE_KEY(obj->ie), obj->ie->key_len);
+        if (obj->ie->flags & INDEX_ENTRY_END) // no key here
+        {
+            ret = walk_tree(obj, INDEX_GET_FIRST); // get first key
+            if (0 != ret)
+            { // no any key
+                if (ret != -INDEX_ERR_ROOT)
+                {
+                    LOG_ERROR("walk tree failed. objid(0x%llx) ret(%d)\n", obj->obj_info->objid, ret);
+                    return ret;
+                }
+                
+                return 0; // no free space
+            }
+        }
+
+        // no overlap
+        addr = os_bstr_to_u64(GET_IE_KEY(obj->ie), obj->ie->key_len);
+        start_blk = addr; //  reset the start block
+    }
+    else
+    {
+        addr = os_bstr_to_u64(GET_IE_KEY(obj->ie), obj->ie->key_len);
+    }
+    
     len = os_bstr_to_u64(GET_IE_VALUE(obj->ie), obj->ie->value_len);
+    end = addr + len;
     
+    ASSERT(len != 0);
 
-//    tree_remove_ie(obj);
-    if (addr < sm->first_free_block)
+    ret = tree_remove_ie(obj);
+    if (ret < 0)
     {
+        LOG_ERROR("remove entry failed. objid(0x%llx) ret(%d)\n", obj->obj_info->objid, ret);
+        return ret;
+    }
         
+    if (start_blk <= addr)
+    {
+        start_blk = addr;  // allocate from addr
+        end_blk = start_blk + blk_cnt;
+        
+        *real_start_blk = addr;
+        
+        if (end_blk < end)
+        {
+            addr_size = os_u64_to_bstr(end_blk, addr_str);
+            len_size = os_u64_to_bstr(end - end_blk, len_str);
+            ret = index_insert_key_nolock(obj, addr_str, addr_size, len_str, len_size);
+            if (ret < 0)
+            {
+                LOG_ERROR("insert key failed. objid(0x%llx) ret(%d)\n", obj->obj_info->objid, ret);
+                return ret;
+            }
+            
+            return (end_blk - addr);
+        }
+
+        return len;
     }
 
+    // below: start_blk > addr
     
-    ret = walk_tree(obj, INDEX_GET_CURRENT);
-    if (0 != ret)
+    end_blk = start_blk + blk_cnt;
+    ASSERT(start_blk < end);
+    *real_start_blk = start_blk;
+    
+    addr_size = os_u64_to_bstr(addr, addr_str);
+    len_size = os_u64_to_bstr(start_blk - addr, len_str);
+    ret = index_insert_key_nolock(obj, addr_str, addr_size, len_str, len_size);
+    if (ret < 0)
     {
+        LOG_ERROR("insert key failed. objid(0x%llx) ret(%d)\n", obj->obj_info->objid, ret);
         return ret;
     }
     
-    return 0;
+    if (end_blk < end)
+    {
+        addr_size = os_u64_to_bstr(end_blk, addr_str);
+        len_size = os_u64_to_bstr(end - end_blk, len_str);
+        ret = index_insert_key_nolock(obj, addr_str, addr_size, len_str, len_size);
+        if (ret < 0)
+        {
+            LOG_ERROR("insert key failed. objid(0x%llx) ret(%d)\n", obj->obj_info->objid, ret);
+            return ret;
+        }
+        
+        return blk_cnt;
+    }
+
+    return (end - start_blk);
 }
 
-int32_t index_free_space(space_manager_t *sm, uint64_t start_blk, uint32_t blk_cnt)
+int32_t free_space(OBJECT_HANDLE *obj, uint64_t start_blk, uint64_t blk_cnt)
 {
-    OBJECT_HANDLE *obj = sm->free_blk_obj;
-    int32_t ret;
     uint8_t addr_str[U64_MAX_SIZE];
     uint8_t len_str[U64_MAX_SIZE];
     uint16_t addr_size;
@@ -100,21 +167,83 @@ int32_t index_free_space(space_manager_t *sm, uint64_t start_blk, uint32_t blk_c
 
     addr_size = os_u64_to_bstr(start_blk, addr_str);
     len_size = os_u64_to_bstr(blk_cnt, len_str);
-    
-    ret = search_key_internal(obj, addr_str, addr_size, len_str, len_size);
-    if (0 != ret)
+
+    return index_insert_key_nolock(obj, addr_str, addr_size, len_str, len_size);
+}
+
+void index_init_sm(space_manager_t *sm, OBJECT_HANDLE *obj, uint64_t first_free_block,
+    uint64_t total_free_blocks, uint64_t total_blocks)
+{
+    sm->free_blk_obj = obj;
+    sm->first_free_block = first_free_block;
+    sm->total_free_blocks = total_free_blocks;
+    sm->total_blocks = total_blocks;
+    OS_RWLOCK_INIT(&sm->lock);
+}
+
+void index_destroy_sm(space_manager_t *sm)
+{
+    OS_RWLOCK_DESTROY(&sm->lock);
+}
+
+// return value:
+// >  0: real blk cnt
+// == 0: no free blk
+// <  0: error code
+int64_t index_alloc_space(space_manager_t *sm, uint64_t blk_cnt, uint64_t *real_start_blk)
+{
+    int64_t ret;
+
+    if (0 == sm->total_free_blocks)
     {
+        return -INDEX_ERR_NO_FREE_BLOCKS;
+    }
+
+    OS_RWLOCK_WRLOCK(&sm->lock);
+    ret = alloc_space(sm->free_blk_obj, sm->first_free_block, blk_cnt, real_start_blk);
+    if (ret < 0) // error
+    {
+        OS_RWLOCK_WRUNLOCK(&sm->lock);
+        LOG_ERROR("alloc space failed. objid(0x%llx) ret(%d)\n", sm->free_blk_obj->obj_info->objid, ret);
         return ret;
     }
 
-    ret = walk_tree(obj, INDEX_GET_CURRENT);
-    if (0 != ret)
+    if (ret == 0) // no space
     {
+        sm->first_free_block = 0;
+        sm->total_free_blocks = 0;
+        OS_RWLOCK_WRUNLOCK(&sm->lock);
         return ret;
     }
-    
 
-    return 0;
+    sm->first_free_block = *real_start_blk + ret;
+    if (sm->total_free_blocks < (uint64_t)ret)
+    {
+        LOG_ERROR("the sm system chaos. objid(0x%llx) ret(%d)\n", sm->free_blk_obj->obj_info->objid, ret);
+    }
+    else
+    {
+        sm->total_free_blocks -= ret;
+    }
+    
+    OS_RWLOCK_WRUNLOCK(&sm->lock);
+
+    return ret;
+}
+
+int32_t index_free_space(space_manager_t *sm, uint64_t start_blk, uint64_t blk_cnt)
+{
+    int32_t ret;
+    
+    OS_RWLOCK_WRLOCK(&sm->lock);
+    ret = free_space(sm->free_blk_obj, start_blk, blk_cnt);
+    if (ret > 0)
+    {
+        sm->total_free_blocks += blk_cnt;
+    }
+    OS_RWLOCK_WRUNLOCK(&sm->lock);
+
+    return ret;
 }
 
 

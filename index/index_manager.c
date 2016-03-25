@@ -175,33 +175,26 @@ int32_t create_system_objects(INDEX_HANDLE *index)
 {
     int32_t ret;
     OBJECT_HANDLE *obj;
-    uint8_t addr_str[U64_MAX_SIZE];
-    uint8_t len_str[U64_MAX_SIZE];
-    uint16_t addr_size;
-    uint16_t len_size;
     
     /* create free blk object */
-    ret = create_object(index, FREEBLK_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_EXTENT | (CR_BINARY << 4), &obj);
+    ret = create_object(index, FREEBLK_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj);
     if (ret < 0)
     {
         LOG_ERROR("Create free block object failed. name(%s)\n", index->name);
         return ret;
     }
 
-    index->sm.free_blk_obj = obj;
-    index->hnd->sb.free_blk_inode_no = obj->obj_info->inode_no;
-    index->hnd->sb.free_blk_id = obj->obj_info->inode.objid;
-    
-    index->sm.total_free_blocks = index->hnd->sb.free_blocks;
-    addr_size = os_u64_to_bstr(index->hnd->sb.first_free_block, addr_str);
-    len_size = os_u64_to_bstr(index->hnd->sb.free_blocks, len_str);
-    ret = index_insert_key(obj, addr_str, addr_size, len_str, len_size); // record the free space 
+    index_init_sm(&index->sm, obj, index->hnd->sb.first_free_block, index->hnd->sb.free_blocks, index->hnd->sb.total_blocks);
+    ret = free_space(index->sm.free_blk_obj, index->hnd->sb.first_free_block, index->hnd->sb.free_blocks);
     if (ret < 0)
     {
-        LOG_ERROR("Insert ext_pair failed. name(%s)\n", index->name);
+        LOG_ERROR("init free block space info failed. name(%s)\n", index->name);
         return ret;
     }
 
+    index->hnd->sb.free_blk_inode_no = obj->obj_info->inode_no;
+    index->hnd->sb.free_blk_id = obj->obj_info->inode.objid;
+    
     /* create objid object */
     ret = create_object(index, OBJID_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_U64 | (CR_U64 << 4), &obj);
     if (ret < 0)

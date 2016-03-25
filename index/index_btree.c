@@ -584,7 +584,7 @@ static void get_to_near_key(OBJECT_HANDLE *tree)
 }
 
 int32_t index_search_key_nolock(OBJECT_HANDLE *tree, const void *key,
-    uint16_t key_len)
+    uint16_t key_len, const void *value, uint16_t value_len)
 {
     int32_t ret = 0;
 
@@ -597,7 +597,7 @@ int32_t index_search_key_nolock(OBJECT_HANDLE *tree, const void *key,
 
     ASSERT(tree->obj_info->attr_record.flags & FLAG_TABLE);
 
-    ret = search_key_internal(tree, key, key_len, NULL, 0);
+    ret = search_key_internal(tree, key, key_len, value, value_len);
     if (-INDEX_ERR_KEY_NOT_FOUND == ret)
     {
         get_to_near_key(tree);
@@ -618,7 +618,7 @@ int32_t index_search_key(OBJECT_HANDLE *tree, const void *key,
     }
 
     OS_RWLOCK_WRLOCK(&tree->obj_info->attr_lock);
-    ret = index_search_key_nolock(tree, key, key_len);
+    ret = index_search_key_nolock(tree, key, key_len, NULL, 0);
     OS_RWLOCK_WRUNLOCK(&tree->obj_info->attr_lock);
 
     return ret;
@@ -1308,7 +1308,7 @@ int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
 
     PRINT_KEY("Insert key start", tree, key, key_len);
 
-    ret = search_key_internal(tree, key, key_len, NULL, 0);
+    ret = search_key_internal(tree, key, key_len, value, value_len);
     if (ret >= 0)
     {
         return -INDEX_ERR_KEY_EXIST;

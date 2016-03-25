@@ -58,8 +58,8 @@ typedef int32_t (*DeleteFunc) (void *hnd,
     const void *value, uint16_t value_len);
 typedef int32_t (*WalkAllCallBack) (void *obj, void *para);
 
-extern int32_t index_search_key_nolock(OBJECT_HANDLE * obj, const void * key,
-    uint16_t key_len);
+extern int32_t index_search_key_nolock(OBJECT_HANDLE *tree, const void *key,
+    uint16_t key_len, const void *value, uint16_t value_len);
 extern int32_t index_remove_key_nolock(OBJECT_HANDLE * obj, const void * key,
     uint16_t key_len);
 extern int32_t index_insert_key_nolock(OBJECT_HANDLE * obj, const void * key,
@@ -97,6 +97,7 @@ extern void init_ib(INDEX_BLOCK * v_pstIB, uint8_t v_ucNodeType,
 
 extern int32_t search_key_internal(OBJECT_HANDLE *tree, const void *key,
     uint16_t key_len, const void *value, uint16_t value_len);
+int32_t tree_remove_ie(OBJECT_HANDLE *tree);
 
 #ifdef	__cplusplus
 }

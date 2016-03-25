@@ -356,12 +356,15 @@ int32_t os_collate_extent(const uint8_t *k1, uint32_t k1_size, const uint8_t *v1
     uint64_t addr1, addr2;
     uint64_t len1, len2;
 
+    if ((v2_size == 0) || (v1_size == 0))
+    {
+        return os_collate_u64(k1, k1_size, k2, k2_size);
+    }
+    
     addr1 = os_bstr_to_u64(k1, k1_size);
-    len1 = os_bstr_to_u64(v1, v1_size);
     addr2 = os_bstr_to_u64(k2, k2_size);
+    len1 = os_bstr_to_u64(v1, v1_size);
     len2 = os_bstr_to_u64(v2, v2_size);
-    ASSERT(len1 != 0);
-    ASSERT(len2 != 0);
 	
     if (addr1 >= (addr2 + len2))
 	{
