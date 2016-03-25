@@ -210,6 +210,34 @@ int32_t create_system_objects(INDEX_HANDLE *index)
     return 0;
 }
 
+int32_t open_system_objects(INDEX_HANDLE *index)
+{
+    int32_t ret;
+    OBJECT_HANDLE *obj;
+    
+    /* open FREEBLK object */
+    ret = open_object(index, index->hnd->sb.free_blk_id, index->hnd->sb.free_blk_inode_no, &obj);
+    if (ret < 0)
+    {
+        LOG_ERROR("Open free block object failed. index_name(%s) ret(%d)\n", index->name, ret);
+        return ret;
+    }
+    
+    index_init_sm(&index->sm, obj, index->hnd->sb.first_free_block, index->hnd->sb.free_blocks, index->hnd->sb.total_blocks);
+
+    /* open $OBJID object */
+    ret = open_object(index, index->hnd->sb.objid_id, index->hnd->sb.objid_inode_no, &obj);
+    if (ret < 0)
+    {
+        LOG_ERROR("Open objid object failed. index_name(%s) ret(%d)\n", index->name, ret);
+        return ret;
+    }
+
+    index->id_obj = obj;
+
+    return 0;
+}
+
 int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint64_t start_lba,
     INDEX_HANDLE **index)
 {
@@ -351,21 +379,11 @@ int32_t index_open_nolock(const char *index_name, uint64_t start_lba, INDEX_HAND
 
     tmp_index->hnd = hnd;
 
-    /* open FREEBLK object */
-    ret = open_object(tmp_index, tmp_index->hnd->sb.free_blk_id, tmp_index->hnd->sb.free_blk_inode_no, &tmp_index->sm.free_blk_obj);
+    /* open system object */
+    ret = open_system_objects(tmp_index);
     if (ret < 0)
     {
-        LOG_ERROR("Open free block object failed. index_name(%s) start_lba(%lld) ret(%d)\n",
-            index_name, start_lba, ret);
-        close_index(tmp_index);
-        return ret;
-    }
-
-    /* open $OBJID object */
-    ret = open_object(tmp_index, tmp_index->hnd->sb.objid_id, tmp_index->hnd->sb.objid_inode_no, &tmp_index->id_obj);
-    if (ret < 0)
-    {
-        LOG_ERROR("Open objid object failed. index_name(%s) start_lba(%lld) ret(%d)\n",
+        LOG_ERROR("Open system object failed. index_name(%s) start_lba(%lld) ret(%d)\n",
             index_name, start_lba, ret);
         close_index(tmp_index);
         return ret;
