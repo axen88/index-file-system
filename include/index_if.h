@@ -153,10 +153,17 @@ typedef struct _OBJECT_HANDLE
     DLIST_ENTRY_S entry;
 } OBJECT_HANDLE;
 
+#define MAX_BLK_NUM  10
+#define MIN_BLK_NUM  3
 
 typedef struct _space_manager
 {
     OBJECT_HANDLE *free_blk_obj;
+
+    uint64_t blk[MAX_BLK_NUM];
+    uint32_t blk_num;
+    uint32_t blk_no;
+    OS_RWLOCK blk_lock;
     
     uint64_t first_free_block;
     uint64_t total_free_blocks;
@@ -190,8 +197,8 @@ typedef struct _INDEX_HANDLE
 #define INDEX_READ_INODE(index, obj, inode_no) \
     index_read_block_pingpong(index->hnd, &obj->inode.head, inode_no, INODE_MAGIC, INODE_SIZE);
 
-#define INDEX_ALLOC_BLOCK(obj, vbn) block_alloc((obj)->index->hnd, 1, vbn)
-#define INDEX_FREE_BLOCK(obj, vbn)  block_free((obj)->index->hnd, vbn, 1)
+#define INDEX_ALLOC_BLOCK(index, vbn) block_alloc((index)->hnd, 1, vbn)
+#define INDEX_FREE_BLOCK(index, vbn)  block_free((index)->hnd, vbn, 1)
 
 extern int32_t index_block_read(struct _OBJECT_HANDLE *obj, uint64_t vbn);
 extern int32_t index_alloc_cache_and_block(struct _OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE **cache);

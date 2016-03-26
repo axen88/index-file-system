@@ -38,43 +38,6 @@ History:
 MODULE(PID_INDEX);
 #include "os_log.h"
 
-int32_t index_write_block(BLOCK_HANDLE_S * hnd, void * buf, uint32_t size,
-    uint32_t start_lba, uint64_t * vbn)
-{
-    int32_t ret = 0;
-    uint64_t tmp_start_lba = 0;
-
-    if ((NULL == hnd) || (NULL == buf) || (0 >= (int32_t) size)
-        || (NULL == vbn))
-    {
-        LOG_ERROR("Invalid parameter. hnd(%p) buf(%p) size(%d) vbn(%p)\n",
-            hnd, buf, size, vbn);
-        return -FILE_BLOCK_ERR_PARAMETER;
-    }
-
-    ret = block_alloc(hnd, 1, vbn);
-    if (ret < 0)
-    {
-        LOG_ERROR("Allocate blocks failed. hnd(%p) blocks(%d) ret(%d)\n",
-            hnd, 1, ret);
-        return ret;
-    }
-
-    tmp_start_lba = start_lba + *vbn * hnd->sb.sectors_per_block
-        + hnd->sb.start_lba;
-
-    ret = os_disk_pwrite(hnd->file_hnd, buf, size, tmp_start_lba);
-    if (ret != (int32_t) size)
-    {
-        LOG_ERROR("Write lba failed. f(%p) buf(%p) size(%d) lba(%lld) ret(%d)\n",
-            hnd->file_hnd, buf, size, tmp_start_lba, ret);
-        (void) block_free(hnd, *vbn, 1);
-        return -FILE_BLOCK_ERR_WRITE;
-    }
-
-    return 0;
-}
-
 int32_t index_update_block(BLOCK_HANDLE_S * hnd, void * buf, uint32_t size,
     uint32_t start_lba, uint64_t vbn)
 {
@@ -192,36 +155,6 @@ int32_t verify_object(OBJECT_HEADER_S * obj, uint32_t objid,
     }
 
     return 0;
-}
-
-int32_t index_write_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
-    uint64_t * vbn)
-{
-    int32_t ret = 0;
-    int32_t ret2 = 0;
-
-    if ((NULL == hnd) || (NULL == obj) || (NULL == vbn))
-    {
-        LOG_ERROR("Invalid parameter. hnd(%p) obj(%p) vbn(%p)\n", hnd, obj, vbn);
-        return -FILE_BLOCK_ERR_PARAMETER;
-    }
-
-    assemble_object(obj);
-
-    ret = index_write_block(hnd, obj, obj->alloc_size, 0, vbn);
-    if (0 > ret)
-    {
-        LOG_ERROR("Write object failed. hnd(%p) obj(%p) ret(%d)\n", hnd, obj, ret);
-    }
-
-    ret2 = fixup_object(obj);
-    if (0 > ret2)
-    {
-        LOG_ERROR("Fixup object failed. obj(%p) ret(%d)\n", obj, ret2);
-        return ret2;
-    }
-
-    return ret;
 }
 
 int32_t index_update_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
@@ -561,10 +494,8 @@ int32_t index_read_sectors(BLOCK_HANDLE_S * hnd, void * buf, uint32_t size,
 }
 
 EXPORT_SYMBOL(index_update_block);
-EXPORT_SYMBOL(index_write_block);
 EXPORT_SYMBOL(index_read_block);
 
-EXPORT_SYMBOL(index_write_block_fixup);
 EXPORT_SYMBOL(index_update_block_fixup);
 EXPORT_SYMBOL(index_read_block_fixup);
 

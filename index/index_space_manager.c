@@ -174,17 +174,64 @@ int32_t free_space(OBJECT_HANDLE *obj, uint64_t start_blk, uint64_t blk_cnt)
 void index_init_sm(space_manager_t *sm, OBJECT_HANDLE *obj, uint64_t first_free_block,
     uint64_t total_free_blocks, uint64_t total_blocks)
 {
+    memset(sm->blk, 0, sizeof(sm->blk));
+    sm->blk_no = 0;
+    sm->blk_num= 0;
     sm->free_blk_obj = obj;
     sm->first_free_block = first_free_block;
     sm->total_free_blocks = total_free_blocks;
     sm->total_blocks = total_blocks;
     OS_RWLOCK_INIT(&sm->lock);
+    OS_RWLOCK_INIT(&sm->blk_lock);
 }
 
 void index_destroy_sm(space_manager_t *sm)
 {
+    OS_RWLOCK_DESTROY(&sm->blk_lock);
     OS_RWLOCK_DESTROY(&sm->lock);
 }
+
+int64_t index_alloc_blk(space_manager_t *sm, uint64_t *real_start_blk)
+{
+    uint64_t blk;
+    uint32_t cnt = 0;
+    
+    OS_RWLOCK_WRLOCK(&sm->blk_lock);
+    if (sm->blk_num == 0)
+    {
+        OS_RWLOCK_WRUNLOCK(&sm->blk_lock);
+        return 0;
+    }
+
+    blk = sm->blk[sm->blk_no];
+    while (blk == 0)
+    {
+        blk = sm->blk[sm->blk_no++];
+        if (sm->blk_no >= MAX_BLK_NUM)
+        {
+            sm->blk_no = 0;
+        }
+
+        cnt++;
+        if (cnt >= MAX_BLK_NUM)
+        {
+            break;
+        }
+    }
+    
+    OS_RWLOCK_WRUNLOCK(&sm->blk_lock);
+
+    return blk;
+}
+
+int32_t index_free_blk(space_manager_t *sm, uint64_t start_blk)
+{
+    OS_RWLOCK_WRLOCK(&sm->blk_lock);
+    
+    OS_RWLOCK_WRUNLOCK(&sm->blk_lock);
+}
+
+
 
 // return value:
 // >  0: real blk cnt

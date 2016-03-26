@@ -78,7 +78,7 @@ static void random_buffer(uint8_t *buf, uint32_t size)
 void test_block_rw(void)
 {
     BLOCK_HANDLE_S *hnd;
-    int64_t vbn;
+    int64_t vbn = 10;
     uint64_t blkNum = 100;
     uint8_t wrBuf[TEST_BLOCK_SIZE];
     uint8_t rdBuf[TEST_BLOCK_SIZE];
@@ -90,14 +90,10 @@ void test_block_rw(void)
 	while (blkNum--)
 	{
 		random_buffer(wrBuf, TEST_BLOCK_SIZE);
-		CU_ASSERT(index_write_block(hnd, wrBuf, TEST_BLOCK_SIZE, 0, &vbn) == 0);
-		CU_ASSERT(index_read_block(hnd, rdBuf, TEST_BLOCK_SIZE, 0, vbn) == TEST_BLOCK_SIZE);
-		CU_ASSERT(memcmp(rdBuf, wrBuf, TEST_BLOCK_SIZE) == 0);
-		
-		random_buffer(wrBuf, TEST_BLOCK_SIZE);
 		CU_ASSERT(index_update_block(hnd, wrBuf, TEST_BLOCK_SIZE, 0, vbn) == TEST_BLOCK_SIZE);
 		CU_ASSERT(index_read_block(hnd, rdBuf, TEST_BLOCK_SIZE, 0, vbn) == TEST_BLOCK_SIZE);
 		CU_ASSERT(memcmp(rdBuf, wrBuf, TEST_BLOCK_SIZE) == 0);
+		vbn++;
 	}
 
     CU_ASSERT(block_close(hnd) == 0);

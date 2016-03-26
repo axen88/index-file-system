@@ -73,15 +73,11 @@ extern int32_t block_alloc(BLOCK_HANDLE_S * hnd, uint32_t blk_cnt,
 #define block_free(hnd, start_vbn, blk_cnt) \
     block_set_status(hnd, start_vbn, blk_cnt, B_FALSE)
 
-extern int32_t index_write_block(BLOCK_HANDLE_S * hnd, void * buf,
-    uint32_t size, uint32_t start_lba, uint64_t * vbn);
 extern int32_t index_update_block(BLOCK_HANDLE_S * hnd, void * buf,
     uint32_t size, uint32_t start_lba, uint64_t vbn);
 extern int32_t index_read_block(BLOCK_HANDLE_S * hnd, void * buf,
     uint32_t size, uint32_t start_lba, uint64_t vbn);
 
-extern int32_t index_write_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
-    uint64_t * vbn);
 extern int32_t index_update_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
     uint64_t vbn);
 extern int32_t index_read_block_fixup(BLOCK_HANDLE_S * hnd, OBJECT_HEADER_S * obj,
