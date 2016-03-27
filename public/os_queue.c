@@ -40,11 +40,11 @@ History:
 
 #ifndef __EN_LIST_QUEUE__
 
-QUEUE_S *queue_create(int32_t max_size)
+QUEUE_S *queue_create(int32_t max_num)
 {
     QUEUE_S *q = NULL;
 
-    if (0 >= max_size)
+    if (0 >= max_num)
     {
         return NULL;
     }
@@ -55,17 +55,17 @@ QUEUE_S *queue_create(int32_t max_size)
         return NULL;
     }
 
-    q->pullMemb = OS_MALLOC(sizeof(uint64_t) * (uint32_t)max_size);
-    if (NULL == q->pullMemb)
+    q->member = OS_MALLOC(sizeof(uint64_t) * (uint32_t)max_num);
+    if (NULL == q->member)
     {
         OS_FREE(q);
         return NULL;
     }
 
-    q->uiHead = 0;
-    q->uiTail = 0;
+    q->head = 0;
+    q->tail = 0;
     q->num = 0;
-    q->max_member = (uint32_t)max_size;
+    q->max_num = (uint32_t)max_num;
 
     return q;
 }
@@ -74,15 +74,15 @@ int32_t queue_push(QUEUE_S *q, uint64_t member)
 {
     ASSERT(q != NULL);
 
-    if (q->num >= q->max_member)
+    if (q->num >= q->max_num)
     {
         return -ERR_QUEUE_FULL;
     }
 
-    q->pullMemb[q->uiTail++] = member;
-    if (q->uiTail >= q->max_member)
+    q->member[q->tail++] = member;
+    if (q->tail >= q->max_num)
     {
-        q->uiTail = 0;
+        q->tail = 0;
     }
 
     q->num++;
@@ -100,10 +100,10 @@ int32_t queue_pop(QUEUE_S *q, uint64_t *member)
         return -ERR_QUEUE_EMPTY;
     }
 
-    *member = q->pullMemb[q->uiHead++];
-    if (q->uiHead >= q->max_member)
+    *member = q->member[q->head++];
+    if (q->head >= q->max_num)
     {
-        q->uiHead = 0;
+        q->head = 0;
     }
 
     q->num--;
@@ -124,19 +124,19 @@ int32_t queue_pop_push(QUEUE_S *q, uint64_t member, uint64_t *member)
     }
     else
     {
-        *member = q->pullMemb[q->uiHead++];
-        if (q->uiHead >= q->max_member)
+        *member = q->member[q->head++];
+        if (q->head >= q->max_num)
         {
-            q->uiHead = 0;
+            q->head = 0;
         }
         
         q->num--;
     }
     
-    q->pullMemb[q->uiTail++] = member;
-    if (q->uiTail >= q->max_member)
+    q->member[q->tail++] = member;
+    if (q->tail >= q->max_num)
     {
-        q->uiTail = 0;
+        q->tail = 0;
     }
 
     q->num++;
@@ -146,7 +146,7 @@ int32_t queue_pop_push(QUEUE_S *q, uint64_t member, uint64_t *member)
 
 int32_t queue_remove_member(QUEUE_S *q, uint64_t member)
 {
-    uint32_t uiCur = 0;
+    uint32_t head = 0;
     uint32_t num = 0;
     uint64_t member = 0;
     
@@ -157,44 +157,44 @@ int32_t queue_remove_member(QUEUE_S *q, uint64_t member)
         return -ERR_QUEUE_EMPTY;
     }
 
-    uiCur = q->uiHead;
+    head = q->head;
     num = q->num;
     
     while (num--)
     {
-        member = q->pullMemb[uiCur];
+        member = q->member[head];
         if (member == member)
         {
-            if (uiCur == q->uiHead)
+            if (head == q->head)
             {
-                q->uiHead++;
+                q->head++;
             }
-            else if (uiCur > q->uiHead)
+            else if (head > q->head)
             {
-                memmove(&q->pullMemb[q->uiHead + 1], &q->pullMemb[q->uiHead],
-                    (uint32_t)(uiCur - q->uiHead) * sizeof(uint64_t));
-                q->uiHead++;
+                memmove(&q->member[q->head + 1], &q->member[q->head],
+                    (uint32_t)(head - q->head) * sizeof(uint64_t));
+                q->head++;
             }
             else
             {
-                ASSERT(q->uiTail > uiCur);
-                memcpy(&q->pullMemb[uiCur], &q->pullMemb[uiCur + 1],
-                    (uint32_t)(q->uiTail - uiCur) * sizeof(uint64_t));
-                q->uiTail--;
+                ASSERT(q->tail > head);
+                memcpy(&q->member[head], &q->member[head + 1],
+                    (uint32_t)(q->tail - head) * sizeof(uint64_t));
+                q->tail--;
             }
             
-            if (q->uiHead >= q->max_member)
+            if (q->head >= q->max_num)
             {
-                q->uiHead = 0;
+                q->head = 0;
             }
             
             q->num--;
             return 0;
         }
 
-        if (++uiCur >= q->max_member)
+        if (++head >= q->max_num)
         {
-            uiCur = 0;
+            head = 0;
         }
     }
 
@@ -205,7 +205,7 @@ int32_t queue_walk_all(QUEUE_S *q,
     int32_t (*func)(uint64_t, void *), void *para)
 {
     int32_t ret = 0;
-    uint32_t uiCur = 0;
+    uint32_t head = 0;
     uint32_t num = 0;
     uint64_t member = 0;
     
@@ -216,21 +216,21 @@ int32_t queue_walk_all(QUEUE_S *q,
         return -ERR_QUEUE_EMPTY;
     }
 
-    uiCur = q->uiHead;
+    head = q->head;
     num = q->num;
     
     while (num--)
     {
-        member = q->pullMemb[uiCur];
+        member = q->member[head];
         ret = func(member, para);
         if (0 != ret)
         {
             break;
         }
 
-        if (++uiCur >= q->max_member)
+        if (++head >= q->max_num)
         {
-            uiCur = 0;
+            head = 0;
         }
     }
 
@@ -248,15 +248,15 @@ int32_t queue_get_max_size(QUEUE_S *q)
 {
     ASSERT(q != NULL);
 
-    return (int32_t)q->max_member;
+    return (int32_t)q->max_num;
 }
 
 void queue_clean(QUEUE_S *q)
 {
     ASSERT(q != NULL);
 
-    q->uiHead = 0;
-    q->uiTail = 0;
+    q->head = 0;
+    q->tail = 0;
     q->num = 0;
 
     return;
@@ -266,7 +266,7 @@ int32_t queue_destroy(QUEUE_S *q)
 {
     ASSERT(q != NULL);
 
-    OS_FREE(q->pullMemb);
+    OS_FREE(q->member);
     OS_FREE(q);
 
     return 0;

@@ -114,7 +114,7 @@ int32_t index_alloc_cache_and_block(OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE **c
     ASSERT(NULL != obj_info);
     
     ret = INDEX_ALLOC_BLOCK(obj_info->index, &vbn);
-    if (0 > ret)
+    if (ret < 0)
     {
         LOG_ERROR("Allocate block failed. ret(%d)\n", ret);
         return ret;

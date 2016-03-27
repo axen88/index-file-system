@@ -81,7 +81,7 @@ void test_space_manager_2(void)
     INDEX_HANDLE *index;
     OBJECT_HANDLE *obj;
     uint64_t start_blk;
-    int64_t ret;
+    int32_t ret;
     
     CU_ASSERT(0 == index_create("index0", 1000, 0, &index));
     CU_ASSERT(0 == index_create_object(index, 500, FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj));
@@ -164,7 +164,7 @@ void test_space_manager_3(void)
     INDEX_HANDLE *index;
     OBJECT_HANDLE *obj;
     uint64_t start_blk;
-    int64_t ret;
+    int32_t ret;
     
     CU_ASSERT(0 == index_create("index0", 1000, 0, &index));
     CU_ASSERT(0 == index_create_object(index, 500, FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj));

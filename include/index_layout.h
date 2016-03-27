@@ -44,8 +44,10 @@ extern "C" {
 #define VERSION             100         /* version: 1.00 */
 #define SUPER_BLOCK_ID      0x4B4C4253  // "SBLK"
 #define BLOCK_MAGIC_NUMBER  0xAA55      /* 0x55, 0xAA */
-#define SUPER_BLOCK_VBN     ((uint64_t)0)
 #define SUPER_BLOCK_SIZE    512         
+
+#define SUPER_BLOCK_VBN     ((uint64_t)0)
+#define SM_OBJ_INODE        3
 
 /* flags in BLOCK_BOOT_SECTOR_S */
 #define FLAG_FIXUP       0x00000001     /* need fixup */
@@ -76,6 +78,7 @@ extern "C" {
 
 #define OBJID_OBJ_NAME            "$OBJID"
 #define FREEBLK_OBJ_NAME          "$FREEBLK"
+
 #define OBJID_OBJ_ID              0ULL
 #define FREEBLK_OBJ_ID            1ULL
 #define RESERVED_OBJ_ID           256ULL

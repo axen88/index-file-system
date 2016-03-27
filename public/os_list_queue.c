@@ -61,7 +61,7 @@ typedef struct tagWALK_CALL_BACK_PARA_S
     void *para;
 } WALK_CALL_BACK_PARA_S;
 
-QUEUE_S *queue_create(int32_t max_size)
+QUEUE_S *queue_create(int32_t max_num)
 {
     QUEUE_S *q = NULL;
 
@@ -72,7 +72,7 @@ QUEUE_S *queue_create(int32_t max_size)
     }
 
     dlist_init_head(&q->head);
-    q->max_size = (uint32_t)max_size;
+    q->max_num = (uint32_t)max_num;
 
     return q;
 }
@@ -83,7 +83,7 @@ int32_t queue_push(QUEUE_S *q, uint64_t member)
     
     ASSERT(q != NULL);
 
-    if (q->head.num >= q->max_size)
+    if (q->head.num >= q->max_num)
     {
         return -ERR_QUEUE_FULL;
     }
@@ -236,7 +236,7 @@ int32_t queue_get_max_size(QUEUE_S *q)
 {
     ASSERT(q != NULL);
 
-    return (int32_t)q->max_size;
+    return (int32_t)q->max_num;
 }
 
 int32_t remove_member_call_back(void *para, DLIST_ENTRY_S *entry)

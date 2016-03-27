@@ -63,18 +63,18 @@ typedef enum tagQUEUE_ERROR_CODE_E
 typedef struct tagQUEUE_S
 {
     DLIST_HEAD_S head;
-    uint32_t max_size;
+    uint32_t max_num;
 } QUEUE_S;
 
 #else
 
 typedef struct tagQUEUE_S
 {
-    uint64_t *pullMemb;
-    uint32_t uiHead;  
-    uint32_t uiTail;
+    uint64_t *member;
+    uint32_t head;  
+    uint32_t tail;
     uint32_t num; 
-    uint32_t max_member; 
+    uint32_t max_num; 
 } QUEUE_S;
 
 
@@ -82,7 +82,7 @@ typedef struct tagQUEUE_S
 #endif
 
 
-extern QUEUE_S *queue_create(int32_t max_size);
+extern QUEUE_S *queue_create(int32_t max_num);
 extern int32_t queue_push(QUEUE_S *q, uint64_t member);
 extern int32_t queue_pop(QUEUE_S *q, uint64_t *member);
 extern int32_t queue_pop_push(QUEUE_S *q, uint64_t push_member,

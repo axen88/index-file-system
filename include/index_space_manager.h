@@ -41,14 +41,15 @@ History:
 extern "C" {
 #endif
 
-int64_t alloc_space(OBJECT_HANDLE *obj, uint64_t start_blk, uint64_t blk_cnt, uint64_t *real_start_blk);
-int32_t free_space(OBJECT_HANDLE *obj, uint64_t start_blk, uint64_t blk_cnt);
+int32_t alloc_space(OBJECT_HANDLE *obj, uint64_t start_blk, uint32_t blk_cnt, uint64_t *real_start_blk);
+int32_t free_space(OBJECT_HANDLE *obj, uint64_t start_blk, uint32_t blk_cnt);
 
 void index_init_sm(space_manager_t *sm, OBJECT_HANDLE *obj, uint64_t first_free_block,
     uint64_t total_free_blocks, uint64_t total_blocks);
+int32_t index_init_free_space(space_manager_t *sm, uint64_t start_blk, uint64_t blk_cnt);
 
-int64_t index_alloc_space(space_manager_t *sm, uint64_t blk_cnt, uint64_t *start_blk);
-int32_t index_free_space(space_manager_t *sm, uint64_t start_blk, uint64_t blk_cnt);
+int32_t index_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *start_blk);
+int32_t index_free_space(space_manager_t *sm, uint64_t start_blk, uint32_t blk_cnt);
 
 
 #ifdef	__cplusplus

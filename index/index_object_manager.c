@@ -336,11 +336,10 @@ int32_t close_object(OBJECT_INFO *obj_info)
     return 0;
 }
 
-int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJECT_HANDLE **obj_out)
+int32_t create_object_inode(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, uint16_t flags, OBJECT_HANDLE **obj_out)
 {
      int32_t ret = sizeof(INODE_RECORD);
      OBJECT_HANDLE *obj = NULL;
-     uint64_t inode_no = 0;
      ATTR_RECORD *attr_record = NULL;
      OBJECT_INFO *obj_info;
 
@@ -348,18 +347,9 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
     ASSERT(NULL != obj_out);
     ASSERT(INODE_SIZE == sizeof(INODE_RECORD));
 
-    /* allocate inode block */
-    ret = INDEX_ALLOC_BLOCK(index, &inode_no);
-    if (ret < 0)
-    {
-        LOG_ERROR("Allocate block failed. ret(%d)\n", ret);
-        return ret;
-    }
-
     ret = get_object_info(index, objid, &obj_info);
     if (ret < 0)
     {
-        INDEX_FREE_BLOCK(index, inode_no);
         LOG_ERROR("get_object_info failed. ret(%d)\n", ret);
         return ret;
     }
@@ -413,7 +403,6 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
     ret = index_update_block_pingpong_init(index->hnd, &obj_info->inode.head, inode_no);
     if (0 > ret)
     {
-        (void)INDEX_FREE_BLOCK(index, inode_no);
         put_object_info(obj_info);
         LOG_ERROR("Create inode failed. obj_id(%lld) vbn(%lld) ret(%d)\n",
             objid, inode_no, ret);
@@ -428,13 +417,40 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
     ret = get_object_handle(obj_info, &obj);
     if (ret < 0)
     {
-        (void)INDEX_FREE_BLOCK(index, inode_no);
         put_object_info(obj_info);
         LOG_ERROR("Open attr failed. objid(%lld) ret(%d)\n", objid, ret);
         return ret;
     }
 
     *obj_out = obj;
+
+    return 0;
+}
+
+int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJECT_HANDLE **obj_out)
+{
+     int32_t ret;
+     uint64_t inode_no = 0;
+
+    ASSERT(NULL != index);
+    ASSERT(NULL != obj_out);
+    ASSERT(INODE_SIZE == sizeof(INODE_RECORD));
+
+    /* allocate inode block */
+    ret = INDEX_ALLOC_BLOCK(index, &inode_no);
+    if (ret < 0)
+    {
+        LOG_ERROR("Allocate block failed. ret(%d)\n", ret);
+        return ret;
+    }
+
+    ret = create_object_inode(index, objid, inode_no, flags, obj_out);
+    if (ret < 0)
+    {
+        INDEX_FREE_BLOCK(index, inode_no);
+        LOG_ERROR("get_object_info failed. ret(%d)\n", ret);
+        return ret;
+    }
 
     return 0;
 }
