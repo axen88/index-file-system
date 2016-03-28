@@ -77,7 +77,7 @@ extern "C" {
 #define FREEBLK_OBJ_NAME          "$FREEBLK"
 
 #define SUPER_BLOCK_VBN        0
-#define SPACE_OBJ_INODE        1
+#define SPACE_OBJ_INODE        3
 
 #define OBJID_OBJ_ID              0ULL
 #define SPACE_OBJ_ID              1ULL
