@@ -152,7 +152,7 @@ int32_t block_create(BLOCK_HANDLE_S **hnd, const char *path,
             BITS_PER_BYTE_SHIFT), sb->block_size, block_size_shift);
     sb->total_blocks = total_blocks;
     sb->free_blocks = total_blocks;
-    sb->first_free_block = 0;
+    sb->first_free_block = 1;
     sb->start_lba = start_lba;
     sb->version = VERSION;
     sb->flags = 0;

@@ -74,10 +74,10 @@ extern "C" {
 #define SPACE_OBJ_NAME            "$SPACE"
 
 #define SUPER_BLOCK_VBN        0
-#define SPACE_OBJ_INODE        3
+#define SPACE_OBJ_INODE        1
 
-#define OBJID_OBJ_ID              0ULL
-#define SPACE_OBJ_ID              1ULL
+#define SPACE_OBJ_ID              0ULL
+#define OBJID_OBJ_ID              1ULL
 #define RESERVED_OBJ_ID           256ULL
 
 #define ATTR_RECORD_HEAD_SIZE       OS_OFFSET(ATTR_RECORD, content)
