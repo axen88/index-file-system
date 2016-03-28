@@ -177,12 +177,14 @@ int32_t create_system_objects(INDEX_HANDLE *index)
     OBJECT_HANDLE *obj;
     
     /* create free blk object */
-    ret = create_object_inode(index, SPACE_OBJ_ID, SPACE_OBJ_INODE, FLAG_SYSTEM | FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj);
+    ret = create_object_at_inode(index, SPACE_OBJ_ID, SPACE_OBJ_INODE, FLAG_SYSTEM | FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj);
     if (ret < 0)
     {
         LOG_ERROR("Create free block object failed. name(%s)\n", index->name);
         return ret;
     }
+    
+    set_object_name(obj, SPACE_OBJ_NAME);
 
     index->hnd->sb.first_free_block++;
     index->hnd->sb.free_blocks--;
@@ -205,6 +207,8 @@ int32_t create_system_objects(INDEX_HANDLE *index)
         LOG_ERROR("Create objid object failed. name(%s)\n", index->name);
         return ret;
     }
+
+    set_object_name(obj, OBJID_OBJ_NAME);
 
     index->id_obj = obj;
     index->hnd->sb.objid_inode_no = obj->obj_info->inode_no;

@@ -148,10 +148,10 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
 void *test_performance_thread(void *para)
 {
     INDEX_TOOLS_PARA_S *tmp_para = para;
-    char obj_name[OBJ_NAME_SIZE];
+    char obj_name[OBJ_NAME_MAX_SIZE];
 
     OS_RWLOCK_WRLOCK(&tmp_para->rwlock);
-    OS_SNPRINTF(obj_name, OBJ_NAME_SIZE, "%lld%d",
+    OS_SNPRINTF(obj_name, OBJ_NAME_MAX_SIZE, "%lld%d",
         tmp_para->objid, tmp_para->no++);
     tmp_para->threads_cnt++;
     OS_RWLOCK_WRUNLOCK(&tmp_para->rwlock);

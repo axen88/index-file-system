@@ -114,7 +114,7 @@ typedef struct _OBJECT_INFO
     uint64_t objid;                    // object id
     uint64_t inode_no;                 // inode no, also the position stored on disk
 
-    char obj_name[OBJ_NAME_SIZE];
+    char obj_name[OBJ_NAME_MAX_SIZE];
     
     avl_node_t entry;                  // register in index handle
 

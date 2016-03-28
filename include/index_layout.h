@@ -55,12 +55,9 @@ extern "C" {
 #define ENTRY_END_SIZE    sizeof(INDEX_ENTRY)
 #define ENTRY_BEGIN_SIZE  sizeof(INDEX_ENTRY)
 
-#define PRV_AREA_SIZE          256       
-#define FILE_NAME_SIZE         256
-#define OBJ_NAME_SIZE          256
-
-#define DEFAULT_OBJ_NAME       "NO_NAME"
-#define DEFAULT_OBJ_NAME_SIZE  (sizeof(DEFAULT_OBJ_NAME) - 1)
+#define PRV_AREA_SIZE              256       
+#define FILE_NAME_SIZE             256
+#define OBJ_NAME_MAX_SIZE          256
 
 /* flags */
 #define FLAG_SYSTEM        0x8000 /* 1: system attr  0: non-system attr */
@@ -74,7 +71,7 @@ extern "C" {
 #define INODE_HEAD_SIZE      OS_OFFSET(INODE_RECORD, reserved)
 
 #define OBJID_OBJ_NAME            "$OBJID"
-#define FREEBLK_OBJ_NAME          "$FREEBLK"
+#define SPACE_OBJ_NAME            "$SPACE"
 
 #define SUPER_BLOCK_VBN        0
 #define SPACE_OBJ_INODE        3
@@ -227,7 +224,7 @@ typedef struct _INODE_RECORD
 
     /* 104 */
     uint16_t name_size;
-    char name[OBJ_NAME_SIZE];      // The tree name
+    char name[OBJ_NAME_MAX_SIZE];      // The tree name
 
     /* 616 */
     uint8_t reserved[INODE_RESERVED_SIZE]; /* make the inode to 2KB length */

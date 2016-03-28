@@ -49,6 +49,10 @@ History:
 #include <stdio.h>
 #include <assert.h>
 
+#if _MSC_VER
+#define snprintf _snprintf
+#endif
+
 #ifdef	__cplusplus
 extern "C" {
 #endif

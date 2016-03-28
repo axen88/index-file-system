@@ -336,7 +336,7 @@ int32_t close_object(OBJECT_INFO *obj_info)
     return 0;
 }
 
-int32_t create_object_inode(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, uint16_t flags, OBJECT_HANDLE **obj_out)
+int32_t create_object_at_inode(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, uint16_t flags, OBJECT_HANDLE **obj_out)
 {
      int32_t ret = sizeof(INODE_RECORD);
      OBJECT_HANDLE *obj = NULL;
@@ -374,10 +374,10 @@ int32_t create_object_inode(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_
     obj_info->inode.mtime = 0;
     
     obj_info->inode.snapshot_no = index->hnd->sb.snapshot_no;
-    obj_info->inode.name_size = DEFAULT_OBJ_NAME_SIZE;
-    strncpy(obj_info->inode.name, DEFAULT_OBJ_NAME, OBJ_NAME_SIZE);
+    snprintf(obj_info->inode.name, OBJ_NAME_MAX_SIZE, "OBJ%lld", objid);
+    obj_info->inode.name_size = strlen(obj_info->inode.name);
     
-    strncpy(obj_info->obj_name, DEFAULT_OBJ_NAME, OBJ_NAME_SIZE);
+    strncpy(obj_info->obj_name, obj_info->inode.name, obj_info->inode.name_size);
     obj_info->inode_no = inode_no;
 
     /* init attr */
@@ -444,7 +444,7 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
         return ret;
     }
 
-    ret = create_object_inode(index, objid, inode_no, flags, obj_out);
+    ret = create_object_at_inode(index, objid, inode_no, flags, obj_out);
     if (ret < 0)
     {
         INDEX_FREE_BLOCK(index, inode_no);
@@ -504,6 +504,27 @@ uint64_t get_objid(INDEX_HANDLE *index)
     return 1;
 }
 
+int32_t set_object_name(OBJECT_HANDLE *obj, char *name)
+{
+    uint32_t name_size;
+    
+    ASSERT(obj != NULL);
+    ASSERT(name != NULL);
+
+    name_size = strlen(name);
+    if (name_size >= OBJ_NAME_MAX_SIZE)
+    {
+        return -INDEX_ERR_PARAMETER;
+    }
+
+    strncpy(obj->obj_info->obj_name, name, name_size);
+    strncpy(obj->obj_info->inode.name, name, name_size);
+    obj->obj_info->inode.name_size = name_size;
+
+    INODE_SET_DIRTY(obj->obj_info);
+
+    return 0;
+}
 
 int32_t index_create_object_nolock(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJECT_HANDLE **obj_out)
 {
