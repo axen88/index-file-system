@@ -46,9 +46,6 @@ extern "C" {
 #define BLOCK_MAGIC_NUMBER  0xAA55      /* 0x55, 0xAA */
 #define SUPER_BLOCK_SIZE    512         
 
-#define SUPER_BLOCK_VBN     ((uint64_t)0)
-#define SM_OBJ_INODE        3
-
 /* flags in BLOCK_BOOT_SECTOR_S */
 #define FLAG_FIXUP       0x00000001     /* need fixup */
 
@@ -79,8 +76,11 @@ extern "C" {
 #define OBJID_OBJ_NAME            "$OBJID"
 #define FREEBLK_OBJ_NAME          "$FREEBLK"
 
+#define SUPER_BLOCK_VBN        0
+#define SPACE_OBJ_INODE        1
+
 #define OBJID_OBJ_ID              0ULL
-#define FREEBLK_OBJ_ID            1ULL
+#define SPACE_OBJ_ID              1ULL
 #define RESERVED_OBJ_ID           256ULL
 
 #define ATTR_RECORD_HEAD_SIZE       OS_OFFSET(ATTR_RECORD, content)

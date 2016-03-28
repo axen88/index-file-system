@@ -157,7 +157,7 @@ typedef struct _OBJECT_HANDLE
 
 typedef struct _space_manager
 {
-    OBJECT_HANDLE *free_blk_obj;
+    OBJECT_HANDLE *space_obj;
 
     uint64_t blk[MAX_BLK_NUM];
     uint32_t blk_num;
@@ -167,6 +167,8 @@ typedef struct _space_manager
     uint64_t first_free_block;
     uint64_t total_free_blocks;
     uint64_t total_blocks;
+
+    uint32_t reentrant_flag;
 
     OS_RWLOCK lock;
 } space_manager_t;

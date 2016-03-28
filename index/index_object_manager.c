@@ -517,6 +517,12 @@ int32_t index_create_object_nolock(INDEX_HANDLE *index, uint64_t objid, uint16_t
     ASSERT(!OBJID_IS_INVALID(objid));
     ASSERT(NULL != obj_out);
 
+    if (objid < RESERVED_OBJ_ID)
+    {
+        LOG_INFO("objid(%lld) should be larger than %d\n", objid, RESERVED_OBJ_ID);
+        return -INDEX_ERR_OBJ_ID_INVALID;
+    }
+
     LOG_INFO("Create the obj start. objid(%lld)\n", objid);
 
     obj_info = avl_find(&index->obj_list, (avl_find_fn)compare_object2, &objid, &where);

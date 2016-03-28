@@ -177,7 +177,7 @@ void index_init_sm(space_manager_t *sm, OBJECT_HANDLE *obj, uint64_t first_free_
     memset(sm->blk, 0, sizeof(sm->blk));
     sm->blk_no = 0;
     sm->blk_num= 0;
-    sm->free_blk_obj = obj;
+    sm->space_obj = obj;
     sm->first_free_block = first_free_block;
     sm->total_free_blocks = total_free_blocks;
     sm->total_blocks = total_blocks;
@@ -202,7 +202,7 @@ int32_t index_init_free_space(space_manager_t *sm, uint64_t start_blk, uint64_t 
     addr_size = os_u64_to_bstr(start_blk, addr_str);
     len_size = os_u64_to_bstr(blk_cnt, len_str);
 
-    return index_insert_key_nolock(sm->free_blk_obj, addr_str, addr_size, len_str, len_size);
+    return index_insert_key_nolock(sm->space_obj, addr_str, addr_size, len_str, len_size);
 }
 
 int64_t index_alloc_blk(space_manager_t *sm, uint64_t *real_start_blk)
@@ -257,17 +257,18 @@ int32_t index_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *real_
 {
     int32_t ret;
 
+    OS_RWLOCK_WRLOCK(&sm->lock);
     if (0 == sm->total_free_blocks)
     {
+        OS_RWLOCK_WRUNLOCK(&sm->lock);
         return -INDEX_ERR_NO_FREE_BLOCKS;
     }
 
-    OS_RWLOCK_WRLOCK(&sm->lock);
-    ret = alloc_space(sm->free_blk_obj, sm->first_free_block, blk_cnt, real_start_blk);
+    ret = alloc_space(sm->space_obj, sm->first_free_block, blk_cnt, real_start_blk);
     if (ret < 0) // error
     {
         OS_RWLOCK_WRUNLOCK(&sm->lock);
-        LOG_ERROR("alloc space failed. objid(0x%llx) ret(%d)\n", sm->free_blk_obj->obj_info->objid, ret);
+        LOG_ERROR("alloc space failed. objid(0x%llx) ret(%d)\n", sm->space_obj->obj_info->objid, ret);
         return ret;
     }
 
@@ -282,7 +283,7 @@ int32_t index_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *real_
     sm->first_free_block = *real_start_blk + ret;
     if (sm->total_free_blocks < (uint64_t)ret)
     {
-        LOG_ERROR("the sm system chaos. objid(0x%llx) ret(%d)\n", sm->free_blk_obj->obj_info->objid, ret);
+        LOG_ERROR("the sm system chaos. objid(0x%llx) ret(%d)\n", sm->space_obj->obj_info->objid, ret);
     }
     else
     {
@@ -299,7 +300,7 @@ int32_t index_free_space(space_manager_t *sm, uint64_t start_blk, uint32_t blk_c
     int32_t ret;
     
     OS_RWLOCK_WRLOCK(&sm->lock);
-    ret = free_space(sm->free_blk_obj, start_blk, blk_cnt);
+    ret = free_space(sm->space_obj, start_blk, blk_cnt);
     if (ret > 0)
     {
         sm->total_free_blocks += blk_cnt;

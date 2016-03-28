@@ -177,7 +177,7 @@ int32_t create_system_objects(INDEX_HANDLE *index)
     OBJECT_HANDLE *obj;
     
     /* create free blk object */
-    ret = create_object_inode(index, FREEBLK_OBJ_ID, SM_OBJ_INODE, FLAG_SYSTEM | FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj);
+    ret = create_object_inode(index, SPACE_OBJ_ID, SPACE_OBJ_INODE, FLAG_SYSTEM | FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj);
     if (ret < 0)
     {
         LOG_ERROR("Create free block object failed. name(%s)\n", index->name);
@@ -436,9 +436,9 @@ void close_index(INDEX_HANDLE *index)
         (void)close_object(index->id_obj->obj_info);
     }
 
-    if (index->sm.free_blk_obj != NULL)
+    if (index->sm.space_obj != NULL)
     {
-        (void)close_object(index->sm.free_blk_obj->obj_info);
+        (void)close_object(index->sm.space_obj->obj_info);
     }
 
     // close block manager system

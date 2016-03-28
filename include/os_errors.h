@@ -132,6 +132,10 @@ typedef enum tagERRORS_CODE_E
     INDEX_ERR_FORMAT,
     INDEX_ERR_IS_OPENED,
     INDEX_ERR_NOT_OPENED,
+    INDEX_ERR_OBJ_ID_INVALID,
+
+    
+    INDEX_ERR_BUTT
 } ERRORS_CODE_E;
 
 #ifdef	__cplusplus
