@@ -44,7 +44,6 @@ History:
 #include "os_adapter.h"
 #include "os_disk_if.h"
 #include "index_layout.h"
-#include "index_bitmap.h"
 #include "index_block_if.h"
 #include "os_log.h"
 

@@ -48,7 +48,6 @@ History:
 
 #include "index_layout.h"
 #include "index_collate.h"
-#include "index_bitmap.h"
 #include "index_block_if.h"
 
 #ifdef	__cplusplus

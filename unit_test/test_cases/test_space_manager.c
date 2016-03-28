@@ -66,7 +66,7 @@ void test_space_manager_1(void)
     CU_ASSERT(0 == index_create("index0", 1000, 0, &index));
     CU_ASSERT(0 == index_create_object(index, 500, FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj));
 
-    CU_ASSERT(alloc_space(obj, 100, 50, &start_blk) == 0); // no space now
+    CU_ASSERT(alloc_space(obj, 100, 50, &start_blk) == -INDEX_ERR_NO_FREE_BLOCKS); // no space now
 
     CU_ASSERT(0 == index_close_object(obj));
     CU_ASSERT(0 == index_close(index));
@@ -91,42 +91,42 @@ void test_space_manager_2(void)
     CU_ASSERT(start_blk == 100);
     CU_ASSERT(ret == 50);
     ret = alloc_space(obj, 10, 80, &start_blk); // no space now
-    CU_ASSERT(ret == 0);
+    CU_ASSERT(ret == -INDEX_ERR_NO_FREE_BLOCKS);
 
     CU_ASSERT(free_space(obj, 100, 50) == 0);
     ret = alloc_space(obj, 10, 90, &start_blk); // will alloc 100, 50
     CU_ASSERT(start_blk == 100);
     CU_ASSERT(ret == 50);
     ret = alloc_space(obj, 10, 90, &start_blk); // no space now
-    CU_ASSERT(ret == 0);
+    CU_ASSERT(ret == -INDEX_ERR_NO_FREE_BLOCKS);
 
     CU_ASSERT(free_space(obj, 100, 50) == 0);
     ret = alloc_space(obj, 10, 100, &start_blk); // will alloc 100, 50
     CU_ASSERT(start_blk == 100);
     CU_ASSERT(ret == 50);
     ret = alloc_space(obj, 10, 100, &start_blk); // no space now
-    CU_ASSERT(ret == 0);
+    CU_ASSERT(ret == -INDEX_ERR_NO_FREE_BLOCKS);
 
     CU_ASSERT(free_space(obj, 100, 50) == 0);
     ret = alloc_space(obj, 10, 200, &start_blk); // will alloc 100, 50
     CU_ASSERT(start_blk == 100);
     CU_ASSERT(ret == 50);
     ret = alloc_space(obj, 10, 200, &start_blk); // no space now
-    CU_ASSERT(ret == 0);
+    CU_ASSERT(ret == -INDEX_ERR_NO_FREE_BLOCKS);
 
     CU_ASSERT(free_space(obj, 100, 50) == 0);
     ret = alloc_space(obj, 100, 50, &start_blk); // will alloc 100, 50
     CU_ASSERT(start_blk == 100);
     CU_ASSERT(ret == 50);
     ret = alloc_space(obj, 100, 50, &start_blk); // no space now
-    CU_ASSERT(ret == 0);
+    CU_ASSERT(ret == -INDEX_ERR_NO_FREE_BLOCKS);
     
     CU_ASSERT(free_space(obj, 100, 50) == 0);
     ret = alloc_space(obj, 100, 60, &start_blk); // will alloc 100, 50
     CU_ASSERT(start_blk == 100);
     CU_ASSERT(ret == 50);
     ret = alloc_space(obj, 100, 60, &start_blk); // no space now
-    CU_ASSERT(ret == 0);
+    CU_ASSERT(ret == -INDEX_ERR_NO_FREE_BLOCKS);
     
     CU_ASSERT(free_space(obj, 100, 50) == 0);
     ret = alloc_space(obj, 120, 60, &start_blk); // will alloc 120, 30
@@ -136,21 +136,21 @@ void test_space_manager_2(void)
     CU_ASSERT(start_blk == 100);
     CU_ASSERT(ret == 20);
     ret = alloc_space(obj, 120, 60, &start_blk); // no space now
-    CU_ASSERT(ret == 0);
+    CU_ASSERT(ret == -INDEX_ERR_NO_FREE_BLOCKS);
     
     CU_ASSERT(free_space(obj, 100, 50) == 0);
     ret = alloc_space(obj, 150, 60, &start_blk); // will alloc 100, 50
     CU_ASSERT(start_blk == 100);
     CU_ASSERT(ret == 50);
     ret = alloc_space(obj, 150, 60, &start_blk); // no space now
-    CU_ASSERT(ret == 0);
+    CU_ASSERT(ret == -INDEX_ERR_NO_FREE_BLOCKS);
     
     CU_ASSERT(free_space(obj, 100, 50) == 0);
     ret = alloc_space(obj, 160, 60, &start_blk); // will alloc 100, 50
     CU_ASSERT(start_blk == 100);
     CU_ASSERT(ret == 50);
     ret = alloc_space(obj, 160, 60, &start_blk); // no space now
-    CU_ASSERT(ret == 0);
+    CU_ASSERT(ret == -INDEX_ERR_NO_FREE_BLOCKS);
     
     CU_ASSERT(0 == index_close_object(obj));
     CU_ASSERT(0 == index_close(index));
@@ -189,7 +189,7 @@ void test_space_manager_3(void)
     CU_ASSERT(start_blk == 108);
     CU_ASSERT(ret == 2);
     ret = alloc_space(obj, 112, 4, &start_blk); // no space
-    CU_ASSERT(ret == 0);
+    CU_ASSERT(ret == -INDEX_ERR_NO_FREE_BLOCKS);
     
     CU_ASSERT(free_space(obj, 100, 50) == 0);
     

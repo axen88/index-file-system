@@ -382,12 +382,12 @@ static int32_t add_or_remove_ib(OBJECT_HANDLE *tree, uint8_t flags)
     }
     else if (flags & INDEX_ADD_BLOCK)
     {
-        ret = block_set_status(tree->obj_info->index->hnd, tree->cache->vbn,
-            1, B_TRUE);
-        if (0 > ret)
+       // ret = block_set_status(tree->obj_info->index->hnd, tree->cache->vbn,
+       //     1, B_TRUE);
+       // if (0 > ret)
         {
-            LOG_ERROR("Set block status failed. vbn(%lld) ret(%d)\n", tree->cache->vbn, ret);
-            return ret;
+        //    LOG_ERROR("Set block status failed. vbn(%lld) ret(%d)\n", tree->cache->vbn, ret);
+          //  return ret;
         }
     }
 

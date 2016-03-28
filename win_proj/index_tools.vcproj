@@ -177,10 +177,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\index\index_bitmap.c"
-				>
-			</File>
-			<File
 				RelativePath="..\index\index_block_manager.c"
 				>
 			</File>
@@ -308,10 +304,6 @@
 			</File>
 			<File
 				RelativePath="..\include\index_attr.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\index_bitmap.h"
 				>
 			</File>
 			<File

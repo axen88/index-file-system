@@ -49,7 +49,6 @@ extern "C"
 typedef struct tagBLOCK_HANDLE_S
 {
     void *file_hnd;                       // file handle
-    BITMAP_HANDLE *bitmap_hnd;            // bitmap handle
     char name[FILE_NAME_SIZE];            // file name
     BLOCK_BOOT_SECTOR_S sb;               // super block
     uint32_t flags;                       
@@ -62,16 +61,8 @@ extern int32_t block_create(BLOCK_HANDLE_S ** hnd, const char * path,
 extern int32_t block_open(BLOCK_HANDLE_S ** hnd, const char * path,
     uint64_t start_lba);
 extern int32_t block_close(BLOCK_HANDLE_S * f);
-extern int32_t block_reset_bitmap(BLOCK_HANDLE_S * hnd);
 extern bool_t block_need_fixup(BLOCK_HANDLE_S * hnd);
 extern int32_t block_finish_fixup(BLOCK_HANDLE_S * hnd);
-
-extern int32_t block_set_status(BLOCK_HANDLE_S * hnd, uint64_t start_vbn, uint32_t blk_cnt,
-    bool_t is_used);
-extern int32_t block_alloc(BLOCK_HANDLE_S * hnd, uint32_t blk_cnt,
-    uint64_t * start_vbn);
-#define block_free(hnd, start_vbn, blk_cnt) \
-    block_set_status(hnd, start_vbn, blk_cnt, B_FALSE)
 
 extern int32_t index_update_block(BLOCK_HANDLE_S * hnd, void * buf,
     uint32_t size, uint32_t start_lba, uint64_t vbn);

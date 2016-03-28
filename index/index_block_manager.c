@@ -92,41 +92,6 @@ int32_t check_and_set_fixup_flag(BLOCK_HANDLE_S * hnd)
     return ret;
 }
 
-int32_t block_reset_bitmap(BLOCK_HANDLE_S * hnd)
-{
-    uint32_t reserved_blocks = 0;
-    int32_t ret = 0;
-
-    if (NULL == hnd)
-    {
-        LOG_ERROR("The parameter is invalid. hnd(%p)\n", hnd);
-        return -FILE_BLOCK_ERR_PARAMETER;
-    }
-
-    hnd->sb.free_blocks = hnd->sb.total_blocks;
-    hnd->sb.first_free_block = 0;
-
-    ret = bitmap_clean(hnd->bitmap_hnd);
-    if (0 > ret)
-    {
-        LOG_ERROR("bitmap_clean failed. bitmap_hnd(%p) ret(%d)\n", hnd->bitmap_hnd, ret);
-        return ret;
-    }
-
-    reserved_blocks = (uint32_t) (hnd->sb.bitmap_start_block
-        + hnd->sb.bitmap_blocks);
-
-    ret = block_set_status(hnd, (uint64_t) 0, reserved_blocks, B_TRUE);
-    if (ret != (int32_t) reserved_blocks)
-    {
-        LOG_ERROR("Set blocks status failed. hnd(%p) reserved_blocks(%d) ret(%d)\n",
-            hnd, reserved_blocks, ret);
-        return -FILE_BLOCK_ERR_BITMAP_BLOCKS_ALLOC;
-    }
-
-    return 0;
-}
-
 int32_t block_finish_fixup(BLOCK_HANDLE_S * hnd)
 {
     if (NULL == hnd)
@@ -146,12 +111,9 @@ int32_t block_create(BLOCK_HANDLE_S **hnd, const char *path,
 {
     BLOCK_BOOT_SECTOR_S *sb = NULL;
     void *file_hnd = NULL;
-    BITMAP_HANDLE *bitmap_hnd = NULL;
     BLOCK_HANDLE_S *tmp_hnd = NULL;
     int32_t ret = 0;
     uint64_t total_blocks = 0;
-    uint64_t bitmap_start_lba = 0;
-    uint32_t bitmap_total_sectors = 0;
 
     if (block_size_shift < BYTES_PER_SECTOR_SHIFT)
     {
@@ -215,29 +177,6 @@ int32_t block_create(BLOCK_HANDLE_S **hnd, const char *path,
         return ret;
     }
 
-    bitmap_start_lba = sb->bitmap_start_block * sb->sectors_per_block
-        + start_lba;
-    bitmap_total_sectors = sb->bitmap_blocks * sb->sectors_per_block;
-
-    ret = bitmap_init(&bitmap_hnd, file_hnd, bitmap_start_lba, bitmap_total_sectors, sb->total_blocks);
-    if (ret < 0)
-    {
-        LOG_ERROR("Init bitmap failed. file_hnd(%p) bitmap_start_lba(%lld) bitmap_total_sectors(%d) total_blocks(%lld) ret(%d)\n",
-            file_hnd, bitmap_start_lba, bitmap_total_sectors, sb->total_blocks, ret);
-        block_close(tmp_hnd);
-        return ret;
-    }
-
-    tmp_hnd->bitmap_hnd = bitmap_hnd;
-
-    ret = block_reset_bitmap(tmp_hnd);
-    if (0 > ret)
-    {
-        LOG_ERROR("Reset bitmap failed. tmp_hnd(%p) ret(%d)\n", tmp_hnd, ret);
-        block_close(tmp_hnd);
-        return ret;
-    }
-
     *hnd = tmp_hnd;
 
     return 0;
@@ -288,11 +227,8 @@ int32_t block_open(BLOCK_HANDLE_S ** hnd, const char * path,
 {
     BLOCK_BOOT_SECTOR_S *sb = NULL;
     void *file_hnd = NULL;
-    BITMAP_HANDLE *bitmap_hnd = NULL;
     BLOCK_HANDLE_S *tmp_hnd = NULL;
     int32_t ret = 0;
-    uint64_t bitmap_start_lba = 0;
-    uint32_t bitmap_total_sectors = 0;
 
     ret = check_and_init_block_resource(&tmp_hnd, path);
     if (0 > ret)
@@ -334,22 +270,6 @@ int32_t block_open(BLOCK_HANDLE_S ** hnd, const char * path,
         (void)block_close(tmp_hnd);
         return ret;
     }
-
-    bitmap_start_lba = sb->bitmap_start_block * sb->sectors_per_block
-        + sb->start_lba;
-    bitmap_total_sectors = sb->bitmap_blocks * sb->sectors_per_block;
-
-    ret = bitmap_init(&bitmap_hnd, file_hnd, bitmap_start_lba, bitmap_total_sectors, sb->total_blocks);
-    if (ret < 0)
-    {
-        LOG_ERROR("Init bitmap failed. file_hnd(%p) bitmap_start_lba(%lld)"
-            " bitmap_total_sectors(%d) total_blocks(%lld) ret(%d)\n",
-            file_hnd, bitmap_start_lba, bitmap_total_sectors, sb->total_blocks, ret);
-        (void)block_close(tmp_hnd);
-        return ret;
-    }
-
-    tmp_hnd->bitmap_hnd = bitmap_hnd;
     
     if ((0 == (sb->flags & FLAG_FIXUP)) && (0 == sb->free_blocks))
     {
@@ -377,12 +297,6 @@ int32_t block_close(BLOCK_HANDLE_S * hnd)
     {
         LOG_ERROR("The parameter is invalid. hnd(%p)\n", hnd);
         return -FILE_BLOCK_ERR_PARAMETER;
-    }
-
-    if (NULL != hnd->bitmap_hnd)
-    {
-        (void) bitmap_destroy(hnd->bitmap_hnd);
-        hnd->bitmap_hnd = NULL;
     }
 
     if (0 != (hnd->flags & FLAG_DIRTY))
@@ -427,190 +341,4 @@ int32_t block_update_super_block(BLOCK_HANDLE_S * hnd)
 
     return ret;
 }
-
-
-int32_t block_find_free(BLOCK_HANDLE_S * hnd, uint32_t blk_cnt,
-    uint64_t * start_vbn)
-{
-    int32_t ret = 0;
-
-    ASSERT(NULL != hnd);
-    ASSERT(NULL != start_vbn);
-    ASSERT(0 != blk_cnt);
-
-    for (;;)
-    {
-        ret = bitmap_get_free_bits(hnd->bitmap_hnd, hnd->sb.first_free_block,
-            blk_cnt, start_vbn);
-        if (ret > 0)
-        {
-            break;
-        }
-        else if (-FILE_BITMAP_ERR_0BIT_NOT_FOUND == ret)
-        {
-            if (0 == hnd->sb.first_free_block)
-            {
-                //hnd->stSB.ullFreeBlocks = 0;
-                hnd->flags |= FLAG_NOSPACE;
-                LOG_ERROR("No free blocks. hnd(%p) free_blocks(%lld)\n",
-                    hnd, hnd->sb.free_blocks);
-                return -FILE_BLOCK_ERR_NO_FREE_BLOCKS;
-            }
-            else
-            {
-                hnd->sb.first_free_block = 0;
-            }
-        }
-        else
-        {
-            LOG_ERROR("Other false. hnd(%p) ret(%d)\n", hnd, ret);
-            break;
-        }
-    }
-
-    return ret;
-}
-
-int32_t block_alloc(BLOCK_HANDLE_S * hnd, uint32_t blk_cnt,
-    uint64_t * start_vbn)
-{
-    int32_t ret = 0;
-    int32_t ret2 = 0;
-
-    if ((NULL == hnd) || (0 == blk_cnt) || (NULL == start_vbn))
-    {
-        LOG_ERROR("Invalid parameter. hnd(%p) blk_cnt(%d) start_vbn(%p)\n",
-            hnd, blk_cnt, start_vbn);
-        return -FILE_BLOCK_ERR_PARAMETER;
-    }
-
-    if (0 != (hnd->flags & FLAG_NOSPACE))
-    {
-        LOG_ERROR("No free blocks. hnd(%p) free_blocks(%lld)\n",
-            hnd, hnd->sb.free_blocks);
-        return -FILE_BLOCK_ERR_NO_FREE_BLOCKS;
-    }
-
-    OS_RWLOCK_WRLOCK(&hnd->rwlock);
-
-    ret = block_find_free(hnd, blk_cnt, start_vbn);
-    if (ret < 0)
-    {
-        LOG_ERROR("Find free blocks failed. hnd(%p) ret(%d)\n", hnd, ret);
-        OS_RWLOCK_WRUNLOCK(&hnd->rwlock);
-        return ret;
-    }
-
-    ret2 = bitmap_set_nbits(hnd->bitmap_hnd, *start_vbn, (uint32_t) ret,
-        B_TRUE);
-    if (ret2 != ret)
-    {
-        LOG_ERROR("Set bitmap failed. bitmap_hnd(%p) vbn(%lld) nBits(%d) ret(1) ret2(%d)\n",
-            hnd->bitmap_hnd, *start_vbn, ret, ret2);
-        OS_RWLOCK_WRUNLOCK(&hnd->rwlock);
-        return ret2;
-    }
-
-    hnd->sb.free_blocks -= (uint32_t) ret;
-    hnd->sb.first_free_block = *start_vbn + (uint32_t) ret;
-
-    ret2 = check_and_set_fixup_flag(hnd);
-    if (0 > ret2)
-    {
-        LOG_ERROR("Set fixup flag failed. hnd(%p) ret2(%d)\n", hnd, ret2);
-
-        (void) bitmap_set_nbits(hnd->bitmap_hnd, *start_vbn,
-            (uint32_t) ret, B_FALSE);
-        hnd->sb.free_blocks += (uint32_t) ret;
-        OS_RWLOCK_WRUNLOCK(&hnd->rwlock);
-        return ret2;
-    }
-
-    OS_RWLOCK_WRUNLOCK(&hnd->rwlock);
-
-    return ret;
-}
-
-int32_t block_set_status(BLOCK_HANDLE_S * hnd, uint64_t start_vbn,
-    uint32_t blk_cnt, bool_t is_used)
-{
-    int32_t ret = 0;
-    int32_t ret2 = 0;
-    int32_t cnt = 0;
-    bool_t is_one = B_FALSE;
-
-    if ((NULL == hnd) || (0 == blk_cnt))
-    {
-        LOG_ERROR("Invalid parameter. hnd(%p) blk_cnt(%d)\n", hnd, blk_cnt);
-        return -FILE_BLOCK_ERR_PARAMETER;
-    }
-
-    OS_RWLOCK_WRLOCK(&hnd->rwlock);
-
-    while (blk_cnt--)
-    {
-        ret = bitmap_check_bit(hnd->bitmap_hnd, start_vbn);
-        if (ret < 0)
-        {
-            LOG_ERROR("Check bitmap failed. bitmap_hnd(%p) vbn(%lld) nBits(%d) is_used(%d) ret(%d)\n",
-                hnd->bitmap_hnd, start_vbn, 1, is_used, ret);
-            OS_RWLOCK_WRUNLOCK(&hnd->rwlock);
-            return ret;
-        }
-
-        if (0 != ret)
-        {
-            is_one = B_TRUE;
-        }
-
-        if (is_one == is_used)
-        {
-            start_vbn++;
-            cnt++;
-            continue;
-        }
-        
-        ret = bitmap_set_nbits(hnd->bitmap_hnd, start_vbn, 1, is_used);
-        if (ret < 0)
-        {
-            LOG_ERROR("Set bitmap failed. bitmap_hnd(%p) vbn(%lld) nBits(%d) is_used(%d) ret(%d)\n",
-                hnd->bitmap_hnd, start_vbn, 1, is_used, ret);
-            OS_RWLOCK_WRUNLOCK(&hnd->rwlock);
-            return ret;
-        }
-
-        if (B_FALSE == is_used)
-        {
-            hnd->flags &= ~FLAG_NOSPACE;
-            hnd->sb.free_blocks += (uint32_t) ret;
-
-            if (hnd->sb.first_free_block > start_vbn)
-            {
-                // tmp_hnd->stSB.ullFirstFreeBlock = start_vbn; // use the block freed immediate
-            }
-        }
-        else
-        {
-            hnd->sb.free_blocks -= (uint32_t) ret;
-        }
-
-        start_vbn++;
-        cnt++;
-    }
-
-    ret2 = check_and_set_fixup_flag(hnd);
-    if (0 > ret2)
-    {
-        LOG_ERROR("Set fixup flag failed. hnd(%p) ret2(%d)\n", hnd, ret2);
-        OS_RWLOCK_WRUNLOCK(&hnd->rwlock);
-        return ret2;
-    }
-
-    OS_RWLOCK_WRUNLOCK(&hnd->rwlock);
-
-    return cnt;
-}
-
-EXPORT_SYMBOL(block_set_status);
-EXPORT_SYMBOL(block_alloc);
 

@@ -179,10 +179,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\index\index_bitmap.c"
-				>
-			</File>
-			<File
 				RelativePath="..\index\index_block_manager.c"
 				>
 			</File>
@@ -288,10 +284,6 @@
 			</File>
 			<File
 				RelativePath=".\test_cases\test_collate.c"
-				>
-			</File>
-			<File
-				RelativePath=".\test_cases\test_file_bitmap.c"
 				>
 			</File>
 			<File

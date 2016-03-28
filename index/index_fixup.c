@@ -79,20 +79,6 @@ int32_t fixup_attr(OBJECT_HANDLE *tree, void *para)
 
 int32_t before_fixup(INDEX_HANDLE *index, WALK_ALL_TREES_PARA_S *para)
 {
-#if 0
-    int32_t ret = 0;
-    
-    memset(para, 0, sizeof(WALK_ALL_TREES_PARA_S));
-    para->pCallBack = fixup_attr;
-    para->flags = INDEX_ADD_BLOCK;
-
-    ret = block_reset_bitmap(index->pF);
-    if (0 > ret)
-    {
-        LOG_ERROR("block_reset_bitmap failed. pF(%p) ret(%d)\n", index->pF, ret);
-        return ret;
-    }
-#endif
     return 0;
 }
 
