@@ -44,7 +44,7 @@ MODULE(PID_INDEX);
 #define INDEX_WALK_FINISHED       1
 
 
-int32_t compare_cache2(const uint64_t *vbn, INDEX_BLOCK_CACHE *cache_node)
+int32_t compare_cache2(const uint64_t *vbn, ifs_block_cache_t *cache_node)
 {
     if (*vbn > cache_node->vbn)
     {
@@ -59,16 +59,16 @@ int32_t compare_cache2(const uint64_t *vbn, INDEX_BLOCK_CACHE *cache_node)
     return 0;
 }
 
-INDEX_BLOCK_CACHE *alloc_cache(OBJECT_INFO *obj_info, uint64_t vbn)
+ifs_block_cache_t *alloc_cache(object_info_t *obj_info, uint64_t vbn)
 {
-    INDEX_BLOCK_CACHE *cache = NULL;
+    ifs_block_cache_t *cache = NULL;
 
     ASSERT(NULL != obj_info);
     
-    cache = OS_MALLOC(sizeof(INDEX_BLOCK_CACHE));
+    cache = OS_MALLOC(sizeof(ifs_block_cache_t));
     if (NULL == cache)
     {
-        LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(INDEX_BLOCK_CACHE));
+        LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(ifs_block_cache_t));
         return NULL;
     }
 
@@ -88,7 +88,7 @@ INDEX_BLOCK_CACHE *alloc_cache(OBJECT_INFO *obj_info, uint64_t vbn)
     return cache;
 }
 
-void free_cache(OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE *cache)
+void free_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
 {
     ASSERT(NULL != obj_info);
     ASSERT(NULL != cache);
@@ -105,9 +105,9 @@ void free_cache(OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE *cache)
 
 }
 
-int32_t index_alloc_cache_and_block(OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE **cache)
+int32_t index_alloc_cache_and_block(object_info_t *obj_info, ifs_block_cache_t **cache)
 {
-    INDEX_BLOCK_CACHE *tmp_cache = NULL;
+    ifs_block_cache_t *tmp_cache = NULL;
     int32_t ret = 0;
     uint64_t vbn = 0;
 
@@ -137,7 +137,7 @@ int32_t index_alloc_cache_and_block(OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE **c
     return 0;
 }
 
-int32_t flush_dirty_cache(OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE *cache)
+int32_t flush_dirty_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
 {
     int32_t ret = 0;
 
@@ -165,7 +165,7 @@ int32_t flush_dirty_cache(OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE *cache)
     return 0;
 }
 
-int32_t index_flush_all_dirty_caches(OBJECT_INFO *obj_info)
+int32_t index_flush_all_dirty_caches(object_info_t *obj_info)
 {
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
     avl_walk_all(&obj_info->caches, (avl_walk_call_back)flush_dirty_cache, obj_info);
@@ -174,7 +174,7 @@ int32_t index_flush_all_dirty_caches(OBJECT_INFO *obj_info)
     return 0;
 }
 
-int32_t release_cache(OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE *cache)
+int32_t release_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
 {
     ASSERT(NULL != obj_info);
     ASSERT(NULL != cache);
@@ -190,7 +190,7 @@ int32_t release_cache(OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE *cache)
     return 0;
 }
 
-int32_t index_release_all_caches(OBJECT_INFO *obj_info)
+int32_t index_release_all_caches(object_info_t *obj_info)
 {
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
     avl_walk_all(&obj_info->caches, (avl_walk_call_back)release_cache, obj_info);
@@ -199,7 +199,7 @@ int32_t index_release_all_caches(OBJECT_INFO *obj_info)
     return 0;
 }
 
-int32_t release_dirty_block(OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE *cache)
+int32_t release_dirty_block(object_info_t *obj_info, ifs_block_cache_t *cache)
 {
     int32_t ret = 0;
 
@@ -222,7 +222,7 @@ int32_t release_dirty_block(OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE *cache)
     return 0;
 }
 
-int32_t index_release_all_dirty_blocks(OBJECT_INFO *obj_info)
+int32_t index_release_all_dirty_blocks(object_info_t *obj_info)
 {
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
     avl_walk_all(&obj_info->caches, (avl_walk_call_back)release_dirty_block, obj_info);
@@ -231,7 +231,7 @@ int32_t index_release_all_dirty_blocks(OBJECT_INFO *obj_info)
     return 0;
 }
 
-int32_t release_old_block_mem(OBJECT_INFO *obj_info, INDEX_OLD_BLOCK *old_blk)
+int32_t release_old_block_mem(object_info_t *obj_info, ifs_old_block_t *old_blk)
 {
     int32_t ret = 0;
 
@@ -244,7 +244,7 @@ int32_t release_old_block_mem(OBJECT_INFO *obj_info, INDEX_OLD_BLOCK *old_blk)
     return 0;
 }
 
-void index_release_all_old_blocks_mem(OBJECT_INFO *obj_info)
+void index_release_all_old_blocks_mem(object_info_t *obj_info)
 {
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
     avl_walk_all(&obj_info->old_blocks, (avl_walk_call_back)release_old_block_mem, obj_info);
@@ -253,7 +253,7 @@ void index_release_all_old_blocks_mem(OBJECT_INFO *obj_info)
     return;
 }
 
-int32_t release_old_block(OBJECT_INFO *obj_info, INDEX_OLD_BLOCK *old_blk)
+int32_t release_old_block(object_info_t *obj_info, ifs_old_block_t *old_blk)
 {
     int32_t ret = 0;
 
@@ -271,7 +271,7 @@ int32_t release_old_block(OBJECT_INFO *obj_info, INDEX_OLD_BLOCK *old_blk)
     return 0;
 }
 
-void index_release_all_old_blocks(OBJECT_INFO *obj_info)
+void index_release_all_old_blocks(object_info_t *obj_info)
 {
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
     avl_walk_all(&obj_info->old_blocks, (avl_walk_call_back)release_old_block, obj_info);
@@ -280,13 +280,13 @@ void index_release_all_old_blocks(OBJECT_INFO *obj_info)
     return;
 }
 
-int32_t index_block_read(OBJECT_HANDLE *obj, uint64_t vbn)
+int32_t index_block_read(object_handle_t *obj, uint64_t vbn)
 {
     int32_t ret = 0;
     INDEX_BLOCK *ib = NULL;
-    INDEX_BLOCK_CACHE *cache = NULL;
+    ifs_block_cache_t *cache = NULL;
     avl_index_t where = 0;
-    OBJECT_INFO *obj_info;
+    object_info_t *obj_info;
 
     ASSERT(NULL != obj);
     
@@ -336,16 +336,16 @@ int32_t index_block_read(OBJECT_HANDLE *obj, uint64_t vbn)
     return 0;
 }
 
-int32_t index_record_old_block(OBJECT_INFO *obj_info, uint64_t vbn)
+int32_t index_record_old_block(object_info_t *obj_info, uint64_t vbn)
 {
-    INDEX_OLD_BLOCK *old_blk = NULL;
+    ifs_old_block_t *old_blk = NULL;
 
     ASSERT(NULL != obj_info);
 
-    old_blk = OS_MALLOC(sizeof(INDEX_OLD_BLOCK));
+    old_blk = OS_MALLOC(sizeof(ifs_old_block_t));
     if (NULL == old_blk)
     {
-        LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(INDEX_OLD_BLOCK));
+        LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(ifs_old_block_t));
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 

@@ -68,7 +68,7 @@ extern "C" {
 
 
 #define INODE_RESERVED_SIZE  1686
-#define INODE_HEAD_SIZE      OS_OFFSET(INODE_RECORD, reserved)
+#define INODE_HEAD_SIZE      OS_OFFSET(inode_record_t, reserved)
 
 #define OBJID_OBJ_NAME            "$OBJID"
 #define SPACE_OBJ_NAME            "$SPACE"
@@ -115,19 +115,19 @@ extern "C" {
 
 #pragma pack(1) /* aligned by 1 byte */
 
-typedef struct tagOBJECT_HEADER_S
+typedef struct block_header
 {
     uint32_t blk_id;              /* obj id */
     uint32_t alloc_size;          /* allocated size */
     uint32_t real_size;           /* real size */
     uint16_t seq_no;              /* update sequence no. */
     uint16_t fixup;               /* do integrity verify */
-} OBJECT_HEADER_S;
+} block_header_t;
 
 /* super block  */
-typedef struct tagBLOCK_BOOT_SECTOR_S
+typedef struct ifs_super_block_t
 {
-    OBJECT_HEADER_S head;               /* header */
+    block_header_t head;               /* header */
 
     uint32_t block_size_shift;          
     uint32_t block_size;                /* by bytes */
@@ -155,7 +155,7 @@ typedef struct tagBLOCK_BOOT_SECTOR_S
     uint32_t flags;                     /* flags */
     uint16_t version;                   /* version */
     uint16_t magic_num;                 /* 0x55AA */
-} BLOCK_BOOT_SECTOR_S;
+} ifs_super_block_t;
 
 typedef struct _INDEX_ENTRY
 {
@@ -174,7 +174,7 @@ typedef struct _INDEX_ENTRY
 
 typedef struct _INDEX_BLOCK
 {
-    OBJECT_HEADER_S head;
+    block_header_t head;
 
     uint16_t first_entry_off;       // Byte offset to first INDEX_ENTRY
     uint8_t node_type;              // The ucFlags of current index block
@@ -199,7 +199,7 @@ typedef struct _ATTR_RECORD
 typedef struct _INODE_RECORD
 {                               /* total 2KB bytes */
     /* 0 */
-    OBJECT_HEADER_S head;
+    block_header_t head;
 
     /* 16 */
     uint16_t first_attr_off;
@@ -228,7 +228,7 @@ typedef struct _INODE_RECORD
 
     /* 616 */
     uint8_t reserved[INODE_RESERVED_SIZE]; /* make the inode to 2KB length */
-} INODE_RECORD;
+} inode_record_t;
 
 #pragma pack()  // Resume to default for performance
 

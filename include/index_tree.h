@@ -58,28 +58,28 @@ typedef int32_t (*DeleteFunc) (void *hnd,
     const void *value, uint16_t value_len);
 typedef int32_t (*WalkAllCallBack) (void *obj, void *para);
 
-extern int32_t index_search_key_nolock(OBJECT_HANDLE *tree, const void *key,
+extern int32_t index_search_key_nolock(object_handle_t *tree, const void *key,
     uint16_t key_len, const void *value, uint16_t value_len);
-extern int32_t index_remove_key_nolock(OBJECT_HANDLE * obj, const void * key,
+extern int32_t index_remove_key_nolock(object_handle_t * obj, const void * key,
     uint16_t key_len);
-extern int32_t index_insert_key_nolock(OBJECT_HANDLE * obj, const void * key,
+extern int32_t index_insert_key_nolock(object_handle_t * obj, const void * key,
     uint16_t key_len, const void *value, uint16_t value_len);
 
-extern int32_t index_search_key(OBJECT_HANDLE *obj, const void *key,
+extern int32_t index_search_key(object_handle_t *obj, const void *key,
     uint16_t key_len);
-extern int32_t index_remove_key(OBJECT_HANDLE *obj, const void *key,
+extern int32_t index_remove_key(object_handle_t *obj, const void *key,
     uint16_t key_len);
-extern int32_t index_insert_key(OBJECT_HANDLE *obj, const void *key,
+extern int32_t index_insert_key(object_handle_t *obj, const void *key,
     uint16_t key_len, const void *value, uint16_t value_len);
-extern int32_t index_update_value(OBJECT_HANDLE * tree, const void * key,
+extern int32_t index_update_value(object_handle_t * tree, const void * key,
     uint16_t key_len, const void *value, uint16_t value_len);
 
-extern int32_t index_walk_all(OBJECT_HANDLE *obj, bool_t v_bReverse,
+extern int32_t index_walk_all(object_handle_t *obj, bool_t v_bReverse,
     uint8_t flags, void *para, WalkAllCallBack v_pCallBack);
 
-extern int32_t walk_tree(OBJECT_HANDLE *obj, uint8_t flags);
-extern int64_t index_get_total_key(OBJECT_HANDLE *obj);
-extern int64_t index_get_target_key(OBJECT_HANDLE *obj, uint64_t target);
+extern int32_t walk_tree(object_handle_t *obj, uint8_t flags);
+extern int64_t index_get_total_key(object_handle_t *obj);
+extern int64_t index_get_target_key(object_handle_t *obj, uint64_t target);
 
 
 typedef struct tagWALK_ALL_TREES_PARA_S
@@ -88,16 +88,16 @@ typedef struct tagWALK_ALL_TREES_PARA_S
     int32_t (*pCallBack)(void *obj, void *para);
 } WALK_ALL_TREES_PARA_S;
 
-extern int32_t index_walk_all_attrs(OBJECT_HANDLE *dir_tree,
+extern int32_t index_walk_all_attrs(object_handle_t *dir_tree,
     WALK_ALL_TREES_PARA_S *para);
 
 
 extern void init_ib(INDEX_BLOCK * v_pstIB, uint8_t v_ucNodeType,
     uint32_t alloc_size);
 
-extern int32_t search_key_internal(OBJECT_HANDLE *tree, const void *key,
+extern int32_t search_key_internal(object_handle_t *tree, const void *key,
     uint16_t key_len, const void *value, uint16_t value_len);
-int32_t tree_remove_ie(OBJECT_HANDLE *tree);
+int32_t tree_remove_ie(object_handle_t *tree);
 
 #ifdef	__cplusplus
 }

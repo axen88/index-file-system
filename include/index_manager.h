@@ -42,19 +42,19 @@ History:
 extern "C" {
 #endif
 
-extern int32_t index_open(const char *index_name, uint64_t start_lba, INDEX_HANDLE **index);
+extern int32_t index_open(const char *index_name, uint64_t start_lba, index_handle_t **index);
 
 extern int32_t index_create(const char *index_name, uint64_t total_sectors, uint64_t start_lba,
-    INDEX_HANDLE **index);
+    index_handle_t **index);
 
-extern int32_t index_expand(OBJECT_HANDLE *tree, uint64_t v_ullAdditionalSectors);
+extern int32_t index_expand(object_handle_t *tree, uint64_t v_ullAdditionalSectors);
 
-extern int32_t index_close(INDEX_HANDLE *index);
+extern int32_t index_close(index_handle_t *index);
 
 
-extern int32_t index_get_opened_attr_num(OBJECT_HANDLE * tree);
+extern int32_t index_get_opened_attr_num(object_handle_t * tree);
 
-extern INDEX_HANDLE *index_get_handle(const char * index_name);
+extern index_handle_t *index_get_handle(const char * index_name);
 
 extern int32_t fixup_index_by_name(char *index_name, uint64_t start_lba);
 extern int32_t verify_index(char *index_name, uint64_t start_lba);

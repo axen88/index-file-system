@@ -64,7 +64,7 @@ MODULE(PID_INDEX);
 #endif
 
 // set the block from current block to root block as dirty
-static int32_t set_ib_dirty(OBJECT_HANDLE *tree, uint64_t vbn, uint8_t depth)
+static int32_t set_ib_dirty(object_handle_t *tree, uint64_t vbn, uint8_t depth)
 {
     uint64_t new_vbn = 0;
     int32_t ret = 0;
@@ -120,7 +120,7 @@ static int32_t set_ib_dirty(OBJECT_HANDLE *tree, uint64_t vbn, uint8_t depth)
     return 0;
 }
 
-static void get_last_ie(OBJECT_HANDLE * tree)
+static void get_last_ie(object_handle_t * tree)
 {
     uint32_t last_ie_len = ENTRY_END_SIZE;
     
@@ -137,7 +137,7 @@ static void get_last_ie(OBJECT_HANDLE * tree)
     return;
 }
 
-static void reset_cache_stack(OBJECT_HANDLE * tree, uint8_t flags)
+static void reset_cache_stack(object_handle_t * tree, uint8_t flags)
 {
     ASSERT(NULL != tree);
     
@@ -159,7 +159,7 @@ static void reset_cache_stack(OBJECT_HANDLE * tree, uint8_t flags)
 }   
 
 // go to next level depth
-static int32_t push_cache_stack(OBJECT_HANDLE *tree, uint8_t flags)
+static int32_t push_cache_stack(object_handle_t *tree, uint8_t flags)
 {
     uint64_t vbn = 0;
     int32_t ret = 0;
@@ -211,7 +211,7 @@ static int32_t push_cache_stack(OBJECT_HANDLE *tree, uint8_t flags)
 }
 
 // go to prev entry
-static int32_t get_prev_ie(OBJECT_HANDLE *tree)
+static int32_t get_prev_ie(object_handle_t *tree)
 {
     ASSERT(NULL != tree);
     
@@ -240,7 +240,7 @@ static int32_t get_prev_ie(OBJECT_HANDLE *tree)
 }
 
 // go to top level
-static int32_t pop_cache_stack(OBJECT_HANDLE *tree, uint8_t flags)
+static int32_t pop_cache_stack(object_handle_t *tree, uint8_t flags)
 {
     ASSERT(NULL != tree);
     
@@ -343,7 +343,7 @@ static void make_ib_small(INDEX_BLOCK *ib)
 }     
 
 // get the next entry
-static int32_t get_next_ie(OBJECT_HANDLE *tree)
+static int32_t get_next_ie(object_handle_t *tree)
 {
     ASSERT(NULL != tree);
 
@@ -365,7 +365,7 @@ static int32_t get_next_ie(OBJECT_HANDLE *tree)
     return 0;
 }    
 
-static int32_t add_or_remove_ib(OBJECT_HANDLE *tree, uint8_t flags)
+static int32_t add_or_remove_ib(object_handle_t *tree, uint8_t flags)
 {
     int32_t ret = 0;
 
@@ -395,7 +395,7 @@ static int32_t add_or_remove_ib(OBJECT_HANDLE *tree, uint8_t flags)
 }
     
 // go to current entry
-static int32_t get_current_ie(OBJECT_HANDLE *tree, uint8_t flags)
+static int32_t get_current_ie(object_handle_t *tree, uint8_t flags)
 {
     int32_t ret = 0;
 
@@ -452,7 +452,7 @@ static int32_t get_current_ie(OBJECT_HANDLE *tree, uint8_t flags)
     return 0;
 }
 
-int32_t walk_tree(OBJECT_HANDLE *tree, uint8_t flags)
+int32_t walk_tree(object_handle_t *tree, uint8_t flags)
 {
     int32_t ret = 0;
 
@@ -494,7 +494,7 @@ int32_t walk_tree(OBJECT_HANDLE *tree, uint8_t flags)
 }
 
 // search key
-int32_t search_key_internal(OBJECT_HANDLE *tree, const void *key,
+int32_t search_key_internal(object_handle_t *tree, const void *key,
     uint16_t key_len, const void *value, uint16_t value_len)
 {
     int32_t ret = 0;
@@ -560,7 +560,7 @@ int32_t search_key_internal(OBJECT_HANDLE *tree, const void *key,
 }
 
 // go to the near key
-static void get_to_near_key(OBJECT_HANDLE *tree)
+static void get_to_near_key(object_handle_t *tree)
 {
     int32_t ret = 0;
 
@@ -583,7 +583,7 @@ static void get_to_near_key(OBJECT_HANDLE *tree)
     return;
 }
 
-int32_t index_search_key_nolock(OBJECT_HANDLE *tree, const void *key,
+int32_t index_search_key_nolock(object_handle_t *tree, const void *key,
     uint16_t key_len, const void *value, uint16_t value_len)
 {
     int32_t ret = 0;
@@ -606,7 +606,7 @@ int32_t index_search_key_nolock(OBJECT_HANDLE *tree, const void *key,
     return ret;
 }
 
-int32_t index_search_key(OBJECT_HANDLE *tree, const void *key,
+int32_t index_search_key(object_handle_t *tree, const void *key,
     uint16_t key_len)
 {
     int32_t ret = 0;
@@ -832,12 +832,12 @@ static void cut_ib_tail(INDEX_BLOCK *src_ib, INDEX_ENTRY *ie)
 }
 
 // split one block into two block, and get the middle entry
-static INDEX_ENTRY *split_ib(OBJECT_HANDLE *tree, INDEX_ENTRY *ie)
+static INDEX_ENTRY *split_ib(object_handle_t *tree, INDEX_ENTRY *ie)
 {
     INDEX_ENTRY *mid_ie = NULL;
     INDEX_ENTRY *new_ie = NULL;
     INDEX_BLOCK *new_ib = NULL;
-    INDEX_BLOCK_CACHE *new_ibc = NULL;
+    ifs_block_cache_t *new_ibc = NULL;
     int32_t pos = 0;         /* Insert iOffset to the new indexHeader */
     int32_t ret = 0;
     
@@ -903,11 +903,11 @@ static INDEX_ENTRY *split_ib(OBJECT_HANDLE *tree, INDEX_ENTRY *ie)
 }
 
 // copy the root entries into new block
-static int32_t reparent_root(OBJECT_HANDLE * tree)
+static int32_t reparent_root(object_handle_t * tree)
 {
     INDEX_ENTRY *ie = NULL;
     INDEX_BLOCK *new_ib = NULL;
-    INDEX_BLOCK_CACHE *new_ibc = NULL;
+    ifs_block_cache_t *new_ibc = NULL;
     INDEX_BLOCK *old_ib = NULL;
     uint32_t alloc_size = 0;
     int32_t ret = 0;
@@ -964,7 +964,7 @@ static int32_t reparent_root(OBJECT_HANDLE * tree)
     return 0;
 }    
 
-static int32_t tree_insert_ie(OBJECT_HANDLE *tree, INDEX_ENTRY **new_ie)
+static int32_t tree_insert_ie(object_handle_t *tree, INDEX_ENTRY **new_ie)
 {
     uint32_t uiNewSize = 0;
     INDEX_ENTRY *ie = NULL;
@@ -1007,7 +1007,7 @@ static int32_t tree_insert_ie(OBJECT_HANDLE *tree, INDEX_ENTRY **new_ie)
     }
 }
 
-int32_t check_removed_ib(OBJECT_HANDLE * tree)
+int32_t check_removed_ib(object_handle_t * tree)
 {
     int32_t ret = 0;
     INDEX_ENTRY *ie = GET_FIRST_IE(tree->cache->ib);
@@ -1060,7 +1060,7 @@ int32_t check_removed_ib(OBJECT_HANDLE * tree)
     return 1;
 }
 
-int32_t remove_leaf(OBJECT_HANDLE *tree)
+int32_t remove_leaf(object_handle_t *tree)
 {
     INDEX_ENTRY *ie = NULL;
     INDEX_ENTRY *prev_ie = NULL;        /* The previous entry */
@@ -1136,7 +1136,7 @@ int32_t remove_leaf(OBJECT_HANDLE *tree)
     return ret;
 }
 
-int32_t remove_node(OBJECT_HANDLE *tree)
+int32_t remove_node(object_handle_t *tree)
 {
     INDEX_ENTRY *succ_ie = NULL;        /* The successor entry */
     uint16_t len = 0;
@@ -1215,7 +1215,7 @@ int32_t remove_node(OBJECT_HANDLE *tree)
     return (remove_leaf(tree)); 
 }
 
-int32_t tree_remove_ie(OBJECT_HANDLE *tree)
+int32_t tree_remove_ie(object_handle_t *tree)
 {
     if (NULL == tree)
     {
@@ -1237,7 +1237,7 @@ int32_t tree_remove_ie(OBJECT_HANDLE *tree)
     return (remove_leaf(tree));
 }
 
-int32_t index_remove_key_nolock(OBJECT_HANDLE *tree, const void *key,
+int32_t index_remove_key_nolock(object_handle_t *tree, const void *key,
     uint16_t key_len)
 {
     int32_t ret = 0;
@@ -1271,7 +1271,7 @@ int32_t index_remove_key_nolock(OBJECT_HANDLE *tree, const void *key,
     return ret;
 }
 
-int32_t index_remove_key(OBJECT_HANDLE *tree, const void *key,
+int32_t index_remove_key(object_handle_t *tree, const void *key,
     uint16_t key_len)
 {
     int32_t ret = 0;
@@ -1290,7 +1290,7 @@ int32_t index_remove_key(OBJECT_HANDLE *tree, const void *key,
 }
 
 // value can be NULL, or value_len can be 0
-int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
+int32_t index_insert_key_nolock(object_handle_t *tree, const void *key,
     uint16_t key_len, const void *value, uint16_t value_len)
 {
     INDEX_ENTRY *ie = NULL;
@@ -1354,7 +1354,7 @@ int32_t index_insert_key_nolock(OBJECT_HANDLE *tree, const void *key,
     return ret;
 }
 
-int32_t index_insert_key(OBJECT_HANDLE *tree, const void *key,
+int32_t index_insert_key(object_handle_t *tree, const void *key,
     uint16_t key_len, const void *value, uint16_t value_len)
 {
     int32_t ret = 0;
@@ -1372,7 +1372,7 @@ int32_t index_insert_key(OBJECT_HANDLE *tree, const void *key,
     return ret;
 }
 
-int32_t index_update_value(OBJECT_HANDLE *tree, const void *key,
+int32_t index_update_value(object_handle_t *tree, const void *key,
     uint16_t key_len, const void *value, uint16_t value_len)
 {
     int32_t ret = 0;

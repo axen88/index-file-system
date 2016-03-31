@@ -76,7 +76,7 @@ static void random_buffer(uint8_t *buf, uint32_t size)
 
 void test_block_rw(void)
 {
-    BLOCK_HANDLE_S *hnd;
+    block_handle_t *hnd;
     int64_t vbn = 10;
     uint64_t blkNum = 100;
     uint8_t wrBuf[TEST_BLOCK_SIZE];

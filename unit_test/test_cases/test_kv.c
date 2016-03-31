@@ -244,8 +244,8 @@ test_kv_pair_t test_kv_pairs[]
 
 void test_kv_1(void)
 {
-    INDEX_HANDLE *index;
-    OBJECT_HANDLE *obj;
+    index_handle_t *index;
+    object_handle_t *obj;
     int32_t i;
     
     // create index and object, insert key

@@ -44,7 +44,7 @@ typedef struct tagDUMP_PARA_S
     NET_PARA_S *net;
 } DUMP_PARA_S;
 
-static int32_t dump_callback(OBJECT_HANDLE *tree, DUMP_PARA_S *para)
+static int32_t dump_callback(object_handle_t *tree, DUMP_PARA_S *para)
 {
     uint32_t i = 0;
     uint8_t *uc = NULL;
@@ -114,7 +114,7 @@ static int32_t dump_callback(OBJECT_HANDLE *tree, DUMP_PARA_S *para)
     return 0;
 }
 
-static int32_t dump_key(OBJECT_HANDLE *tree, const bool_t v_bReverse, NET_PARA_S *net)
+static int32_t dump_key(object_handle_t *tree, const bool_t v_bReverse, NET_PARA_S *net)
 {
     int32_t ret = 0;
     DUMP_PARA_S para;
@@ -139,8 +139,8 @@ static int32_t dump_key(OBJECT_HANDLE *tree, const bool_t v_bReverse, NET_PARA_S
 
 void dump_cmd(INDEX_TOOLS_PARA_S *para)
 {
-    INDEX_HANDLE *index = NULL;
-    OBJECT_HANDLE *obj = NULL;
+    index_handle_t *index = NULL;
+    object_handle_t *obj = NULL;
     int32_t ret = 0;
     
     ASSERT (NULL != para);

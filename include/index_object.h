@@ -42,31 +42,31 @@ extern "C" {
 #endif
 
 /* open object */
-extern int32_t index_open_object(struct _INDEX_HANDLE *index, uint64_t objid, OBJECT_HANDLE **obj);
+extern int32_t index_open_object(index_handle_t *index, uint64_t objid, object_handle_t **obj);
 
 /* create object */
-extern int32_t index_create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJECT_HANDLE **obj);
+extern int32_t index_create_object(index_handle_t *index, uint64_t objid, uint16_t flags, object_handle_t **obj);
 
-extern int32_t index_close_object(OBJECT_HANDLE *obj);
+extern int32_t index_close_object(object_handle_t *obj);
 
 /* delete object */
-extern int32_t index_delete_object(INDEX_HANDLE *index, uint64_t objid);
+extern int32_t index_delete_object(index_handle_t *index, uint64_t objid);
 
 /* rename object */
-extern int32_t index_rename_object(OBJECT_HANDLE *obj, const char *new_obj_name);
+extern int32_t index_rename_object(object_handle_t *obj, const char *new_obj_name);
 
-extern OBJECT_HANDLE *index_get_object_handle(INDEX_HANDLE *index, uint64_t objid);
+extern object_handle_t *index_get_object_handle(index_handle_t *index, uint64_t objid);
 
-int32_t set_object_name(OBJECT_HANDLE *obj, char *name);
+int32_t set_object_name(object_handle_t *obj, char *name);
 
 /* for internal only */
-int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJECT_HANDLE **obj);
-int32_t open_object(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, OBJECT_HANDLE **obj);
-extern int32_t close_object(OBJECT_INFO *obj_info);
-int32_t create_object_at_inode(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no,
-    uint16_t flags, OBJECT_HANDLE **obj_out);
+int32_t create_object(index_handle_t *index, uint64_t objid, uint16_t flags, object_handle_t **obj);
+int32_t open_object(index_handle_t *index, uint64_t objid, uint64_t inode_no, object_handle_t **obj);
+extern int32_t close_object(object_info_t *obj_info);
+int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t inode_no,
+    uint16_t flags, object_handle_t **obj_out);
 
-extern int32_t compare_attr_info2(const char *attr_name, OBJECT_INFO *attr_info_node);
+extern int32_t compare_attr_info2(const char *attr_name, object_info_t *attr_info_node);
 
 #ifdef	__cplusplus
 }

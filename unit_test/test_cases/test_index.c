@@ -58,7 +58,7 @@ static int clean_suite(void)
 
 void test_create_index(void)
 {
-    INDEX_HANDLE *index[5];
+    index_handle_t *index[5];
     
     CU_ASSERT(0 == index_create("index0", 1000, 0, &index[0]));
     CU_ASSERT(0 == index_create("index1", 1000, 0, &index[1]));
@@ -75,7 +75,7 @@ void test_create_index(void)
 
 void test_open_index(void)
 {
-    INDEX_HANDLE *index[5];
+    index_handle_t *index[5];
     
     CU_ASSERT(0 == index_open("index0", 0, &index[0]));
     CU_ASSERT(0 == index_open("index1", 0, &index[1]));

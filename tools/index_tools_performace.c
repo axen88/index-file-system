@@ -43,8 +43,8 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
     uint64_t objid, uint64_t keys_num, NET_PARA_S *net)
 {
     int32_t ret = 0;
-    INDEX_HANDLE *index = NULL;
-    OBJECT_HANDLE *obj = NULL;
+    index_handle_t *index = NULL;
+    object_handle_t *obj = NULL;
     uint64_t key = 0;
     uint8_t c[TEST_VALUE_LEN];
     uint64_t ullTime = 0;
@@ -98,8 +98,8 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
     uint64_t objid, uint64_t keys_num, NET_PARA_S *net)
 {
     int32_t ret = 0;
-    INDEX_HANDLE *index = NULL;
-    OBJECT_HANDLE *obj = NULL;
+    index_handle_t *index = NULL;
+    object_handle_t *obj = NULL;
     uint64_t key = 0;
     uint64_t ullTime = 0;
 

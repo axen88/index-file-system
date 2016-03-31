@@ -51,7 +51,7 @@ static int32_t verify_callback(void *tree, void *para)
 {
 #if 0
     VERIFY_PARA_S *para = para;
-    OBJECT_HANDLE *obj = tree;
+    object_handle_t *obj = tree;
     int32_t ret = 0;
 
     if (0 == para->no++)
@@ -99,7 +99,7 @@ static int32_t verify_callback(void *tree, void *para)
 	return 0;
 }
 
-int32_t index_verify_attr(OBJECT_HANDLE *tree, void *para)
+int32_t index_verify_attr(object_handle_t *tree, void *para)
 {
 #if 0
     int32_t ret = 0;
@@ -158,8 +158,8 @@ int32_t index_verify_attr(OBJECT_HANDLE *tree, void *para)
 
 int32_t index_verify_attr_by_name(char *index_name, uint64_t start_lba, uint64_t objid)
 {
-    OBJECT_HANDLE *obj = NULL;
-    INDEX_HANDLE *index = NULL;
+    object_handle_t *obj = NULL;
+    index_handle_t *index = NULL;
     int32_t ret = 0;
 
     if ((NULL == index_name) || (0 == objid))
@@ -196,7 +196,7 @@ int32_t index_verify_attr_by_name(char *index_name, uint64_t start_lba, uint64_t
 
 int32_t verify_index(char *index_name, uint64_t start_lba)
 {
-    INDEX_HANDLE *index = NULL;
+    index_handle_t *index = NULL;
     int32_t ret = 0;
     WALK_ALL_TREES_PARA_S para;
     

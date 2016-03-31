@@ -40,7 +40,7 @@ MODULE(PID_INDEX);
 
 extern int32_t FixupTree(void *tree, void *para);
 
-int64_t index_get_total_key(OBJECT_HANDLE *tree)
+int64_t index_get_total_key(object_handle_t *tree)
 {
     int64_t cnt = 0;
     
@@ -61,7 +61,7 @@ int64_t index_get_total_key(OBJECT_HANDLE *tree)
     return cnt;
 }
 
-int64_t index_get_target_key(OBJECT_HANDLE *tree, uint64_t target)
+int64_t index_get_target_key(object_handle_t *tree, uint64_t target)
 {
 	int64_t cnt = 0;
 	
@@ -86,7 +86,7 @@ int64_t index_get_target_key(OBJECT_HANDLE *tree, uint64_t target)
     return cnt;
 }
 
-int32_t index_walk_all(OBJECT_HANDLE *tree, bool_t v_bReverse, uint8_t flags,
+int32_t index_walk_all(object_handle_t *tree, bool_t v_bReverse, uint8_t flags,
     void *para, WalkAllCallBack v_pCallBack)
 {
     int32_t ret = 0;
@@ -133,7 +133,7 @@ static int32_t tree_callback(void *tree, void *para)
     int32_t ret = 0;
     char name[OBJ_NAME_SIZE];
     WALK_ALL_TREES_PARA_S *para = para;
-    OBJECT_HANDLE *tree = NULL;
+    object_handle_t *tree = NULL;
 
     ASSERT(NULL != tree);
     ASSERT(NULL != para);
@@ -169,7 +169,7 @@ static int32_t tree_callback(void *tree, void *para)
 	return 0;
 }
 
-int32_t index_walk_all_attrs(OBJECT_HANDLE *dir_tree,
+int32_t index_walk_all_attrs(object_handle_t *dir_tree,
     WALK_ALL_TREES_PARA_S *para)
 {
 #if 0
@@ -191,9 +191,9 @@ int32_t index_walk_all_attrs(OBJECT_HANDLE *dir_tree,
     }
     else if (FixupTree == para->pCallBack)
     {
-        SET_TREE_DIRTY((OBJECT_HANDLE *)dir_tree);
+        SET_TREE_DIRTY((object_handle_t *)dir_tree);
         INDEX_CommitTreeTransNoLock(dir_tree, COMMIT_FLAG_FORCE);
-        SET_TREE_DIRTY((OBJECT_HANDLE *)dir_tree);
+        SET_TREE_DIRTY((object_handle_t *)dir_tree);
         INDEX_CommitTreeTransNoLock(dir_tree, COMMIT_FLAG_FORCE);
     }
 
@@ -210,7 +210,7 @@ int32_t index_walk_all_attrs(OBJECT_HANDLE *dir_tree,
 	return 0;
 }
 
-int32_t index_get_opened_attr_num(OBJECT_HANDLE * tree)
+int32_t index_get_opened_attr_num(object_handle_t * tree)
 {
 #if 0
     int32_t ret = 0;
@@ -221,9 +221,9 @@ int32_t index_get_opened_attr_num(OBJECT_HANDLE * tree)
         return -INDEX_ERR_PARAMETER;
     }
 
-    OS_RWLOCK_WRLOCK(&((OBJECT_HANDLE *)tree)->index->rwlock);
-    ret = dlist_count(&((OBJECT_HANDLE *)tree)->index->stTreesList);
-    OS_RWLOCK_WRUNLOCK(&((OBJECT_HANDLE *)tree)->index->rwlock);
+    OS_RWLOCK_WRLOCK(&((object_handle_t *)tree)->index->rwlock);
+    ret = dlist_count(&((object_handle_t *)tree)->index->stTreesList);
+    OS_RWLOCK_WRUNLOCK(&((object_handle_t *)tree)->index->rwlock);
 
     return ret;
 #endif

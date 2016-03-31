@@ -39,7 +39,7 @@ History:
 MODULE(PID_INDEX);
 #include "os_log.h"
 
-int32_t compare_object2(const void *objid, OBJECT_INFO *obj_info)
+int32_t compare_object2(const void *objid, object_info_t *obj_info)
 {
     if ((*(uint64_t *)objid) > obj_info->objid)
     {
@@ -53,7 +53,7 @@ int32_t compare_object2(const void *objid, OBJECT_INFO *obj_info)
     return -1;
 }
 
-int32_t compare_cache1(const INDEX_BLOCK_CACHE *cache, const INDEX_BLOCK_CACHE *cache_node)
+int32_t compare_cache1(const ifs_block_cache_t *cache, const ifs_block_cache_t *cache_node)
 {
     if (cache->vbn > cache_node->vbn)
     {
@@ -68,7 +68,7 @@ int32_t compare_cache1(const INDEX_BLOCK_CACHE *cache, const INDEX_BLOCK_CACHE *
     return 0;
 }
 
-int32_t compare_old_block1(const INDEX_OLD_BLOCK *old_block, const INDEX_OLD_BLOCK *old_block_node)
+int32_t compare_old_block1(const ifs_old_block_t *old_block, const ifs_old_block_t *old_block_node)
 {
     if (old_block->vbn > old_block_node->vbn)
     {
@@ -84,7 +84,7 @@ int32_t compare_old_block1(const INDEX_OLD_BLOCK *old_block, const INDEX_OLD_BLO
 }
 
 // copy origin attr record from inode
-void recover_attr_record(OBJECT_INFO *obj_info)
+void recover_attr_record(object_info_t *obj_info)
 {
     ATTR_RECORD *attr_record;
     
@@ -92,7 +92,7 @@ void recover_attr_record(OBJECT_INFO *obj_info)
     memcpy(&obj_info->attr_record, attr_record, attr_record->record_size);
 }
 
-void init_attr(OBJECT_INFO *obj_info, uint64_t inode_no)
+void init_attr(object_info_t *obj_info, uint64_t inode_no)
 {
     recover_attr_record(obj_info);
     obj_info->root_ibc.vbn = inode_no;
@@ -100,18 +100,18 @@ void init_attr(OBJECT_INFO *obj_info, uint64_t inode_no)
     obj_info->root_ibc.state = CLEAN;
 }
 
-int32_t get_object_info(INDEX_HANDLE *index, uint64_t objid, OBJECT_INFO **obj_info_out)
+int32_t get_object_info(index_handle_t *index, uint64_t objid, object_info_t **obj_info_out)
 {
-    OBJECT_INFO *obj_info = NULL;
+    object_info_t *obj_info = NULL;
     
-    obj_info = (OBJECT_INFO *)OS_MALLOC(sizeof(OBJECT_INFO));
+    obj_info = (object_info_t *)OS_MALLOC(sizeof(object_info_t));
     if (NULL == obj_info)
     {
-        LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(OBJECT_INFO));
+        LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(object_info_t));
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 
-    memset(obj_info, 0, sizeof(OBJECT_INFO));
+    memset(obj_info, 0, sizeof(object_info_t));
     obj_info->obj_ref_cnt = 0;
     obj_info->index = index;
     obj_info->objid = objid;
@@ -121,10 +121,10 @@ int32_t get_object_info(INDEX_HANDLE *index, uint64_t objid, OBJECT_INFO **obj_i
     
     OS_RWLOCK_INIT(&obj_info->attr_lock);
     
-    avl_create(&obj_info->old_blocks, (int (*)(const void *, const void*))compare_old_block1, sizeof(INDEX_OLD_BLOCK),
-        OS_OFFSET(INDEX_OLD_BLOCK, entry));
-    avl_create(&obj_info->caches, (int (*)(const void *, const void*))compare_cache1, sizeof(INDEX_BLOCK_CACHE),
-        OS_OFFSET(INDEX_BLOCK_CACHE, entry));
+    avl_create(&obj_info->old_blocks, (int (*)(const void *, const void*))compare_old_block1, sizeof(ifs_old_block_t),
+        OS_OFFSET(ifs_old_block_t, entry));
+    avl_create(&obj_info->caches, (int (*)(const void *, const void*))compare_cache1, sizeof(ifs_block_cache_t),
+        OS_OFFSET(ifs_block_cache_t, entry));
     OS_RWLOCK_INIT(&obj_info->caches_lock);
     
     OS_RWLOCK_INIT(&obj_info->obj_lock);
@@ -138,7 +138,7 @@ int32_t get_object_info(INDEX_HANDLE *index, uint64_t objid, OBJECT_INFO **obj_i
     return 0;
 }
 
-void put_object_info(OBJECT_INFO *obj_info)
+void put_object_info(object_info_t *obj_info)
 {
     LOG_INFO("destroy object info start. objid(%lld)\n", obj_info->objid);
 
@@ -158,19 +158,19 @@ void put_object_info(OBJECT_INFO *obj_info)
     OS_FREE(obj_info);
 }
 
-int32_t get_object_handle(OBJECT_INFO *obj_info, OBJECT_HANDLE **obj_out)
+int32_t get_object_handle(object_info_t *obj_info, object_handle_t **obj_out)
 {
     int32_t ret = 0;
-    OBJECT_HANDLE *obj = NULL;
+    object_handle_t *obj = NULL;
 
-    obj = (OBJECT_HANDLE *)OS_MALLOC(sizeof(OBJECT_HANDLE));
+    obj = (object_handle_t *)OS_MALLOC(sizeof(object_handle_t));
     if (NULL == obj)
     {
-        LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(OBJECT_HANDLE));
+        LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(object_handle_t));
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 
-    memset(obj, 0, sizeof(OBJECT_HANDLE));
+    memset(obj, 0, sizeof(object_handle_t));
     obj->obj_info = obj_info;
     obj->index = obj_info->index;
 
@@ -182,7 +182,7 @@ int32_t get_object_handle(OBJECT_INFO *obj_info, OBJECT_HANDLE **obj_out)
     return 0;
 }
 
-void put_object_handle(OBJECT_HANDLE *obj)
+void put_object_handle(object_handle_t *obj)
 {
     obj->obj_info->obj_ref_cnt--;
     dlist_remove_entry(&obj->obj_info->obj_hnd_list, &obj->entry);
@@ -191,17 +191,17 @@ void put_object_handle(OBJECT_HANDLE *obj)
     return;
 }
 
-void recover_obj_inode(OBJECT_INFO *obj_info)
+void recover_obj_inode(object_info_t *obj_info)
 {
-    memcpy(&obj_info->inode, &obj_info->old_inode, sizeof(INODE_RECORD));
+    memcpy(&obj_info->inode, &obj_info->old_inode, sizeof(inode_record_t));
 }
 
-void backup_obj_inode(OBJECT_INFO *obj_info)
+void backup_obj_inode(object_info_t *obj_info)
 {
-    memcpy(&obj_info->old_inode, &obj_info->inode, sizeof(INODE_RECORD));
+    memcpy(&obj_info->old_inode, &obj_info->inode, sizeof(inode_record_t));
 }
 
-int32_t flush_inode(OBJECT_INFO *obj_info)
+int32_t flush_inode(object_info_t *obj_info)
 {
     int32_t ret = 0;
 
@@ -231,7 +231,7 @@ int32_t flush_inode(OBJECT_INFO *obj_info)
 }
 
 // copy attr record into inode
-void validate_attr(OBJECT_INFO *obj_info)
+void validate_attr(object_info_t *obj_info)
 {
     if (!ATTR_INFO_DIRTY(obj_info))
     {
@@ -249,7 +249,7 @@ void validate_attr(OBJECT_INFO *obj_info)
     return;
 }
 
-void cancel_object_modification(OBJECT_INFO *obj_info)
+void cancel_object_modification(object_info_t *obj_info)
 {
     ASSERT(obj_info != NULL);
 
@@ -275,7 +275,7 @@ void cancel_object_modification(OBJECT_INFO *obj_info)
     return;
 }
 
-int32_t commit_object_modification(OBJECT_INFO *obj_info)
+int32_t commit_object_modification(object_info_t *obj_info)
 {
     int32_t ret = 0;
     
@@ -307,18 +307,18 @@ int32_t commit_object_modification(OBJECT_INFO *obj_info)
 	return 0;
 }
 
-void put_all_object_handle(OBJECT_INFO *obj_info)
+void put_all_object_handle(object_info_t *obj_info)
 {
-    OBJECT_HANDLE *obj;
+    object_handle_t *obj;
     
     while (obj_info->obj_ref_cnt != 0)
     {
-        obj = OS_CONTAINER(obj_info->obj_hnd_list.head.next, OBJECT_HANDLE, entry);
+        obj = OS_CONTAINER(obj_info->obj_hnd_list.head.next, object_handle_t, entry);
         put_object_handle(obj);
     }
 }
 
-int32_t close_object(OBJECT_INFO *obj_info)
+int32_t close_object(object_info_t *obj_info)
 {
     int32_t ret;
     
@@ -336,16 +336,16 @@ int32_t close_object(OBJECT_INFO *obj_info)
     return 0;
 }
 
-int32_t create_object_at_inode(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, uint16_t flags, OBJECT_HANDLE **obj_out)
+int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t inode_no, uint16_t flags, object_handle_t **obj_out)
 {
-     int32_t ret = sizeof(INODE_RECORD);
-     OBJECT_HANDLE *obj = NULL;
+     int32_t ret = sizeof(inode_record_t);
+     object_handle_t *obj = NULL;
      ATTR_RECORD *attr_record = NULL;
-     OBJECT_INFO *obj_info;
+     object_info_t *obj_info;
 
     ASSERT(NULL != index);
     ASSERT(NULL != obj_out);
-    ASSERT(INODE_SIZE == sizeof(INODE_RECORD));
+    ASSERT(INODE_SIZE == sizeof(inode_record_t));
 
     ret = get_object_info(index, objid, &obj_info);
     if (ret < 0)
@@ -359,7 +359,7 @@ int32_t create_object_at_inode(INDEX_HANDLE *index, uint64_t objid, uint64_t ino
     obj_info->inode.head.alloc_size = INODE_SIZE;
     obj_info->inode.head.real_size = INODE_SIZE;
     
-    obj_info->inode.first_attr_off = OS_OFFSET(INODE_RECORD, reserved);
+    obj_info->inode.first_attr_off = OS_OFFSET(inode_record_t, reserved);
     
     obj_info->inode.objid = objid;
     obj_info->inode.base_objid = 0;
@@ -427,14 +427,14 @@ int32_t create_object_at_inode(INDEX_HANDLE *index, uint64_t objid, uint64_t ino
     return 0;
 }
 
-int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJECT_HANDLE **obj_out)
+int32_t create_object(index_handle_t *index, uint64_t objid, uint16_t flags, object_handle_t **obj_out)
 {
      int32_t ret;
      uint64_t inode_no = 0;
 
     ASSERT(NULL != index);
     ASSERT(NULL != obj_out);
-    ASSERT(INODE_SIZE == sizeof(INODE_RECORD));
+    ASSERT(INODE_SIZE == sizeof(inode_record_t));
 
     /* allocate inode block */
     ret = INDEX_ALLOC_BLOCK(index, objid, &inode_no);
@@ -455,11 +455,11 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
     return 0;
 }
 
-int32_t open_object(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, OBJECT_HANDLE **obj_out)
+int32_t open_object(index_handle_t *index, uint64_t objid, uint64_t inode_no, object_handle_t **obj_out)
 {
     int32_t ret = 0;
-    OBJECT_INFO *obj_info = NULL;
-    OBJECT_HANDLE *obj = NULL;
+    object_info_t *obj_info = NULL;
+    object_handle_t *obj = NULL;
 
     ASSERT(NULL != index);
     ASSERT(NULL != obj_out);
@@ -499,12 +499,12 @@ int32_t open_object(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, OBJE
     return 0;
 }
 
-uint64_t get_objid(INDEX_HANDLE *index)
+uint64_t get_objid(index_handle_t *index)
 {
     return 1;
 }
 
-int32_t set_object_name(OBJECT_HANDLE *obj, char *name)
+int32_t set_object_name(object_handle_t *obj, char *name)
 {
     uint32_t name_size;
     
@@ -526,13 +526,13 @@ int32_t set_object_name(OBJECT_HANDLE *obj, char *name)
     return 0;
 }
 
-int32_t index_create_object_nolock(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJECT_HANDLE **obj_out)
+int32_t index_create_object_nolock(index_handle_t *index, uint64_t objid, uint16_t flags, object_handle_t **obj_out)
 {
     int32_t ret = 0;
-    OBJECT_HANDLE *obj = NULL;
+    object_handle_t *obj = NULL;
     uint16_t name_size = 0;
     avl_index_t where = 0;
-    OBJECT_INFO *obj_info;
+    object_info_t *obj_info;
 
     ASSERT(NULL != index);
     ASSERT(!OBJID_IS_INVALID(objid));
@@ -592,7 +592,7 @@ int32_t index_create_object_nolock(INDEX_HANDLE *index, uint64_t objid, uint16_t
     return 0;
 }    
 
-int32_t index_create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJECT_HANDLE **obj)
+int32_t index_create_object(index_handle_t *index, uint64_t objid, uint16_t flags, object_handle_t **obj)
 {
     int32_t ret = 0;
 
@@ -609,14 +609,14 @@ int32_t index_create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags,
     return ret;
 }    
 
-int32_t index_open_object_nolock(struct _INDEX_HANDLE *index, uint64_t objid, uint32_t open_flags, OBJECT_HANDLE **obj_out)
+int32_t index_open_object_nolock(index_handle_t *index, uint64_t objid, uint32_t open_flags, object_handle_t **obj_out)
 {
     int32_t ret = 0;
-    OBJECT_HANDLE *obj = NULL;
+    object_handle_t *obj = NULL;
     uint64_t inode_no = 0;
     avl_index_t where = 0;
-    OBJECT_HANDLE *id_obj;
-    OBJECT_INFO *obj_info = NULL;
+    object_handle_t *id_obj;
+    object_info_t *obj_info = NULL;
 
     ASSERT(NULL != index);
     ASSERT(NULL != obj_out);
@@ -672,7 +672,7 @@ int32_t index_open_object_nolock(struct _INDEX_HANDLE *index, uint64_t objid, ui
     return 0;
 }      
 
-int32_t index_open_object(struct _INDEX_HANDLE *index, uint64_t objid, OBJECT_HANDLE **obj)
+int32_t index_open_object(index_handle_t *index, uint64_t objid, object_handle_t **obj)
 {
     int32_t ret = 0;
 
@@ -689,9 +689,9 @@ int32_t index_open_object(struct _INDEX_HANDLE *index, uint64_t objid, OBJECT_HA
     return ret;
 }      
 
-OBJECT_HANDLE *index_get_object_handle(INDEX_HANDLE *index, uint64_t objid)
+object_handle_t *index_get_object_handle(index_handle_t *index, uint64_t objid)
 {
-    OBJECT_HANDLE *tmp_obj = NULL;
+    object_handle_t *tmp_obj = NULL;
     avl_index_t where = 0;
 
     ASSERT(NULL != index);
@@ -704,9 +704,9 @@ OBJECT_HANDLE *index_get_object_handle(INDEX_HANDLE *index, uint64_t objid)
     return tmp_obj;
 }
 
-int32_t index_close_object_nolock(OBJECT_HANDLE *obj)
+int32_t index_close_object_nolock(object_handle_t *obj)
 {
-    OBJECT_INFO *obj_info = NULL;
+    object_info_t *obj_info = NULL;
     
     if (NULL == obj)
     {
@@ -744,10 +744,10 @@ int32_t index_close_object_nolock(OBJECT_HANDLE *obj)
 	return 0;
 }     
 
-int32_t index_close_object(OBJECT_HANDLE *obj)
+int32_t index_close_object(object_handle_t *obj)
 {
     int32_t ret = 0;
-	INDEX_HANDLE *index;
+	index_handle_t *index;
 
     if (NULL == obj)
     {
@@ -764,12 +764,12 @@ int32_t index_close_object(OBJECT_HANDLE *obj)
     return ret;
 }     
 
-int32_t index_delete_object(INDEX_HANDLE *index, uint64_t objid)
+int32_t index_delete_object(index_handle_t *index, uint64_t objid)
 {
     return 0;
 }
 
-int32_t index_rename_object(OBJECT_HANDLE *obj, const char *new_obj_name)
+int32_t index_rename_object(object_handle_t *obj, const char *new_obj_name)
 {
     return 0;
 }

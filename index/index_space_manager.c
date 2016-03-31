@@ -40,7 +40,7 @@
  MODULE(PID_INDEX);
 #include "os_log.h"
 
-int32_t alloc_space(OBJECT_HANDLE *obj, uint64_t start_blk, uint32_t blk_cnt, uint64_t *real_start_blk)
+int32_t alloc_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt, uint64_t *real_start_blk)
 {
     uint64_t addr;
     uint32_t len;
@@ -158,7 +158,7 @@ int32_t alloc_space(OBJECT_HANDLE *obj, uint64_t start_blk, uint32_t blk_cnt, ui
     return (uint32_t)(end - start_blk);
 }
 
-int32_t free_space(OBJECT_HANDLE *obj, uint64_t start_blk, uint32_t blk_cnt)
+int32_t free_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt)
 {
     uint8_t addr_str[U64_MAX_SIZE];
     uint8_t len_str[U64_MAX_SIZE];
@@ -171,7 +171,7 @@ int32_t free_space(OBJECT_HANDLE *obj, uint64_t start_blk, uint32_t blk_cnt)
     return index_insert_key_nolock(obj, addr_str, addr_size, len_str, len_size);
 }
 
-void index_init_sm(space_manager_t *sm, OBJECT_HANDLE *obj, uint64_t first_free_block,
+void index_init_sm(space_manager_t *sm, object_handle_t *obj, uint64_t first_free_block,
     uint64_t total_free_blocks)
 {
     sm->space_obj = obj;
@@ -186,7 +186,7 @@ void index_destroy_sm(space_manager_t *sm)
     OS_RWLOCK_DESTROY(&sm->lock);
 }
 
-static int32_t translate_free_space_to_memory(OBJECT_HANDLE *tree, QUEUE_S *q)
+static int32_t translate_free_space_to_memory(object_handle_t *tree, QUEUE_S *q)
 {
     uint64_t addr;
     uint64_t len;
@@ -319,7 +319,7 @@ int32_t index_init_free_space(space_manager_t *sm, uint64_t start_blk, uint64_t 
 // >  0: real blk cnt
 // == 0: no free blk
 // <  0: error code
-int32_t index_alloc_space(INDEX_HANDLE *index, uint64_t objid, uint32_t blk_cnt, uint64_t *real_start_blk)
+int32_t index_alloc_space(index_handle_t *index, uint64_t objid, uint32_t blk_cnt, uint64_t *real_start_blk)
 {
     int32_t ret;
     
@@ -332,7 +332,7 @@ int32_t index_alloc_space(INDEX_HANDLE *index, uint64_t objid, uint32_t blk_cnt,
     return sm_alloc_space(&index->sm, blk_cnt, real_start_blk);
 }
 
-int32_t index_free_space(INDEX_HANDLE *index, uint64_t objid, uint64_t start_blk, uint32_t blk_cnt)
+int32_t index_free_space(index_handle_t *index, uint64_t objid, uint64_t start_blk, uint32_t blk_cnt)
 {
     int32_t ret;
     

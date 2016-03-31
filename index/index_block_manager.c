@@ -38,10 +38,10 @@ History:
 MODULE(PID_INDEX);
 #include "os_log.h"
 
-int32_t check_and_init_block_resource(BLOCK_HANDLE_S ** hnd,
+int32_t check_and_init_block_resource(block_handle_t ** hnd,
     const char * path)
 {
-    BLOCK_HANDLE_S *tmp_hnd = NULL;
+    block_handle_t *tmp_hnd = NULL;
 
     if ((NULL == hnd) || (NULL == path))
     {
@@ -55,14 +55,14 @@ int32_t check_and_init_block_resource(BLOCK_HANDLE_S ** hnd,
         return -FILE_BLOCK_ERR_PARAMETER;
     }
 
-    tmp_hnd = OS_MALLOC(sizeof(BLOCK_HANDLE_S));
+    tmp_hnd = OS_MALLOC(sizeof(block_handle_t));
     if (NULL == tmp_hnd)
     {
-        LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(BLOCK_HANDLE_S));
+        LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(block_handle_t));
         return -FILE_BLOCK_ERR_ALLOCATE_MEMORY;
     }
 
-    memset(tmp_hnd, 0, sizeof(BLOCK_HANDLE_S));
+    memset(tmp_hnd, 0, sizeof(block_handle_t));
     strncpy(tmp_hnd->name, path, FILE_NAME_SIZE);
     OS_RWLOCK_INIT(&tmp_hnd->rwlock);
 
@@ -71,7 +71,7 @@ int32_t check_and_init_block_resource(BLOCK_HANDLE_S ** hnd,
     return 0;
 }
 
-int32_t check_and_set_fixup_flag(BLOCK_HANDLE_S * hnd)
+int32_t check_and_set_fixup_flag(block_handle_t * hnd)
 {
     int32_t ret = 0;
 
@@ -92,7 +92,7 @@ int32_t check_and_set_fixup_flag(BLOCK_HANDLE_S * hnd)
     return ret;
 }
 
-int32_t block_finish_fixup(BLOCK_HANDLE_S * hnd)
+int32_t block_finish_fixup(block_handle_t * hnd)
 {
     if (NULL == hnd)
     {
@@ -105,13 +105,13 @@ int32_t block_finish_fixup(BLOCK_HANDLE_S * hnd)
     return check_and_set_fixup_flag(hnd);
 }
 
-int32_t block_create(BLOCK_HANDLE_S **hnd, const char *path,
+int32_t block_create(block_handle_t **hnd, const char *path,
     uint64_t total_sectors, uint32_t block_size_shift,
     uint32_t reserved_blocks, uint64_t start_lba)
 {
-    BLOCK_BOOT_SECTOR_S *sb = NULL;
+    ifs_super_block_t *sb = NULL;
     void *file_hnd = NULL;
-    BLOCK_HANDLE_S *tmp_hnd = NULL;
+    block_handle_t *tmp_hnd = NULL;
     int32_t ret = 0;
     uint64_t total_blocks = 0;
 
@@ -182,7 +182,7 @@ int32_t block_create(BLOCK_HANDLE_S **hnd, const char *path,
     return 0;
 }
 
-int32_t check_super_block(BLOCK_BOOT_SECTOR_S * sb, uint64_t start_lba)
+int32_t check_super_block(ifs_super_block_t * sb, uint64_t start_lba)
 {
     ASSERT(NULL != sb);
     
@@ -222,12 +222,12 @@ int32_t check_super_block(BLOCK_BOOT_SECTOR_S * sb, uint64_t start_lba)
     return 0;
 }
 
-int32_t block_open(BLOCK_HANDLE_S ** hnd, const char * path,
+int32_t block_open(block_handle_t ** hnd, const char * path,
     uint64_t start_lba)
 {
-    BLOCK_BOOT_SECTOR_S *sb = NULL;
+    ifs_super_block_t *sb = NULL;
     void *file_hnd = NULL;
-    BLOCK_HANDLE_S *tmp_hnd = NULL;
+    block_handle_t *tmp_hnd = NULL;
     int32_t ret = 0;
 
     ret = check_and_init_block_resource(&tmp_hnd, path);
@@ -281,15 +281,15 @@ int32_t block_open(BLOCK_HANDLE_S ** hnd, const char * path,
     return 0;
 }
 
-bool_t block_need_fixup(BLOCK_HANDLE_S * hnd)
+bool_t block_need_fixup(block_handle_t * hnd)
 {
     ASSERT(NULL != hnd);
 
-    return (((BLOCK_HANDLE_S *) hnd)->sb.flags & FLAG_FIXUP)
+    return (((block_handle_t *) hnd)->sb.flags & FLAG_FIXUP)
         ? B_TRUE : B_FALSE;
 }
 
-int32_t block_close(BLOCK_HANDLE_S * hnd)
+int32_t block_close(block_handle_t * hnd)
 {
     int32_t ret = 0;
 
@@ -322,7 +322,7 @@ int32_t block_close(BLOCK_HANDLE_S * hnd)
     return 0;
 }
 
-int32_t block_update_super_block(BLOCK_HANDLE_S * hnd)
+int32_t block_update_super_block(block_handle_t * hnd)
 {
     int32_t ret = 0;
 

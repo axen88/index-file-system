@@ -42,7 +42,7 @@ MODULE(PID_INDEX);
 int32_t fixup_callback(void *tree, void *para)
 {
 #if 0
-    OBJECT_HANDLE *pstTree = tree;
+    object_handle_t *pstTree = tree;
 
     if (0 != (pstTree->pstInode->flags & TREE_FLAGS_DIR))
     {
@@ -53,7 +53,7 @@ int32_t fixup_callback(void *tree, void *para)
     return 0;
 }
 
-int32_t fixup_attr(OBJECT_HANDLE *tree, void *para)
+int32_t fixup_attr(object_handle_t *tree, void *para)
 {
 #if 0
     int32_t ret = 0;
@@ -77,12 +77,12 @@ int32_t fixup_attr(OBJECT_HANDLE *tree, void *para)
 	return 0;
 }
 
-int32_t before_fixup(INDEX_HANDLE *index, WALK_ALL_TREES_PARA_S *para)
+int32_t before_fixup(index_handle_t *index, WALK_ALL_TREES_PARA_S *para)
 {
     return 0;
 }
 
-int32_t fixup_index(INDEX_HANDLE *index)
+int32_t fixup_index(index_handle_t *index)
 {
 #if 0
     int32_t ret = 0;
@@ -121,7 +121,7 @@ int32_t fixup_index(INDEX_HANDLE *index)
 
 int32_t fixup_index_by_name(char *index_name, uint64_t start_lba)
 {
-    INDEX_HANDLE *index = NULL;
+    index_handle_t *index = NULL;
     int32_t ret = 0;
     
     ASSERT (NULL != index_name);

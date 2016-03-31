@@ -36,7 +36,7 @@ History:
 *******************************************************************************/
 #include "index_if.h"
 
-int32_t print_index_info(NET_PARA_S *net, INDEX_HANDLE *index)
+int32_t print_index_info(NET_PARA_S *net, index_handle_t *index)
 {
     ASSERT(NULL != index);
 
@@ -46,7 +46,7 @@ int32_t print_index_info(NET_PARA_S *net, INDEX_HANDLE *index)
     return 0;
 }
 
-int32_t print_obj_info(NET_PARA_S *net, OBJECT_INFO *obj_info)
+int32_t print_obj_info(NET_PARA_S *net, object_info_t *obj_info)
 {
     ASSERT(NULL != obj_info);
 
@@ -56,7 +56,7 @@ int32_t print_obj_info(NET_PARA_S *net, OBJECT_INFO *obj_info)
     return 0;
 }
 
-int32_t print_cache_info(NET_PARA_S *net, INDEX_BLOCK_CACHE *cache)
+int32_t print_cache_info(NET_PARA_S *net, ifs_block_cache_t *cache)
 {
     ASSERT(NULL != cache);
 
@@ -66,7 +66,7 @@ int32_t print_cache_info(NET_PARA_S *net, INDEX_BLOCK_CACHE *cache)
     return 0;
 }
 
-int32_t print_attr_info(NET_PARA_S *net, OBJECT_INFO *obj_info)
+int32_t print_attr_info(NET_PARA_S *net, object_info_t *obj_info)
 {
     ASSERT(NULL != obj_info);
 
@@ -76,9 +76,9 @@ int32_t print_attr_info(NET_PARA_S *net, OBJECT_INFO *obj_info)
     return 0;
 }
 
-void print_block_Info(BLOCK_HANDLE_S * hnd, NET_PARA_S *net)
+void print_block_Info(block_handle_t * hnd, NET_PARA_S *net)
 {
-    BLOCK_HANDLE_S *tmp_hnd = hnd;
+    block_handle_t *tmp_hnd = hnd;
 
     if (NULL == hnd)
     {
@@ -117,7 +117,7 @@ void print_block_Info(BLOCK_HANDLE_S * hnd, NET_PARA_S *net)
 
 int32_t list_super_block(char *index_name, uint64_t start_lba, NET_PARA_S *net)
 {
-    INDEX_HANDLE *index = NULL;
+    index_handle_t *index = NULL;
     int32_t ret = 0;
     
     /* 检查输入参数 */
@@ -142,14 +142,14 @@ int32_t list_super_block(char *index_name, uint64_t start_lba, NET_PARA_S *net)
 int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, NET_PARA_S *net)
 {
     int32_t ret = 0;
-    INDEX_HANDLE *index = NULL;
-    OBJECT_HANDLE *obj = NULL;
+    index_handle_t *index = NULL;
+    object_handle_t *obj = NULL;
     
     ASSERT(NULL != index_name);
     
     if (0 == strlen(index_name))
     {
-        ret = walk_all_opened_index((int32_t (*)(void *, INDEX_HANDLE *))print_index_info, net);
+        ret = walk_all_opened_index((int32_t (*)(void *, index_handle_t *))print_index_info, net);
         if (0 > ret)
         {
             OS_PRINT(net, "Walk all opened index failed. ret(%d)\n", ret);

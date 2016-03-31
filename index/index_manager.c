@@ -41,23 +41,23 @@ MODULE(PID_INDEX);
 avl_tree_t *g_index_list = NULL;
 OS_RWLOCK g_index_list_rwlock;
 
-void close_index(INDEX_HANDLE *index);
-extern int32_t fixup_index(INDEX_HANDLE *index);
+void close_index(index_handle_t *index);
+extern int32_t fixup_index(index_handle_t *index);
 
-int32_t compare_index1(const INDEX_HANDLE *index, const INDEX_HANDLE *index_node)
+int32_t compare_index1(const index_handle_t *index, const index_handle_t *index_node)
 {
     return os_collate_ansi_string(index->name, strlen(index->name),
         index_node->name, strlen(index_node->name));
 }
 
-int32_t compare_index2(const char *index_name, INDEX_HANDLE *index_node)
+int32_t compare_index2(const char *index_name, index_handle_t *index_node)
 {
     return os_collate_ansi_string(index_name, strlen(index_name),
         index_node->name, strlen(index_node->name));
 }
 
 
-int32_t compare_object1(const OBJECT_INFO *obj_info, const OBJECT_INFO *target_obj_info)
+int32_t compare_object1(const object_info_t *obj_info, const object_info_t *target_obj_info)
 {
     if (obj_info->objid > target_obj_info->objid)
     {
@@ -86,14 +86,14 @@ int32_t index_init_system(void)
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 
-    avl_create(g_index_list, (int (*)(const void *, const void*))compare_index1, sizeof(INDEX_HANDLE),
-        OS_OFFSET(INDEX_HANDLE, entry));
+    avl_create(g_index_list, (int (*)(const void *, const void*))compare_index1, sizeof(index_handle_t),
+        OS_OFFSET(index_handle_t, entry));
     OS_RWLOCK_INIT(&g_index_list_rwlock);
 
     return 0;
 }
 
-int32_t close_one_index(void *para, INDEX_HANDLE *index)
+int32_t close_one_index(void *para, index_handle_t *index)
 {
     ASSERT(NULL != index);
 
@@ -102,7 +102,7 @@ int32_t close_one_index(void *para, INDEX_HANDLE *index)
     return 0;
 }
 
-int32_t close_one_object(void *para, OBJECT_INFO *obj_info)
+int32_t close_one_object(void *para, object_info_t *obj_info)
 {
     ASSERT(NULL != obj_info);
 
@@ -133,7 +133,7 @@ void index_exit_system(void)
 }
 
 int32_t walk_all_opened_index(
-    int32_t (*func)(void *, INDEX_HANDLE *), void *para)
+    int32_t (*func)(void *, index_handle_t *), void *para)
 {
     int32_t ret = 0;
     
@@ -144,26 +144,26 @@ int32_t walk_all_opened_index(
     return ret;
 }
 
-int32_t init_index_resource(INDEX_HANDLE ** index, const char * index_name)
+int32_t init_index_resource(index_handle_t ** index, const char * index_name)
 {
-    INDEX_HANDLE *tmp_index = NULL;
+    index_handle_t *tmp_index = NULL;
 
     ASSERT(NULL != index);
     ASSERT(NULL != index_name);
 
-    tmp_index = (INDEX_HANDLE *) OS_MALLOC(sizeof(INDEX_HANDLE));
+    tmp_index = (index_handle_t *) OS_MALLOC(sizeof(index_handle_t));
     if (NULL == tmp_index)
     {
-        LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(INDEX_HANDLE));
+        LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(index_handle_t));
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 
-    memset(tmp_index, 0, sizeof(INDEX_HANDLE));
+    memset(tmp_index, 0, sizeof(index_handle_t));
     strncpy(tmp_index->name, index_name, INDEX_NAME_SIZE);
     OS_RWLOCK_INIT(&tmp_index->index_lock);
     tmp_index->index_ref_cnt = 1;
-    avl_create(&tmp_index->obj_list, (int (*)(const void *, const void*))compare_object1, sizeof(OBJECT_INFO),
-        OS_OFFSET(OBJECT_INFO, entry));
+    avl_create(&tmp_index->obj_list, (int (*)(const void *, const void*))compare_object1, sizeof(object_info_t),
+        OS_OFFSET(object_info_t, entry));
     avl_add(g_index_list, tmp_index);
 
     *index = tmp_index;
@@ -171,10 +171,10 @@ int32_t init_index_resource(INDEX_HANDLE ** index, const char * index_name)
     return 0;
 }
 
-int32_t create_system_objects(INDEX_HANDLE *index)
+int32_t create_system_objects(index_handle_t *index)
 {
     int32_t ret;
-    OBJECT_HANDLE *obj;
+    object_handle_t *obj;
     
     /* create free blk object */
     ret = create_object_at_inode(index, SPACE_OBJ_ID, SPACE_OBJ_INODE, FLAG_SYSTEM | FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj);
@@ -217,10 +217,10 @@ int32_t create_system_objects(INDEX_HANDLE *index)
     return 0;
 }
 
-int32_t open_system_objects(INDEX_HANDLE *index)
+int32_t open_system_objects(index_handle_t *index)
 {
     int32_t ret;
-    OBJECT_HANDLE *obj;
+    object_handle_t *obj;
     
     /* open FREEBLK object */
     ret = open_object(index, index->hnd->sb.space_id, index->hnd->sb.space_inode_no, &obj);
@@ -246,11 +246,11 @@ int32_t open_system_objects(INDEX_HANDLE *index)
 }
 
 int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint64_t start_lba,
-    INDEX_HANDLE **index)
+    index_handle_t **index)
 {
-    INDEX_HANDLE *tmp_index = NULL;
+    index_handle_t *tmp_index = NULL;
     int32_t ret = 0;
-    BLOCK_HANDLE_S *hnd = NULL;
+    block_handle_t *hnd = NULL;
     avl_index_t where = 0;
 
     if ((NULL == index) || (0 == total_sectors) || (NULL == index_name))
@@ -325,7 +325,7 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
 }     
 
 int32_t index_create(const char *index_name, uint64_t total_sectors, uint64_t start_lba,
-    INDEX_HANDLE **index)
+    index_handle_t **index)
 {
     int32_t ret = 0;
     
@@ -336,11 +336,11 @@ int32_t index_create(const char *index_name, uint64_t total_sectors, uint64_t st
     return ret;
 }     
 
-int32_t index_open_nolock(const char *index_name, uint64_t start_lba, INDEX_HANDLE **index)
+int32_t index_open_nolock(const char *index_name, uint64_t start_lba, index_handle_t **index)
 {
-    INDEX_HANDLE *tmp_index = NULL;
+    index_handle_t *tmp_index = NULL;
     int32_t ret = 0;
-    BLOCK_HANDLE_S *hnd = NULL;
+    block_handle_t *hnd = NULL;
     avl_index_t where = 0;
 
     if ((NULL == index) || (NULL == index_name))
@@ -416,7 +416,7 @@ int32_t index_open_nolock(const char *index_name, uint64_t start_lba, INDEX_HAND
     return 0;
 }     
 
-int32_t index_open(const char *index_name, uint64_t start_lba, INDEX_HANDLE **index)
+int32_t index_open(const char *index_name, uint64_t start_lba, index_handle_t **index)
 {
     int32_t ret = 0;
 
@@ -427,7 +427,7 @@ int32_t index_open(const char *index_name, uint64_t start_lba, INDEX_HANDLE **in
     return ret;
 }     
 
-void close_index(INDEX_HANDLE *index)
+void close_index(index_handle_t *index)
 {
     ASSERT(NULL != index);
 
@@ -462,7 +462,7 @@ void close_index(INDEX_HANDLE *index)
     return;
 }
 
-int32_t index_close_nolock(INDEX_HANDLE *index)
+int32_t index_close_nolock(index_handle_t *index)
 {
     if (NULL == index)
     {   /* Not allocated yet */
@@ -495,7 +495,7 @@ int32_t index_close_nolock(INDEX_HANDLE *index)
     return 0;
 }     
 
-int32_t index_close(INDEX_HANDLE *index)
+int32_t index_close(index_handle_t *index)
 {
     int32_t ret = 0;
 
@@ -506,9 +506,9 @@ int32_t index_close(INDEX_HANDLE *index)
     return ret;
 }     
 
-INDEX_HANDLE *index_get_handle(const char * index_name)
+index_handle_t *index_get_handle(const char * index_name)
 {
-    INDEX_HANDLE *index = NULL;
+    index_handle_t *index = NULL;
     avl_index_t where = 0;
  
     if (NULL == index_name)

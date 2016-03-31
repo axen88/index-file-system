@@ -39,8 +39,8 @@ History:
 static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
 {
     int32_t ret = 0;
-    INDEX_HANDLE *index = NULL;
-    OBJECT_HANDLE *obj = NULL;
+    index_handle_t *index = NULL;
+    object_handle_t *obj = NULL;
 
     ASSERT(NULL != para);
 
@@ -93,8 +93,8 @@ static int32_t cmd_insert_key(INDEX_TOOLS_PARA_S *para)
 static int32_t cmd_remove_key(INDEX_TOOLS_PARA_S *para)
 {
     int32_t ret = 0;
-    INDEX_HANDLE *index = NULL;
-    OBJECT_HANDLE *obj = NULL;
+    index_handle_t *index = NULL;
+    object_handle_t *obj = NULL;
 
     ASSERT(NULL != para);
 
