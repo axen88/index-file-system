@@ -43,7 +43,7 @@ History:
 extern "C" {
 #endif
 
-#define __EN_LIST_QUEUE__
+//#define __EN_LIST_QUEUE__
 
 #define QUEUE_NO_LIMIT    (-1)
 

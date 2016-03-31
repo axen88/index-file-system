@@ -437,7 +437,7 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
     ASSERT(INODE_SIZE == sizeof(INODE_RECORD));
 
     /* allocate inode block */
-    ret = INDEX_ALLOC_BLOCK(index, &inode_no);
+    ret = INDEX_ALLOC_BLOCK(index, objid, &inode_no);
     if (ret < 0)
     {
         LOG_ERROR("Allocate block failed. ret(%d)\n", ret);
@@ -447,7 +447,7 @@ int32_t create_object(INDEX_HANDLE *index, uint64_t objid, uint16_t flags, OBJEC
     ret = create_object_at_inode(index, objid, inode_no, flags, obj_out);
     if (ret < 0)
     {
-        INDEX_FREE_BLOCK(index, inode_no);
+        INDEX_FREE_BLOCK(index, objid, inode_no);
         LOG_ERROR("get_object_info failed. ret(%d)\n", ret);
         return ret;
     }
@@ -488,7 +488,7 @@ int32_t open_object(INDEX_HANDLE *index, uint64_t objid, uint64_t inode_no, OBJE
     ret = get_object_handle(obj_info, &obj);
     if (ret < 0)
     {
-        (void)INDEX_FREE_BLOCK(index, inode_no);
+        (void)INDEX_FREE_BLOCK(index, obj_info->objid, inode_no);
         put_object_info(obj_info);
         LOG_ERROR("Open attr failed. objid(%lld) ret(%d)\n", objid, ret);
         return ret;
@@ -579,7 +579,7 @@ int32_t index_create_object_nolock(INDEX_HANDLE *index, uint64_t objid, uint16_t
     {
         LOG_ERROR("Insert obj failed. obj(%p) objid(%lld) ret(%d)\n",
             obj, objid, ret);
-        (void)INDEX_FREE_BLOCK(obj->index, obj->obj_info->inode_no);
+        (void)INDEX_FREE_BLOCK(obj->index, obj->obj_info->objid, obj->obj_info->inode_no);
         close_object(obj->obj_info);
         return ret;
     }

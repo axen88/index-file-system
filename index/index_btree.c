@@ -77,7 +77,7 @@ static int32_t set_ib_dirty(OBJECT_HANDLE *tree, uint64_t vbn, uint8_t depth)
     {
         if ((0 != depth) && (DIRTY != tree->cache_stack[depth]->state))
         {   // allocate new block for modified data
-            ret = INDEX_ALLOC_BLOCK(tree->index, &new_vbn);
+            ret = INDEX_ALLOC_BLOCK(tree->index, tree->obj_info->objid, &new_vbn);
             if (ret < 0)
             {
                 LOG_ERROR("Allocate new block failed. ret(%d)\n", ret);

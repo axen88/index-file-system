@@ -44,11 +44,10 @@ typedef struct tagDUMP_PARA_S
     NET_PARA_S *net;
 } DUMP_PARA_S;
 
-static int32_t dump_callback(void *in_tree, DUMP_PARA_S *para)
+static int32_t dump_callback(OBJECT_HANDLE *tree, DUMP_PARA_S *para)
 {
     uint32_t i = 0;
     uint8_t *uc = NULL;
-    OBJECT_HANDLE *tree = in_tree;
 
     ASSERT(NULL != tree);
     ASSERT(NULL != para);

@@ -146,8 +146,8 @@ typedef struct tagBLOCK_BOOT_SECTOR_S
     uint64_t objid_inode_no;
     uint64_t objid_id;
 
-    uint64_t free_blk_inode_no;
-    uint64_t free_blk_id;
+    uint64_t space_inode_no;
+    uint64_t space_id;
     
     uint64_t snapshot_no;
     uint8_t aucReserved2[PRV_AREA_SIZE - 24];    // Reserved bytes

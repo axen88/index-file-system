@@ -113,7 +113,7 @@ int32_t index_alloc_cache_and_block(OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE **c
 
     ASSERT(NULL != obj_info);
     
-    ret = INDEX_ALLOC_BLOCK(obj_info->index, &vbn);
+    ret = INDEX_ALLOC_BLOCK(obj_info->index, obj_info->objid, &vbn);
     if (ret < 0)
     {
         LOG_ERROR("Allocate block failed. ret(%d)\n", ret);
@@ -126,7 +126,7 @@ int32_t index_alloc_cache_and_block(OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE **c
     {
         OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
         LOG_ERROR("Allocate cache failed.\n");
-        INDEX_FREE_BLOCK(obj_info->index, vbn);
+        INDEX_FREE_BLOCK(obj_info->index, obj_info->objid, vbn);
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 
@@ -211,7 +211,7 @@ int32_t release_dirty_block(OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE *cache)
         return 0;
     }
 
-    ret = INDEX_FREE_BLOCK(obj_info->index, cache->vbn);
+    ret = INDEX_FREE_BLOCK(obj_info->index, obj_info->objid, cache->vbn);
     if (0 > ret)
     {
         LOG_ERROR("Free block failed. vbn(%lld) ret(%d)\n", cache->vbn, ret);
@@ -260,7 +260,7 @@ int32_t release_old_block(OBJECT_INFO *obj_info, INDEX_OLD_BLOCK *old_blk)
     ASSERT(NULL != obj_info);
     ASSERT(NULL != old_blk);
 
-    ret = INDEX_FREE_BLOCK(obj_info->index, old_blk->vbn);
+    ret = INDEX_FREE_BLOCK(obj_info->index, obj_info->objid, old_blk->vbn);
     if (0 > ret)
     {
         LOG_ERROR("Free block failed. vbn(%lld) ret(%d)\n", old_blk->vbn, ret);

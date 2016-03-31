@@ -111,20 +111,20 @@ int32_t queue_pop(QUEUE_S *q, uint64_t *member)
     return 0;
 }
 
-int32_t queue_pop_push(QUEUE_S *q, uint64_t member, uint64_t *member)
+int32_t queue_pop_push(QUEUE_S *q, uint64_t push_member, uint64_t *pop_member)
 {
     int32_t ret = 0;
     
     ASSERT(q != NULL);
-    ASSERT(member != NULL);
+    ASSERT(pop_member != NULL);
 
     if (0 == q->num)
     {
-        ret = ERR_QUEUE_EMPTY;
+        ret = -ERR_QUEUE_EMPTY;
     }
     else
     {
-        *member = q->member[q->head++];
+        *pop_member = q->member[q->head++];
         if (q->head >= q->max_num)
         {
             q->head = 0;
@@ -133,7 +133,7 @@ int32_t queue_pop_push(QUEUE_S *q, uint64_t member, uint64_t *member)
         q->num--;
     }
     
-    q->member[q->tail++] = member;
+    q->member[q->tail++] = push_member;
     if (q->tail >= q->max_num)
     {
         q->tail = 0;
@@ -148,7 +148,7 @@ int32_t queue_remove_member(QUEUE_S *q, uint64_t member)
 {
     uint32_t head = 0;
     uint32_t num = 0;
-    uint64_t member = 0;
+    uint64_t memb = 0;
     
     ASSERT(q != NULL);
 
@@ -162,8 +162,8 @@ int32_t queue_remove_member(QUEUE_S *q, uint64_t member)
     
     while (num--)
     {
-        member = q->member[head];
-        if (member == member)
+        memb = q->member[head];
+        if (memb == member)
         {
             if (head == q->head)
             {

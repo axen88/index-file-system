@@ -172,79 +172,71 @@ int32_t free_space(OBJECT_HANDLE *obj, uint64_t start_blk, uint32_t blk_cnt)
 }
 
 void index_init_sm(space_manager_t *sm, OBJECT_HANDLE *obj, uint64_t first_free_block,
-    uint64_t total_free_blocks, uint64_t total_blocks)
+    uint64_t total_free_blocks)
 {
-    memset(sm->blk, 0, sizeof(sm->blk));
-    sm->blk_no = 0;
-    sm->blk_num= 0;
     sm->space_obj = obj;
     sm->first_free_block = first_free_block;
     sm->total_free_blocks = total_free_blocks;
-    sm->total_blocks = total_blocks;
     OS_RWLOCK_INIT(&sm->lock);
-    OS_RWLOCK_INIT(&sm->blk_lock);
 }
 
 void index_destroy_sm(space_manager_t *sm)
 {
-    OS_RWLOCK_DESTROY(&sm->blk_lock);
+    OS_RWLOCK_DESTROY(&sm->lock);
     OS_RWLOCK_DESTROY(&sm->lock);
 }
 
-
-int32_t index_init_free_space(space_manager_t *sm, uint64_t start_blk, uint64_t blk_cnt)
+static int32_t translate_free_space_to_memory(OBJECT_HANDLE *tree, QUEUE_S *q)
 {
-    uint8_t addr_str[U64_MAX_SIZE];
-    uint8_t len_str[U64_MAX_SIZE];
-    uint16_t addr_size;
-    uint16_t len_size;
+    uint64_t addr;
+    uint64_t len;
+    int32_t ret;
 
-    addr_size = os_u64_to_bstr(start_blk, addr_str);
-    len_size = os_u64_to_bstr(blk_cnt, len_str);
+    addr = os_bstr_to_u64(GET_IE_KEY(tree->ie), tree->ie->key_len);
+    len = os_bstr_to_u64(GET_IE_VALUE(tree->ie), tree->ie->value_len);
 
-    return index_insert_key_nolock(sm->space_obj, addr_str, addr_size, len_str, len_size);
-}
-
-int64_t index_alloc_blk(space_manager_t *sm, uint64_t *real_start_blk)
-{
-    uint64_t blk;
-    uint32_t cnt = 0;
-    
-    OS_RWLOCK_WRLOCK(&sm->blk_lock);
-    if (sm->blk_num == 0)
+    while (len--)
     {
-        OS_RWLOCK_WRUNLOCK(&sm->blk_lock);
-        return 0;
-    }
-
-    blk = sm->blk[sm->blk_no];
-    while (blk == 0)
-    {
-        blk = sm->blk[sm->blk_no++];
-        if (sm->blk_no >= MAX_BLK_NUM)
+        ret = queue_push(q, addr); // save the free space into the queue
+        if (ret < 0)
         {
-            sm->blk_no = 0;
+            LOG_ERROR("push free block(%lld) failed. ret(%d)\n", addr, ret);
+            return ret;
         }
 
-        cnt++;
-        if (cnt >= MAX_BLK_NUM)
-        {
-            break;
-        }
+        addr++;
     }
-    
-    OS_RWLOCK_WRUNLOCK(&sm->blk_lock);
 
-    return blk;
+    return 0;
 }
 
-int32_t index_free_blk(space_manager_t *sm, uint64_t start_blk)
+int32_t index_init_sbm(space_base_manager_t *sbm, space_manager_t *sm)
 {
-    OS_RWLOCK_WRLOCK(&sm->blk_lock);
-    
-    OS_RWLOCK_WRUNLOCK(&sm->blk_lock);
+    index_walk_all(sm->space_obj, 0, 0, sbm->q, (WalkAllCallBack)translate_free_space_to_memory);
 
-	return 0;
+    return 0;
+}
+
+int32_t sbm_alloc_blk(space_base_manager_t *sbm, uint64_t *blk)
+{
+    uint32_t ret;
+    
+    OS_RWLOCK_WRLOCK(&sbm->lock);
+    ret = queue_pop(sbm->q, blk);
+    OS_RWLOCK_WRUNLOCK(&sbm->lock);
+
+    return ret;
+}
+
+int32_t sbm_free_blk(space_base_manager_t *sbm, uint64_t blk)
+{
+    uint32_t ret;
+    
+    OS_RWLOCK_WRLOCK(&sbm->lock);
+    ret = queue_push(sbm->q, blk);
+    OS_RWLOCK_WRUNLOCK(&sbm->lock);
+
+	return ret;
 }
 
 
@@ -253,7 +245,7 @@ int32_t index_free_blk(space_manager_t *sm, uint64_t start_blk)
 // >  0: real blk cnt
 // == 0: no free blk
 // <  0: error code
-int32_t index_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *real_start_blk)
+int32_t sm_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *real_start_blk)
 {
     int32_t ret;
 
@@ -295,7 +287,7 @@ int32_t index_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *real_
     return ret;
 }
 
-int32_t index_free_space(space_manager_t *sm, uint64_t start_blk, uint32_t blk_cnt)
+int32_t sm_free_space(space_manager_t *sm, uint64_t start_blk, uint32_t blk_cnt)
 {
     int32_t ret;
     
@@ -309,4 +301,53 @@ int32_t index_free_space(space_manager_t *sm, uint64_t start_blk, uint32_t blk_c
 
     return ret;
 }
+
+int32_t index_init_free_space(space_manager_t *sm, uint64_t start_blk, uint64_t blk_cnt)
+{
+    uint8_t addr_str[U64_MAX_SIZE];
+    uint8_t len_str[U64_MAX_SIZE];
+    uint16_t addr_size;
+    uint16_t len_size;
+
+    addr_size = os_u64_to_bstr(start_blk, addr_str);
+    len_size = os_u64_to_bstr(blk_cnt, len_str);
+
+    return index_insert_key_nolock(sm->space_obj, addr_str, addr_size, len_str, len_size);
+}
+
+// return value:
+// >  0: real blk cnt
+// == 0: no free blk
+// <  0: error code
+int32_t index_alloc_space(INDEX_HANDLE *index, uint64_t objid, uint32_t blk_cnt, uint64_t *real_start_blk)
+{
+    int32_t ret;
+    
+    if (objid == index->sm.space_obj->obj_info->objid)
+    {
+        ret = sbm_alloc_blk(&index->sbm, real_start_blk);
+        return ret;
+    }
+
+    return sm_alloc_space(&index->sm, blk_cnt, real_start_blk);
+}
+
+int32_t index_free_space(INDEX_HANDLE *index, uint64_t objid, uint64_t start_blk, uint32_t blk_cnt)
+{
+    int32_t ret;
+    
+    if (objid == index->sm.space_obj->obj_info->objid)
+    {
+        while (blk_cnt--)
+        {
+            ret = sbm_free_blk(&index->sbm, start_blk);
+            start_blk++;
+        }
+        
+        return ret;
+    }
+
+    return sm_free_space(&index->sm, start_blk, blk_cnt);
+}
+
 

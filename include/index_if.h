@@ -155,23 +155,23 @@ typedef struct _OBJECT_HANDLE
 #define MAX_BLK_NUM  10
 #define MIN_BLK_NUM  3
 
-typedef struct _space_manager
+typedef struct space_manager
 {
     OBJECT_HANDLE *space_obj;
 
-    uint64_t blk[MAX_BLK_NUM];
-    uint32_t blk_num;
-    uint32_t blk_no;
-    OS_RWLOCK blk_lock;
-    
     uint64_t first_free_block;
     uint64_t total_free_blocks;
-    uint64_t total_blocks;
-
-    uint32_t reentrant_flag;
 
     OS_RWLOCK lock;
 } space_manager_t;
+
+typedef struct space_base_manager
+{
+    space_manager_t sm;
+
+    QUEUE_S *q;
+    OS_RWLOCK lock;
+} space_base_manager_t;
 
 typedef struct _INDEX_HANDLE
 {
@@ -183,6 +183,7 @@ typedef struct _INDEX_HANDLE
     //OBJECT_HANDLE *space_obj;
     
     space_manager_t sm;
+    space_base_manager_t sbm;
     
     uint32_t index_ref_cnt;
     avl_tree_t obj_list;              // all opened object info
@@ -198,8 +199,8 @@ typedef struct _INDEX_HANDLE
 #define INDEX_READ_INODE(index, obj, inode_no) \
     index_read_block_pingpong(index->hnd, &obj->inode.head, inode_no, INODE_MAGIC, INODE_SIZE);
 
-#define INDEX_ALLOC_BLOCK(index, vbn) index_alloc_space(&(index)->sm, 1, vbn)
-#define INDEX_FREE_BLOCK(index, vbn)  index_free_space(&(index)->sm, vbn, 1)
+#define INDEX_ALLOC_BLOCK(index, objid, vbn) index_alloc_space(index, objid, 1, vbn)
+#define INDEX_FREE_BLOCK(index, objid, vbn)  index_free_space(index, objid, vbn, 1)
 
 extern int32_t index_block_read(struct _OBJECT_HANDLE *obj, uint64_t vbn);
 extern int32_t index_alloc_cache_and_block(struct _OBJECT_INFO *obj_info, INDEX_BLOCK_CACHE **cache);

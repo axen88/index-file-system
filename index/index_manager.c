@@ -189,7 +189,7 @@ int32_t create_system_objects(INDEX_HANDLE *index)
     index->hnd->sb.first_free_block++;
     index->hnd->sb.free_blocks--;
 
-    index_init_sm(&index->sm, obj, index->hnd->sb.first_free_block, index->hnd->sb.free_blocks, index->hnd->sb.total_blocks);
+    index_init_sm(&index->sm, obj, index->hnd->sb.first_free_block, index->hnd->sb.free_blocks);
     ret = index_init_free_space(&index->sm, index->hnd->sb.first_free_block, index->hnd->sb.free_blocks);
     if (ret < 0)
     {
@@ -197,8 +197,8 @@ int32_t create_system_objects(INDEX_HANDLE *index)
         return ret;
     }
 
-    index->hnd->sb.free_blk_inode_no = obj->obj_info->inode_no;
-    index->hnd->sb.free_blk_id = obj->obj_info->inode.objid;
+    index->hnd->sb.space_inode_no = obj->obj_info->inode_no;
+    index->hnd->sb.space_id = obj->obj_info->inode.objid;
     
     /* create objid object */
     ret = create_object(index, OBJID_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_U64 | (CR_U64 << 4), &obj);
@@ -223,14 +223,14 @@ int32_t open_system_objects(INDEX_HANDLE *index)
     OBJECT_HANDLE *obj;
     
     /* open FREEBLK object */
-    ret = open_object(index, index->hnd->sb.free_blk_id, index->hnd->sb.free_blk_inode_no, &obj);
+    ret = open_object(index, index->hnd->sb.space_id, index->hnd->sb.space_inode_no, &obj);
     if (ret < 0)
     {
         LOG_ERROR("Open free block object failed. index_name(%s) ret(%d)\n", index->name, ret);
         return ret;
     }
     
-    index_init_sm(&index->sm, obj, index->hnd->sb.first_free_block, index->hnd->sb.free_blocks, index->hnd->sb.total_blocks);
+    index_init_sm(&index->sm, obj, index->hnd->sb.first_free_block, index->hnd->sb.free_blocks);
 
     /* open $OBJID object */
     ret = open_object(index, index->hnd->sb.objid_id, index->hnd->sb.objid_inode_no, &obj);
