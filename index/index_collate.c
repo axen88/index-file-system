@@ -46,7 +46,7 @@ char os_to_upper(char c)
     return (((c <= 'z') && (c >= 'a')) ? (c - ('a' - 'A')) : c);
 }
 
-UNICODE_CHAR os_to_wupper(UNICODE_CHAR c)
+unicode_char_t os_to_wupper(unicode_char_t c)
 {
     return (((c <= 'z') && (c >= 'a')) ? (c - ('a' - 'A')) : c);
 }
@@ -122,11 +122,11 @@ return value
     =0: str1 == str2
     >0: str1 > str2
 */
-int32_t os_collate_unicode_string(const UNICODE_CHAR *str1, uint32_t str1_size,
-	const UNICODE_CHAR *str2, uint32_t str2_size)
+int32_t os_collate_unicode_string(const unicode_char_t *str1, uint32_t str1_size,
+	const unicode_char_t *str2, uint32_t str2_size)
 {
-	UNICODE_CHAR c1 = 0;
-    UNICODE_CHAR c2 = 0;
+	unicode_char_t c1 = 0;
+    unicode_char_t c2 = 0;
 
     ASSERT(str1_size > 0);
     ASSERT(str2_size > 0);
@@ -381,7 +381,7 @@ int32_t os_collate_extent(const uint8_t *k1, uint32_t k1_size, const uint8_t *v1
 
 
 // collate key
-int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY *ie,
+int32_t collate_key(uint16_t collate_rule, index_entry_t *ie,
     const void *key, uint16_t key_len, const void *value, uint16_t value_len)
 {
     ASSERT(CR_BUTT > (collate_rule));
@@ -400,8 +400,8 @@ int32_t collate_key(uint16_t collate_rule, INDEX_ENTRY *ie,
                 ie->key_len, (char *)key, key_len);
 
         case CR_UNICODE_STRING:
-            return os_collate_unicode_string((UNICODE_CHAR *)GET_IE_KEY(ie),
-                ie->key_len, (UNICODE_CHAR *)key, key_len);
+            return os_collate_unicode_string((unicode_char_t *)GET_IE_KEY(ie),
+                ie->key_len, (unicode_char_t *)key, key_len);
 
         case CR_U64:
             return os_collate_u64((uint8_t *)GET_IE_KEY(ie), ie->key_len,

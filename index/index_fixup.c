@@ -57,7 +57,7 @@ int32_t fixup_attr(object_handle_t *tree, void *para)
 {
 #if 0
     int32_t ret = 0;
-    WALK_ALL_TREES_PARA_S *para = para;
+    tree_walk_para_t *para = para;
 
     ASSERT(NULL != tree);
     ASSERT(NULL != para);
@@ -77,7 +77,7 @@ int32_t fixup_attr(object_handle_t *tree, void *para)
 	return 0;
 }
 
-int32_t before_fixup(index_handle_t *index, WALK_ALL_TREES_PARA_S *para)
+int32_t before_fixup(index_handle_t *index, tree_walk_para_t *para)
 {
     return 0;
 }
@@ -86,7 +86,7 @@ int32_t fixup_index(index_handle_t *index)
 {
 #if 0
     int32_t ret = 0;
-    WALK_ALL_TREES_PARA_S para;
+    tree_walk_para_t para;
     
     ASSERT (NULL != index);
 

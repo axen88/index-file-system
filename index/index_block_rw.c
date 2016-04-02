@@ -86,7 +86,7 @@ int32_t index_read_block(block_handle_t * hnd, void * buf, uint32_t size,
     return ret;
 }
 
-void assemble_object(block_header_t * obj)
+void assemble_object(block_head_t * obj)
 {
     uint16_t *foot = NULL; // the last 2 bytes
 
@@ -101,7 +101,7 @@ void assemble_object(block_header_t * obj)
     return;
 }
 
-int32_t fixup_object(block_header_t * obj)
+int32_t fixup_object(block_head_t * obj)
 {
     uint16_t *foot = NULL; // the last 2 bytes
 
@@ -125,7 +125,7 @@ int32_t fixup_object(block_header_t * obj)
     return 0;
 }
 
-int32_t verify_object(block_header_t * obj, uint32_t objid,
+int32_t verify_object(block_head_t * obj, uint32_t objid,
     uint32_t alloc_size)
 {
     ASSERT(NULL != obj);
@@ -147,17 +147,17 @@ int32_t verify_object(block_header_t * obj, uint32_t objid,
     }
 
     if ((obj->real_size > obj->alloc_size)
-        || (obj->real_size < sizeof(block_header_t)))
+        || (obj->real_size < sizeof(block_head_t)))
     {
         LOG_ERROR("real_size not match. obj(%p) real_size(%d) alloc_size(%d) sizeof(%d)",
-            obj, obj->real_size, alloc_size, (uint32_t)sizeof(block_header_t));
+            obj, obj->real_size, alloc_size, (uint32_t)sizeof(block_head_t));
         return -FILE_BLOCK_ERR_INVALID_OBJECT;
     }
 
     return 0;
 }
 
-int32_t index_update_block_fixup(block_handle_t * hnd, block_header_t * obj,
+int32_t index_update_block_fixup(block_handle_t * hnd, block_head_t * obj,
     uint64_t vbn)
 {
     int32_t ret = 0;
@@ -188,7 +188,7 @@ int32_t index_update_block_fixup(block_handle_t * hnd, block_header_t * obj,
     return ret;
 }
 
-int32_t index_read_block_fixup(block_handle_t * hnd, block_header_t * obj,
+int32_t index_read_block_fixup(block_handle_t * hnd, block_head_t * obj,
     uint64_t vbn, uint32_t objid, uint32_t alloc_size)
 {
     int32_t ret = 0;
@@ -218,7 +218,7 @@ int32_t index_read_block_fixup(block_handle_t * hnd, block_header_t * obj,
     return fixup_object(obj);
 }
 
-int32_t check_obj(block_handle_t * hnd, block_header_t * obj)
+int32_t check_obj(block_handle_t * hnd, block_head_t * obj)
 {
     if ((NULL == hnd) || (NULL == obj))
     {
@@ -237,7 +237,7 @@ int32_t check_obj(block_handle_t * hnd, block_header_t * obj)
     return 0;
 }
 
-int32_t index_update_block_pingpong_init(block_handle_t * hnd, block_header_t * obj,
+int32_t index_update_block_pingpong_init(block_handle_t * hnd, block_head_t * obj,
     uint64_t vbn)
 {
     int32_t ret = 0;
@@ -288,7 +288,7 @@ int32_t index_update_block_pingpong_init(block_handle_t * hnd, block_header_t * 
     return 0;
 }
 
-int32_t index_update_block_pingpong(block_handle_t * hnd, block_header_t * obj,
+int32_t index_update_block_pingpong(block_handle_t * hnd, block_head_t * obj,
     uint64_t vbn)
 {
     int32_t ret = 0;
@@ -328,21 +328,21 @@ int32_t index_update_block_pingpong(block_handle_t * hnd, block_header_t * obj,
     return 0;
 }
 
-block_header_t *get_last_correct_dat(uint8_t * buf, uint32_t objid,
+block_head_t *get_last_correct_dat(uint8_t * buf, uint32_t objid,
     uint32_t alloc_size, uint32_t cnt)
 {
     uint32_t i = 0;
     uint32_t prev_i = 0;
     uint16_t prev_seq_no = 0;
     int32_t ret = 0;
-    block_header_t *obj = NULL;
+    block_head_t *obj = NULL;
 
     ASSERT(NULL != buf);
     ASSERT(0 != alloc_size);
 
     for (i = 0; i < cnt; i++)
     {
-        obj = (block_header_t *)(buf + alloc_size * i);
+        obj = (block_head_t *)(buf + alloc_size * i);
 
         if (0 == obj->blk_id)
         { // not written yet
@@ -360,7 +360,7 @@ block_header_t *get_last_correct_dat(uint8_t * buf, uint32_t objid,
 
     for (i = 0; i < cnt; i++)
     {
-        obj = (block_header_t *)(buf + alloc_size * prev_i);
+        obj = (block_head_t *)(buf + alloc_size * prev_i);
 
         if (0 == obj->blk_id)
         { // not written yet
@@ -398,13 +398,13 @@ block_header_t *get_last_correct_dat(uint8_t * buf, uint32_t objid,
     return NULL;
 }
 
-int32_t index_read_block_pingpong(block_handle_t * hnd, block_header_t * obj,
+int32_t index_read_block_pingpong(block_handle_t * hnd, block_head_t * obj,
     uint64_t vbn, uint32_t objid, uint32_t alloc_size)
 {
     int32_t ret = 0;
     uint32_t block_size = 0;
     uint8_t *buf = NULL;
-    block_header_t * tmp_obj = NULL;
+    block_head_t * tmp_obj = NULL;
 
     if ((NULL == hnd) || (NULL == obj) || (0 == alloc_size))
     {

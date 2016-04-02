@@ -87,7 +87,7 @@ int64_t index_get_target_key(object_handle_t *tree, uint64_t target)
 }
 
 int32_t index_walk_all(object_handle_t *tree, bool_t v_bReverse, uint8_t flags,
-    void *para, WalkAllCallBack v_pCallBack)
+    void *para, tree_walk_cb_t cb)
 {
     int32_t ret = 0;
     uint8_t ucIfFlag = (B_FALSE == v_bReverse)
@@ -95,10 +95,10 @@ int32_t index_walk_all(object_handle_t *tree, bool_t v_bReverse, uint8_t flags,
     uint8_t ucWhileFlag = (B_FALSE == v_bReverse)
         ? 0 : INDEX_GET_PREV;
 
-    if ((NULL == tree) || (NULL == v_pCallBack))
+    if ((NULL == tree) || (NULL == cb))
     {
-        LOG_ERROR("Invalid parameter. tree(%p) v_pCallBack(%p)\n",
-            tree, v_pCallBack);
+        LOG_ERROR("Invalid parameter. tree(%p) cb(%p)\n",
+            tree, cb);
         return -INDEX_ERR_PARAMETER;
     }
 
@@ -111,7 +111,7 @@ int32_t index_walk_all(object_handle_t *tree, bool_t v_bReverse, uint8_t flags,
     {
 	    do
 	    {
-            ret = v_pCallBack(tree, para);
+            ret = cb(tree, para);
             if (ret < 0)
             {
                 LOG_ERROR("Call back failed. tree(%p) para(%p) ret(%d)\n",
@@ -132,7 +132,7 @@ static int32_t tree_callback(void *tree, void *para)
 #if 0
     int32_t ret = 0;
     char name[OBJ_NAME_SIZE];
-    WALK_ALL_TREES_PARA_S *para = para;
+    tree_walk_para_t *para = para;
     object_handle_t *tree = NULL;
 
     ASSERT(NULL != tree);
@@ -170,7 +170,7 @@ static int32_t tree_callback(void *tree, void *para)
 }
 
 int32_t index_walk_all_attrs(object_handle_t *dir_tree,
-    WALK_ALL_TREES_PARA_S *para)
+    tree_walk_para_t *para)
 {
 #if 0
     int32_t ret = 0;

@@ -62,10 +62,10 @@ extern "C" {
 #define OS_SLEEP_MS(x)                  
 #define OSThreadExit()                  pthread_exit(NULL)
 
-typedef pthread_mutex_t             OS_MUTEX;
-typedef pthread_rwlock_t            OS_RWLOCK;
-typedef pthread_t                   OS_THREAD_ID;
-typedef pthread_t                   OS_THREAD_T;
+typedef pthread_mutex_t             os_mutex_t;
+typedef pthread_rwlock_t            os_rwlock;
+typedef pthread_t                   os_thread_id_t;
+typedef pthread_t                   os_thread_t;
 
 #define OS_GET_THREAD_ID()         pthread_self()
 

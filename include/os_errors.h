@@ -42,7 +42,7 @@ History:
 extern "C" {
 #endif
 
-typedef enum tagERRORS_CODE_E
+typedef enum error_code
 {
     // FILE_IO errors
     FILE_IO_ERR_START = 100000,
@@ -136,7 +136,7 @@ typedef enum tagERRORS_CODE_E
 
     
     INDEX_ERR_BUTT
-} ERRORS_CODE_E;
+} error_code_t;
 
 #ifdef	__cplusplus
 }

@@ -43,29 +43,29 @@ History:
 
 #define LIST_WALK_FINISHED 1
 
-typedef struct tagQUEUE_ENTRY_S
+typedef struct queue_entry
 {
-    DLIST_ENTRY_S entry;
+    dlist_entry_t entry;
     uint64_t member;
-} QUEUE_ENTRY_S;
+} queue_entry_t;
 
-typedef struct tagCALLBACK_PARA_S
+typedef struct queue_cb
 {
-    QUEUE_S *q;
+    queue_t *q;
     uint64_t member;
-} CALLBACK_PARA_S;
+} queue_cb_t;
 
-typedef struct tagWALK_CALL_BACK_PARA_S
+typedef struct queue_walk_cb
 {
     int32_t (*func)(uint64_t, void *);
     void *para;
-} WALK_CALL_BACK_PARA_S;
+} queue_walk_cb_t;
 
-QUEUE_S *queue_create(int32_t max_num)
+queue_t *queue_create(int32_t max_num)
 {
-    QUEUE_S *q = NULL;
+    queue_t *q = NULL;
 
-    q = (QUEUE_S *)OS_MALLOC(sizeof(QUEUE_S));
+    q = (queue_t *)OS_MALLOC(sizeof(queue_t));
     if (NULL == q)
     {
         return NULL;
@@ -77,9 +77,9 @@ QUEUE_S *queue_create(int32_t max_num)
     return q;
 }
 
-int32_t queue_push(QUEUE_S *q, uint64_t member)
+int32_t queue_push(queue_t *q, uint64_t member)
 {
-    QUEUE_ENTRY_S *entry = NULL;
+    queue_entry_t *entry = NULL;
     
     ASSERT(q != NULL);
 
@@ -88,7 +88,7 @@ int32_t queue_push(QUEUE_S *q, uint64_t member)
         return -ERR_QUEUE_FULL;
     }
 
-    entry = OS_MALLOC(sizeof(QUEUE_ENTRY_S));
+    entry = OS_MALLOC(sizeof(queue_entry_t));
     if (NULL == entry)
     {
         return -ERR_QUEUE_MALLOC;
@@ -100,9 +100,9 @@ int32_t queue_push(QUEUE_S *q, uint64_t member)
     return 0;
 }
 
-int32_t queue_pop(QUEUE_S *q, uint64_t *member)
+int32_t queue_pop(queue_t *q, uint64_t *member)
 {
-    QUEUE_ENTRY_S *entry = NULL;
+    queue_entry_t *entry = NULL;
     
     ASSERT(q != NULL);
     ASSERT(member != NULL);
@@ -112,7 +112,7 @@ int32_t queue_pop(QUEUE_S *q, uint64_t *member)
         return -ERR_QUEUE_EMPTY;
     }
 
-    entry = OS_CONTAINER(q->head.head.next, QUEUE_ENTRY_S, entry);
+    entry = OS_CONTAINER(q->head.head.next, queue_entry_t, entry);
     *member = entry->member;
     dlist_remove_entry(&q->head, &entry->entry);
     OS_FREE(entry);
@@ -120,11 +120,11 @@ int32_t queue_pop(QUEUE_S *q, uint64_t *member)
     return 0;
 }
 
-int32_t queue_pop_push(QUEUE_S *q, uint64_t push_member,
+int32_t queue_pop_push(queue_t *q, uint64_t push_member,
     uint64_t *pop_member)
 {
     int32_t ret = 0;
-    QUEUE_ENTRY_S *entry = NULL;
+    queue_entry_t *entry = NULL;
     
     ASSERT(q != NULL);
     ASSERT(pop_member != NULL);
@@ -132,7 +132,7 @@ int32_t queue_pop_push(QUEUE_S *q, uint64_t push_member,
     if (0 == q->head.num)
     {
         ret = ERR_QUEUE_EMPTY;
-        entry = OS_MALLOC(sizeof(QUEUE_ENTRY_S));
+        entry = OS_MALLOC(sizeof(queue_entry_t));
         if (NULL == entry)
         {
             return -ERR_QUEUE_MALLOC;
@@ -140,7 +140,7 @@ int32_t queue_pop_push(QUEUE_S *q, uint64_t push_member,
     }
     else
     {
-        entry = OS_CONTAINER(q->head.head.next, QUEUE_ENTRY_S, entry);
+        entry = OS_CONTAINER(q->head.head.next, queue_entry_t, entry);
         *pop_member = entry->member;
         dlist_remove_entry(&q->head, &entry->entry);
     }
@@ -151,15 +151,15 @@ int32_t queue_pop_push(QUEUE_S *q, uint64_t push_member,
     return ret;
 }
 
-static int32_t compare_and_remove_member(void *para, DLIST_ENTRY_S *entry)
+static int32_t compare_and_remove_member(void *para, dlist_entry_t *entry)
 {
-    QUEUE_ENTRY_S *tmp_entry = NULL;
-    CALLBACK_PARA_S *tmp_para = para;
+    queue_entry_t *tmp_entry = NULL;
+    queue_cb_t *tmp_para = para;
 
     ASSERT(NULL != entry);
     ASSERT(NULL != para);
 
-    tmp_entry = OS_CONTAINER(entry, QUEUE_ENTRY_S, entry);
+    tmp_entry = OS_CONTAINER(entry, queue_entry_t, entry);
 
     if (tmp_entry->member == tmp_para->member)
     {
@@ -171,10 +171,10 @@ static int32_t compare_and_remove_member(void *para, DLIST_ENTRY_S *entry)
     return 0;
 }
 
-int32_t queue_remove_member(QUEUE_S *q, uint64_t member)
+int32_t queue_remove_member(queue_t *q, uint64_t member)
 {
     int32_t ret = 0;
-    CALLBACK_PARA_S para;
+    queue_cb_t para;
     
     ASSERT(q != NULL);
 
@@ -190,25 +190,25 @@ int32_t queue_remove_member(QUEUE_S *q, uint64_t member)
     return ret;
 }
 
-static int32_t walk_call_back(void *para, DLIST_ENTRY_S *entry)
+static int32_t walk_call_back(void *para, dlist_entry_t *entry)
 {
-    WALK_CALL_BACK_PARA_S *tmp_para = NULL;
-    QUEUE_ENTRY_S *tmp_entry = NULL;
+    queue_walk_cb_t *tmp_para = NULL;
+    queue_entry_t *tmp_entry = NULL;
 
     ASSERT(NULL != entry);
     ASSERT(NULL != para);
 
     tmp_para = para;
-    tmp_entry = OS_CONTAINER(entry, QUEUE_ENTRY_S, entry);
+    tmp_entry = OS_CONTAINER(entry, queue_entry_t, entry);
 
     return tmp_para->func(tmp_entry->member, tmp_para->para);
 }
 
-int32_t queue_walk_all(QUEUE_S *q,
+int32_t queue_walk_all(queue_t *q,
     int32_t (*func)(uint64_t, void *), void *para)
 {
     int32_t ret = 0;
-    WALK_CALL_BACK_PARA_S tmp_para;
+    queue_walk_cb_t tmp_para;
     
     ASSERT(q != NULL);
 
@@ -225,28 +225,28 @@ int32_t queue_walk_all(QUEUE_S *q,
 }
 
 
-int32_t queue_get_size(QUEUE_S *q)
+int32_t queue_get_size(queue_t *q)
 {
     ASSERT(q != NULL);
 
     return (int32_t)q->head.num;
 }
 
-int32_t queue_get_max_size(QUEUE_S *q)
+int32_t queue_get_max_size(queue_t *q)
 {
     ASSERT(q != NULL);
 
     return (int32_t)q->max_num;
 }
 
-int32_t remove_member_call_back(void *para, DLIST_ENTRY_S *entry)
+int32_t remove_member_call_back(void *para, dlist_entry_t *entry)
 {
-    QUEUE_ENTRY_S *tmp_entry = NULL;
-    QUEUE_S *q = para;
+    queue_entry_t *tmp_entry = NULL;
+    queue_t *q = para;
 
     ASSERT(NULL != entry);
 
-    tmp_entry = OS_CONTAINER(entry, QUEUE_ENTRY_S, entry);
+    tmp_entry = OS_CONTAINER(entry, queue_entry_t, entry);
 
     dlist_remove_entry(&q->head, &tmp_entry->entry);
     OS_FREE(tmp_entry);
@@ -254,7 +254,7 @@ int32_t remove_member_call_back(void *para, DLIST_ENTRY_S *entry)
     return 0;
 }
 
-void queue_clean(QUEUE_S *q)
+void queue_clean(queue_t *q)
 {
     ASSERT(q != NULL);
 
@@ -268,7 +268,7 @@ void queue_clean(QUEUE_S *q)
     return;
 }
 
-int32_t queue_destroy(QUEUE_S *q)
+int32_t queue_destroy(queue_t *q)
 {
     ASSERT(q != NULL);
 

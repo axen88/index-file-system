@@ -120,7 +120,7 @@ uint32_t parse_cmd(char *cmd, char *argv[], uint32_t argc)
     return cnt;
 }
 
-void show_sub_cmd_list(OS_CMD_LIST_S *cmd_list[], uint32_t cmd_num, NET_PARA_S *net)
+void show_sub_cmd_list(os_cmd_list_t *cmd_list[], uint32_t cmd_num, net_para_t *net)
 {
 	uint32_t i = 0;
 	uint32_t j = 0;
@@ -129,32 +129,32 @@ void show_sub_cmd_list(OS_CMD_LIST_S *cmd_list[], uint32_t cmd_num, NET_PARA_S *
 	{
         for (j = 0; j < MAX_CMD_LEVEL; j++)
         {
-            if (NULL == cmd_list[i]->cmdLevel[j])
+            if (NULL == cmd_list[i]->level[j])
             {
                 break;
             }
             
-            OS_PRINT(net, "%s ", cmd_list[i]->cmdLevel[j]);
+            OS_PRINT(net, "%s ", cmd_list[i]->level[j]);
         }
         
 		OS_PRINT(net, "%s\n", cmd_list[i]->comment);
 	}
 }
 
-void show_cmd_list(OS_CMD_LIST_S *cmd_list, NET_PARA_S *net)
+void show_cmd_list(os_cmd_list_t *cmd_list, net_para_t *net)
 {
-    while (NULL != cmd_list->cmdLevel[0])
+    while (NULL != cmd_list->level[0])
 	{
         uint32_t j;
         
         for (j = 0; j < MAX_CMD_LEVEL; j++)
         {
-            if (NULL == cmd_list->cmdLevel[j])
+            if (NULL == cmd_list->level[j])
             {
                 break;
             }
             
-            OS_PRINT(net, "%s ", cmd_list->cmdLevel[j]);
+            OS_PRINT(net, "%s ", cmd_list->level[j]);
         }
         
 		OS_PRINT(net, ": %s\n", cmd_list->comment);
@@ -166,13 +166,13 @@ void show_cmd_list(OS_CMD_LIST_S *cmd_list, NET_PARA_S *net)
 	OS_PRINT(net, "quit : quit the system\n");
 }
 
-int32_t execute_cmd(int32_t argc, char *argv[], OS_CMD_LIST_S *cmd_list, NET_PARA_S *net)
+int32_t execute_cmd(int32_t argc, char *argv[], os_cmd_list_t *cmd_list, net_para_t *net)
 {
     int32_t level;
-    OS_CMD_LIST_S *cmd = cmd_list;
-    OS_CMD_LIST_S *tmp_cmd = NULL;
+    os_cmd_list_t *cmd = cmd_list;
+    os_cmd_list_t *tmp_cmd = NULL;
     int32_t tmp_num = 0;
-    OS_CMD_LIST_S *sub_cmd[MAX_SUB_CMD_NUM];
+    os_cmd_list_t *sub_cmd[MAX_SUB_CMD_NUM];
     int32_t sub_cmd_num = 0;
 
     if (strcmp("help", argv[0]) == 0)
@@ -185,7 +185,7 @@ int32_t execute_cmd(int32_t argc, char *argv[], OS_CMD_LIST_S *cmd_list, NET_PAR
         return CMD_QUIT;
     }
     
-    while (NULL != cmd->cmdLevel[0])
+    while (NULL != cmd->level[0])
     {
         for (level = 0; level < MAX_CMD_LEVEL; level++)
         {
@@ -194,12 +194,12 @@ int32_t execute_cmd(int32_t argc, char *argv[], OS_CMD_LIST_S *cmd_list, NET_PAR
                 break;
             }
             
-            if (NULL == cmd->cmdLevel[level])
+            if (NULL == cmd->level[level])
             {
                 break;
             }
             
-            if (0 != strcmp(cmd->cmdLevel[level], argv[level]))
+            if (0 != strcmp(cmd->level[level], argv[level]))
             {
                 break;
             }
@@ -212,7 +212,7 @@ int32_t execute_cmd(int32_t argc, char *argv[], OS_CMD_LIST_S *cmd_list, NET_PAR
             break;
         }
 
-        if (NULL == cmd->cmdLevel[level])
+        if (NULL == cmd->level[level])
         {
             if (level == argc)
             {
@@ -287,7 +287,7 @@ int32_t os_parse_para(int argc, char *argv[], char *para,
     return 0;
 }
 
-int32_t parse_and_exec_cmd(char *cmd, OS_CMD_LIST_S cmd_list[], NET_PARA_S *net)
+int32_t parse_and_exec_cmd(char *cmd, os_cmd_list_t cmd_list[], net_para_t *net)
 {
     uint32_t tmp_argc = 0;
     char **tmp_argv = NULL;
@@ -317,7 +317,7 @@ int32_t parse_and_exec_cmd(char *cmd, OS_CMD_LIST_S cmd_list[], NET_PARA_S *net)
     return CMD_QUIT;
 }
 
-void os_cmd_ui(OS_CMD_LIST_S cmd_list[], NET_PARA_S *net)
+void os_cmd_ui(os_cmd_list_t cmd_list[], net_para_t *net)
 {
     int32_t i = 0;
     char *cmd = NULL;

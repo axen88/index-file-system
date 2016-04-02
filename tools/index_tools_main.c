@@ -40,7 +40,7 @@ History:
 MODULE(PID_INDEX);
 #include "os_log.h"
 
-extern OS_CMD_LIST_S INDEX_CMD_LIST[];
+extern os_cmd_list_t ifs_cmd_list[];
 
 int tools_print(void *net, const char *format, ...)
 {
@@ -60,7 +60,7 @@ int tools_print(void *net, const char *format, ...)
 int32_t main(int32_t argc, char *argv[])
 {
     int32_t ret = 0;
-    NET_PARA_S net;
+    net_para_t net;
     
     LOG_SYSTEM_INIT();
     ret = index_init_system();
@@ -72,7 +72,7 @@ int32_t main(int32_t argc, char *argv[])
     {
         net.net = NULL;
         net.print = tools_print;
-        os_cmd_ui(INDEX_CMD_LIST, &net);
+        os_cmd_ui(ifs_cmd_list, &net);
         index_exit_system();
     }
     

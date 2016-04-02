@@ -36,7 +36,7 @@ History:
 *******************************************************************************/
 #include "index_if.h"
 
-void parse_index_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para)
+void parse_index_para(int argc, char *argv[], ifs_tools_para_t *para)
 {
     if (0 != os_parse_para(argc, argv, "-i", para->index_name, INDEX_NAME_SIZE))
     {
@@ -64,7 +64,7 @@ void parse_index_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para)
     return;
 }
 
-void parse_object_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para)
+void parse_object_para(int argc, char *argv[], ifs_tools_para_t *para)
 {
     if (0 != os_parse_para(argc, argv, "-o", para->tmp, TMP_BUF_SIZE))
     {
@@ -88,9 +88,9 @@ void parse_object_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para)
     return;
 }
 
-void parse_all_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para)
+void parse_all_para(int argc, char *argv[], ifs_tools_para_t *para)
 {
-    memset(para, 0, sizeof(INDEX_TOOLS_PARA_S));
+    memset(para, 0, sizeof(ifs_tools_para_t));
     
     OS_RWLOCK_INIT(&para->rwlock);
     parse_index_para(argc, argv, para);
@@ -123,7 +123,7 @@ void parse_all_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para)
     return;
 }
 
-OS_CMD_LIST_S INDEX_CMD_LIST[]
+os_cmd_list_t ifs_cmd_list[]
 = {
     {do_create_cmd,   {"create",   NULL, NULL}, "<-i index_name> [-o obj_id] [-s start_lba]"},
     {do_open_cmd,     {"open",     NULL, NULL}, "<-i index_name> [-o obj_id] [-s start_lba]"},

@@ -39,7 +39,7 @@ MODULE(PID_INDEX);
 #include "os_log.h"
 
 avl_tree_t *g_index_list = NULL;
-OS_RWLOCK g_index_list_rwlock;
+os_rwlock g_index_list_rwlock;
 
 void close_index(index_handle_t *index);
 extern int32_t fixup_index(index_handle_t *index);
@@ -123,7 +123,7 @@ void index_exit_system(void)
         return;
     }
 
-    (void)avl_walk_all(g_index_list, (avl_walk_call_back)close_one_index, NULL);
+    (void)avl_walk_all(g_index_list, (avl_walk_cb_t)close_one_index, NULL);
 
     OS_FREE(g_index_list);
     g_index_list = NULL;
@@ -138,7 +138,7 @@ int32_t walk_all_opened_index(
     int32_t ret = 0;
     
     OS_RWLOCK_WRLOCK(&g_index_list_rwlock);
-    ret = avl_walk_all(g_index_list, (avl_walk_call_back)func, para);
+    ret = avl_walk_all(g_index_list, (avl_walk_cb_t)func, para);
     OS_RWLOCK_WRUNLOCK(&g_index_list_rwlock);
     
     return ret;
@@ -270,7 +270,7 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
         index_name, total_sectors, start_lba);
 
     /* already opened */
-    tmp_index = avl_find(g_index_list, (avl_find_fn)compare_index2, index_name, &where);
+    tmp_index = avl_find(g_index_list, (avl_find_fn_t)compare_index2, index_name, &where);
     if (NULL != tmp_index)
     {
         *index = tmp_index;
@@ -357,7 +357,7 @@ int32_t index_open_nolock(const char *index_name, uint64_t start_lba, index_hand
 
     LOG_INFO("Open the index. index_name(%s) start_lba(%lld)\n", index_name, start_lba);
 
-    tmp_index = avl_find(g_index_list, (avl_find_fn)compare_index2, index_name, &where);
+    tmp_index = avl_find(g_index_list, (avl_find_fn_t)compare_index2, index_name, &where);
     if (NULL != tmp_index)
     {
         tmp_index->index_ref_cnt++;
@@ -432,7 +432,7 @@ void close_index(index_handle_t *index)
     ASSERT(NULL != index);
 
     // close all user object
-    avl_walk_all(&index->obj_list, (avl_walk_call_back)close_one_object, NULL);
+    avl_walk_all(&index->obj_list, (avl_walk_cb_t)close_one_object, NULL);
 
     // close system object
     if (index->id_obj != NULL)
@@ -518,7 +518,7 @@ index_handle_t *index_get_handle(const char * index_name)
     }
 
     OS_RWLOCK_WRLOCK(&g_index_list_rwlock);
-    index = avl_find(g_index_list, (avl_find_fn)compare_index2, index_name, &where);
+    index = avl_find(g_index_list, (avl_find_fn_t)compare_index2, index_name, &where);
     OS_RWLOCK_WRUNLOCK(&g_index_list_rwlock);
     
     return index;

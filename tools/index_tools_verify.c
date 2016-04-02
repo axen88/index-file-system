@@ -39,18 +39,18 @@ History:
 MODULE(PID_INDEX);
 #include "os_log.h"
 
-int do_verify_cmd(int argc, char *argv[], NET_PARA_S *net)
+int do_verify_cmd(int argc, char *argv[], net_para_t *net)
 {
-    INDEX_TOOLS_PARA_S *para = NULL;
+    ifs_tools_para_t *para = NULL;
 
     OS_PRINT(net, "comming soon.\n");
     return 0;
 
-    para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
+    para = OS_MALLOC(sizeof(ifs_tools_para_t));
     if (NULL == para)
     {
         OS_PRINT(net, "Allocate memory failed. size(%d)\n",
-            (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
+            (uint32_t)sizeof(ifs_tools_para_t));
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 

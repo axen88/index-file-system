@@ -49,30 +49,30 @@ History:
 
 #define FILE_BUF_LEN  1024
 
-typedef struct tagFILE_HANDLE_S
+typedef struct file_handle
 {
     struct file *file_hnd;
     loff_t offset;
     char buf[FILE_BUF_LEN];
-    OS_RWLOCK rwlock;
-} FILE_HANDLE_S;
+    os_rwlock rwlock;
+} file_handle_t;
 
 int32_t file_open_or_create(void **hnd, const char *name, uint32_t flags)
 {
-    FILE_HANDLE_S *tmp_hnd = NULL;
+    file_handle_t *tmp_hnd = NULL;
 
     if ((NULL == hnd) || (NULL == name))
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
 
-    tmp_hnd = OS_MALLOC(sizeof(FILE_HANDLE_S));
+    tmp_hnd = OS_MALLOC(sizeof(file_handle_t));
     if (NULL == tmp_hnd)
     {
         return -FILE_IO_ERR_MALLOC;
     }
 
-    memset(tmp_hnd, 0, sizeof(FILE_HANDLE_S));
+    memset(tmp_hnd, 0, sizeof(file_handle_t));
     
     tmp_hnd->file_hnd = filp_open(name, (int32_t)flags, 0);
     if (IS_ERR(tmp_hnd->file_hnd))
@@ -99,7 +99,7 @@ int32_t os_file_create(void **hnd, const char *name)
 
 int32_t os_file_seek(void *hnd, uint64_t offset)
 {
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
     
     if (NULL == tmp_hnd)
     {
@@ -116,7 +116,7 @@ int32_t os_file_seek(void *hnd, uint64_t offset)
 int32_t os_file_pwrite(void *hnd, void *buf,
     uint32_t size, uint64_t offset)
 {
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
     mm_segment_t oldFs;
     int32_t ret = 0;
 
@@ -141,7 +141,7 @@ int32_t os_file_pwrite(void *hnd, void *buf,
 int32_t os_file_pread(void *hnd, void *buf,
     uint32_t size, uint64_t offset)
 {
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
     mm_segment_t oldFs;
     int32_t ret = 0;
 
@@ -165,7 +165,7 @@ int32_t os_file_pread(void *hnd, void *buf,
 
 int32_t os_file_write(void *hnd, void *buf, uint32_t size)
 {
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
     mm_segment_t oldFs;
     int32_t ret = 0;
 
@@ -188,7 +188,7 @@ int32_t os_file_write(void *hnd, void *buf, uint32_t size)
 
 int32_t os_file_read(void *hnd, void *buf, uint32_t size)
 {
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
     mm_segment_t oldFs;
     int32_t ret = 0;
     loff_t offset = 0;
@@ -212,7 +212,7 @@ int32_t os_file_read(void *hnd, void *buf, uint32_t size)
 
 int32_t os_file_close(void *hnd)
 {
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
 
     if (NULL == tmp_hnd)
     {
@@ -233,7 +233,7 @@ int32_t os_file_close(void *hnd)
 
 void os_file_printf(void *hnd, const char *format, ...)
 {
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
     va_list ap;
 
     if (NULL == tmp_hnd)
@@ -276,28 +276,28 @@ EXPORT_SYMBOL(os_file_close);
 #include "os_adapter.h"
 #include "os_file_if.h"
 
-typedef struct tagFILE_HANDLE_S
+typedef struct file_handle
 {
     FILE *file_hnd;
-    OS_RWLOCK rwlock;
-} FILE_HANDLE_S;
+    os_rwlock rwlock;
+} file_handle_t;
 
 int32_t file_open_or_create(void **hnd, const char *name, char *v_pcMethod)
 {
-    FILE_HANDLE_S *tmp_hnd = NULL;
+    file_handle_t *tmp_hnd = NULL;
 
     if ((NULL == hnd) || (NULL == name) || (NULL == v_pcMethod))
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
 
-    tmp_hnd = OS_MALLOC(sizeof(FILE_HANDLE_S));
+    tmp_hnd = OS_MALLOC(sizeof(file_handle_t));
     if (NULL == tmp_hnd)
     {
         return FILE_IO_ERR_MALLOC;
     }
     
-    memset(tmp_hnd, 0, sizeof(FILE_HANDLE_S));
+    memset(tmp_hnd, 0, sizeof(file_handle_t));
     
     tmp_hnd->file_hnd = fopen(name, v_pcMethod);
     if (NULL == tmp_hnd->file_hnd)
@@ -332,7 +332,7 @@ int32_t os_file_open_or_create(void **hnd, const char *name)
 
 int32_t os_file_seek(void *hnd, uint64_t offset)
 {
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
 
     if (NULL == hnd)
     {
@@ -350,7 +350,7 @@ int32_t os_file_pwrite(void *hnd, void *buf, uint32_t size,
     uint64_t offset)
 {
     int32_t ret = 0;
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
 
     if ((NULL == tmp_hnd) || (NULL == buf) || (0 == size))
     {
@@ -375,7 +375,7 @@ int32_t os_file_pread(void *hnd, void *buf, uint32_t size,
     uint64_t offset)
 {
     int32_t ret = 0;
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
 
     if ((NULL == tmp_hnd) || (NULL == buf) || (0 == size))
     {
@@ -398,7 +398,7 @@ int32_t os_file_pread(void *hnd, void *buf, uint32_t size,
 
 int32_t os_file_write(void *hnd, void *buf, uint32_t size)
 {
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
 
     if ((NULL == tmp_hnd) || (NULL == buf) || (0 == size))
     {
@@ -411,7 +411,7 @@ int32_t os_file_write(void *hnd, void *buf, uint32_t size)
 
 int32_t os_file_read(void *hnd, void *buf, uint32_t size)
 {
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
 
     if ((NULL == tmp_hnd) || (NULL == buf) || (0 == size))
     {
@@ -423,7 +423,7 @@ int32_t os_file_read(void *hnd, void *buf, uint32_t size)
 
 int32_t os_file_close(void *hnd)
 {
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
 
     if (NULL == tmp_hnd)
     {
@@ -445,7 +445,7 @@ int32_t os_file_close(void *hnd)
 int32_t os_file_resize(void *hnd, uint64_t new_size)
 {
 	int32_t fd = 0;
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
 
     if (NULL == tmp_hnd)
     {
@@ -464,7 +464,7 @@ int32_t os_file_resize(void *hnd, uint64_t new_size)
 int64_t os_file_get_size(void *hnd)
 {
     int64_t offset = 0;
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
 
     if (NULL == tmp_hnd)
     {
@@ -498,7 +498,7 @@ int64_t os_file_get_size(void *hnd)
 
 void os_file_set_buf(void *hnd, void *buf, uint32_t size)
 {
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
 
     if (NULL == tmp_hnd)
     {
@@ -528,7 +528,7 @@ int32_t os_file_exist(const char *name)
 
 void os_file_printf(void *hnd, const char *format, ...)
 {
-    FILE_HANDLE_S *tmp_hnd = hnd;
+    file_handle_t *tmp_hnd = hnd;
     va_list ap;
 
     if (NULL == tmp_hnd)

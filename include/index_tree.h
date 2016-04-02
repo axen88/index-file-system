@@ -52,11 +52,7 @@ extern "C" {
 #define INDEX_ADD_BLOCK      0x40 /* add the block of the current key occupied */
 #define INDEX_WALK_MASK      0x1F
 
-
-typedef int32_t (*DeleteFunc) (void *hnd,
-    const void *key, uint16_t key_len,
-    const void *value, uint16_t value_len);
-typedef int32_t (*WalkAllCallBack) (void *obj, void *para);
+typedef int32_t (*tree_walk_cb_t) (void *obj, void *para);
 
 extern int32_t index_search_key_nolock(object_handle_t *tree, const void *key,
     uint16_t key_len, const void *value, uint16_t value_len);
@@ -75,24 +71,24 @@ extern int32_t index_update_value(object_handle_t * tree, const void * key,
     uint16_t key_len, const void *value, uint16_t value_len);
 
 extern int32_t index_walk_all(object_handle_t *obj, bool_t v_bReverse,
-    uint8_t flags, void *para, WalkAllCallBack v_pCallBack);
+    uint8_t flags, void *para, tree_walk_cb_t cb);
 
 extern int32_t walk_tree(object_handle_t *obj, uint8_t flags);
 extern int64_t index_get_total_key(object_handle_t *obj);
 extern int64_t index_get_target_key(object_handle_t *obj, uint64_t target);
 
 
-typedef struct tagWALK_ALL_TREES_PARA_S
+typedef struct tree_walk_para
 {
     uint8_t flags;
     int32_t (*pCallBack)(void *obj, void *para);
-} WALK_ALL_TREES_PARA_S;
+} tree_walk_para_t;
 
 extern int32_t index_walk_all_attrs(object_handle_t *dir_tree,
-    WALK_ALL_TREES_PARA_S *para);
+    tree_walk_para_t *para);
 
 
-extern void init_ib(INDEX_BLOCK * v_pstIB, uint8_t v_ucNodeType,
+extern void init_ib(index_block_t * v_pstIB, uint8_t v_ucNodeType,
     uint32_t alloc_size);
 
 extern int32_t search_key_internal(object_handle_t *tree, const void *key,

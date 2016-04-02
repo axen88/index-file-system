@@ -186,7 +186,7 @@ void index_destroy_sm(space_manager_t *sm)
     OS_RWLOCK_DESTROY(&sm->lock);
 }
 
-static int32_t translate_free_space_to_memory(object_handle_t *tree, QUEUE_S *q)
+static int32_t translate_free_space_to_memory(object_handle_t *tree, queue_t *q)
 {
     uint64_t addr;
     uint64_t len;
@@ -212,7 +212,7 @@ static int32_t translate_free_space_to_memory(object_handle_t *tree, QUEUE_S *q)
 
 int32_t index_init_sbm(space_base_manager_t *sbm, space_manager_t *sm)
 {
-    index_walk_all(sm->space_obj, 0, 0, sbm->q, (WalkAllCallBack)translate_free_space_to_memory);
+    index_walk_all(sm->space_obj, 0, 0, sbm->q, (tree_walk_cb_t)translate_free_space_to_memory);
 
     return 0;
 }

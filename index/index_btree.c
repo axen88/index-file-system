@@ -68,7 +68,7 @@ static int32_t set_ib_dirty(object_handle_t *tree, uint64_t vbn, uint8_t depth)
 {
     uint64_t new_vbn = 0;
     int32_t ret = 0;
-    INDEX_ENTRY *ie = NULL;
+    index_entry_t *ie = NULL;
 
     ASSERT(NULL != tree);
     ASSERT(depth < INDEX_MAX_DEPTH);
@@ -103,7 +103,7 @@ static int32_t set_ib_dirty(object_handle_t *tree, uint64_t vbn, uint8_t depth)
         if (0 != vbn)
         {
             
-            ie = (INDEX_ENTRY *) ((uint8_t *) tree->cache_stack[depth]->ib
+            ie = (index_entry_t *) ((uint8_t *) tree->cache_stack[depth]->ib
                 + tree->position_stack[depth]);
             SET_IE_VBN(ie, vbn);
         }
@@ -131,7 +131,7 @@ static void get_last_ie(object_handle_t * tree)
         last_ie_len += VBN_SIZE;
     }
 
-    tree->ie = (INDEX_ENTRY *)(GET_END_IE(tree->cache->ib) - last_ie_len);
+    tree->ie = (index_entry_t *)(GET_END_IE(tree->cache->ib) - last_ie_len);
     tree->position = tree->cache->ib->head.real_size - last_ie_len;
 
     return;
@@ -258,7 +258,7 @@ static int32_t pop_cache_stack(object_handle_t *tree, uint8_t flags)
         tree->cache->vbn, tree->position);
 
     // recover the entry
-    tree->ie = (INDEX_ENTRY *)((uint8_t *)tree->cache->ib
+    tree->ie = (index_entry_t *)((uint8_t *)tree->cache->ib
         + tree->position);
 
     if (flags & INDEX_GET_PREV)
@@ -269,9 +269,9 @@ static int32_t pop_cache_stack(object_handle_t *tree, uint8_t flags)
     return 0;
 }      
 
-void init_ib(INDEX_BLOCK *ib, uint8_t node_type, uint32_t aloc_size)
+void init_ib(index_block_t *ib, uint8_t node_type, uint32_t aloc_size)
 {
-    INDEX_ENTRY *ie = NULL;
+    index_entry_t *ie = NULL;
 
     ASSERT(NULL != ib);
     
@@ -280,14 +280,14 @@ void init_ib(INDEX_BLOCK *ib, uint8_t node_type, uint32_t aloc_size)
     ib->head.blk_id = INDEX_MAGIC;
     ib->head.alloc_size = aloc_size;
     
-    ib->first_entry_off = sizeof(INDEX_BLOCK);
+    ib->first_entry_off = sizeof(index_block_t);
     if (node_type & INDEX_BLOCK_LARGE)
     {   // have child node
-        ib->head.real_size = sizeof(INDEX_BLOCK) + ENTRY_END_SIZE + VBN_SIZE;
+        ib->head.real_size = sizeof(index_block_t) + ENTRY_END_SIZE + VBN_SIZE;
     }
     else
     {   // no child node
-        ib->head.real_size = sizeof(INDEX_BLOCK) + ENTRY_END_SIZE;
+        ib->head.real_size = sizeof(index_block_t) + ENTRY_END_SIZE;
     }
 
     ib->node_type = node_type;
@@ -316,13 +316,13 @@ void init_ib(INDEX_BLOCK *ib, uint8_t node_type, uint32_t aloc_size)
 }
 
 // make the block no child
-static void make_ib_small(INDEX_BLOCK *ib)
+static void make_ib_small(index_block_t *ib)
 {
-    INDEX_ENTRY *ie = NULL;
+    index_entry_t *ie = NULL;
 
     ASSERT(NULL != ib);
     
-    ib->head.real_size = sizeof(INDEX_BLOCK) + ENTRY_END_SIZE;
+    ib->head.real_size = sizeof(index_block_t) + ENTRY_END_SIZE;
     ib->node_type = INDEX_BLOCK_SMALL;
     
     ie = GET_FIRST_IE(ib);
@@ -624,14 +624,14 @@ int32_t index_search_key(object_handle_t *tree, const void *key,
     return ret;
 }
 
-static INDEX_ENTRY *get_middle_ie(INDEX_BLOCK *ib)
+static index_entry_t *get_middle_ie(index_block_t *ib)
 {
-    INDEX_ENTRY *ie = NULL;
+    index_entry_t *ie = NULL;
     uint32_t uiMidPos = 0;
 
     ASSERT(NULL != ib);
     
-    uiMidPos = (ib->head.real_size - sizeof(INDEX_BLOCK)) >> 1;
+    uiMidPos = (ib->head.real_size - sizeof(index_block_t)) >> 1;
     ie = GET_FIRST_IE(ib);
     while (!(ie->flags & INDEX_ENTRY_END))
     {
@@ -650,7 +650,7 @@ static INDEX_ENTRY *get_middle_ie(INDEX_BLOCK *ib)
 }  
 
 // get the length from current entry to the end entry
-uint32_t get_entries_length(INDEX_ENTRY *ie)
+uint32_t get_entries_length(index_entry_t *ie)
 {
     uint32_t len = 0;
 
@@ -677,7 +677,7 @@ uint32_t get_entries_length(INDEX_ENTRY *ie)
 }      
 
 // get the last entry
-static INDEX_ENTRY *ib_get_last_ie(INDEX_BLOCK *ib)
+static index_entry_t *ib_get_last_ie(index_block_t *ib)
 {
     uint32_t last_ie_len = ENTRY_END_SIZE;
 
@@ -688,12 +688,12 @@ static INDEX_ENTRY *ib_get_last_ie(INDEX_BLOCK *ib)
         last_ie_len += VBN_SIZE;
     }
 
-    return (INDEX_ENTRY *)(GET_END_IE(ib) - last_ie_len);
+    return (index_entry_t *)(GET_END_IE(ib) - last_ie_len);
 }
 
-static void remove_ie(INDEX_BLOCK * ib, INDEX_ENTRY * ie)
+static void remove_ie(index_block_t * ib, index_entry_t * ie)
 {
-    INDEX_ENTRY *next_ie = NULL;
+    index_entry_t *next_ie = NULL;
 
     ASSERT(NULL != ib);
     ASSERT(NULL != ie);
@@ -706,8 +706,8 @@ static void remove_ie(INDEX_BLOCK * ib, INDEX_ENTRY * ie)
     return;
 }
 
-void insert_ie(INDEX_BLOCK * ib, INDEX_ENTRY * ie,
-    INDEX_ENTRY * pos)
+void insert_ie(index_block_t * ib, index_entry_t * ie,
+    index_entry_t * pos)
 {
     ASSERT(NULL != ib);
     ASSERT(NULL != ie);
@@ -726,9 +726,9 @@ void insert_ie(INDEX_BLOCK * ib, INDEX_ENTRY * ie,
 }
 
 // add vbn to an entry
-static INDEX_ENTRY *dump_ie_add_vbn(INDEX_ENTRY * ie, uint64_t vbn)
+static index_entry_t *dump_ie_add_vbn(index_entry_t * ie, uint64_t vbn)
 {
-    INDEX_ENTRY *new_ie = NULL;
+    index_entry_t *new_ie = NULL;
     uint16_t size = 0;
     
     ASSERT(NULL != ie);
@@ -739,7 +739,7 @@ static INDEX_ENTRY *dump_ie_add_vbn(INDEX_ENTRY * ie, uint64_t vbn)
         size += VBN_SIZE;
     }
 
-    new_ie = (INDEX_ENTRY *)OS_MALLOC(size);
+    new_ie = (index_entry_t *)OS_MALLOC(size);
     if (NULL == new_ie)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", size);
@@ -755,9 +755,9 @@ static INDEX_ENTRY *dump_ie_add_vbn(INDEX_ENTRY * ie, uint64_t vbn)
 }  
 
 // delete vbn from an entry
-static INDEX_ENTRY *dump_ie_del_vbn(INDEX_ENTRY * ie)
+static index_entry_t *dump_ie_del_vbn(index_entry_t * ie)
 {
-    INDEX_ENTRY *new_ie = NULL;
+    index_entry_t *new_ie = NULL;
     uint16_t size = 0;
     
     ASSERT(NULL != ie);
@@ -768,7 +768,7 @@ static INDEX_ENTRY *dump_ie_del_vbn(INDEX_ENTRY * ie)
         size -= VBN_SIZE;
     }
 
-    new_ie = (INDEX_ENTRY *)OS_MALLOC(size);
+    new_ie = (index_entry_t *)OS_MALLOC(size);
     if (NULL == new_ie)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", size);
@@ -783,8 +783,8 @@ static INDEX_ENTRY *dump_ie_del_vbn(INDEX_ENTRY * ie)
 }      
 
 // copy the last half entries
-void copy_ib_tail(INDEX_BLOCK * dst_ib, INDEX_BLOCK * src_ib,
-    INDEX_ENTRY * mid_ie)
+void copy_ib_tail(index_block_t * dst_ib, index_block_t * src_ib,
+    index_entry_t * mid_ie)
 {
     uint32_t tail_size = 0;
 
@@ -806,11 +806,11 @@ void copy_ib_tail(INDEX_BLOCK * dst_ib, INDEX_BLOCK * src_ib,
 }
 
 // remove the last half entries
-static void cut_ib_tail(INDEX_BLOCK *src_ib, INDEX_ENTRY *ie)
+static void cut_ib_tail(index_block_t *src_ib, index_entry_t *ie)
 {
     uint8_t *start = NULL;
-    INDEX_ENTRY *last_ie = NULL;
-    INDEX_ENTRY *prev_ie = NULL;
+    index_entry_t *last_ie = NULL;
+    index_entry_t *prev_ie = NULL;
 
     ASSERT(NULL != src_ib);
     ASSERT(NULL != ie);
@@ -832,11 +832,11 @@ static void cut_ib_tail(INDEX_BLOCK *src_ib, INDEX_ENTRY *ie)
 }
 
 // split one block into two block, and get the middle entry
-static INDEX_ENTRY *split_ib(object_handle_t *tree, INDEX_ENTRY *ie)
+static index_entry_t *split_ib(object_handle_t *tree, index_entry_t *ie)
 {
-    INDEX_ENTRY *mid_ie = NULL;
-    INDEX_ENTRY *new_ie = NULL;
-    INDEX_BLOCK *new_ib = NULL;
+    index_entry_t *mid_ie = NULL;
+    index_entry_t *new_ie = NULL;
+    index_block_t *new_ib = NULL;
     ifs_block_cache_t *new_ibc = NULL;
     int32_t pos = 0;         /* Insert iOffset to the new indexHeader */
     int32_t ret = 0;
@@ -861,7 +861,7 @@ static INDEX_ENTRY *split_ib(object_handle_t *tree, INDEX_ENTRY *ie)
     if (pos < 0)
     {   /* Insert the entry OS_S32o newIB */
         insert_ie(new_ib, ie,
-            (INDEX_ENTRY *) (((uint8_t *) GET_FIRST_IE(new_ib) - pos)
+            (index_entry_t *) (((uint8_t *) GET_FIRST_IE(new_ib) - pos)
                 - mid_ie->len));
     }
 
@@ -905,10 +905,10 @@ static INDEX_ENTRY *split_ib(object_handle_t *tree, INDEX_ENTRY *ie)
 // copy the root entries into new block
 static int32_t reparent_root(object_handle_t * tree)
 {
-    INDEX_ENTRY *ie = NULL;
-    INDEX_BLOCK *new_ib = NULL;
+    index_entry_t *ie = NULL;
+    index_block_t *new_ib = NULL;
     ifs_block_cache_t *new_ibc = NULL;
-    INDEX_BLOCK *old_ib = NULL;
+    index_block_t *old_ib = NULL;
     uint32_t alloc_size = 0;
     int32_t ret = 0;
 
@@ -959,15 +959,15 @@ static int32_t reparent_root(object_handle_t * tree)
 	tree->position_stack[tree->depth] = tree->position;
 
 	tree->cache = new_ibc;
-    tree->ie = (INDEX_ENTRY *)((uint8_t *)new_ib + tree->position);
+    tree->ie = (index_entry_t *)((uint8_t *)new_ib + tree->position);
 
     return 0;
 }    
 
-static int32_t tree_insert_ie(object_handle_t *tree, INDEX_ENTRY **new_ie)
+static int32_t tree_insert_ie(object_handle_t *tree, index_entry_t **new_ie)
 {
     uint32_t uiNewSize = 0;
-    INDEX_ENTRY *ie = NULL;
+    index_entry_t *ie = NULL;
     
     ASSERT(NULL != tree);
     ASSERT(NULL != new_ie);
@@ -1010,7 +1010,7 @@ static int32_t tree_insert_ie(object_handle_t *tree, INDEX_ENTRY **new_ie)
 int32_t check_removed_ib(object_handle_t * tree)
 {
     int32_t ret = 0;
-    INDEX_ENTRY *ie = GET_FIRST_IE(tree->cache->ib);
+    index_entry_t *ie = GET_FIRST_IE(tree->cache->ib);
     
     if (0 == (ie->flags & INDEX_ENTRY_END))
     {
@@ -1062,8 +1062,8 @@ int32_t check_removed_ib(object_handle_t * tree)
 
 int32_t remove_leaf(object_handle_t *tree)
 {
-    INDEX_ENTRY *ie = NULL;
-    INDEX_ENTRY *prev_ie = NULL;        /* The previous entry */
+    index_entry_t *ie = NULL;
+    index_entry_t *prev_ie = NULL;        /* The previous entry */
     bool_t is_end = B_FALSE;
     int32_t ret = 0;
     
@@ -1138,7 +1138,7 @@ int32_t remove_leaf(object_handle_t *tree)
 
 int32_t remove_node(object_handle_t *tree)
 {
-    INDEX_ENTRY *succ_ie = NULL;        /* The successor entry */
+    index_entry_t *succ_ie = NULL;        /* The successor entry */
     uint16_t len = 0;
     uint8_t depth = 0;
     uint64_t vbn = 0;
@@ -1179,7 +1179,7 @@ int32_t remove_node(object_handle_t *tree)
     }
 
     // get the old entry
-    tree->ie = (INDEX_ENTRY *)((uint8_t *)tree->ie - len);
+    tree->ie = (index_entry_t *)((uint8_t *)tree->ie - len);
     tree->position -= len;
     
     /* remove the old entry */
@@ -1293,7 +1293,7 @@ int32_t index_remove_key(object_handle_t *tree, const void *key,
 int32_t index_insert_key_nolock(object_handle_t *tree, const void *key,
     uint16_t key_len, const void *value, uint16_t value_len)
 {
-    INDEX_ENTRY *ie = NULL;
+    index_entry_t *ie = NULL;
     uint16_t len = 0;
     int32_t ret = 0;
 
@@ -1320,9 +1320,9 @@ int32_t index_insert_key_nolock(object_handle_t *tree, const void *key,
         return ret;
     }
 
-    len = sizeof(INDEX_ENTRY) + key_len + value_len;
+    len = sizeof(index_entry_t) + key_len + value_len;
 
-    ie = (INDEX_ENTRY *)OS_MALLOC(len);
+    ie = (index_entry_t *)OS_MALLOC(len);
     if (NULL == ie)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", len);

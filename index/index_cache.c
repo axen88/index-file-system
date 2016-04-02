@@ -168,7 +168,7 @@ int32_t flush_dirty_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
 int32_t index_flush_all_dirty_caches(object_info_t *obj_info)
 {
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
-    avl_walk_all(&obj_info->caches, (avl_walk_call_back)flush_dirty_cache, obj_info);
+    avl_walk_all(&obj_info->caches, (avl_walk_cb_t)flush_dirty_cache, obj_info);
     OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
 
     return 0;
@@ -193,7 +193,7 @@ int32_t release_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
 int32_t index_release_all_caches(object_info_t *obj_info)
 {
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
-    avl_walk_all(&obj_info->caches, (avl_walk_call_back)release_cache, obj_info);
+    avl_walk_all(&obj_info->caches, (avl_walk_cb_t)release_cache, obj_info);
     OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
 
     return 0;
@@ -225,7 +225,7 @@ int32_t release_dirty_block(object_info_t *obj_info, ifs_block_cache_t *cache)
 int32_t index_release_all_dirty_blocks(object_info_t *obj_info)
 {
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
-    avl_walk_all(&obj_info->caches, (avl_walk_call_back)release_dirty_block, obj_info);
+    avl_walk_all(&obj_info->caches, (avl_walk_cb_t)release_dirty_block, obj_info);
     OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
 
     return 0;
@@ -247,7 +247,7 @@ int32_t release_old_block_mem(object_info_t *obj_info, ifs_old_block_t *old_blk)
 void index_release_all_old_blocks_mem(object_info_t *obj_info)
 {
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
-    avl_walk_all(&obj_info->old_blocks, (avl_walk_call_back)release_old_block_mem, obj_info);
+    avl_walk_all(&obj_info->old_blocks, (avl_walk_cb_t)release_old_block_mem, obj_info);
     OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
 
     return;
@@ -274,7 +274,7 @@ int32_t release_old_block(object_info_t *obj_info, ifs_old_block_t *old_blk)
 void index_release_all_old_blocks(object_info_t *obj_info)
 {
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
-    avl_walk_all(&obj_info->old_blocks, (avl_walk_call_back)release_old_block, obj_info);
+    avl_walk_all(&obj_info->old_blocks, (avl_walk_cb_t)release_old_block, obj_info);
     OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
 
     return;
@@ -283,7 +283,7 @@ void index_release_all_old_blocks(object_info_t *obj_info)
 int32_t index_block_read(object_handle_t *obj, uint64_t vbn)
 {
     int32_t ret = 0;
-    INDEX_BLOCK *ib = NULL;
+    index_block_t *ib = NULL;
     ifs_block_cache_t *cache = NULL;
     avl_index_t where = 0;
     object_info_t *obj_info;
@@ -298,7 +298,7 @@ int32_t index_block_read(object_handle_t *obj, uint64_t vbn)
     }
 
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
-    cache = avl_find(&obj_info->caches, (avl_find_fn)compare_cache2, &vbn, &where);
+    cache = avl_find(&obj_info->caches, (avl_find_fn_t)compare_cache2, &vbn, &where);
     if (NULL != cache) // block already in the cache
     {
         OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);

@@ -42,28 +42,28 @@ extern "C" {
 #endif
 
 
-typedef struct tagNET_PARA_S
+typedef struct net_para
 {
 	void *net;
     int (*print)(void *net, const char *format, ...);
-} NET_PARA_S;
+} net_para_t;
 
 
-typedef int (*OS_CMD_FUNC)(int argc, char *argv[], NET_PARA_S *net);
+typedef int (*os_cmd_func_t)(int argc, char *argv[], net_para_t *net);
 
 #define MAX_CMD_LEVEL    3
 #define MAX_SUB_CMD_NUM  10
 
-typedef struct tagOS_CMD_LIST_S
+typedef struct os_cmd_list
 {
-	OS_CMD_FUNC func;
-    char *cmdLevel[MAX_CMD_LEVEL];
+	os_cmd_func_t func;
+    char *level[MAX_CMD_LEVEL];
 	char *comment;
-} OS_CMD_LIST_S;
+} os_cmd_list_t;
 
 extern int32_t os_parse_para(int argc, char *argv[], char *para, char *content, uint32_t content_size);
-int32_t parse_and_exec_cmd(char *cmd, OS_CMD_LIST_S cmd_list[], NET_PARA_S *net);
-extern void os_cmd_ui(OS_CMD_LIST_S cmd_list[], NET_PARA_S *net);
+int32_t parse_and_exec_cmd(char *cmd, os_cmd_list_t cmd_list[], net_para_t *net);
+extern void os_cmd_ui(os_cmd_list_t cmd_list[], net_para_t *net);
 
 #ifdef  __cplusplus
 }

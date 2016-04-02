@@ -79,7 +79,7 @@ History:
 #define DATA_TIME_STR_LEN 40
 #define BUF_LEN           1024
 
-typedef struct tagLOG_S
+typedef struct log
 {
     char  dir[LOG_NAME_LEN];      
     char  name[LOG_NAME_LEN];      
@@ -91,11 +91,11 @@ typedef struct tagLOG_S
     char date_time[DATA_TIME_STR_LEN];
     char buf[BUF_LEN];
     
-    OS_RWLOCK   rwlock;                  
+    os_rwlock   rwlock;                  
     void *file_hnd;  
-} LOG_S; 
+} log_t; 
 
-static void *open_log(LOG_S *log)
+static void *open_log(log_t *log)
 {
     char name[LOG_NAME_LEN];
     int32_t ret = 0;
@@ -118,7 +118,7 @@ static void *open_log(LOG_S *log)
 
 #ifdef __KERNEL__
 
-static int32_t backup_log(LOG_S *log)
+static int32_t backup_log(log_t *log)
 {
     int32_t ret = 0;
 
@@ -143,7 +143,7 @@ static int32_t backup_log(LOG_S *log)
 
 #else
 
-static int32_t backup_log(LOG_S *log)
+static int32_t backup_log(log_t *log)
 {
     int32_t ret = 0;
     char bakName[LOG_NAME_LEN];
@@ -207,7 +207,7 @@ void log_set_level(void *log, uint32_t pid, uint32_t level)
         return;
     }
     
-    ((LOG_S *)log)->levels[pid] = level;
+    ((log_t *)log)->levels[pid] = level;
 
     return;
 }
@@ -219,12 +219,12 @@ int32_t log_get_level(void *log, uint32_t pid)
         return -1;
     }
     
-    return ((LOG_S *)log)->levels[pid];
+    return ((log_t *)log)->levels[pid];
 }
 
 void *log_open(const char *file_name, const char *version, const char *dir, uint32_t mode)
 {
-    LOG_S *log = NULL;
+    log_t *log = NULL;
     uint32_t i = 0;
 
     if ((NULL == file_name) || (NULL == version) || (NULL == dir))
@@ -232,13 +232,13 @@ void *log_open(const char *file_name, const char *version, const char *dir, uint
         return NULL;
     }
     
-    log = (LOG_S *)OS_MALLOC(sizeof(LOG_S));
+    log = (log_t *)OS_MALLOC(sizeof(log_t));
     if (NULL == log)
     {
         return NULL;
     }
 
-    memset(log, 0, sizeof(LOG_S));
+    memset(log, 0, sizeof(log_t));
     
     OS_RWLOCK_INIT(&log->rwlock);
 
@@ -266,7 +266,7 @@ void *log_open(const char *file_name, const char *version, const char *dir, uint
 
 void log_close(void *log)
 {
-    LOG_S *tmp_log = (LOG_S *)log;
+    log_t *tmp_log = (log_t *)log;
     
     if (NULL == tmp_log)
     {
@@ -289,7 +289,7 @@ void log_close(void *log)
 
 void log_trace(void *log, uint32_t pid, uint32_t level, const char *format, ...)
 {
-    LOG_S *tmp_log = (LOG_S *)log;
+    log_t *tmp_log = (log_t *)log;
     va_list ap;
 
     if ((NULL == tmp_log) || (pid >= PIDS_NUM) || (level > tmp_log->levels[pid])

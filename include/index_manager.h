@@ -57,7 +57,6 @@ extern int32_t index_get_opened_attr_num(object_handle_t * tree);
 extern index_handle_t *index_get_handle(const char * index_name);
 
 extern int32_t fixup_index_by_name(char *index_name, uint64_t start_lba);
-extern int32_t verify_index(char *index_name, uint64_t start_lba);
 extern int32_t index_verify_attr_by_name(char *index_name, uint64_t start_lba, uint64_t objid);
 
 extern int32_t index_init_system(void);

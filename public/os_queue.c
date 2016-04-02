@@ -40,16 +40,16 @@ History:
 
 #ifndef __EN_LIST_QUEUE__
 
-QUEUE_S *queue_create(int32_t max_num)
+queue_t *queue_create(int32_t max_num)
 {
-    QUEUE_S *q = NULL;
+    queue_t *q = NULL;
 
     if (0 >= max_num)
     {
         return NULL;
     }
 
-    q = (QUEUE_S *)OS_MALLOC(sizeof(QUEUE_S));
+    q = (queue_t *)OS_MALLOC(sizeof(queue_t));
     if (NULL == q)
     {
         return NULL;
@@ -70,7 +70,7 @@ QUEUE_S *queue_create(int32_t max_num)
     return q;
 }
 
-int32_t queue_push(QUEUE_S *q, uint64_t member)
+int32_t queue_push(queue_t *q, uint64_t member)
 {
     ASSERT(q != NULL);
 
@@ -90,7 +90,7 @@ int32_t queue_push(QUEUE_S *q, uint64_t member)
     return 0;
 }
 
-int32_t queue_pop(QUEUE_S *q, uint64_t *member)
+int32_t queue_pop(queue_t *q, uint64_t *member)
 {
     ASSERT(q != NULL);
     ASSERT(member != NULL);
@@ -111,7 +111,7 @@ int32_t queue_pop(QUEUE_S *q, uint64_t *member)
     return 0;
 }
 
-int32_t queue_pop_push(QUEUE_S *q, uint64_t push_member, uint64_t *pop_member)
+int32_t queue_pop_push(queue_t *q, uint64_t push_member, uint64_t *pop_member)
 {
     int32_t ret = 0;
     
@@ -144,7 +144,7 @@ int32_t queue_pop_push(QUEUE_S *q, uint64_t push_member, uint64_t *pop_member)
     return ret;
 }
 
-int32_t queue_remove_member(QUEUE_S *q, uint64_t member)
+int32_t queue_remove_member(queue_t *q, uint64_t member)
 {
     uint32_t head = 0;
     uint32_t num = 0;
@@ -201,7 +201,7 @@ int32_t queue_remove_member(QUEUE_S *q, uint64_t member)
     return -ERR_QUEUE_MEMB_NOT_FOUND;
 }
 
-int32_t queue_walk_all(QUEUE_S *q,
+int32_t queue_walk_all(queue_t *q,
     int32_t (*func)(uint64_t, void *), void *para)
 {
     int32_t ret = 0;
@@ -237,21 +237,21 @@ int32_t queue_walk_all(QUEUE_S *q,
     return ret;
 }
 
-int32_t queue_get_size(QUEUE_S *q)
+int32_t queue_get_size(queue_t *q)
 {
     ASSERT(q != NULL);
 
     return (int32_t)q->num;
 }
 
-int32_t queue_get_max_size(QUEUE_S *q)
+int32_t queue_get_max_size(queue_t *q)
 {
     ASSERT(q != NULL);
 
     return (int32_t)q->max_num;
 }
 
-void queue_clean(QUEUE_S *q)
+void queue_clean(queue_t *q)
 {
     ASSERT(q != NULL);
 
@@ -262,7 +262,7 @@ void queue_clean(QUEUE_S *q)
     return;
 }
 
-int32_t queue_destroy(QUEUE_S *q)
+int32_t queue_destroy(queue_t *q)
 {
     ASSERT(q != NULL);
 

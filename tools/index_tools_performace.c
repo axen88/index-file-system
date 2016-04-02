@@ -40,7 +40,7 @@ History:
 #define TEST_VALUE_LEN 20
 
 int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
-    uint64_t objid, uint64_t keys_num, NET_PARA_S *net)
+    uint64_t objid, uint64_t keys_num, net_para_t *net)
 {
     int32_t ret = 0;
     index_handle_t *index = NULL;
@@ -95,7 +95,7 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
 }
 
 int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
-    uint64_t objid, uint64_t keys_num, NET_PARA_S *net)
+    uint64_t objid, uint64_t keys_num, net_para_t *net)
 {
     int32_t ret = 0;
     index_handle_t *index = NULL;
@@ -147,7 +147,7 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
 
 void *test_performance_thread(void *para)
 {
-    INDEX_TOOLS_PARA_S *tmp_para = para;
+    ifs_tools_para_t *tmp_para = para;
     char obj_name[OBJ_NAME_MAX_SIZE];
 
     OS_RWLOCK_WRLOCK(&tmp_para->rwlock);
@@ -176,7 +176,7 @@ void *test_performance_thread(void *para)
     return NULL;
 }
 
-int32_t test_performance(INDEX_TOOLS_PARA_S *para,
+int32_t test_performance(ifs_tools_para_t *para,
     bool_t v_bInsert)
 {
     void *threads_group = NULL;
@@ -212,15 +212,15 @@ int32_t test_performance(INDEX_TOOLS_PARA_S *para,
     return 0;
 }
 
-int do_performance_cmd(int argc, char *argv[], NET_PARA_S *net)
+int do_performance_cmd(int argc, char *argv[], net_para_t *net)
 {
-    INDEX_TOOLS_PARA_S *para = NULL;
+    ifs_tools_para_t *para = NULL;
 
-    para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
+    para = OS_MALLOC(sizeof(ifs_tools_para_t));
     if (NULL == para)
     {
         OS_PRINT(net, "Allocate memory failed. size(%d)\n",
-            sizeof(INDEX_TOOLS_PARA_S));
+            sizeof(ifs_tools_para_t));
         return -1;
     }
 

@@ -51,26 +51,26 @@ History:
 #include "os_adapter.h"
 #include "os_threads_group.h"
 
-typedef struct tagTHREAD_ARRAY_S
+typedef struct thread_array
 {
     uint32_t uiRealNum;
-    OS_THREAD_T *pPids;
-} THREAD_ARRAY_S;
+    os_thread_t *pPids;
+} thread_array_t;
 
 void *threads_group_create(uint32_t num, void *(*func)(void *),
     void *para, char *thread_name)
 {
-    THREAD_ARRAY_S *pstThreadGroup = NULL;
+    thread_array_t *pstThreadGroup = NULL;
     uint32_t i = 0;
     int32_t ret = 0;
 
-    pstThreadGroup = (THREAD_ARRAY_S *)OS_MALLOC(sizeof(THREAD_ARRAY_S));
+    pstThreadGroup = (thread_array_t *)OS_MALLOC(sizeof(thread_array_t));
     if (NULL == pstThreadGroup)
     {
         return NULL;
     }
 
-    pstThreadGroup->pPids = (OS_THREAD_T *)OS_MALLOC(sizeof(OS_THREAD_T) * num);
+    pstThreadGroup->pPids = (os_thread_t *)OS_MALLOC(sizeof(os_thread_t) * num);
     if (NULL == pstThreadGroup->pPids)
     {
         OS_FREE(pstThreadGroup);
@@ -95,7 +95,7 @@ void *threads_group_create(uint32_t num, void *(*func)(void *),
         }
 
 #else
-        OS_THREAD_T tid = 0;
+        os_thread_t tid = 0;
 
         ret = pthread_create(&tid, NULL, func, para);
         if (ret == 0)
@@ -128,14 +128,14 @@ int32_t threads_group_get_real_num(void *threads_group)
         return -ERR_THREADS_GROUP_INVALID_PARA;
     }
     
-    return (int32_t)((THREAD_ARRAY_S *)threads_group)->uiRealNum;
+    return (int32_t)((thread_array_t *)threads_group)->uiRealNum;
 }
 
 void threads_group_destroy(void *threads_group, uint32_t force,
     uint64_t over_time_ms)
 {
     uint32_t i = 0;
-    THREAD_ARRAY_S *pstThreadGroup = (THREAD_ARRAY_S *)threads_group;
+    thread_array_t *pstThreadGroup = (thread_array_t *)threads_group;
 
     ASSERT (NULL != pstThreadGroup);
 

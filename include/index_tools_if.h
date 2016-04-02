@@ -48,14 +48,14 @@ extern "C" {
 #define TOOLS_FLAGS_REVERSE           0x0002
 #define TOOLS_FLAGS_SB                0x0004
 
-typedef struct tagINDEX_TOOLS_PARA_S
+typedef struct ifs_tools_para
 {
     char index_name[INDEX_NAME_SIZE];
     char tmp[TMP_BUF_SIZE];
     char key[KEY_MAX_SIZE];
     char value[VALUE_MAX_SIZE];
 
-    NET_PARA_S *net;
+    net_para_t *net;
 
     uint64_t objid;
     uint64_t start_lba;
@@ -67,22 +67,22 @@ typedef struct tagINDEX_TOOLS_PARA_S
     uint32_t no;
     bool_t insert;
     uint32_t threads_cnt;
-    OS_RWLOCK rwlock;
-} INDEX_TOOLS_PARA_S;
+    os_rwlock rwlock;
+} ifs_tools_para_t;
 
 
-extern int do_verify_cmd(int argc, char *argv[], NET_PARA_S *net);
-extern int do_fixup_cmd(int argc, char *argv[], NET_PARA_S *net);
-extern int do_dump_cmd(int argc, char *argv[], NET_PARA_S *net);
-extern int do_list_cmd(int argc, char *argv[], NET_PARA_S *net);
-extern int do_create_cmd(int argc, char *argv[], NET_PARA_S *net);
-extern int do_open_cmd(int argc, char *argv[], NET_PARA_S *net);
-extern int do_close_cmd(int argc, char *argv[], NET_PARA_S *net);
-extern int do_delete_cmd(int argc, char *argv[], NET_PARA_S *net);
-extern int do_insert_key_cmd(int argc, char *argv[], NET_PARA_S *net);
-extern int do_remove_key_cmd(int argc, char *argv[], NET_PARA_S *net);
-extern int do_performance_cmd(int argc, char *argv[], NET_PARA_S *net);
-extern void parse_all_para(int argc, char *argv[], INDEX_TOOLS_PARA_S *para);
+extern int do_verify_cmd(int argc, char *argv[], net_para_t *net);
+extern int do_fixup_cmd(int argc, char *argv[], net_para_t *net);
+extern int do_dump_cmd(int argc, char *argv[], net_para_t *net);
+extern int do_list_cmd(int argc, char *argv[], net_para_t *net);
+extern int do_create_cmd(int argc, char *argv[], net_para_t *net);
+extern int do_open_cmd(int argc, char *argv[], net_para_t *net);
+extern int do_close_cmd(int argc, char *argv[], net_para_t *net);
+extern int do_delete_cmd(int argc, char *argv[], net_para_t *net);
+extern int do_insert_key_cmd(int argc, char *argv[], net_para_t *net);
+extern int do_remove_key_cmd(int argc, char *argv[], net_para_t *net);
+extern int do_performance_cmd(int argc, char *argv[], net_para_t *net);
+extern void parse_all_para(int argc, char *argv[], ifs_tools_para_t *para);
 
 #ifdef	__cplusplus
 }

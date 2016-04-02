@@ -36,7 +36,7 @@ History:
 *******************************************************************************/
 #include "index_if.h"
 
-static int32_t cmd_create(INDEX_TOOLS_PARA_S *para)
+static int32_t cmd_create(ifs_tools_para_t *para)
 {
     int32_t ret = 0;
     index_handle_t *index = NULL;
@@ -87,7 +87,7 @@ static int32_t cmd_create(INDEX_TOOLS_PARA_S *para)
     return 0;
 }
 
-static int32_t cmd_open(INDEX_TOOLS_PARA_S *para)
+static int32_t cmd_open(ifs_tools_para_t *para)
 {
     int32_t ret = 0;
     index_handle_t *index = NULL;
@@ -136,7 +136,7 @@ static int32_t cmd_open(INDEX_TOOLS_PARA_S *para)
     return 0;
 }
 
-static int32_t cmd_close(INDEX_TOOLS_PARA_S *para)
+static int32_t cmd_close(ifs_tools_para_t *para)
 {
     int32_t ret = 0;
     index_handle_t *index = NULL;
@@ -190,7 +190,7 @@ static int32_t cmd_close(INDEX_TOOLS_PARA_S *para)
     return 0;
 }
 
-static int32_t cmd_delete(INDEX_TOOLS_PARA_S *para)
+static int32_t cmd_delete(ifs_tools_para_t *para)
 {
     int32_t ret = 0;
     index_handle_t *index = NULL;
@@ -232,15 +232,15 @@ static int32_t cmd_delete(INDEX_TOOLS_PARA_S *para)
     return 0;
 }
 
-int do_create_cmd(int argc, char *argv[], NET_PARA_S *net)
+int do_create_cmd(int argc, char *argv[], net_para_t *net)
 {
-    INDEX_TOOLS_PARA_S *para = NULL;
+    ifs_tools_para_t *para = NULL;
 
-    para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
+    para = OS_MALLOC(sizeof(ifs_tools_para_t));
     if (NULL == para)
     {
         OS_PRINT(net, "Allocate memory failed. size(%d)\n",
-            (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
+            (uint32_t)sizeof(ifs_tools_para_t));
         return -1;
     }
 
@@ -253,15 +253,15 @@ int do_create_cmd(int argc, char *argv[], NET_PARA_S *net)
     return 0;
 }
 
-int do_open_cmd(int argc, char *argv[], NET_PARA_S *net)
+int do_open_cmd(int argc, char *argv[], net_para_t *net)
 {
-    INDEX_TOOLS_PARA_S *para = NULL;
+    ifs_tools_para_t *para = NULL;
 
-    para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
+    para = OS_MALLOC(sizeof(ifs_tools_para_t));
     if (NULL == para)
     {
         OS_PRINT(net, "Allocate memory failed. size(%d)\n",
-            (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
+            (uint32_t)sizeof(ifs_tools_para_t));
         return -1;
     }
 
@@ -274,15 +274,15 @@ int do_open_cmd(int argc, char *argv[], NET_PARA_S *net)
     return 0;
 }
 
-int do_close_cmd(int argc, char *argv[], NET_PARA_S *net)
+int do_close_cmd(int argc, char *argv[], net_para_t *net)
 {
-    INDEX_TOOLS_PARA_S *para = NULL;
+    ifs_tools_para_t *para = NULL;
 
-    para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
+    para = OS_MALLOC(sizeof(ifs_tools_para_t));
     if (NULL == para)
     {
         OS_PRINT(net, "Allocate memory failed. size(%d)\n",
-            (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
+            (uint32_t)sizeof(ifs_tools_para_t));
         return -1;
     }
 
@@ -295,15 +295,15 @@ int do_close_cmd(int argc, char *argv[], NET_PARA_S *net)
     return 0;
 }
 
-int do_delete_cmd(int argc, char *argv[], NET_PARA_S *net)
+int do_delete_cmd(int argc, char *argv[], net_para_t *net)
 {
-    INDEX_TOOLS_PARA_S *para = NULL;
+    ifs_tools_para_t *para = NULL;
 
-    para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
+    para = OS_MALLOC(sizeof(ifs_tools_para_t));
     if (NULL == para)
     {
         OS_PRINT(net, "Allocate memory failed. size(%d)\n",
-            (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
+            (uint32_t)sizeof(ifs_tools_para_t));
         return -1;
     }
 

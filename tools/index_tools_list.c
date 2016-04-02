@@ -36,7 +36,7 @@ History:
 *******************************************************************************/
 #include "index_if.h"
 
-int32_t print_index_info(NET_PARA_S *net, index_handle_t *index)
+int32_t print_index_info(net_para_t *net, index_handle_t *index)
 {
     ASSERT(NULL != index);
 
@@ -46,7 +46,7 @@ int32_t print_index_info(NET_PARA_S *net, index_handle_t *index)
     return 0;
 }
 
-int32_t print_obj_info(NET_PARA_S *net, object_info_t *obj_info)
+int32_t print_obj_info(net_para_t *net, object_info_t *obj_info)
 {
     ASSERT(NULL != obj_info);
 
@@ -56,7 +56,7 @@ int32_t print_obj_info(NET_PARA_S *net, object_info_t *obj_info)
     return 0;
 }
 
-int32_t print_cache_info(NET_PARA_S *net, ifs_block_cache_t *cache)
+int32_t print_cache_info(net_para_t *net, ifs_block_cache_t *cache)
 {
     ASSERT(NULL != cache);
 
@@ -66,7 +66,7 @@ int32_t print_cache_info(NET_PARA_S *net, ifs_block_cache_t *cache)
     return 0;
 }
 
-int32_t print_attr_info(NET_PARA_S *net, object_info_t *obj_info)
+int32_t print_attr_info(net_para_t *net, object_info_t *obj_info)
 {
     ASSERT(NULL != obj_info);
 
@@ -76,7 +76,7 @@ int32_t print_attr_info(NET_PARA_S *net, object_info_t *obj_info)
     return 0;
 }
 
-void print_block_Info(block_handle_t * hnd, NET_PARA_S *net)
+void print_block_Info(block_handle_t * hnd, net_para_t *net)
 {
     block_handle_t *tmp_hnd = hnd;
 
@@ -115,7 +115,7 @@ void print_block_Info(block_handle_t * hnd, NET_PARA_S *net)
     return;
 }
 
-int32_t list_super_block(char *index_name, uint64_t start_lba, NET_PARA_S *net)
+int32_t list_super_block(char *index_name, uint64_t start_lba, net_para_t *net)
 {
     index_handle_t *index = NULL;
     int32_t ret = 0;
@@ -139,7 +139,7 @@ int32_t list_super_block(char *index_name, uint64_t start_lba, NET_PARA_S *net)
     return 0;
 }
 
-int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, NET_PARA_S *net)
+int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, net_para_t *net)
 {
     int32_t ret = 0;
     index_handle_t *index = NULL;
@@ -167,7 +167,7 @@ int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, NET_PARA_
     
     if (OBJID_IS_INVALID(objid))
     {
-        avl_walk_all(&index->obj_list, (avl_walk_call_back)print_obj_info, net);
+        avl_walk_all(&index->obj_list, (avl_walk_cb_t)print_obj_info, net);
 		return ret;
     }
 
@@ -192,20 +192,20 @@ int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, NET_PARA_
     
     OS_PRINT(net, "\nCache info:\n");
     OS_PRINT(net, "-----------------------------------------\n");
-    avl_walk_all(&obj->obj_info->caches, (avl_walk_call_back)print_cache_info, net);
+    avl_walk_all(&obj->obj_info->caches, (avl_walk_cb_t)print_cache_info, net);
 
     return ret;
 }
 
-int do_list_cmd(int argc, char *argv[], NET_PARA_S *net)
+int do_list_cmd(int argc, char *argv[], net_para_t *net)
 {
-    INDEX_TOOLS_PARA_S *para = NULL;
+    ifs_tools_para_t *para = NULL;
 
-    para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
+    para = OS_MALLOC(sizeof(ifs_tools_para_t));
     if (NULL == para)
     {
         OS_PRINT(net, "Allocate memory failed. size(%d)\n",
-            (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
+            (uint32_t)sizeof(ifs_tools_para_t));
         return -1;
     }
 

@@ -39,18 +39,18 @@ History:
 MODULE(PID_INDEX);
 #include "os_log.h"
 
-typedef struct tagVERIFY_PARA_S
+typedef struct verify_para
 {
     bool_t bReverse;  
     uint32_t no;      
     char *pcKey;  
     uint32_t uiKeySize; 
-} VERIFY_PARA_S;
+} verify_para_t;
 
 static int32_t verify_callback(void *tree, void *para)
 {
 #if 0
-    VERIFY_PARA_S *para = para;
+    verify_para_t *para = para;
     object_handle_t *obj = tree;
     int32_t ret = 0;
 
@@ -103,7 +103,7 @@ int32_t index_verify_attr(object_handle_t *tree, void *para)
 {
 #if 0
     int32_t ret = 0;
-    VERIFY_PARA_S tmp_para;
+    verify_para_t tmp_para;
     char *pcKey = NULL;
     uint16_t usKeyMaxSize = 0;
 
@@ -198,7 +198,7 @@ int32_t verify_index(char *index_name, uint64_t start_lba)
 {
     index_handle_t *index = NULL;
     int32_t ret = 0;
-    WALK_ALL_TREES_PARA_S para;
+    tree_walk_para_t para;
     
     ASSERT (NULL != index_name);
     ASSERT (0 != strlen(index_name));

@@ -36,15 +36,15 @@ History:
 *******************************************************************************/
 #include "index_if.h"
 
-typedef struct tagDUMP_PARA_S
+typedef struct dump_para
 {
     uint8_t depth; 
     uint64_t vbn;  
     uint32_t no;  
-    NET_PARA_S *net;
-} DUMP_PARA_S;
+    net_para_t *net;
+} dump_para_t;
 
-static int32_t dump_callback(object_handle_t *tree, DUMP_PARA_S *para)
+static int32_t dump_callback(object_handle_t *tree, dump_para_t *para)
 {
     uint32_t i = 0;
     uint8_t *uc = NULL;
@@ -114,19 +114,19 @@ static int32_t dump_callback(object_handle_t *tree, DUMP_PARA_S *para)
     return 0;
 }
 
-static int32_t dump_key(object_handle_t *tree, const bool_t v_bReverse, NET_PARA_S *net)
+static int32_t dump_key(object_handle_t *tree, const bool_t v_bReverse, net_para_t *net)
 {
     int32_t ret = 0;
-    DUMP_PARA_S para;
+    dump_para_t para;
 
     ASSERT(NULL != tree);
 
-	memset(&para, 0, sizeof(DUMP_PARA_S));
+	memset(&para, 0, sizeof(dump_para_t));
     
 	OS_PRINT(net, "Start dump all keys. objid(%lld)\n", tree->obj_info->objid);
 
     para.net = net;
-    ret = index_walk_all(tree, v_bReverse, 0, &para, (WalkAllCallBack)dump_callback);
+    ret = index_walk_all(tree, v_bReverse, 0, &para, (tree_walk_cb_t)dump_callback);
     if (ret < 0)
     {
         OS_PRINT(net, "Walk tree failed. objid(%lld) ret(%d)\n", tree->obj_info->objid, ret);
@@ -137,7 +137,7 @@ static int32_t dump_key(object_handle_t *tree, const bool_t v_bReverse, NET_PARA
 	return ret;
 }
 
-void dump_cmd(INDEX_TOOLS_PARA_S *para)
+void dump_cmd(ifs_tools_para_t *para)
 {
     index_handle_t *index = NULL;
     object_handle_t *obj = NULL;
@@ -182,15 +182,15 @@ void dump_cmd(INDEX_TOOLS_PARA_S *para)
 }
 
 
-int do_dump_cmd(int argc, char *argv[], NET_PARA_S *net)
+int do_dump_cmd(int argc, char *argv[], net_para_t *net)
 {
-    INDEX_TOOLS_PARA_S *para = NULL;
+    ifs_tools_para_t *para = NULL;
 
-    para = OS_MALLOC(sizeof(INDEX_TOOLS_PARA_S));
+    para = OS_MALLOC(sizeof(ifs_tools_para_t));
     if (NULL == para)
     {
         OS_PRINT(net, "Allocate memory failed. size(%d)\n",
-            (uint32_t)sizeof(INDEX_TOOLS_PARA_S));
+            (uint32_t)sizeof(ifs_tools_para_t));
         return -1;
     }
 

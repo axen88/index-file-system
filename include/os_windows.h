@@ -66,10 +66,10 @@ extern "C" {
 #define OS_SLEEP_MS(x)                  
 #define OSThreadExit()                  ExitThread(0)
 
-typedef CRITICAL_SECTION            OS_MUTEX;
-typedef CRITICAL_SECTION            OS_RWLOCK;
-typedef uint64_t                     OS_THREAD_ID;
-typedef HANDLE                      OS_THREAD_T;
+typedef CRITICAL_SECTION            os_mutex_t;
+typedef CRITICAL_SECTION            os_rwlock;
+typedef uint64_t                     os_thread_id_t;
+typedef HANDLE                      os_thread_t;
     
 #define OS_GET_THREAD_ID()         GetCurrentThreadId()
     

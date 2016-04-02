@@ -68,10 +68,10 @@ extern "C" {
 #define OS_SLEEP_MS(x)                  
 #define OSThreadExit()                while (!kthread_should_stop()) msleep(100);
 
-typedef struct semaphore            OS_MUTEX;
-typedef rwlock_t                    OS_RWLOCK;
-typedef pid_t                       OS_THREAD_ID;
-typedef struct task_struct *        OS_THREAD_T;
+typedef struct semaphore            os_mutex_t;
+typedef rwlock_t                    os_rwlock;
+typedef pid_t                       os_thread_id_t;
+typedef struct task_struct *        os_thread_t;
         
 #define OS_GET_THREAD_ID()         current->pid
         

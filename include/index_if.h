@@ -54,31 +54,31 @@ History:
 extern "C" {
 #endif
 
-typedef enum tagCACHE_STATUS_E
+typedef enum cache_status
 {
     EMPTY = 0,  /* no data in cache */
     CLEAN,      /* data in buffer is the same to data on disk */
     DIRTY,      /* data in buffer read from disk is changed */
     FLUSH       /* the dirty data is flushed to disk */
-} CACHE_STATUS_E;
+} cache_status_t;
 
-#define INVALID_OBJID                ((uint64_t)(-1))
+#define INVALID_OBJID                 ((uint64_t)(-1))
 #define OBJID_IS_INVALID(id)          ((id) == INVALID_OBJID)
 
 
 #define IBC_SET_DIRTY(ibc)  ((ibc)->state = DIRTY)
 #define IBC_SET_CLEAN(ibc)  ((ibc)->state == CLEAN)
 #define IBC_SET_EMPTY(ibc)  ((ibc)->state == EMPTY)
-#define IBC_DIRTY(ibc)  ((ibc)->state == DIRTY)
-#define IBC_CLEAN(ibc)  ((ibc)->state == CLEAN)
-#define IBC_EMPTY(ibc)  ((ibc)->state == EMPTY)
+#define IBC_DIRTY(ibc)      ((ibc)->state == DIRTY)
+#define IBC_CLEAN(ibc)      ((ibc)->state == CLEAN)
+#define IBC_EMPTY(ibc)      ((ibc)->state == EMPTY)
 
-#define INDEX_NAME_SIZE            256
+#define INDEX_NAME_SIZE     256
 
 
-#define INDEX_MAX_DEPTH           16
+#define INDEX_MAX_DEPTH     16
 
-#define ATTR_INFO_DIRTY(obj_info)   IBC_DIRTY(&(obj_info)->root_ibc)
+#define ATTR_INFO_DIRTY(obj_info)     IBC_DIRTY(&(obj_info)->root_ibc)
 #define ATTR_INFO_SET_DIRTY(obj_info) IBC_SET_DIRTY(&(obj_info)->root_ibc)
 #define ATTR_INFO_CLR_DIRTY(obj_info) IBC_SET_CLEAN(&(obj_info)->root_ibc)
 
@@ -86,25 +86,25 @@ typedef enum tagCACHE_STATUS_E
 
 #define INODE_SET_DIRTY(obj)      ((obj)->obj_state |= OBJ_FLAG_DIRTY)
 #define INODE_CLR_DIRTY(obj)      ((obj)->obj_state &= ~OBJ_FLAG_DIRTY)
-#define INODE_DIRTY(obj)         ((obj)->obj_state & OBJ_FLAG_DIRTY)
+#define INODE_DIRTY(obj)          ((obj)->obj_state & OBJ_FLAG_DIRTY)
 
-typedef struct _ifs_block_cache
+typedef struct ifs_block_cache
 {
 	uint64_t vbn;
 	uint32_t state;
-	struct _INDEX_BLOCK *ib;
+	index_block_t *ib;
 	avl_node_t entry;
 } ifs_block_cache_t;
 
-typedef struct _ifs_old_block
+typedef struct ifs_old_block
 {
 	uint64_t vbn;
 	avl_node_t entry;
 } ifs_old_block_t;
 
-typedef struct _object_info
+typedef struct object_info
 {
-    struct _index_handle *index;       // index handle
+    struct index_handle *index;       // index handle
     
     inode_record_t inode;                // inode
     inode_record_t old_inode;            // old inode
@@ -118,26 +118,26 @@ typedef struct _object_info
     
     avl_node_t entry;                  // register in index handle
 
-    ATTR_RECORD attr_record;           // attr record
-    OS_RWLOCK attr_lock;               // lock  tree handle
+    attr_record_t attr_record;           // attr record
+    os_rwlock attr_lock;               // lock  tree handle
 
     
-    DLIST_HEAD_S obj_hnd_list;        // all object handle
-    OS_RWLOCK    obj_hnd_lock;        // lock the obj_hnd_list operation
+    dlist_head_t obj_hnd_list;        // all object handle
+    os_rwlock    obj_hnd_lock;        // lock the obj_hnd_list operation
 
     ifs_block_cache_t root_ibc;
     avl_tree_t caches;            // record all new block data
     avl_tree_t old_blocks;        // record old block info
-    OS_RWLOCK caches_lock;
+    os_rwlock caches_lock;
     
     uint32_t obj_ref_cnt;
     
-    OS_RWLOCK obj_lock;
+    os_rwlock obj_lock;
 } object_info_t;
 
-typedef struct _object_handle
+typedef struct object_handle
 {
-    struct _index_handle *index;       // index handle
+    struct index_handle *index;       // index handle
     object_info_t *obj_info;
 
     // tree handle structure
@@ -147,9 +147,9 @@ typedef struct _object_handle
     uint64_t position_stack[INDEX_MAX_DEPTH];
     ifs_block_cache_t *cache;
     uint64_t position;
-    INDEX_ENTRY *ie;        
+    index_entry_t *ie;        
 
-    DLIST_ENTRY_S entry;
+    dlist_entry_t entry;
 } object_handle_t;
 
 #define MAX_BLK_NUM  10
@@ -162,18 +162,18 @@ typedef struct space_manager
     uint64_t first_free_block;
     uint64_t total_free_blocks;
 
-    OS_RWLOCK lock;
+    os_rwlock lock;
 } space_manager_t;
 
 typedef struct space_base_manager
 {
     space_manager_t sm;
 
-    QUEUE_S *q;
-    OS_RWLOCK lock;
+    queue_t *q;
+    os_rwlock lock;
 } space_base_manager_t;
 
-typedef struct _index_handle
+typedef struct index_handle
 {
     block_handle_t *hnd;               // The block file handle
     char name[INDEX_NAME_SIZE];        // index name
@@ -190,7 +190,7 @@ typedef struct _index_handle
 
     avl_node_t entry;
     
-    OS_RWLOCK index_lock;             // lock
+    os_rwlock index_lock;             // lock
 } index_handle_t;
 
 #define INDEX_UPDATE_INODE(obj) \
@@ -202,14 +202,14 @@ typedef struct _index_handle
 #define INDEX_ALLOC_BLOCK(index, objid, vbn) index_alloc_space(index, objid, 1, vbn)
 #define INDEX_FREE_BLOCK(index, objid, vbn)  index_free_space(index, objid, vbn, 1)
 
-extern int32_t index_block_read(struct _object_handle *obj, uint64_t vbn);
-extern int32_t index_alloc_cache_and_block(struct _object_info *obj_info, ifs_block_cache_t **cache);
-extern int32_t index_release_all_dirty_blocks(struct _object_info *obj_info);
-extern void index_release_all_old_blocks_mem(struct _object_info *obj_info);
-extern void index_release_all_old_blocks(struct _object_info *obj_info);
-extern int32_t index_record_old_block(struct _object_info *obj_info, uint64_t vbn);
-extern int32_t index_release_all_caches(struct _object_info *obj_info);
-extern int32_t index_flush_all_dirty_caches(struct _object_info * obj_info);
+extern int32_t index_block_read(object_handle_t *obj, uint64_t vbn);
+extern int32_t index_alloc_cache_and_block(object_info_t *obj_info, ifs_block_cache_t **cache);
+extern int32_t index_release_all_dirty_blocks(object_info_t *obj_info);
+extern void index_release_all_old_blocks_mem(object_info_t *obj_info);
+extern void index_release_all_old_blocks(object_info_t *obj_info);
+extern int32_t index_record_old_block(object_info_t *obj_info, uint64_t vbn);
+extern int32_t index_release_all_caches(object_info_t *obj_info);
+extern int32_t index_flush_all_dirty_caches(object_info_t * obj_info);
 
 extern int32_t walk_all_opened_index(
     int32_t (*func)(void *, index_handle_t *), void *para);

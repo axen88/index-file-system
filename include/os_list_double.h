@@ -43,35 +43,35 @@ extern "C"
 {
 #endif
 
-typedef struct tagDLIST_ENTRY_S
+typedef struct dlist_entry
 {
-    struct tagDLIST_ENTRY_S *next;
-    struct tagDLIST_ENTRY_S *prev;
-} DLIST_ENTRY_S;
+    struct dlist_entry *next;
+    struct dlist_entry *prev;
+} dlist_entry_t;
 
-typedef struct tagDLIST_HEAD_S
+typedef struct dlist_head
 {
-    DLIST_ENTRY_S head;
+    dlist_entry_t head;
     uint32_t num;
-} DLIST_HEAD_S;
+} dlist_head_t;
 
-extern void dlist_init_entry(DLIST_ENTRY_S * entry);
-extern void dlist_init_head(DLIST_HEAD_S * head);
-extern void dlist_add_head(DLIST_HEAD_S * head,
-    DLIST_ENTRY_S * entry);
-extern void dlist_add_tail(DLIST_HEAD_S * head,
-    DLIST_ENTRY_S * entry);
-extern DLIST_ENTRY_S *dlist_get_entry(DLIST_HEAD_S * head, uint32_t position);
-extern void dlist_remove_entry(DLIST_HEAD_S * head,
-    DLIST_ENTRY_S * entry);
-extern int32_t dlist_remove_target_entry(DLIST_HEAD_S * head,
+extern void dlist_init_entry(dlist_entry_t * entry);
+extern void dlist_init_head(dlist_head_t * head);
+extern void dlist_add_head(dlist_head_t * head,
+    dlist_entry_t * entry);
+extern void dlist_add_tail(dlist_head_t * head,
+    dlist_entry_t * entry);
+extern dlist_entry_t *dlist_get_entry(dlist_head_t * head, uint32_t position);
+extern void dlist_remove_entry(dlist_head_t * head,
+    dlist_entry_t * entry);
+extern int32_t dlist_remove_target_entry(dlist_head_t * head,
     uint32_t position);
-extern int32_t dlist_walk_all(DLIST_HEAD_S * head,
-    int32_t (*func)(void *, DLIST_ENTRY_S *), void * para);
-extern bool_t dlist_is_empty(DLIST_HEAD_S * head);
-extern int32_t dlist_count(DLIST_HEAD_S * head);
-extern int32_t dlist_walk_all_reverse(DLIST_HEAD_S * head,
-    int32_t (*func)(void *, DLIST_ENTRY_S *), void * para);
+extern int32_t dlist_walk_all(dlist_head_t * head,
+    int32_t (*func)(void *, dlist_entry_t *), void * para);
+extern bool_t dlist_is_empty(dlist_head_t * head);
+extern int32_t dlist_count(dlist_head_t * head);
+extern int32_t dlist_walk_all_reverse(dlist_head_t * head,
+    int32_t (*func)(void *, dlist_entry_t *), void * para);
 
 #ifdef __cplusplus
 }

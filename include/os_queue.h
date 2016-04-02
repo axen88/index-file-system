@@ -60,40 +60,40 @@ typedef enum tagQUEUE_ERROR_CODE_E
 
 #include "os_list_double.h"
 
-typedef struct tagQUEUE_S
+typedef struct queue
 {
-    DLIST_HEAD_S head;
+    dlist_head_t head;
     uint32_t max_num;
-} QUEUE_S;
+} queue_t;
 
 #else
 
-typedef struct tagQUEUE_S
+typedef struct queue
 {
     uint64_t *member;
     uint32_t head;  
     uint32_t tail;
     uint32_t num; 
     uint32_t max_num; 
-} QUEUE_S;
+} queue_t;
 
 
 
 #endif
 
 
-extern QUEUE_S *queue_create(int32_t max_num);
-extern int32_t queue_push(QUEUE_S *q, uint64_t member);
-extern int32_t queue_pop(QUEUE_S *q, uint64_t *member);
-extern int32_t queue_pop_push(QUEUE_S *q, uint64_t push_member,
+extern queue_t *queue_create(int32_t max_num);
+extern int32_t queue_push(queue_t *q, uint64_t member);
+extern int32_t queue_pop(queue_t *q, uint64_t *member);
+extern int32_t queue_pop_push(queue_t *q, uint64_t push_member,
     uint64_t *pop_member);
-extern int32_t queue_remove_member(QUEUE_S *q, uint64_t member);
-extern int32_t queue_walk_all(QUEUE_S *q,
+extern int32_t queue_remove_member(queue_t *q, uint64_t member);
+extern int32_t queue_walk_all(queue_t *q,
     int32_t (*func)(uint64_t, void *), void *para);
-extern int32_t queue_get_size(QUEUE_S *q);
-extern int32_t queue_get_max_size(QUEUE_S *q);
-extern void queue_clean(QUEUE_S *q);
-extern int32_t queue_destroy(QUEUE_S *q);
+extern int32_t queue_get_size(queue_t *q);
+extern int32_t queue_get_max_size(queue_t *q);
+extern void queue_clean(queue_t *q);
+extern int32_t queue_destroy(queue_t *q);
 
 #ifdef __cplusplus
 }

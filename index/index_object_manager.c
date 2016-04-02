@@ -86,7 +86,7 @@ int32_t compare_old_block1(const ifs_old_block_t *old_block, const ifs_old_block
 // copy origin attr record from inode
 void recover_attr_record(object_info_t *obj_info)
 {
-    ATTR_RECORD *attr_record;
+    attr_record_t *attr_record;
     
     attr_record = INODE_GET_ATTR_RECORD(&obj_info->inode);
     memcpy(&obj_info->attr_record, attr_record, attr_record->record_size);
@@ -96,7 +96,7 @@ void init_attr(object_info_t *obj_info, uint64_t inode_no)
 {
     recover_attr_record(obj_info);
     obj_info->root_ibc.vbn = inode_no;
-    obj_info->root_ibc.ib = (INDEX_BLOCK *)obj_info->attr_record.content;
+    obj_info->root_ibc.ib = (index_block_t *)obj_info->attr_record.content;
     obj_info->root_ibc.state = CLEAN;
 }
 
@@ -340,7 +340,7 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
 {
      int32_t ret = sizeof(inode_record_t);
      object_handle_t *obj = NULL;
-     ATTR_RECORD *attr_record = NULL;
+     attr_record_t *attr_record = NULL;
      object_info_t *obj_info;
 
     ASSERT(NULL != index);
@@ -386,7 +386,7 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
     attr_record->flags = flags;
     if (flags & FLAG_TABLE)
     { /* table */
-        init_ib((INDEX_BLOCK *)&attr_record->content, INDEX_BLOCK_SMALL, ATTR_RECORD_CONTENT_SIZE);
+        init_ib((index_block_t *)&attr_record->content, INDEX_BLOCK_SMALL, ATTR_RECORD_CONTENT_SIZE);
     }
     else
     { /* data stream */
@@ -546,7 +546,7 @@ int32_t index_create_object_nolock(index_handle_t *index, uint64_t objid, uint16
 
     LOG_INFO("Create the obj start. objid(%lld)\n", objid);
 
-    obj_info = avl_find(&index->obj_list, (avl_find_fn)compare_object2, &objid, &where);
+    obj_info = avl_find(&index->obj_list, (avl_find_fn_t)compare_object2, &objid, &where);
     if (NULL != obj_info)
     {
         LOG_ERROR("The obj already exist. obj(%p) objid(%lld) ret(%d)\n", obj, objid, ret);
@@ -623,7 +623,7 @@ int32_t index_open_object_nolock(index_handle_t *index, uint64_t objid, uint32_t
 
     LOG_INFO("Open the obj. objid(%lld)\n", objid);
 
-    obj_info = avl_find(&index->obj_list, (avl_find_fn)compare_object2, &objid, &where);
+    obj_info = avl_find(&index->obj_list, (avl_find_fn_t)compare_object2, &objid, &where);
     if (NULL != obj_info)
     {
         ret = get_object_handle(obj_info, &obj);
@@ -698,7 +698,7 @@ object_handle_t *index_get_object_handle(index_handle_t *index, uint64_t objid)
     ASSERT(!OBJID_IS_INVALID(objid));
 
     OS_RWLOCK_RDLOCK(&index->index_lock);
-    tmp_obj = avl_find(&index->obj_list, (avl_find_fn)compare_object2, &objid, &where);
+    tmp_obj = avl_find(&index->obj_list, (avl_find_fn_t)compare_object2, &objid, &where);
     OS_RWLOCK_RDLOCK(&index->index_lock);
 
     return tmp_obj;

@@ -38,7 +38,7 @@ History:
 #include "os_adapter.h"
 #include "os_list_double.h"
 
-void dlist_init_entry(DLIST_ENTRY_S * entry)
+void dlist_init_entry(dlist_entry_t * entry)
 {
     ASSERT(NULL != entry);
 
@@ -46,7 +46,7 @@ void dlist_init_entry(DLIST_ENTRY_S * entry)
     entry->prev = entry;
 }
 
-void dlist_init_head(DLIST_HEAD_S * head)
+void dlist_init_head(dlist_head_t * head)
 {
     ASSERT(NULL != head);
 
@@ -54,8 +54,8 @@ void dlist_init_head(DLIST_HEAD_S * head)
     dlist_init_entry(&head->head);
 }
 
-static void add_entry(DLIST_ENTRY_S * entry, DLIST_ENTRY_S * prev,
-    DLIST_ENTRY_S * next)
+static void add_entry(dlist_entry_t * entry, dlist_entry_t * prev,
+    dlist_entry_t * next)
 {
     ASSERT(NULL != entry);
     ASSERT(NULL != prev);
@@ -67,8 +67,8 @@ static void add_entry(DLIST_ENTRY_S * entry, DLIST_ENTRY_S * prev,
     prev->next = entry;
 }
 
-static void remove_entry(DLIST_ENTRY_S * entry, DLIST_ENTRY_S * prev,
-    DLIST_ENTRY_S * next)
+static void remove_entry(dlist_entry_t * entry, dlist_entry_t * prev,
+    dlist_entry_t * next)
 {
     ASSERT(NULL != prev);
     ASSERT(NULL != next);
@@ -78,7 +78,7 @@ static void remove_entry(DLIST_ENTRY_S * entry, DLIST_ENTRY_S * prev,
     dlist_init_entry(entry);
 }
 
-void dlist_add_head(DLIST_HEAD_S * head, DLIST_ENTRY_S * entry)
+void dlist_add_head(dlist_head_t * head, dlist_entry_t * entry)
 {
     ASSERT(NULL != head);
     ASSERT(NULL != entry);
@@ -88,7 +88,7 @@ void dlist_add_head(DLIST_HEAD_S * head, DLIST_ENTRY_S * entry)
     head->num++;
 }
 
-void dlist_add_tail(DLIST_HEAD_S * head, DLIST_ENTRY_S * entry)
+void dlist_add_tail(dlist_head_t * head, dlist_entry_t * entry)
 {
     ASSERT(NULL != head);
     ASSERT(NULL != entry);
@@ -98,7 +98,7 @@ void dlist_add_tail(DLIST_HEAD_S * head, DLIST_ENTRY_S * entry)
     head->num++;
 }
 
-void dlist_remove_entry(DLIST_HEAD_S * head, DLIST_ENTRY_S * entry)
+void dlist_remove_entry(dlist_head_t * head, dlist_entry_t * entry)
 {
     ASSERT(NULL != entry);
     ASSERT(NULL != entry->prev);
@@ -111,10 +111,10 @@ void dlist_remove_entry(DLIST_HEAD_S * head, DLIST_ENTRY_S * entry)
     }
 }
 
-DLIST_ENTRY_S *dlist_get_entry(DLIST_HEAD_S * head, uint32_t position)
+dlist_entry_t *dlist_get_entry(dlist_head_t * head, uint32_t position)
 {
     uint32_t cnt = 0;
-    DLIST_ENTRY_S *next = NULL;
+    dlist_entry_t *next = NULL;
 
     ASSERT(NULL != head);
 
@@ -137,9 +137,9 @@ DLIST_ENTRY_S *dlist_get_entry(DLIST_HEAD_S * head, uint32_t position)
     return NULL;
 }
 
-int32_t dlist_remove_target_entry(DLIST_HEAD_S * head, uint32_t position)
+int32_t dlist_remove_target_entry(dlist_head_t * head, uint32_t position)
 {
-    DLIST_ENTRY_S *entry = NULL;
+    dlist_entry_t *entry = NULL;
 
     ASSERT(NULL != head);
 
@@ -154,12 +154,12 @@ int32_t dlist_remove_target_entry(DLIST_HEAD_S * head, uint32_t position)
     return -1;
 }
 
-int32_t dlist_walk_all(DLIST_HEAD_S * head,
-    int32_t (*func)(void *, DLIST_ENTRY_S *), void * para)
+int32_t dlist_walk_all(dlist_head_t * head,
+    int32_t (*func)(void *, dlist_entry_t *), void * para)
 {
     int32_t ret = 0;
-    DLIST_ENTRY_S *next = NULL;
-    DLIST_ENTRY_S *next_next = NULL;
+    dlist_entry_t *next = NULL;
+    dlist_entry_t *next_next = NULL;
 
     ASSERT(NULL != func);
     ASSERT(NULL != head);
@@ -187,12 +187,12 @@ int32_t dlist_walk_all(DLIST_HEAD_S * head,
     return 0;
 }
 
-int32_t dlist_walk_all_reverse(DLIST_HEAD_S * head,
-    int32_t (*func)(void *, DLIST_ENTRY_S *), void * para)
+int32_t dlist_walk_all_reverse(dlist_head_t * head,
+    int32_t (*func)(void *, dlist_entry_t *), void * para)
 {
     int32_t ret = 0;
-    DLIST_ENTRY_S *prev = NULL;
-    DLIST_ENTRY_S *prev_prev = NULL;
+    dlist_entry_t *prev = NULL;
+    dlist_entry_t *prev_prev = NULL;
 
     ASSERT(NULL != func);
     ASSERT(NULL != head);
@@ -220,14 +220,14 @@ int32_t dlist_walk_all_reverse(DLIST_HEAD_S * head,
     return 0;
 }
 
-int32_t dlist_count(DLIST_HEAD_S * head)
+int32_t dlist_count(dlist_head_t * head)
 {
     ASSERT(NULL != head);
 
     return (int32_t)head->num;
 }
 
-bool_t dlist_is_empty(DLIST_HEAD_S * head)
+bool_t dlist_is_empty(dlist_head_t * head)
 {
     ASSERT(NULL != head);
     ASSERT(NULL != head->head.next);

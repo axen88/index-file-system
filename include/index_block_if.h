@@ -52,7 +52,7 @@ typedef struct block_handle
     char name[FILE_NAME_SIZE];            // file name
     ifs_super_block_t sb;               // super block
     uint32_t flags;                       
-    OS_RWLOCK rwlock;                     
+    os_rwlock rwlock;                     
 } block_handle_t;
 
 extern int32_t block_create(block_handle_t ** hnd, const char * path,
@@ -69,16 +69,16 @@ extern int32_t index_update_block(block_handle_t * hnd, void * buf,
 extern int32_t index_read_block(block_handle_t * hnd, void * buf,
     uint32_t size, uint32_t start_lba, uint64_t vbn);
 
-extern int32_t index_update_block_fixup(block_handle_t * hnd, block_header_t * obj,
+extern int32_t index_update_block_fixup(block_handle_t * hnd, block_head_t * obj,
     uint64_t vbn);
-extern int32_t index_read_block_fixup(block_handle_t * hnd, block_header_t * obj,
+extern int32_t index_read_block_fixup(block_handle_t * hnd, block_head_t * obj,
      uint64_t vbn, uint32_t objid, uint32_t alloc_size);
 
-extern int32_t index_update_block_pingpong_init(block_handle_t * hnd, block_header_t * obj,
+extern int32_t index_update_block_pingpong_init(block_handle_t * hnd, block_head_t * obj,
     uint64_t vbn);
-extern int32_t index_update_block_pingpong(block_handle_t * hnd, block_header_t * obj,
+extern int32_t index_update_block_pingpong(block_handle_t * hnd, block_head_t * obj,
     uint64_t vbn);
-extern int32_t index_read_block_pingpong(block_handle_t * hnd, block_header_t * obj,
+extern int32_t index_read_block_pingpong(block_handle_t * hnd, block_head_t * obj,
     uint64_t vbn, uint32_t objid, uint32_t alloc_size);
 
 extern int32_t index_update_sectors(block_handle_t * f, void * buf,

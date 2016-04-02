@@ -52,8 +52,8 @@ extern "C" {
 #define INODE_MAGIC                0x454A424F   // "OBJE"
 #define INDEX_MAGIC                0x58444E49   // "INDX"
 
-#define ENTRY_END_SIZE    sizeof(INDEX_ENTRY)
-#define ENTRY_BEGIN_SIZE  sizeof(INDEX_ENTRY)
+#define ENTRY_END_SIZE    sizeof(index_entry_t)
+#define ENTRY_BEGIN_SIZE  sizeof(index_entry_t)
 
 #define PRV_AREA_SIZE              256       
 #define FILE_NAME_SIZE             256
@@ -80,12 +80,12 @@ extern "C" {
 #define OBJID_OBJ_ID              1ULL
 #define RESERVED_OBJ_ID           256ULL
 
-#define ATTR_RECORD_HEAD_SIZE       OS_OFFSET(ATTR_RECORD, content)
+#define ATTR_RECORD_HEAD_SIZE       OS_OFFSET(attr_record_t, content)
 
 #define ATTR_RECORD_SIZE           (INODE_RESERVED_SIZE)
 #define ATTR_RECORD_CONTENT_SIZE   (ATTR_RECORD_SIZE - ATTR_RECORD_HEAD_SIZE)
 
-#define INODE_GET_ATTR_RECORD(inode)  ((ATTR_RECORD *)((uint8_t *)(inode) + (inode)->first_attr_off))
+#define INODE_GET_ATTR_RECORD(inode)  ((attr_record_t *)((uint8_t *)(inode) + (inode)->first_attr_off))
 
 #define KEY_MAX_SIZE    256
 #define VALUE_MAX_SIZE  1024
@@ -102,32 +102,32 @@ extern "C" {
 
 #define VBN_SIZE                  sizeof(uint64_t)
 
-#define GET_FIRST_IE(ib)     ((INDEX_ENTRY *)((uint8_t*)(ib) + ((INDEX_BLOCK *)(ib))->first_entry_off))
-#define GET_END_IE(ib)       ((uint8_t *)(ib) + ((INDEX_BLOCK *)(ib))->head.real_size)
-#define GET_NEXT_IE(ie)      ((INDEX_ENTRY *)((uint8_t*)(ie) + ((INDEX_ENTRY *)(ie))->len))
-#define GET_PREV_IE(ie)      ((INDEX_ENTRY *)((uint8_t*)(ie) - ((INDEX_ENTRY *)(ie))->prev_len))
-#define GET_IE_VBN(ie)       (*(uint64_t*)((uint8_t *)(ie)+ (((INDEX_ENTRY *)(ie))->len - VBN_SIZE)))
+#define GET_FIRST_IE(ib)     ((index_entry_t *)((uint8_t*)(ib) + ((index_block_t *)(ib))->first_entry_off))
+#define GET_END_IE(ib)       ((uint8_t *)(ib) + ((index_block_t *)(ib))->head.real_size)
+#define GET_NEXT_IE(ie)      ((index_entry_t *)((uint8_t*)(ie) + ((index_entry_t *)(ie))->len))
+#define GET_PREV_IE(ie)      ((index_entry_t *)((uint8_t*)(ie) - ((index_entry_t *)(ie))->prev_len))
+#define GET_IE_VBN(ie)       (*(uint64_t*)((uint8_t *)(ie)+ (((index_entry_t *)(ie))->len - VBN_SIZE)))
 #define SET_IE_VBN(ie, vbn)  (GET_IE_VBN(ie) = vbn)
-#define GET_IE_KEY(ie)       ((uint8_t*)(ie) + sizeof(INDEX_ENTRY))
-#define GET_IE_VALUE(ie)     ((uint8_t*)(ie) + sizeof(INDEX_ENTRY) + (((INDEX_ENTRY *)(ie))->key_len))
+#define GET_IE_KEY(ie)       ((uint8_t*)(ie) + sizeof(index_entry_t))
+#define GET_IE_VALUE(ie)     ((uint8_t*)(ie) + sizeof(index_entry_t) + (((index_entry_t *)(ie))->key_len))
 
 
 
 #pragma pack(1) /* aligned by 1 byte */
 
-typedef struct block_header
+typedef struct block_head
 {
     uint32_t blk_id;              /* obj id */
     uint32_t alloc_size;          /* allocated size */
     uint32_t real_size;           /* real size */
     uint16_t seq_no;              /* update sequence no. */
     uint16_t fixup;               /* do integrity verify */
-} block_header_t;
+} block_head_t;
 
 /* super block  */
-typedef struct ifs_super_block_t
+typedef struct ifs_super_block
 {
-    block_header_t head;               /* header */
+    block_head_t head;               /* header */
 
     uint32_t block_size_shift;          
     uint32_t block_size;                /* by bytes */
@@ -157,7 +157,7 @@ typedef struct ifs_super_block_t
     uint16_t magic_num;                 /* 0x55AA */
 } ifs_super_block_t;
 
-typedef struct _INDEX_ENTRY
+typedef struct index_entry
 {
     uint16_t len;               // Byte size of this index entry
     uint16_t prev_len;          // Byte size of this index entry
@@ -165,28 +165,28 @@ typedef struct _INDEX_ENTRY
     uint16_t key_len;           // Byte size of the key, no this field in INDEX_ENTRY_END entry
     uint16_t value_len;         // Byte size of the c, no this field in INDEX_ENTRY_END entry
 
-    uint8_t flags;              // Bits field of INDEX_ENTRY ucFlags
+    uint8_t flags;              // Bits field of index_entry_t ucFlags
     
     //uint8_t key[];            // The key
     //uint8_t value[];          // The value
     //uint64_t vbn;             // Virtual index number of child index block
-} INDEX_ENTRY;
+} index_entry_t;
 
-typedef struct _INDEX_BLOCK
+typedef struct index_block
 {
-    block_header_t head;
+    block_head_t head;
 
-    uint16_t first_entry_off;       // Byte offset to first INDEX_ENTRY
+    uint16_t first_entry_off;       // Byte offset to first index_entry_t
     uint8_t node_type;              // The ucFlags of current index block
     uint8_t padding[5];             // Reserved/align to 8-byte boundary
 
-    INDEX_ENTRY begin_entry;
-    //INDEX_ENTRY entries;
-} INDEX_BLOCK;
+    index_entry_t begin_entry;
+    //index_entry_t entries;
+} index_block_t;
 
 #define ATTR_RECORD_MAX_SIZE  INODE_RESERVED_SIZE
 
-typedef struct _ATTR_RECORD
+typedef struct attr_record
 {
     uint16_t record_size; // record size, include this head
     uint16_t flags;        // table/stream, resident/non-resident
@@ -194,12 +194,12 @@ typedef struct _ATTR_RECORD
     uint64_t attr_size;   // attr size
 
     uint8_t content[ATTR_RECORD_MAX_SIZE];  // the attr record content
-} ATTR_RECORD;
+} attr_record_t;
 
-typedef struct _INODE_RECORD
+typedef struct inode_record
 {                               /* total 2KB bytes */
     /* 0 */
-    block_header_t head;
+    block_head_t head;
 
     /* 16 */
     uint16_t first_attr_off;

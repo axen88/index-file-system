@@ -406,8 +406,8 @@ extern void avl_destroy(avl_tree_t *tree);
 extern int avl_walk_all(avl_tree_t * tree,
     int (*func) (void*, void *), void *para);
 
-typedef int (*avl_walk_call_back)(void*, void *);
-typedef int (*avl_find_fn)(const void*, void *);
+typedef int (*avl_walk_cb_t)(void*, void *);
+typedef int (*avl_find_fn_t)(const void*, void *);
 
 #ifdef	__cplusplus
 }

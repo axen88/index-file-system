@@ -48,7 +48,7 @@ History:
 MODULE(PID_INDEX);
 #include "os_log.h"
 
-extern OS_CMD_LIST_S INDEX_CMD_LIST[];
+extern os_cmd_list_t ifs_cmd_list[];
 
 int net_print(void *net, const char *format, ...)
 {
@@ -156,7 +156,7 @@ void read_cb(struct bufferevent *bev, void *arg)
     char line[MAX_LINE+1];
     int n;
     evutil_socket_t fd = bufferevent_getfd(bev);
-    NET_PARA_S net;
+    net_para_t net;
 
     while (n = bufferevent_read(bev, line, MAX_LINE), n > 0) {
         line[n] = '\0';
@@ -164,7 +164,7 @@ void read_cb(struct bufferevent *bev, void *arg)
 
         net.net = bev;
         net.print = net_print;
-        parse_and_exec_cmd(line, INDEX_CMD_LIST, &net);
+        parse_and_exec_cmd(line, ifs_cmd_list, &net);
 
         line[0] = '>';
         line[1] = 0;
