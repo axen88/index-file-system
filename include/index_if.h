@@ -165,14 +165,6 @@ typedef struct space_manager
     os_rwlock lock;
 } space_manager_t;
 
-typedef struct space_base_manager
-{
-    space_manager_t sm;
-
-    queue_t *q;
-    os_rwlock lock;
-} space_base_manager_t;
-
 typedef struct index_handle
 {
     block_handle_t *hnd;               // The block file handle
@@ -182,8 +174,9 @@ typedef struct index_handle
     //OBJECT_HANDLE *log_obj;
     //OBJECT_HANDLE *space_obj;
     
-    space_manager_t sm;
-    space_base_manager_t sbm;
+    space_manager_t sm;       // space manager
+    space_manager_t bsm;      // base space manager
+    uint64_t        base_blk; // base block for bsm object
     
     uint32_t index_ref_cnt;
     avl_tree_t obj_list;              // all opened object info

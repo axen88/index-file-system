@@ -70,14 +70,17 @@ extern "C" {
 #define INODE_RESERVED_SIZE  1686
 #define INODE_HEAD_SIZE      OS_OFFSET(inode_record_t, reserved)
 
-#define OBJID_OBJ_NAME            "$OBJID"
+#define BASE_OBJ_NAME             "$BASE"
 #define SPACE_OBJ_NAME            "$SPACE"
+#define OBJID_OBJ_NAME            "$OBJID"
 
 #define SUPER_BLOCK_VBN        0
-#define SPACE_OBJ_INODE        1
+#define BASE_OBJ_INODE         1
+#define SPACE_OBJ_INODE        2
 
-#define SPACE_OBJ_ID              0ULL
-#define OBJID_OBJ_ID              1ULL
+#define BASE_OBJ_ID               0ULL
+#define SPACE_OBJ_ID              1ULL
+#define OBJID_OBJ_ID              2ULL
 #define RESERVED_OBJ_ID           256ULL
 
 #define ATTR_RECORD_HEAD_SIZE       OS_OFFSET(attr_record_t, content)
@@ -138,8 +141,6 @@ typedef struct ifs_super_block
 
     uint64_t total_blocks;              /* total blocks = reserved blocks + bitmap blocks + data blocks */
 
-    uint64_t free_blocks;               /* total free blocks */
-    uint64_t first_free_block;          /* first possible free block */
 
     uint64_t start_lba;                 /* super block's lba */
     
@@ -148,9 +149,17 @@ typedef struct ifs_super_block
 
     uint64_t space_inode_no;
     uint64_t space_id;
+    uint64_t free_blocks;               /* total free blocks */
+    uint64_t first_free_block;          /* first possible free block */
+
+    uint64_t base_blk;
+    uint64_t base_inode_no;
+    uint64_t base_id;
+    uint64_t base_free_blocks;               /* total free blocks */
+    uint64_t base_first_free_block;          /* first possible free block */
     
     uint64_t snapshot_no;
-    uint8_t aucReserved2[PRV_AREA_SIZE - 24];    // Reserved bytes
+    uint8_t aucReserved2[PRV_AREA_SIZE - 64];    // Reserved bytes
     uint8_t aucReserved[160];            
     uint32_t flags;                     /* flags */
     uint16_t version;                   /* version */

@@ -175,8 +175,24 @@ int32_t create_system_objects(index_handle_t *index)
 {
     int32_t ret;
     object_handle_t *obj;
+
+    index->base_blk = 0;
     
-    /* create free blk object */
+    /* create base object */
+    ret = create_object_at_inode(index, BASE_OBJ_ID, BASE_OBJ_INODE, FLAG_SYSTEM | FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj);
+    if (ret < 0)
+    {
+        LOG_ERROR("Create base object failed. name(%s)\n", index->name);
+        return ret;
+    }
+
+    set_object_name(obj, BASE_OBJ_NAME);
+    index->hnd->sb.base_inode_no = obj->obj_info->inode_no;
+    index->hnd->sb.base_id = obj->obj_info->inode.objid;
+    
+    index_init_sm(&index->bsm, obj, 0, 0);
+
+    /* create space object */
     ret = create_object_at_inode(index, SPACE_OBJ_ID, SPACE_OBJ_INODE, FLAG_SYSTEM | FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj);
     if (ret < 0)
     {
@@ -185,9 +201,11 @@ int32_t create_system_objects(index_handle_t *index)
     }
     
     set_object_name(obj, SPACE_OBJ_NAME);
-
-    index->hnd->sb.first_free_block++;
-    index->hnd->sb.free_blocks--;
+    index->hnd->sb.space_inode_no = obj->obj_info->inode_no;
+    index->hnd->sb.space_id = obj->obj_info->inode.objid;
+    
+    index->hnd->sb.first_free_block += 2;
+    index->hnd->sb.free_blocks -= 2;
 
     index_init_sm(&index->sm, obj, index->hnd->sb.first_free_block, index->hnd->sb.free_blocks);
     ret = index_init_free_space(&index->sm, index->hnd->sb.first_free_block, index->hnd->sb.free_blocks);
@@ -197,9 +215,6 @@ int32_t create_system_objects(index_handle_t *index)
         return ret;
     }
 
-    index->hnd->sb.space_inode_no = obj->obj_info->inode_no;
-    index->hnd->sb.space_id = obj->obj_info->inode.objid;
-    
     /* create objid object */
     ret = create_object(index, OBJID_OBJ_ID, FLAG_SYSTEM | FLAG_TABLE | CR_U64 | (CR_U64 << 4), &obj);
     if (ret < 0)
@@ -209,11 +224,10 @@ int32_t create_system_objects(index_handle_t *index)
     }
 
     set_object_name(obj, OBJID_OBJ_NAME);
-
-    index->id_obj = obj;
     index->hnd->sb.objid_inode_no = obj->obj_info->inode_no;
     index->hnd->sb.objid_id = obj->obj_info->inode.objid;
-
+    index->id_obj = obj;
+    
     return 0;
 }
 
@@ -221,12 +235,24 @@ int32_t open_system_objects(index_handle_t *index)
 {
     int32_t ret;
     object_handle_t *obj;
+
+    index->base_blk = index->hnd->sb.base_blk;
     
-    /* open FREEBLK object */
+    /* open BASE object */
+    ret = open_object(index, index->hnd->sb.base_id, index->hnd->sb.base_inode_no, &obj);
+    if (ret < 0)
+    {
+        LOG_ERROR("Open base object failed. index_name(%s) ret(%d)\n", index->name, ret);
+        return ret;
+    }
+    
+    index_init_sm(&index->bsm, obj, index->hnd->sb.base_first_free_block, index->hnd->sb.base_free_blocks);
+
+    /* open SPACE object */
     ret = open_object(index, index->hnd->sb.space_id, index->hnd->sb.space_inode_no, &obj);
     if (ret < 0)
     {
-        LOG_ERROR("Open free block object failed. index_name(%s) ret(%d)\n", index->name, ret);
+        LOG_ERROR("Open space object failed. index_name(%s) ret(%d)\n", index->name, ret);
         return ret;
     }
     
@@ -445,9 +471,15 @@ void close_index(index_handle_t *index)
         (void)close_object(index->sm.space_obj->obj_info);
     }
 
+    if (index->bsm.space_obj != NULL)
+    {
+        (void)close_object(index->bsm.space_obj->obj_info);
+    }
+
     // close block manager system
     if (NULL != index->hnd)
     {
+        index->hnd->sb.base_blk = index->base_blk;
         (void)block_close(index->hnd);
         index->hnd = NULL;
     }
