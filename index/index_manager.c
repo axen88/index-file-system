@@ -187,8 +187,8 @@ int32_t create_system_objects(index_handle_t *index)
     }
 
     set_object_name(obj, BASE_OBJ_NAME);
-    index->hnd->sb.base_inode_no = obj->obj_info->inode_no;
-    index->hnd->sb.base_id = obj->obj_info->inode.objid;
+    index->sb.base_inode_no = obj->obj_info->inode_no;
+    index->sb.base_id = obj->obj_info->inode.objid;
     
     index_init_sm(&index->bsm, obj, 0, 0);
 
@@ -201,14 +201,14 @@ int32_t create_system_objects(index_handle_t *index)
     }
     
     set_object_name(obj, SPACE_OBJ_NAME);
-    index->hnd->sb.space_inode_no = obj->obj_info->inode_no;
-    index->hnd->sb.space_id = obj->obj_info->inode.objid;
+    index->sb.space_inode_no = obj->obj_info->inode_no;
+    index->sb.space_id = obj->obj_info->inode.objid;
     
-    index->hnd->sb.first_free_block += 2;
-    index->hnd->sb.free_blocks -= 2;
+    index->sb.first_free_block += 2;
+    index->sb.free_blocks -= 2;
 
-    index_init_sm(&index->sm, obj, index->hnd->sb.first_free_block, index->hnd->sb.free_blocks);
-    ret = index_init_free_space(&index->sm, index->hnd->sb.first_free_block, index->hnd->sb.free_blocks);
+    index_init_sm(&index->sm, obj, index->sb.first_free_block, index->sb.free_blocks);
+    ret = index_init_free_space(&index->sm, index->sb.first_free_block, index->sb.free_blocks);
     if (ret < 0)
     {
         LOG_ERROR("init free block space info failed. name(%s)\n", index->name);
@@ -224,8 +224,8 @@ int32_t create_system_objects(index_handle_t *index)
     }
 
     set_object_name(obj, OBJID_OBJ_NAME);
-    index->hnd->sb.objid_inode_no = obj->obj_info->inode_no;
-    index->hnd->sb.objid_id = obj->obj_info->inode.objid;
+    index->sb.objid_inode_no = obj->obj_info->inode_no;
+    index->sb.objid_id = obj->obj_info->inode.objid;
     index->id_obj = obj;
     
     return 0;
@@ -236,30 +236,30 @@ int32_t open_system_objects(index_handle_t *index)
     int32_t ret;
     object_handle_t *obj;
 
-    index->base_blk = index->hnd->sb.base_blk;
+    index->base_blk = index->sb.base_blk;
     
     /* open BASE object */
-    ret = open_object(index, index->hnd->sb.base_id, index->hnd->sb.base_inode_no, &obj);
+    ret = open_object(index, index->sb.base_id, index->sb.base_inode_no, &obj);
     if (ret < 0)
     {
         LOG_ERROR("Open base object failed. index_name(%s) ret(%d)\n", index->name, ret);
         return ret;
     }
     
-    index_init_sm(&index->bsm, obj, index->hnd->sb.base_first_free_block, index->hnd->sb.base_free_blocks);
+    index_init_sm(&index->bsm, obj, index->sb.base_first_free_block, index->sb.base_free_blocks);
 
     /* open SPACE object */
-    ret = open_object(index, index->hnd->sb.space_id, index->hnd->sb.space_inode_no, &obj);
+    ret = open_object(index, index->sb.space_id, index->sb.space_inode_no, &obj);
     if (ret < 0)
     {
         LOG_ERROR("Open space object failed. index_name(%s) ret(%d)\n", index->name, ret);
         return ret;
     }
     
-    index_init_sm(&index->sm, obj, index->hnd->sb.first_free_block, index->hnd->sb.free_blocks);
+    index_init_sm(&index->sm, obj, index->sb.first_free_block, index->sb.free_blocks);
 
     /* open $OBJID object */
-    ret = open_object(index, index->hnd->sb.objid_id, index->hnd->sb.objid_inode_no, &obj);
+    ret = open_object(index, index->sb.objid_id, index->sb.objid_inode_no, &obj);
     if (ret < 0)
     {
         LOG_ERROR("Open objid object failed. index_name(%s) ret(%d)\n", index->name, ret);
@@ -271,12 +271,115 @@ int32_t open_system_objects(index_handle_t *index)
     return 0;
 }
 
+int32_t init_super_block(ifs_super_block_t *sb, uint64_t total_sectors, uint32_t block_size_shift,
+    uint32_t reserved_blocks, uint64_t start_lba)
+{
+    int32_t ret = 0;
+    uint64_t total_blocks = 0;
+
+    if (block_size_shift < BYTES_PER_SECTOR_SHIFT)
+    {
+        LOG_ERROR("The parameter is invalid. block_size_shift(%d)\n", block_size_shift);
+        return -FILE_BLOCK_ERR_PARAMETER;
+    }
+
+    reserved_blocks++;
+    total_blocks = total_sectors >> (block_size_shift - BYTES_PER_SECTOR_SHIFT);
+    if (total_blocks <= reserved_blocks)
+    {
+        LOG_ERROR("The parameter is invalid. total_blocks(%lld) reserved_blocks(%d)\n",
+            total_blocks, reserved_blocks);
+        return -FILE_BLOCK_ERR_PARAMETER;
+    }
+
+    sb->head.blk_id = SUPER_BLOCK_ID;
+    sb->head.real_size = SUPER_BLOCK_SIZE;
+    sb->head.alloc_size = SUPER_BLOCK_SIZE;
+    sb->head.seq_no = 0;
+    sb->block_size_shift = block_size_shift;
+    sb->block_size = 1 << block_size_shift;
+    sb->sectors_per_block = sb->block_size / BYTES_PER_SECTOR;
+    sb->bitmap_start_block = reserved_blocks;
+    sb->bitmap_blocks =
+        (uint32_t) RoundUp2(RoundUp2(total_blocks, BITS_PER_BYTE,
+            BITS_PER_BYTE_SHIFT), sb->block_size, block_size_shift);
+    sb->total_blocks = total_blocks;
+    sb->free_blocks = total_blocks;
+    sb->first_free_block = 1;
+    sb->start_lba = start_lba;
+    sb->version = VERSION;
+    sb->flags = 0;
+    sb->magic_num = BLOCK_MAGIC_NUMBER;
+
+    return 0;
+}
+
+int32_t check_super_block(ifs_super_block_t * sb, uint64_t start_lba)
+{
+    ASSERT(NULL != sb);
+    
+    if (sb->magic_num != BLOCK_MAGIC_NUMBER)
+    {
+        LOG_ERROR( "magic_num not match. magic_num(%x) expect(%x)\n",
+            sb->magic_num, BLOCK_MAGIC_NUMBER);
+        return -FILE_BLOCK_ERR_FORMAT;
+    }
+
+    if (sb->version != VERSION)
+    {
+        LOG_ERROR("version not match. version(%04d) expect(%04d)\n", sb->version, VERSION);
+        return -FILE_BLOCK_ERR_FORMAT;
+    }
+
+    if (sb->sectors_per_block != SECTORS_PER_BLOCK)
+    {
+        LOG_ERROR("sectors_per_block not match. sectors_per_block(%d) expect(%d)\n",
+            sb->sectors_per_block, SECTORS_PER_BLOCK);
+        return -FILE_BLOCK_ERR_FORMAT;
+    }
+
+    if (sb->block_size != BYTES_PER_BLOCK)
+    {
+        LOG_ERROR("block_size not match. block_size(%d) expect(%d)\n",
+            sb->block_size, BYTES_PER_BLOCK);
+        return -FILE_BLOCK_ERR_FORMAT;
+    }
+
+    if (sb->start_lba != start_lba)
+    {
+        LOG_ERROR("start_lba changed. old(%lld) new(%lld)\n", sb->start_lba, start_lba);
+        sb->start_lba = start_lba;
+    }
+
+    return 0;
+}
+
+int32_t block_update_super_block(index_handle_t * hnd)
+{
+    int32_t ret = 0;
+
+    if (NULL == hnd)
+    {
+        LOG_ERROR("Invalid parameter. hnd(%p)\n", hnd);
+        return -FILE_BLOCK_ERR_PARAMETER;
+    }
+
+    ret = index_update_block_pingpong(hnd, &hnd->sb.head, SUPER_BLOCK_VBN);
+    if (0 > ret)
+    {
+        LOG_ERROR("Update super block failed. hnd(%p) vbn(%lld) ret(%d)\n",
+            hnd, SUPER_BLOCK_VBN, ret);
+    }
+
+    return ret;
+}
+
+
 int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint64_t start_lba,
     index_handle_t **index)
 {
     index_handle_t *tmp_index = NULL;
     int32_t ret = 0;
-    block_handle_t *hnd = NULL;
     avl_index_t where = 0;
 
     if ((NULL == index) || (0 == total_sectors) || (NULL == index_name))
@@ -313,31 +416,44 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
         return ret;
     }
     
-    /* create block manager */
-    ret = block_create(&hnd, index_name, total_sectors, BYTES_PER_BLOCK_SHIFT,
-        0, start_lba);
+    /* init super block */
+    ret = init_super_block(&tmp_index->sb, total_sectors, BYTES_PER_BLOCK_SHIFT, 0, start_lba);
     if (ret < 0)
     {
-        LOG_ERROR("Create block file failed. name(%s)\n", index_name);
+        LOG_ERROR("init super block failed. name(%s)\n", index_name);
         close_index(tmp_index);
         return ret;
     }
 
-    tmp_index->hnd = hnd;
+    ret = os_disk_create(&tmp_index->file_hnd, index_name);
+    if (0 > ret)
+    {
+        LOG_ERROR("init disk failed. ret(%d)\n", ret);
+        close_index(tmp_index);
+        return ret;
+    }
+
+    ret = index_update_block_pingpong_init(tmp_index, &tmp_index->sb.head, SUPER_BLOCK_VBN);
+    if (0 > ret)
+    {
+        LOG_ERROR("Update super block failed. index_name(%s) vbn(%lld) ret(%d)\n",
+            index_name, SUPER_BLOCK_VBN, ret);
+        close_index(tmp_index);
+        return ret;
+    }
 
     ret = create_system_objects(tmp_index);
     if (0 > ret)
     {
-        LOG_ERROR("create system objects failed. hnd(%p) ret(%d)\n", tmp_index->hnd, ret);
+        LOG_ERROR("create system objects failed. index_name(%s) ret(%d)\n", index_name, ret);
         close_index(tmp_index);
         return ret;
     }
-
     
-    ret = block_update_super_block(tmp_index->hnd);
+    ret = block_update_super_block(tmp_index);
     if (0 > ret)
     {
-        LOG_ERROR("Update super block failed. hnd(%p) ret(%d)\n", tmp_index->hnd, ret);
+        LOG_ERROR("Update super block failed. hnd(%p) ret(%d)\n", tmp_index, ret);
         close_index(tmp_index);
         return ret;
     }
@@ -366,8 +482,9 @@ int32_t index_open_nolock(const char *index_name, uint64_t start_lba, index_hand
 {
     index_handle_t *tmp_index = NULL;
     int32_t ret = 0;
-    block_handle_t *hnd = NULL;
+    index_handle_t *hnd = NULL;
     avl_index_t where = 0;
+    ifs_super_block_t *sb = NULL;
 
     if ((NULL == index) || (NULL == index_name))
     {
@@ -401,16 +518,37 @@ int32_t index_open_nolock(const char *index_name, uint64_t start_lba, index_hand
         return ret;
     }
 
-    ret = block_open(&hnd, index_name, start_lba);
-    if (0 > ret)
+    ret = os_disk_open(&tmp_index->file_hnd, index_name);
+    if (ret < 0)
     {
-        LOG_ERROR("Open index file failed. index_name(%s) start_lba(%lld) ret(%d)\n",
-            index_name, start_lba, ret);
-        close_index(tmp_index);
+        LOG_ERROR("Open disk failed. index_name(%s) ret(%d)\n", index_name, ret);
+        (void)close_index(tmp_index);
         return ret;
     }
 
-    tmp_index->hnd = hnd;
+    sb = &tmp_index->sb;
+
+    sb->sectors_per_block = SECTORS_PER_BLOCK;
+    sb->block_size = BYTES_PER_BLOCK;
+    sb->start_lba = start_lba;
+
+    ret = index_read_block_pingpong(tmp_index, &sb->head, SUPER_BLOCK_VBN, SUPER_BLOCK_ID, SUPER_BLOCK_SIZE);
+    if (0 > ret)
+    {
+        LOG_ERROR("Read block failed. index_name(%s) vbn(%lld) ret(%d)\n",
+            index_name, SUPER_BLOCK_VBN, ret);
+        (void)close_index(tmp_index);
+        return ret;
+    }
+
+    ret = check_super_block(sb, start_lba);
+    if (0 > ret)
+    {
+        LOG_ERROR("Check super block failed. index_name(%s) start_lba(%lld) ret(%d)\n",
+            index_name, start_lba, ret);
+        (void)close_index(tmp_index);
+        return ret;
+    }
 
     /* open system object */
     ret = open_system_objects(tmp_index);
@@ -420,18 +558,6 @@ int32_t index_open_nolock(const char *index_name, uint64_t start_lba, index_hand
             index_name, start_lba, ret);
         close_index(tmp_index);
         return ret;
-    }
-
-    if (block_need_fixup(tmp_index->hnd))
-    {
-        ret = fixup_index(tmp_index);
-        if (ret < 0)
-        {
-            LOG_ERROR("Fixup index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
-                index_name, start_lba, ret);
-            close_index(tmp_index);
-            return ret;
-        }
     }
 
     *index = tmp_index;
@@ -455,6 +581,8 @@ int32_t index_open(const char *index_name, uint64_t start_lba, index_handle_t **
 
 void close_index(index_handle_t *index)
 {
+    int32_t ret;
+    
     ASSERT(NULL != index);
 
     // close all user object
@@ -476,12 +604,22 @@ void close_index(index_handle_t *index)
         (void)close_object(index->bsm.space_obj->obj_info);
     }
 
-    // close block manager system
-    if (NULL != index->hnd)
+    if (NULL != index->file_hnd)
     {
-        index->hnd->sb.base_blk = index->base_blk;
-        (void)block_close(index->hnd);
-        index->hnd = NULL;
+        if (0 != (index->flags & FLAG_DIRTY))
+        {
+            index->flags &= ~FLAG_DIRTY;
+            index->sb.flags &= ~FLAG_FIXUP;
+            ret = block_update_super_block(index);
+            if (0 > ret)
+            {
+                LOG_ERROR("Update super block failed. index(%p) ret(%d)\n", index, ret);
+            }
+        }
+        
+        index->sb.base_blk = index->base_blk;
+        (void) os_disk_close(index->file_hnd);
+        index->file_hnd = NULL;
     }
 
     avl_destroy(&index->obj_list);

@@ -76,16 +76,16 @@ int32_t print_attr_info(net_para_t *net, object_info_t *obj_info)
     return 0;
 }
 
-void print_block_Info(block_handle_t * hnd, net_para_t *net)
+void print_block_Info(index_handle_t * hnd, net_para_t *net)
 {
-    block_handle_t *tmp_hnd = hnd;
+    index_handle_t *tmp_hnd = hnd;
 
     if (NULL == hnd)
     {
         return;
     }
 
-    OS_RWLOCK_WRLOCK(&tmp_hnd->rwlock);
+    OS_RWLOCK_WRLOCK(&tmp_hnd->index_lock);
 
     OS_PRINT(net, "ObjID            : 0x%X\n", tmp_hnd->sb.head.blk_id);
     OS_PRINT(net, "AllocSize        : %d\n", tmp_hnd->sb.head.alloc_size);
@@ -110,7 +110,7 @@ void print_block_Info(block_handle_t * hnd, net_para_t *net)
     OS_PRINT(net, "Flags            : 0x%08X\n", tmp_hnd->sb.flags);
     OS_PRINT(net, "MagicNum         : 0x%04X\n", tmp_hnd->sb.magic_num);
     
-    OS_RWLOCK_WRUNLOCK(&tmp_hnd->rwlock);
+    OS_RWLOCK_WRUNLOCK(&tmp_hnd->index_lock);
 
     return;
 }
@@ -132,7 +132,7 @@ int32_t list_super_block(char *index_name, uint64_t start_lba, net_para_t *net)
         return ret;
     }
     
-    print_block_Info(index->hnd, net);
+    print_block_Info(index, net);
     
     (void)index_close(index);
     

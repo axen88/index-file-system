@@ -90,6 +90,48 @@ void test_open_index(void)
     CU_ASSERT(0 == index_close(index[4]));
 }
 
+#define TEST_BLOCK_FILE "Test.dat"
+#define TEST_BLOCK_SHIFT 12
+#define TEST_BLOCK_SIZE (1 << TEST_BLOCK_SHIFT)
+#define TEST_START_LBA   5
+
+static void random_buffer(uint8_t *buf, uint32_t size)
+{
+	while (size--)
+	{
+		*buf++ = (uint8_t)rand();
+	}
+}
+
+void test_index_rw(void)
+{
+    index_handle_t *hnd;
+    int64_t vbn = 10;
+    uint64_t blkNum = 100;
+    uint8_t wrBuf[TEST_BLOCK_SIZE];
+    uint8_t rdBuf[TEST_BLOCK_SIZE];
+    
+    srand((unsigned)time(NULL));
+    
+    CU_ASSERT(0 == index_create(TEST_BLOCK_FILE, 10000, TEST_START_LBA, &hnd));
+    
+    while (blkNum--)
+    {
+        random_buffer(wrBuf, TEST_BLOCK_SIZE);
+        CU_ASSERT(index_update_block(hnd, wrBuf, TEST_BLOCK_SIZE, 0, vbn) == TEST_BLOCK_SIZE);
+        CU_ASSERT(index_read_block(hnd, rdBuf, TEST_BLOCK_SIZE, 0, vbn) == TEST_BLOCK_SIZE);
+        CU_ASSERT(memcmp(rdBuf, wrBuf, TEST_BLOCK_SIZE) == 0);
+        vbn++;
+    }
+
+    CU_ASSERT(index_close(hnd) == 0);
+
+    
+    CU_ASSERT(index_open(TEST_BLOCK_FILE, TEST_START_LBA, &hnd) == 0);
+    CU_ASSERT(index_close(hnd) == 0);
+}
+
+
 int add_index_test_case(void)
 {
     CU_pSuite pSuite = NULL;
@@ -105,6 +147,11 @@ int add_index_test_case(void)
     }
 
     if (NULL == CU_add_test(pSuite, "test open index", test_open_index))
+    {
+       return -3;
+    }
+
+    if (NULL == CU_add_test(pSuite, "test index rw", test_index_rw))
     {
        return -3;
     }

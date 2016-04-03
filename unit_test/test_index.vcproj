@@ -179,10 +179,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\index\index_block_manager.c"
-				>
-			</File>
-			<File
 				RelativePath="..\index\index_block_rw.c"
 				>
 			</File>
@@ -274,10 +270,6 @@
 		<Filter
 			Name="test_case"
 			>
-			<File
-				RelativePath=".\test_cases\test_block.c"
-				>
-			</File>
 			<File
 				RelativePath=".\test_case_main.c"
 				>

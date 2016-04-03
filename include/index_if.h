@@ -48,7 +48,6 @@ History:
 
 #include "index_layout.h"
 #include "index_collate.h"
-#include "index_block_if.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -167,8 +166,11 @@ typedef struct space_manager
 
 typedef struct index_handle
 {
-    block_handle_t *hnd;               // The block file handle
     char name[INDEX_NAME_SIZE];        // index name
+
+    void *file_hnd;                       // file handle
+    ifs_super_block_t sb;               // super block
+    uint32_t flags;                       
 
     object_handle_t *id_obj;
     //OBJECT_HANDLE *log_obj;
@@ -187,10 +189,10 @@ typedef struct index_handle
 } index_handle_t;
 
 #define INDEX_UPDATE_INODE(obj) \
-    index_update_block_pingpong(obj->index->hnd, &obj->inode.head, obj->inode_no)
+    index_update_block_pingpong(obj->index, &obj->inode.head, obj->inode_no)
     
 #define INDEX_READ_INODE(index, obj, inode_no) \
-    index_read_block_pingpong(index->hnd, &obj->inode.head, inode_no, INODE_MAGIC, INODE_SIZE);
+    index_read_block_pingpong(index, &obj->inode.head, inode_no, INODE_MAGIC, INODE_SIZE);
 
 #define INDEX_ALLOC_BLOCK(index, objid, vbn) index_alloc_space(index, objid, 1, vbn)
 #define INDEX_FREE_BLOCK(index, objid, vbn)  index_free_space(index, objid, vbn, 1)
@@ -217,6 +219,7 @@ extern int32_t walk_all_opened_index(
 #include "index_object.h"
 #include "index_manager.h"
 #include "index_space_manager.h"
+#include "index_block_if.h"
 
 #include "index_tools_if.h"
 

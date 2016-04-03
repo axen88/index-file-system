@@ -38,7 +38,7 @@ History:
 MODULE(PID_INDEX);
 #include "os_log.h"
 
-int32_t index_update_block(block_handle_t * hnd, void * buf, uint32_t size,
+int32_t index_update_block(index_handle_t * hnd, void * buf, uint32_t size,
     uint32_t start_lba, uint64_t vbn)
 {
     int32_t ret = 0;
@@ -62,7 +62,7 @@ int32_t index_update_block(block_handle_t * hnd, void * buf, uint32_t size,
     return ret;
 }
 
-int32_t index_read_block(block_handle_t * hnd, void * buf, uint32_t size,
+int32_t index_read_block(index_handle_t * hnd, void * buf, uint32_t size,
     uint32_t start_lba, uint64_t vbn)
 {
     int32_t ret = 0;
@@ -157,7 +157,7 @@ int32_t verify_object(block_head_t * obj, uint32_t objid,
     return 0;
 }
 
-int32_t index_update_block_fixup(block_handle_t * hnd, block_head_t * obj,
+int32_t index_update_block_fixup(index_handle_t * hnd, block_head_t * obj,
     uint64_t vbn)
 {
     int32_t ret = 0;
@@ -188,7 +188,7 @@ int32_t index_update_block_fixup(block_handle_t * hnd, block_head_t * obj,
     return ret;
 }
 
-int32_t index_read_block_fixup(block_handle_t * hnd, block_head_t * obj,
+int32_t index_read_block_fixup(index_handle_t * hnd, block_head_t * obj,
     uint64_t vbn, uint32_t objid, uint32_t alloc_size)
 {
     int32_t ret = 0;
@@ -218,7 +218,7 @@ int32_t index_read_block_fixup(block_handle_t * hnd, block_head_t * obj,
     return fixup_object(obj);
 }
 
-int32_t check_obj(block_handle_t * hnd, block_head_t * obj)
+int32_t check_obj(index_handle_t *hnd, block_head_t *obj)
 {
     if ((NULL == hnd) || (NULL == obj))
     {
@@ -237,7 +237,7 @@ int32_t check_obj(block_handle_t * hnd, block_head_t * obj)
     return 0;
 }
 
-int32_t index_update_block_pingpong_init(block_handle_t * hnd, block_head_t * obj,
+int32_t index_update_block_pingpong_init(index_handle_t * hnd, block_head_t * obj,
     uint64_t vbn)
 {
     int32_t ret = 0;
@@ -288,7 +288,7 @@ int32_t index_update_block_pingpong_init(block_handle_t * hnd, block_head_t * ob
     return 0;
 }
 
-int32_t index_update_block_pingpong(block_handle_t * hnd, block_head_t * obj,
+int32_t index_update_block_pingpong(index_handle_t * hnd, block_head_t * obj,
     uint64_t vbn)
 {
     int32_t ret = 0;
@@ -398,7 +398,7 @@ block_head_t *get_last_correct_dat(uint8_t * buf, uint32_t objid,
     return NULL;
 }
 
-int32_t index_read_block_pingpong(block_handle_t * hnd, block_head_t * obj,
+int32_t index_read_block_pingpong(index_handle_t * hnd, block_head_t * obj,
     uint64_t vbn, uint32_t objid, uint32_t alloc_size)
 {
     int32_t ret = 0;
@@ -449,7 +449,7 @@ int32_t index_read_block_pingpong(block_handle_t * hnd, block_head_t * obj,
     return 0;
 }
 
-int32_t index_update_sectors(block_handle_t * hnd, void * buf, uint32_t size,
+int32_t index_update_sectors(index_handle_t * hnd, void * buf, uint32_t size,
     uint64_t start_lba)
 {
     int32_t ret = 0;
@@ -471,7 +471,7 @@ int32_t index_update_sectors(block_handle_t * hnd, void * buf, uint32_t size,
     return ret;
 }
 
-int32_t index_read_sectors(block_handle_t * hnd, void * buf, uint32_t size,
+int32_t index_read_sectors(index_handle_t * hnd, void * buf, uint32_t size,
     uint64_t start_lba)
 {
     int32_t ret = 0;

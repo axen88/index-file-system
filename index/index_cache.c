@@ -72,10 +72,10 @@ ifs_block_cache_t *alloc_cache(object_info_t *obj_info, uint64_t vbn)
         return NULL;
     }
 
-    cache->ib = OS_MALLOC(obj_info->index->hnd->sb.block_size);
+    cache->ib = OS_MALLOC(obj_info->index->sb.block_size);
     if (NULL == cache)
     {
-        LOG_ERROR("Allocate memory failed. size(%d)\n", obj_info->index->hnd->sb.block_size);
+        LOG_ERROR("Allocate memory failed. size(%d)\n", obj_info->index->sb.block_size);
         OS_FREE(cache);
         return NULL;
     }
@@ -149,7 +149,7 @@ int32_t flush_dirty_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
         return 0;
     }
 
-    ret = index_update_block_fixup(obj_info->index->hnd, &cache->ib->head, cache->vbn);
+    ret = index_update_block_fixup(obj_info->index, &cache->ib->head, cache->vbn);
     if (ret != (int32_t)cache->ib->head.alloc_size)
     {
         LOG_ERROR("Update index block failed. objid(%lld) vbn(%lld) size(%d) ret(%d)\n",
@@ -317,18 +317,18 @@ int32_t index_block_read(object_handle_t *obj, uint64_t vbn)
     obj->cache = cache;
     ib = cache->ib;
 
-    ret = index_read_block_fixup(obj->index->hnd, &ib->head, vbn,
-        INDEX_MAGIC, obj->index->hnd->sb.block_size);
+    ret = index_read_block_fixup(obj->index, &ib->head, vbn,
+        INDEX_MAGIC, obj->index->sb.block_size);
     if (ret < 0)
     {   // Read the block
         LOG_ERROR("Read index block failed. objid(%lld) ib(%p) vbn(%lld) size(%d) ret(%d)\n",
-            obj_info->objid, ib, vbn, obj->index->hnd->sb.block_size, ret);
+            obj_info->objid, ib, vbn, obj->index->sb.block_size, ret);
         OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
         return ret;
     }
 
     LOG_DEBUG("Read index block success. objid(%lld) ib(%p) vbn(%lld) size(%d)\n",
-        obj_info->objid, ib, vbn, obj->index->hnd->sb.block_size);
+        obj_info->objid, ib, vbn, obj->index->sb.block_size);
 
     obj->cache->state = CLEAN;
     OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);

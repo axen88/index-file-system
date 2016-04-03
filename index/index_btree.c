@@ -935,7 +935,7 @@ static int32_t reparent_root(object_handle_t * tree)
     new_ib = new_ibc->ib;
 
     memcpy(new_ib, old_ib, old_ib->head.real_size);
-    new_ib->head.alloc_size = tree->obj_info->index->hnd->sb.block_size;
+    new_ib->head.alloc_size = tree->obj_info->index->sb.block_size;
 
     new_ibc->state = DIRTY;
 

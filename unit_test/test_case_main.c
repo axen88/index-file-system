@@ -42,7 +42,6 @@ History:
 #include "os_adapter.h"
 
 int add_index_test_case(void);
-int add_block_test_suite(void);
 int add_kv_test_case(void);
 int add_collate_test_case(void);
 int add_space_manager_test_case(void);
@@ -54,12 +53,6 @@ int main(void)
     /* initialize the CUnit test registry */
     if (CUE_SUCCESS != CU_initialize_registry())
         return CU_get_error();
-
-    ret = add_block_test_suite();
-    if (0 != ret) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
 
     ret = add_index_test_case();
     if (0 != ret) {

@@ -373,7 +373,7 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
     obj_info->inode.atime = 0;
     obj_info->inode.mtime = 0;
     
-    obj_info->inode.snapshot_no = index->hnd->sb.snapshot_no;
+    obj_info->inode.snapshot_no = index->sb.snapshot_no;
     snprintf(obj_info->inode.name, OBJ_NAME_MAX_SIZE, "OBJ%lld", objid);
     obj_info->inode.name_size = strlen(obj_info->inode.name);
     
@@ -400,7 +400,7 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
     validate_attr(obj_info);
 
     // update index block
-    ret = index_update_block_pingpong_init(index->hnd, &obj_info->inode.head, inode_no);
+    ret = index_update_block_pingpong_init(index, &obj_info->inode.head, inode_no);
     if (0 > ret)
     {
         put_object_info(obj_info);
