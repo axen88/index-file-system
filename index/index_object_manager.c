@@ -88,7 +88,6 @@ void init_attr(object_info_t *obj_info, uint64_t inode_no)
     obj_info->attr_record = INODE_GET_ATTR_RECORD(&obj_info->inode);
     obj_info->root_ibc.vbn = inode_no;
     obj_info->root_ibc.ib = (index_block_t *)obj_info->attr_record->content;
-    IBC_SET_CLEAN(&obj_info->root_ibc);
 }
 
 int32_t get_object_info(index_handle_t *index, uint64_t objid, object_info_t **obj_info_out)
@@ -196,6 +195,7 @@ int32_t recover_obj_inode(object_info_t *obj_info, uint64_t inode_no)
     obj_info->inode_no = inode_no;
     strncpy(obj_info->obj_name, obj_info->inode.name, obj_info->inode.name_size);
     init_attr(obj_info, inode_no);
+    IBC_SET_CLEAN(&obj_info->root_ibc);
 
     return 0;
 }
@@ -366,7 +366,6 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
     obj_info->inode_no = inode_no;
     strncpy(obj_info->obj_name, obj_info->inode.name, obj_info->inode.name_size);
     init_attr(obj_info, inode_no);
-    
     IBC_SET_DIRTY(&obj_info->root_ibc);
 
     INODE_SET_DIRTY(obj_info);

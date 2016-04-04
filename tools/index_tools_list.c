@@ -76,45 +76,6 @@ int32_t print_attr_info(net_para_t *net, object_info_t *obj_info)
     return 0;
 }
 
-void print_block_Info(index_handle_t * hnd, net_para_t *net)
-{
-    index_handle_t *tmp_hnd = hnd;
-
-    if (NULL == hnd)
-    {
-        return;
-    }
-
-    OS_RWLOCK_WRLOCK(&tmp_hnd->index_lock);
-
-    OS_PRINT(net, "ObjID            : 0x%X\n", tmp_hnd->sb.head.blk_id);
-    OS_PRINT(net, "AllocSize        : %d\n", tmp_hnd->sb.head.alloc_size);
-    OS_PRINT(net, "RealSize         : %d\n", tmp_hnd->sb.head.real_size);
-    OS_PRINT(net, "SeqNo            : 0x%04X\n", tmp_hnd->sb.head.seq_no);
-    OS_PRINT(net, "Fixup            : 0x%04X\n", tmp_hnd->sb.head.fixup);
-
-    
-    OS_PRINT(net, "BlockSizeShift   : %d\n", tmp_hnd->sb.block_size_shift);
-    OS_PRINT(net, "BlockSize        : %d\n", tmp_hnd->sb.block_size);
-    OS_PRINT(net, "SectorsPerBlock  : %d\n", tmp_hnd->sb.sectors_per_block);
-    
-    OS_PRINT(net, "BitmapBlocks     : %d\n", tmp_hnd->sb.bitmap_blocks);
-    OS_PRINT(net, "BitmapStartBlock : %lld\n", tmp_hnd->sb.bitmap_start_block);
-    
-    OS_PRINT(net, "TotalBlocks      : %lld\n", tmp_hnd->sb.total_blocks);
-    OS_PRINT(net, "FreeBlocks       : %lld\n", tmp_hnd->sb.free_blocks);
-    OS_PRINT(net, "FirstFreeBlock   : %lld\n", tmp_hnd->sb.first_free_block);
-    
-    OS_PRINT(net, "start_lba         : %lld\n", tmp_hnd->sb.start_lba);
-    OS_PRINT(net, "Version          : %d\n", tmp_hnd->sb.version);
-    OS_PRINT(net, "Flags            : 0x%08X\n", tmp_hnd->sb.flags);
-    OS_PRINT(net, "MagicNum         : 0x%04X\n", tmp_hnd->sb.magic_num);
-    
-    OS_RWLOCK_WRUNLOCK(&tmp_hnd->index_lock);
-
-    return;
-}
-
 int32_t list_super_block(char *index_name, uint64_t start_lba, net_para_t *net)
 {
     index_handle_t *index = NULL;
@@ -132,7 +93,32 @@ int32_t list_super_block(char *index_name, uint64_t start_lba, net_para_t *net)
         return ret;
     }
     
-    print_block_Info(index, net);
+    OS_RWLOCK_WRLOCK(&index->index_lock);
+
+    OS_PRINT(net, "ObjID            : 0x%X\n",   index->sb.head.blk_id);
+    OS_PRINT(net, "AllocSize        : %d\n",     index->sb.head.alloc_size);
+    OS_PRINT(net, "RealSize         : %d\n",     index->sb.head.real_size);
+    OS_PRINT(net, "SeqNo            : 0x%04X\n", index->sb.head.seq_no);
+    OS_PRINT(net, "Fixup            : 0x%04X\n", index->sb.head.fixup);
+
+    
+    OS_PRINT(net, "BlockSizeShift   : %d\n", index->sb.block_size_shift);
+    OS_PRINT(net, "BlockSize        : %d\n", index->sb.block_size);
+    OS_PRINT(net, "SectorsPerBlock  : %d\n", index->sb.sectors_per_block);
+    
+    OS_PRINT(net, "BitmapBlocks     : %d\n",   index->sb.bitmap_blocks);
+    OS_PRINT(net, "BitmapStartBlock : %lld\n", index->sb.bitmap_start_block);
+    
+    OS_PRINT(net, "TotalBlocks      : %lld\n", index->sb.total_blocks);
+    OS_PRINT(net, "FreeBlocks       : %lld\n", index->sb.free_blocks);
+    OS_PRINT(net, "FirstFreeBlock   : %lld\n", index->sb.first_free_block);
+    
+    OS_PRINT(net, "start_lba         : %lld\n",  index->sb.start_lba);
+    OS_PRINT(net, "Version          : %d\n",     index->sb.version);
+    OS_PRINT(net, "Flags            : 0x%08X\n", index->sb.flags);
+    OS_PRINT(net, "MagicNum         : 0x%04X\n", index->sb.magic_num);
+    
+    OS_RWLOCK_WRUNLOCK(&index->index_lock);
     
     (void)index_close(index);
     

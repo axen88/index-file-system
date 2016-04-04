@@ -144,7 +144,7 @@ int32_t flush_dirty_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
     ASSERT(NULL != obj_info);
     ASSERT(NULL != cache);
 
-    if (DIRTY != cache->state)
+    if (!IBC_DIRTY(cache))
     {
         return 0;
     }
@@ -206,7 +206,7 @@ int32_t release_dirty_block(object_info_t *obj_info, ifs_block_cache_t *cache)
     ASSERT(NULL != obj_info);
     ASSERT(NULL != cache);
 
-    if (DIRTY != cache->state)
+    if (!(IBC_DIRTY(cache)))
     {
         return 0;
     }
@@ -317,8 +317,7 @@ int32_t index_block_read(object_handle_t *obj, uint64_t vbn)
     obj->cache = cache;
     ib = cache->ib;
 
-    ret = index_read_block_fixup(obj->index, &ib->head, vbn,
-        INDEX_MAGIC, obj->index->sb.block_size);
+    ret = index_read_block_fixup(obj->index, &ib->head, vbn, INDEX_MAGIC, obj->index->sb.block_size);
     if (ret < 0)
     {   // Read the block
         LOG_ERROR("Read index block failed. objid(%lld) ib(%p) vbn(%lld) size(%d) ret(%d)\n",

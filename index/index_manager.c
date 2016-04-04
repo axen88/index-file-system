@@ -354,8 +354,7 @@ int32_t check_super_block(ifs_super_block_t * sb, uint64_t start_lba)
 }
 
 
-int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint64_t start_lba,
-    index_handle_t **index)
+int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint64_t start_lba, index_handle_t **index)
 {
     index_handle_t *tmp_index = NULL;
     int32_t ret = 0;
@@ -412,7 +411,7 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
         return ret;
     }
 
-    ret = index_update_block_fixup(tmp_index, &tmp_index->sb.head, SUPER_BLOCK_VBN);
+    ret = index_update_block_pingpong_init(tmp_index, &tmp_index->sb.head, SUPER_BLOCK_VBN);
     if (0 > ret)
     {
         LOG_ERROR("Update super block failed. index_name(%s) vbn(%lld) ret(%d)\n",
@@ -420,7 +419,7 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
         close_index(tmp_index);
         return ret;
     }
-
+    
     ret = create_system_objects(tmp_index);
     if (0 > ret)
     {
@@ -571,23 +570,27 @@ void close_index(index_handle_t *index)
     if (index->id_obj != NULL)
     {
         (void)close_object(index->id_obj->obj_info);
+        index->id_obj = NULL;
     }
 
     if (index->sm.space_obj != NULL)
     {
         (void)close_object(index->sm.space_obj->obj_info);
+        index->sm.space_obj = NULL;
     }
 
     if (index->bsm.space_obj != NULL)
     {
         (void)close_object(index->bsm.space_obj->obj_info);
+        index->bsm.space_obj = NULL;
     }
 
-    if (NULL != index->file_hnd)
+    if (index->file_hnd != NULL)
     {
         if (index->flags & FLAG_DIRTY)
         {
             index->flags &= ~FLAG_DIRTY;
+            index->sb.base_blk = index->base_blk;
             ret = index_update_super_block(index);
             if (0 > ret)
             {
@@ -595,7 +598,6 @@ void close_index(index_handle_t *index)
             }
         }
         
-        index->sb.base_blk = index->base_blk;
         (void) os_disk_close(index->file_hnd);
         index->file_hnd = NULL;
     }
