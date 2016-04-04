@@ -80,7 +80,7 @@ ifs_block_cache_t *alloc_cache(object_info_t *obj_info, uint64_t vbn)
         return NULL;
     }
 
-    cache->state = EMPTY;
+    IBC_SET_EMPTY(cache);
     cache->vbn = vbn;
     
     avl_add(&obj_info->caches, cache);
@@ -160,7 +160,7 @@ int32_t flush_dirty_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
     LOG_DEBUG("Update index block success. objid(%lld) vbn(%lld) size(%d)\n",
             obj_info->objid, cache->vbn, cache->ib->head.alloc_size);
     
-    cache->state = CLEAN;
+    IBC_SET_CLEAN(cache);
 
     return 0;
 }
@@ -179,7 +179,7 @@ int32_t release_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
     ASSERT(NULL != obj_info);
     ASSERT(NULL != cache);
 
-    if (DIRTY == cache->state)  // all cache should be CLEAN or EMPTY state
+    if (IBC_DIRTY(cache))  // all cache should be CLEAN or EMPTY state
     {
         LOG_ERROR("The dirty cache will be released. objid(%lld) vbn(%lld)\n",
             obj_info->objid, cache->vbn);
@@ -330,7 +330,7 @@ int32_t index_block_read(object_handle_t *obj, uint64_t vbn)
     LOG_DEBUG("Read index block success. objid(%lld) ib(%p) vbn(%lld) size(%d)\n",
         obj_info->objid, ib, vbn, obj->index->sb.block_size);
 
-    obj->cache->state = CLEAN;
+    IBC_SET_CLEAN(obj->cache);
     OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
 
     return 0;

@@ -88,7 +88,7 @@ void init_attr(object_info_t *obj_info, uint64_t inode_no)
     obj_info->attr_record = INODE_GET_ATTR_RECORD(&obj_info->inode);
     obj_info->root_ibc.vbn = inode_no;
     obj_info->root_ibc.ib = (index_block_t *)obj_info->attr_record->content;
-    obj_info->root_ibc.state = CLEAN;
+    IBC_SET_CLEAN(&obj_info->root_ibc);
 }
 
 int32_t get_object_info(index_handle_t *index, uint64_t objid, object_info_t **obj_info_out)
@@ -182,14 +182,22 @@ void put_object_handle(object_handle_t *obj)
     return;
 }
 
-void recover_obj_inode(object_info_t *obj_info)
+int32_t recover_obj_inode(object_info_t *obj_info, uint64_t inode_no)
 {
-    memcpy(&obj_info->inode, &obj_info->old_inode, sizeof(inode_record_t));
-}
+    int32_t ret;
+    
+    ret = INDEX_READ_INODE(obj_info, inode_no);
+    if (0 > ret)
+    {
+        LOG_ERROR("Read inode failed. ret(%d)\n", ret);
+        return ret;
+    }
 
-void backup_obj_inode(object_info_t *obj_info)
-{
-    memcpy(&obj_info->old_inode, &obj_info->inode, sizeof(inode_record_t));
+    obj_info->inode_no = inode_no;
+    strncpy(obj_info->obj_name, obj_info->inode.name, obj_info->inode.name_size);
+    init_attr(obj_info, inode_no);
+
+    return 0;
 }
 
 int32_t flush_inode(object_info_t *obj_info)
@@ -214,8 +222,6 @@ int32_t flush_inode(object_info_t *obj_info)
     LOG_DEBUG("Update inode success. objid(%lld) inode(%p) inode_no(%lld)\n",
         obj_info->objid, obj_info->inode, obj_info->inode_no);
 
-    // set recover dot
-    backup_obj_inode(obj_info);
     INODE_CLR_DIRTY(obj_info);
 
     return 0;
@@ -226,13 +232,8 @@ void cancel_object_modification(object_info_t *obj_info)
     ASSERT(obj_info != NULL);
 
     // recover obj inode
-    recover_obj_inode(obj_info);
+    recover_obj_inode(obj_info, obj_info->inode_no);
     INODE_CLR_DIRTY(obj_info);
-
-    if (!ATTR_INFO_DIRTY(obj_info))
-    {
-        return;
-    }
 
     // free old block memory
     index_release_all_old_blocks_mem(obj_info);
@@ -240,9 +241,6 @@ void cancel_object_modification(object_info_t *obj_info)
     // discard all dirty block cache
     index_release_all_dirty_blocks(obj_info);
 
-    // recover the attr record
-    ATTR_INFO_CLR_DIRTY(obj_info);
-    
     return;
 }
 
@@ -306,11 +304,49 @@ int32_t close_object(object_info_t *obj_info)
     return 0;
 }
 
+void init_inode(inode_record_t *inode, uint64_t objid, uint64_t inode_no, uint16_t flags)
+{
+    attr_record_t *attr_record = NULL;
+
+    inode->head.blk_id = INODE_MAGIC;
+    inode->head.alloc_size = INODE_SIZE;
+    inode->head.real_size = INODE_SIZE;
+    
+    inode->first_attr_off = OS_OFFSET(inode_record_t, reserved);
+    
+    inode->objid = objid;
+    inode->base_objid = 0;
+    
+    inode->mode = 0;
+    inode->uid = 0;
+    inode->gid = 0;
+    inode->size = 0;
+    inode->links = 0;
+    inode->ctime = 0;
+    inode->atime = 0;
+    inode->mtime = 0;
+    
+    snprintf(inode->name, OBJ_NAME_MAX_SIZE, "OBJ%lld", objid);
+    inode->name_size = strlen(inode->name);
+
+    /* init attr */
+    attr_record = INODE_GET_ATTR_RECORD(inode);
+    attr_record->record_size = ATTR_RECORD_SIZE;
+    attr_record->flags = flags;
+    if (flags & FLAG_TABLE)
+    { /* table */
+        init_ib((index_block_t *)&attr_record->content, INDEX_BLOCK_SMALL, ATTR_RECORD_CONTENT_SIZE);
+    }
+    else
+    { /* data stream */
+        memset(attr_record->content, 0, ATTR_RECORD_CONTENT_SIZE);
+    }
+}
+
 int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t inode_no, uint16_t flags, object_handle_t **obj_out)
 {
-     int32_t ret = sizeof(inode_record_t);
-     object_handle_t *obj = NULL;
-     attr_record_t *attr_record = NULL;
+     int32_t ret;
+     object_handle_t *obj;
      object_info_t *obj_info;
 
     ASSERT(NULL != index);
@@ -325,45 +361,12 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
     }
 
     /* init inode */
-    obj_info->inode.head.blk_id = INODE_MAGIC;
-    obj_info->inode.head.alloc_size = INODE_SIZE;
-    obj_info->inode.head.real_size = INODE_SIZE;
-    
-    obj_info->inode.first_attr_off = OS_OFFSET(inode_record_t, reserved);
-    
-    obj_info->inode.objid = objid;
-    obj_info->inode.base_objid = 0;
-    
-    obj_info->inode.mode = 0;
-    obj_info->inode.uid = 0;
-    obj_info->inode.gid = 0;
-    obj_info->inode.size = 0;
-    obj_info->inode.links = 0;
-    obj_info->inode.ctime = 0;
-    obj_info->inode.atime = 0;
-    obj_info->inode.mtime = 0;
-    
-    obj_info->inode.snapshot_no = index->sb.snapshot_no;
-    snprintf(obj_info->inode.name, OBJ_NAME_MAX_SIZE, "OBJ%lld", objid);
-    obj_info->inode.name_size = strlen(obj_info->inode.name);
-    
-    strncpy(obj_info->obj_name, obj_info->inode.name, obj_info->inode.name_size);
+    init_inode(&obj_info->inode, objid, inode_no, flags);
+
     obj_info->inode_no = inode_no;
-
-    /* init attr */
-    attr_record = INODE_GET_ATTR_RECORD(&obj_info->inode);
-    attr_record->record_size = ATTR_RECORD_SIZE;
-    attr_record->flags = flags;
-    if (flags & FLAG_TABLE)
-    { /* table */
-        init_ib((index_block_t *)&attr_record->content, INDEX_BLOCK_SMALL, ATTR_RECORD_CONTENT_SIZE);
-    }
-    else
-    { /* data stream */
-        memset(attr_record->content, 0, ATTR_RECORD_CONTENT_SIZE);
-    }
-
+    strncpy(obj_info->obj_name, obj_info->inode.name, obj_info->inode.name_size);
     init_attr(obj_info, inode_no);
+    
     IBC_SET_DIRTY(&obj_info->root_ibc);
 
     INODE_SET_DIRTY(obj_info);
@@ -378,11 +381,8 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
         return ret;
     }
     
-    LOG_DEBUG("Create inode success. obj_id(%lld) vbn(%lld)\n",
-        objid, inode_no);
+    LOG_DEBUG("Create inode success. obj_id(%lld) vbn(%lld)\n", objid, inode_no);
 
-    backup_obj_inode(obj_info);
-    
     ret = get_object_handle(obj_info, &obj);
     if (ret < 0)
     {
@@ -440,24 +440,17 @@ int32_t open_object(index_handle_t *index, uint64_t objid, uint64_t inode_no, ob
         return ret;
     }
 
-    ret = INDEX_READ_INODE(obj_info, inode_no);
+    ret = recover_obj_inode(obj_info, inode_no);
     if (0 > ret)
     {
-        LOG_ERROR("Read inode failed. ret(%d)\n", ret);
         put_object_info(obj_info);
+        LOG_ERROR("Read inode failed. ret(%d)\n", ret);
         return ret;
     }
 
-    obj_info->inode_no = inode_no;
-    strncpy(obj_info->obj_name, obj_info->inode.name, obj_info->inode.name_size);
-
-    backup_obj_inode(obj_info);
-    init_attr(obj_info, inode_no);
-    
     ret = get_object_handle(obj_info, &obj);
     if (ret < 0)
     {
-        (void)INDEX_FREE_BLOCK(index, obj_info->objid, inode_no);
         put_object_info(obj_info);
         LOG_ERROR("Open attr failed. objid(%lld) ret(%d)\n", objid, ret);
         return ret;
@@ -617,13 +610,6 @@ int32_t index_open_object_nolock(index_handle_t *index, uint64_t objid, uint32_t
         return ret;
     }
     
-   // if (id_obj->ie->value_len != VBN_SIZE)
-    {
-       // LOG_ERROR("The attr chaos. obj(%p) objid(%lld) value_len(%d)\n", obj, objid, id_obj->ie->value_len);
-      //  return -INDEX_ERR_CHAOS;
-    }
-    
-    //memcpy(&inode_no, GET_IE_VALUE(id_obj->ie), VBN_SIZE);
     inode_no = os_bstr_to_u64(GET_IE_VALUE(id_obj->ie), id_obj->ie->value_len);
 
     ret = open_object(index, objid, inode_no, &obj);

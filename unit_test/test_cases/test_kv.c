@@ -274,7 +274,7 @@ void test_kv_1(void)
 
     for (i = 0; i < ArraySize(test_kv_pairs); i++)
     {
-        //CU_ASSERT(0 == index_remove_key(obj, test_kv_pairs[i].key, strlen(test_kv_pairs[i].key)));
+        CU_ASSERT(0 == index_remove_key(obj, test_kv_pairs[i].key, strlen(test_kv_pairs[i].key)));
     }
     
     CU_ASSERT(0 == index_close_object(obj));

@@ -108,12 +108,12 @@ static int32_t set_ib_dirty(object_handle_t *tree, uint64_t vbn, uint8_t depth)
             SET_IE_VBN(ie, vbn);
         }
 
-        if (DIRTY == tree->cache_stack[depth]->state)
+        if (IBC_DIRTY(tree->cache_stack[depth]))
         {
             return 0;
         }
 
-        tree->cache_stack[depth]->state = DIRTY;
+        IBC_SET_DIRTY(tree->cache_stack[depth]);
         vbn = new_vbn;
     } while (depth-- > 0);
 
@@ -865,7 +865,7 @@ static index_entry_t *split_ib(object_handle_t *tree, index_entry_t *ie)
                 - mid_ie->len));
     }
 
-    new_ibc->state = DIRTY;
+    IBC_SET_DIRTY(new_ibc);
 
     //LOG_DEBUG("Write new index block success. vbn(%lld)\n", new_ibc->vbn);
 
@@ -937,7 +937,7 @@ static int32_t reparent_root(object_handle_t * tree)
     memcpy(new_ib, old_ib, old_ib->head.real_size);
     new_ib->head.alloc_size = tree->obj_info->index->sb.block_size;
 
-    new_ibc->state = DIRTY;
+    IBC_SET_DIRTY(new_ibc);
 
     //LOG_DEBUG("Write new index block success. vbn(%lld)\n", new_ibc->vbn);
 
@@ -1034,7 +1034,7 @@ int32_t check_removed_ib(object_handle_t * tree)
         //LOG_DEBUG("delete index block success. vbn(%lld)\n", tree->cache->vbn);
 
         // this block will be deleted
-        tree->cache->state = EMPTY;
+        IBC_SET_EMPTY(tree->cache);
 
         ret = pop_cache_stack(tree, 0);
         if (0 > ret)

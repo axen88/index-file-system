@@ -77,10 +77,6 @@ typedef enum cache_status
 
 #define INDEX_MAX_DEPTH     16
 
-#define ATTR_INFO_DIRTY(obj_info)     IBC_DIRTY(&(obj_info)->root_ibc)
-#define ATTR_INFO_SET_DIRTY(obj_info) IBC_SET_DIRTY(&(obj_info)->root_ibc)
-#define ATTR_INFO_CLR_DIRTY(obj_info) IBC_SET_CLEAN(&(obj_info)->root_ibc)
-
 #define OBJ_FLAG_DIRTY   0x01
 
 #define INODE_SET_DIRTY(obj)      ((obj)->obj_state |= OBJ_FLAG_DIRTY)
@@ -106,7 +102,6 @@ typedef struct object_info
     struct index_handle *index;       // index handle
     
     inode_record_t inode;                // inode
-    inode_record_t old_inode;            // old inode
     
     uint32_t obj_state;                // state
 
