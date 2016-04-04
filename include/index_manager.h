@@ -52,8 +52,6 @@ extern int32_t index_expand(object_handle_t *tree, uint64_t v_ullAdditionalSecto
 extern int32_t index_close(index_handle_t *index);
 
 
-extern int32_t index_get_opened_attr_num(object_handle_t * tree);
-
 extern index_handle_t *index_get_handle(const char * index_name);
 
 extern int32_t fixup_index_by_name(char *index_name, uint64_t start_lba);

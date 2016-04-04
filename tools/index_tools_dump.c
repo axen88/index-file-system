@@ -65,7 +65,7 @@ static int32_t dump_callback(object_handle_t *tree, dump_para_t *para)
         tree->ie->prev_len, tree->ie->len);
 
     uc = GET_IE_KEY(tree->ie);
-    switch (tree->obj_info->attr_record.flags & CR_MASK)
+    switch (tree->obj_info->attr_record->flags & CR_MASK)
     {
         case CR_ANSI_STRING:
             for (i = 0; i < tree->ie->key_len; i++)
@@ -89,7 +89,7 @@ static int32_t dump_callback(object_handle_t *tree, dump_para_t *para)
     OS_PRINT(para->net, "%s", " : ");
 
     uc = GET_IE_VALUE(tree->ie);
-    switch ((tree->obj_info->attr_record.flags >> 4) & CR_MASK)
+    switch ((tree->obj_info->attr_record->flags >> 4) & CR_MASK)
     {
         case CR_ANSI_STRING:
             for (i = 0; i < tree->ie->value_len; i++)

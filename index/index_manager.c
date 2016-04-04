@@ -300,8 +300,7 @@ int32_t init_super_block(ifs_super_block_t *sb, uint64_t total_sectors, uint32_t
     sb->block_size = 1 << block_size_shift;
     sb->sectors_per_block = sb->block_size / BYTES_PER_SECTOR;
     sb->bitmap_start_block = reserved_blocks;
-    sb->bitmap_blocks =
-        (uint32_t) RoundUp2(RoundUp2(total_blocks, BITS_PER_BYTE,
+    sb->bitmap_blocks = (uint32_t)RoundUp2(RoundUp2(total_blocks, BITS_PER_BYTE,
             BITS_PER_BYTE_SHIFT), sb->block_size, block_size_shift);
     sb->total_blocks = total_blocks;
     sb->free_blocks = total_blocks;
@@ -352,26 +351,6 @@ int32_t check_super_block(ifs_super_block_t * sb, uint64_t start_lba)
     }
 
     return 0;
-}
-
-int32_t block_update_super_block(index_handle_t * hnd)
-{
-    int32_t ret = 0;
-
-    if (NULL == hnd)
-    {
-        LOG_ERROR("Invalid parameter. hnd(%p)\n", hnd);
-        return -FILE_BLOCK_ERR_PARAMETER;
-    }
-
-    ret = index_update_block_pingpong(hnd, &hnd->sb.head, SUPER_BLOCK_VBN);
-    if (0 > ret)
-    {
-        LOG_ERROR("Update super block failed. hnd(%p) vbn(%lld) ret(%d)\n",
-            hnd, SUPER_BLOCK_VBN, ret);
-    }
-
-    return ret;
 }
 
 
@@ -433,7 +412,7 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
         return ret;
     }
 
-    ret = index_update_block_pingpong_init(tmp_index, &tmp_index->sb.head, SUPER_BLOCK_VBN);
+    ret = index_update_block_fixup(tmp_index, &tmp_index->sb.head, SUPER_BLOCK_VBN);
     if (0 > ret)
     {
         LOG_ERROR("Update super block failed. index_name(%s) vbn(%lld) ret(%d)\n",
@@ -450,7 +429,7 @@ int32_t index_create_nolock(const char *index_name, uint64_t total_sectors, uint
         return ret;
     }
     
-    ret = block_update_super_block(tmp_index);
+    ret = index_update_super_block(tmp_index);
     if (0 > ret)
     {
         LOG_ERROR("Update super block failed. hnd(%p) ret(%d)\n", tmp_index, ret);
@@ -606,11 +585,10 @@ void close_index(index_handle_t *index)
 
     if (NULL != index->file_hnd)
     {
-        if (0 != (index->flags & FLAG_DIRTY))
+        if (index->flags & FLAG_DIRTY)
         {
             index->flags &= ~FLAG_DIRTY;
-            index->sb.flags &= ~FLAG_FIXUP;
-            ret = block_update_super_block(index);
+            ret = index_update_super_block(index);
             if (0 > ret)
             {
                 LOG_ERROR("Update super block failed. index(%p) ret(%d)\n", index, ret);

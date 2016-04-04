@@ -210,24 +210,4 @@ int32_t index_walk_all_attrs(object_handle_t *dir_tree,
 	return 0;
 }
 
-int32_t index_get_opened_attr_num(object_handle_t * tree)
-{
-#if 0
-    int32_t ret = 0;
-    
-    if (NULL == tree)
-    {
-        LOG_ERROR("Invalid parameter. tree(%p)\n", tree);
-        return -INDEX_ERR_PARAMETER;
-    }
-
-    OS_RWLOCK_WRLOCK(&((object_handle_t *)tree)->index->rwlock);
-    ret = dlist_count(&((object_handle_t *)tree)->index->stTreesList);
-    OS_RWLOCK_WRUNLOCK(&((object_handle_t *)tree)->index->rwlock);
-
-    return ret;
-#endif
-	return 0;
-}
-
 

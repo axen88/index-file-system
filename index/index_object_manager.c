@@ -83,20 +83,11 @@ int32_t compare_old_block1(const ifs_old_block_t *old_block, const ifs_old_block
     return 0;
 }
 
-// copy origin attr record from inode
-void recover_attr_record(object_info_t *obj_info)
-{
-    attr_record_t *attr_record;
-    
-    attr_record = INODE_GET_ATTR_RECORD(&obj_info->inode);
-    memcpy(&obj_info->attr_record, attr_record, attr_record->record_size);
-}
-
 void init_attr(object_info_t *obj_info, uint64_t inode_no)
 {
-    recover_attr_record(obj_info);
+    obj_info->attr_record = INODE_GET_ATTR_RECORD(&obj_info->inode);
     obj_info->root_ibc.vbn = inode_no;
-    obj_info->root_ibc.ib = (index_block_t *)obj_info->attr_record.content;
+    obj_info->root_ibc.ib = (index_block_t *)obj_info->attr_record->content;
     obj_info->root_ibc.state = CLEAN;
 }
 
@@ -230,25 +221,6 @@ int32_t flush_inode(object_info_t *obj_info)
     return 0;
 }
 
-// copy attr record into inode
-void validate_attr(object_info_t *obj_info)
-{
-    if (!ATTR_INFO_DIRTY(obj_info))
-    {
-        return;
-    }
-    
-    ASSERT(obj_info->attr_record.record_size
-        == (INODE_GET_ATTR_RECORD(&obj_info->inode))->record_size);
-    memcpy((INODE_GET_ATTR_RECORD(&obj_info->inode)),
-        &obj_info->attr_record, obj_info->attr_record.record_size);
-    
-    INODE_SET_DIRTY(obj_info);
-    ATTR_INFO_CLR_DIRTY(obj_info);
-
-    return;
-}
-
 void cancel_object_modification(object_info_t *obj_info)
 {
     ASSERT(obj_info != NULL);
@@ -269,7 +241,6 @@ void cancel_object_modification(object_info_t *obj_info)
     index_release_all_dirty_blocks(obj_info);
 
     // recover the attr record
-    recover_attr_record(obj_info);
     ATTR_INFO_CLR_DIRTY(obj_info);
     
     return;
@@ -290,8 +261,7 @@ int32_t commit_object_modification(object_info_t *obj_info)
         return ret;
     }
 
-    // update the attribute root into inode
-    validate_attr(obj_info);
+    INODE_SET_DIRTY(obj_info);
 
     ret = flush_inode(obj_info);
     if (0 > ret)
@@ -396,11 +366,10 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
     init_attr(obj_info, inode_no);
     IBC_SET_DIRTY(&obj_info->root_ibc);
 
-    // validate the attribute into inode
-    validate_attr(obj_info);
+    INODE_SET_DIRTY(obj_info);
 
     // update index block
-    ret = index_update_block_pingpong_init(index, &obj_info->inode.head, inode_no);
+    ret = index_update_block_fixup(index, &obj_info->inode.head, inode_no);
     if (0 > ret)
     {
         put_object_info(obj_info);
@@ -471,7 +440,7 @@ int32_t open_object(index_handle_t *index, uint64_t objid, uint64_t inode_no, ob
         return ret;
     }
 
-    ret = INDEX_READ_INODE(index, obj_info, inode_no);
+    ret = INDEX_READ_INODE(obj_info, inode_no);
     if (0 > ret)
     {
         LOG_ERROR("Read inode failed. ret(%d)\n", ret);

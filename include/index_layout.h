@@ -64,10 +64,10 @@ extern "C" {
 #define FLAG_TABLE         0x4000 /* 1: table        0: data stream */
 
 #define BLOCK_SIZE            (4 * 1024)
-#define INODE_SIZE            (2 * 1024)
+#define INODE_SIZE            (4 * 1024)
 
 
-#define INODE_RESERVED_SIZE  1686
+#define INODE_RESERVED_SIZE  (1686 + 2048)
 #define INODE_HEAD_SIZE      OS_OFFSET(inode_record_t, reserved)
 
 #define BASE_OBJ_NAME             "$BASE"

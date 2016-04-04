@@ -117,7 +117,7 @@ typedef struct object_info
     
     avl_node_t entry;                  // register in index handle
 
-    attr_record_t attr_record;           // attr record
+    attr_record_t *attr_record;           // attr record
     os_rwlock attr_lock;               // lock  tree handle
 
     
@@ -188,11 +188,11 @@ typedef struct index_handle
     os_rwlock index_lock;             // lock
 } index_handle_t;
 
-#define INDEX_UPDATE_INODE(obj) \
-    index_update_block_pingpong(obj->index, &obj->inode.head, obj->inode_no)
-    
-#define INDEX_READ_INODE(index, obj, inode_no) \
-    index_read_block_pingpong(index, &obj->inode.head, inode_no, INODE_MAGIC, INODE_SIZE);
+#define INDEX_UPDATE_INODE(obj_info) \
+    index_update_block_fixup((obj_info)->index, &(obj_info)->inode.head, (obj_info)->inode_no);
+
+#define INDEX_READ_INODE(obj_info, inode_no) \
+    index_read_block_fixup((obj_info)->index, &(obj_info)->inode.head, inode_no, INODE_MAGIC, INODE_SIZE);
 
 #define INDEX_ALLOC_BLOCK(index, objid, vbn) index_alloc_space(index, objid, 1, vbn)
 #define INDEX_FREE_BLOCK(index, objid, vbn)  index_free_space(index, objid, vbn, 1)

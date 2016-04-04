@@ -68,7 +68,12 @@ extern int32_t index_update_sectors(index_handle_t * f, void * buf,
 extern int32_t index_read_sectors(index_handle_t * f, void * buf,
     uint32_t size, uint64_t lba);
 
-extern int32_t block_update_super_block(index_handle_t * hnd);
+static int32_t index_update_super_block(index_handle_t *hnd)
+{
+    return index_update_block_pingpong(hnd, &hnd->sb.head, SUPER_BLOCK_VBN);
+}
+
+
 
 #ifdef  __cplusplus
 }

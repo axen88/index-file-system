@@ -462,7 +462,7 @@ int32_t walk_tree(object_handle_t *tree, uint8_t flags)
         return -INDEX_ERR_PARAMETER;
     }
 
-    ASSERT(tree->obj_info->attr_record.flags & FLAG_TABLE);
+    ASSERT(tree->obj_info->attr_record->flags & FLAG_TABLE);
 
     if (flags & (INDEX_GET_FIRST | INDEX_GET_LAST))
     {   /* Get to the root's first entry */
@@ -514,7 +514,7 @@ int32_t search_key_internal(object_handle_t *tree, const void *key,
     {
         while (0 == (tree->ie->flags & INDEX_ENTRY_END))
         {       /* It is not the Index END */
-            uint16_t collate_rule = tree->obj_info->attr_record.flags & CR_MASK;
+            uint16_t collate_rule = tree->obj_info->attr_record->flags & CR_MASK;
             
             ret = collate_key(collate_rule, tree->ie, key, key_len, value, value_len);
             if (ret > 0)
@@ -595,7 +595,7 @@ int32_t index_search_key_nolock(object_handle_t *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    ASSERT(tree->obj_info->attr_record.flags & FLAG_TABLE);
+    ASSERT(tree->obj_info->attr_record->flags & FLAG_TABLE);
 
     ret = search_key_internal(tree, key, key_len, value, value_len);
     if (-INDEX_ERR_KEY_NOT_FOUND == ret)
@@ -1250,7 +1250,7 @@ int32_t index_remove_key_nolock(object_handle_t *tree, const void *key,
 
     PRINT_KEY("Remove key start", tree, key, key_len);
 
-    ASSERT(tree->obj_info->attr_record.flags & FLAG_TABLE);
+    ASSERT(tree->obj_info->attr_record->flags & FLAG_TABLE);
 
     ret = search_key_internal(tree, key, key_len, NULL, 0);
     if (0 > ret)
@@ -1304,7 +1304,7 @@ int32_t index_insert_key_nolock(object_handle_t *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    ASSERT(tree->obj_info->attr_record.flags & FLAG_TABLE);
+    ASSERT(tree->obj_info->attr_record->flags & FLAG_TABLE);
 
     PRINT_KEY("Insert key start", tree, key, key_len);
 
@@ -1383,7 +1383,7 @@ int32_t index_update_value(object_handle_t *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    ASSERT(tree->obj_info->attr_record.flags & FLAG_TABLE);
+    ASSERT(tree->obj_info->attr_record->flags & FLAG_TABLE);
 
     OS_RWLOCK_WRLOCK(&tree->obj_info->attr_lock);
     ret = index_remove_key_nolock(tree, key, key_len);
