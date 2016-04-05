@@ -79,8 +79,8 @@ typedef enum cache_status
 
 #define OBJ_FLAG_DIRTY   0x01
 
-#define INODE_SET_DIRTY(obj)      ((obj)->obj_state |= OBJ_FLAG_DIRTY)
-#define INODE_CLR_DIRTY(obj)      ((obj)->obj_state &= ~OBJ_FLAG_DIRTY)
+#define SET_INODE_DIRTY(obj)      ((obj)->obj_state |= OBJ_FLAG_DIRTY)
+#define CLR_INODE_DIRTY(obj)      ((obj)->obj_state &= ~OBJ_FLAG_DIRTY)
 #define INODE_DIRTY(obj)          ((obj)->obj_state & OBJ_FLAG_DIRTY)
 
 typedef struct ifs_block_cache

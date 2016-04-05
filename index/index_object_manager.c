@@ -202,7 +202,7 @@ int32_t flush_inode(object_info_t *obj_info)
     LOG_DEBUG("Update inode success. objid(%lld) inode(%p) inode_no(%lld)\n",
         obj_info->objid, obj_info->inode, obj_info->inode_no);
 
-    INODE_CLR_DIRTY(obj_info);
+    CLR_INODE_DIRTY(obj_info);
 
     return 0;
 }
@@ -213,7 +213,7 @@ void cancel_object_modification(object_info_t *obj_info)
 
     // recover obj inode
     recover_obj_inode(obj_info, obj_info->inode_no);
-    INODE_CLR_DIRTY(obj_info);
+    CLR_INODE_DIRTY(obj_info);
 
     // discard all dirty block cache
     index_release_all_dirty_blocks(obj_info);
@@ -236,7 +236,7 @@ int32_t commit_object_modification(object_info_t *obj_info)
         return ret;
     }
 
-    INODE_SET_DIRTY(obj_info);
+    SET_INODE_DIRTY(obj_info);
 
     ret = flush_inode(obj_info);
     if (0 > ret)
@@ -342,7 +342,7 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
     init_attr(obj_info, inode_no);
     SET_IBC_DIRTY(&obj_info->root_ibc);
 
-    INODE_SET_DIRTY(obj_info);
+    SET_INODE_DIRTY(obj_info);
 
     // update index block
     ret = index_update_block_fixup(index, &obj_info->inode.head, inode_no);
@@ -456,7 +456,7 @@ int32_t set_object_name(object_handle_t *obj, char *name)
     strncpy(obj->obj_info->inode.name, name, name_size);
     obj->obj_info->inode.name_size = name_size;
 
-    INODE_SET_DIRTY(obj->obj_info);
+    SET_INODE_DIRTY(obj->obj_info);
 
     return 0;
 }
