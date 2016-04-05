@@ -59,6 +59,40 @@ int32_t compare_cache2(const uint64_t *vbn, ifs_block_cache_t *cache_node)
     return 0;
 }
 
+void insert_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
+{
+    index_handle_t *index = obj_info->index;
+    
+    avl_add(&obj_info->caches, cache); // add to object
+    
+    OS_RWLOCK_WRLOCK(&index->metadata_cache_lock);
+    avl_add(&index->metadata_cache, cache); // add to fs
+    OS_RWLOCK_WRUNLOCK(&index->metadata_cache_lock);
+    
+}
+
+void remove_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
+{
+    index_handle_t *index = obj_info->index;
+    
+    avl_remove(&obj_info->caches, cache); // remove from object
+    
+    OS_RWLOCK_WRLOCK(&index->metadata_cache_lock);
+    avl_remove(&index->metadata_cache, cache); // remove from fs
+    OS_RWLOCK_WRUNLOCK(&index->metadata_cache_lock);
+    
+}
+
+
+void change_cache_vbn(object_info_t *obj_info, ifs_block_cache_t *cache, uint64_t new_vbn)
+{
+    remove_cache(obj_info, cache);
+    cache->vbn = new_vbn;
+    insert_cache(obj_info, cache);
+}
+
+
+
 ifs_block_cache_t *alloc_cache(object_info_t *obj_info, uint64_t vbn)
 {
     ifs_block_cache_t *cache = NULL;
@@ -80,10 +114,10 @@ ifs_block_cache_t *alloc_cache(object_info_t *obj_info, uint64_t vbn)
         return NULL;
     }
 
-    IBC_SET_EMPTY(cache);
+    SET_IBC_EMPTY(cache);
     cache->vbn = vbn;
     
-    avl_add(&obj_info->caches, cache);
+    insert_cache(obj_info, cache);
 
     return cache;
 }
@@ -93,7 +127,7 @@ void free_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
     ASSERT(NULL != obj_info);
     ASSERT(NULL != cache);
     
-    avl_remove(&obj_info->caches, cache);
+    remove_cache(obj_info, cache);
     
     if (NULL != cache->ib)
     {
@@ -160,7 +194,7 @@ int32_t flush_dirty_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
     LOG_DEBUG("Update index block success. objid(%lld) vbn(%lld) size(%d)\n",
             obj_info->objid, cache->vbn, cache->ib->head.alloc_size);
     
-    IBC_SET_CLEAN(cache);
+    SET_IBC_CLEAN(cache);
 
     return 0;
 }
@@ -231,55 +265,6 @@ int32_t index_release_all_dirty_blocks(object_info_t *obj_info)
     return 0;
 }
 
-int32_t release_old_block_mem(object_info_t *obj_info, ifs_old_block_t *old_blk)
-{
-    int32_t ret = 0;
-
-    ASSERT(NULL != obj_info);
-    ASSERT(NULL != old_blk);
-
-    avl_remove(&obj_info->old_blocks, old_blk);
-    OS_FREE(old_blk);
-
-    return 0;
-}
-
-void index_release_all_old_blocks_mem(object_info_t *obj_info)
-{
-    OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
-    avl_walk_all(&obj_info->old_blocks, (avl_walk_cb_t)release_old_block_mem, obj_info);
-    OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
-
-    return;
-}
-
-int32_t release_old_block(object_info_t *obj_info, ifs_old_block_t *old_blk)
-{
-    int32_t ret = 0;
-
-    ASSERT(NULL != obj_info);
-    ASSERT(NULL != old_blk);
-
-    ret = INDEX_FREE_BLOCK(obj_info->index, obj_info->objid, old_blk->vbn);
-    if (0 > ret)
-    {
-        LOG_ERROR("Free block failed. vbn(%lld) ret(%d)\n", old_blk->vbn, ret);
-    }
-
-    release_old_block_mem(obj_info, old_blk);
-
-    return 0;
-}
-
-void index_release_all_old_blocks(object_info_t *obj_info)
-{
-    OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
-    avl_walk_all(&obj_info->old_blocks, (avl_walk_cb_t)release_old_block, obj_info);
-    OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
-
-    return;
-}
-
 int32_t index_block_read(object_handle_t *obj, uint64_t vbn)
 {
     int32_t ret = 0;
@@ -329,31 +314,9 @@ int32_t index_block_read(object_handle_t *obj, uint64_t vbn)
     LOG_DEBUG("Read index block success. objid(%lld) ib(%p) vbn(%lld) size(%d)\n",
         obj_info->objid, ib, vbn, obj->index->sb.block_size);
 
-    IBC_SET_CLEAN(obj->cache);
+    SET_IBC_CLEAN(obj->cache);
     OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
 
-    return 0;
-}
-
-int32_t index_record_old_block(object_info_t *obj_info, uint64_t vbn)
-{
-    ifs_old_block_t *old_blk = NULL;
-
-    ASSERT(NULL != obj_info);
-
-    old_blk = OS_MALLOC(sizeof(ifs_old_block_t));
-    if (NULL == old_blk)
-    {
-        LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(ifs_old_block_t));
-        return -INDEX_ERR_ALLOCATE_MEMORY;
-    }
-
-    old_blk->vbn = vbn;
-
-    OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
-    avl_add(&obj_info->old_blocks, old_blk);
-    OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
-    
     return 0;
 }
 

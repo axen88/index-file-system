@@ -144,6 +144,9 @@ int32_t walk_all_opened_index(
     return ret;
 }
 
+int32_t compare_cache1(const ifs_block_cache_t *cache, const ifs_block_cache_t *cache_node);
+
+
 int32_t init_index_resource(index_handle_t ** index, const char * index_name)
 {
     index_handle_t *tmp_index = NULL;
@@ -161,9 +164,12 @@ int32_t init_index_resource(index_handle_t ** index, const char * index_name)
     memset(tmp_index, 0, sizeof(index_handle_t));
     strncpy(tmp_index->name, index_name, INDEX_NAME_SIZE);
     OS_RWLOCK_INIT(&tmp_index->index_lock);
+    OS_RWLOCK_INIT(&tmp_index->metadata_cache_lock);
     tmp_index->index_ref_cnt = 1;
     avl_create(&tmp_index->obj_list, (int (*)(const void *, const void*))compare_object1, sizeof(object_info_t),
         OS_OFFSET(object_info_t, entry));
+    avl_create(&tmp_index->metadata_cache, (int (*)(const void *, const void*))compare_cache1, sizeof(ifs_block_cache_t),
+        OS_OFFSET(ifs_block_cache_t, fs_entry));
     avl_add(g_index_list, tmp_index);
 
     *index = tmp_index;
@@ -603,7 +609,9 @@ void close_index(index_handle_t *index)
     }
 
     avl_destroy(&index->obj_list);
+    avl_destroy(&index->metadata_cache);
     OS_RWLOCK_DESTROY(&index->index_lock);
+    OS_RWLOCK_DESTROY(&index->metadata_cache_lock);
     avl_remove(g_index_list, index);
 
     OS_FREE(index);

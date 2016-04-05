@@ -84,18 +84,16 @@ static int32_t set_ib_dirty(object_handle_t *tree, uint64_t vbn, uint8_t depth)
                 return ret;
             }
             
-            // record old block to rollback
-			ret = index_record_old_block(tree->obj_info, tree->cache_stack[depth]->vbn);
+            // free old block
+			ret = INDEX_FREE_BLOCK(tree->index, tree->obj_info->objid, tree->cache_stack[depth]->vbn);
             
             OS_RWLOCK_WRLOCK(&tree->obj_info->caches_lock);
-            avl_remove(&tree->obj_info->caches, tree->cache_stack[depth]);
-            tree->cache_stack[depth]->vbn = new_vbn;
-            avl_add(&tree->obj_info->caches, tree->cache_stack[depth]);
+            change_cache_vbn(tree->obj_info,tree->cache_stack[depth], new_vbn);
             OS_RWLOCK_WRUNLOCK(&tree->obj_info->caches_lock);
             
             if (0 > ret)
             {
-                LOG_ERROR("Record old block failed. ret(%d)\n", ret);
+                LOG_ERROR("Free old block failed. ret(%d)\n", ret);
                 return ret;
             }
         }
@@ -111,7 +109,7 @@ static int32_t set_ib_dirty(object_handle_t *tree, uint64_t vbn, uint8_t depth)
             return 0;
         }
 
-        IBC_SET_DIRTY(tree->cache_stack[depth]);
+        SET_IBC_DIRTY(tree->cache_stack[depth]);
         vbn = new_vbn;
     } while (depth-- > 0);
 
@@ -371,10 +369,10 @@ static int32_t add_or_remove_ib(object_handle_t *tree, uint8_t flags)
         
     if (flags & INDEX_REMOVE_BLOCK)
     {
-        ret = index_record_old_block(tree->obj_info, tree->cache->vbn);
+        ret = INDEX_FREE_BLOCK(tree->index, tree->obj_info->objid, tree->cache->vbn);
         if (0 > ret)
         {
-            LOG_ERROR("Record old block failed. vbn(%lld) ret(%d)\n", tree->cache->vbn, ret);
+            LOG_ERROR("Free block failed. vbn(%lld) ret(%d)\n", tree->cache->vbn, ret);
             return ret;
         }
     }
@@ -863,7 +861,7 @@ static index_entry_t *split_ib(object_handle_t *tree, index_entry_t *ie)
                 - mid_ie->len));
     }
 
-    IBC_SET_DIRTY(new_ibc);
+    SET_IBC_DIRTY(new_ibc);
 
     //LOG_DEBUG("Write new index block success. vbn(%lld)\n", new_ibc->vbn);
 
@@ -935,7 +933,7 @@ static int32_t reparent_root(object_handle_t * tree)
     memcpy(new_ib, old_ib, old_ib->head.real_size);
     new_ib->head.alloc_size = tree->obj_info->index->sb.block_size;
 
-    IBC_SET_DIRTY(new_ibc);
+    SET_IBC_DIRTY(new_ibc);
 
     //LOG_DEBUG("Write new index block success. vbn(%lld)\n", new_ibc->vbn);
 
@@ -1022,17 +1020,17 @@ int32_t check_removed_ib(object_handle_t * tree)
 
     for (;;)
     {
-        ret = index_record_old_block(tree->obj_info, tree->cache->vbn);
+        ret = INDEX_FREE_BLOCK(tree->index, tree->obj_info->objid, tree->cache->vbn);
         if (0 > ret)
         {
-            LOG_ERROR("Record old block failed. ret(%d)\n", ret);
+            LOG_ERROR("Free block failed. ret(%d)\n", ret);
             return ret;
         }
 
         //LOG_DEBUG("delete index block success. vbn(%lld)\n", tree->cache->vbn);
 
         // this block will be deleted
-        IBC_SET_EMPTY(tree->cache);
+        SET_IBC_EMPTY(tree->cache);
 
         ret = pop_cache_stack(tree, 0);
         if (0 > ret)

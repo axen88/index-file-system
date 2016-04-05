@@ -68,21 +68,6 @@ int32_t compare_cache1(const ifs_block_cache_t *cache, const ifs_block_cache_t *
     return 0;
 }
 
-int32_t compare_old_block1(const ifs_old_block_t *old_block, const ifs_old_block_t *old_block_node)
-{
-    if (old_block->vbn > old_block_node->vbn)
-    {
-        return 1;
-    }
-    
-    if (old_block->vbn < old_block_node->vbn)
-    {
-        return -1;
-    }
-
-    return 0;
-}
-
 void init_attr(object_info_t *obj_info, uint64_t inode_no)
 {
     obj_info->attr_record = INODE_GET_ATTR_RECORD(&obj_info->inode);
@@ -111,10 +96,8 @@ int32_t get_object_info(index_handle_t *index, uint64_t objid, object_info_t **o
     
     OS_RWLOCK_INIT(&obj_info->attr_lock);
     
-    avl_create(&obj_info->old_blocks, (int (*)(const void *, const void*))compare_old_block1, sizeof(ifs_old_block_t),
-        OS_OFFSET(ifs_old_block_t, entry));
     avl_create(&obj_info->caches, (int (*)(const void *, const void*))compare_cache1, sizeof(ifs_block_cache_t),
-        OS_OFFSET(ifs_block_cache_t, entry));
+        OS_OFFSET(ifs_block_cache_t, obj_entry));
     OS_RWLOCK_INIT(&obj_info->caches_lock);
     
     OS_RWLOCK_INIT(&obj_info->obj_lock);
@@ -133,9 +116,6 @@ void put_object_info(object_info_t *obj_info)
     LOG_INFO("destroy object info start. objid(%lld)\n", obj_info->objid);
 
     avl_remove(&obj_info->index->obj_list, obj_info);
-
-    index_release_all_old_blocks_mem(obj_info);
-    avl_destroy(&obj_info->old_blocks);
 
     index_release_all_caches(obj_info);
     avl_destroy(&obj_info->caches);
@@ -195,7 +175,7 @@ int32_t recover_obj_inode(object_info_t *obj_info, uint64_t inode_no)
     obj_info->inode_no = inode_no;
     strncpy(obj_info->obj_name, obj_info->inode.name, obj_info->inode.name_size);
     init_attr(obj_info, inode_no);
-    IBC_SET_CLEAN(&obj_info->root_ibc);
+    SET_IBC_CLEAN(&obj_info->root_ibc);
 
     return 0;
 }
@@ -235,9 +215,6 @@ void cancel_object_modification(object_info_t *obj_info)
     recover_obj_inode(obj_info, obj_info->inode_no);
     INODE_CLR_DIRTY(obj_info);
 
-    // free old block memory
-    index_release_all_old_blocks_mem(obj_info);
-    
     // discard all dirty block cache
     index_release_all_dirty_blocks(obj_info);
 
@@ -268,9 +245,6 @@ int32_t commit_object_modification(object_info_t *obj_info)
             obj_info->objid, ret);
         return ret;
     }
-
-    // release old blocks
-    index_release_all_old_blocks(obj_info);
 
 	return 0;
 }
@@ -366,7 +340,7 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
     obj_info->inode_no = inode_no;
     strncpy(obj_info->obj_name, obj_info->inode.name, obj_info->inode.name_size);
     init_attr(obj_info, inode_no);
-    IBC_SET_DIRTY(&obj_info->root_ibc);
+    SET_IBC_DIRTY(&obj_info->root_ibc);
 
     INODE_SET_DIRTY(obj_info);
 

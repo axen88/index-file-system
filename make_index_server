@@ -10,8 +10,7 @@ INDEX_DIR := index
 
 CFLAGS = -Iinclude -Wall -g -Wno-unused  -D__EN_FILE_IF__
 
-LIB_OBJS = $(INDEX_DIR)/index_block_manager.o $(INDEX_DIR)/index_block_rw.o \
-	    $(INDEX_DIR)/index_bitmap.o $(INDEX_DIR)/index_btree.o $(INDEX_DIR)/index_manager.o \
+LIB_OBJS = $(INDEX_DIR)/index_block_rw.o $(INDEX_DIR)/index_btree.o $(INDEX_DIR)/index_manager.o \
 	    $(INDEX_DIR)/index_cache.o $(INDEX_DIR)/index_utils.o  \
 	    $(INDEX_DIR)/index_object_manager.o $(INDEX_DIR)/index_verify.o $(INDEX_DIR)/index_fixup.o \
 	    $(PUBLIC_DIR)/os_queue.o $(PUBLIC_DIR)/os_list_double.o $(PUBLIC_DIR)/avl.o \

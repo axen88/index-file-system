@@ -65,9 +65,9 @@ typedef enum cache_status
 #define OBJID_IS_INVALID(id)          ((id) == INVALID_OBJID)
 
 
-#define IBC_SET_DIRTY(ibc)  ((ibc)->state = DIRTY)
-#define IBC_SET_CLEAN(ibc)  ((ibc)->state == CLEAN)
-#define IBC_SET_EMPTY(ibc)  ((ibc)->state == EMPTY)
+#define SET_IBC_DIRTY(ibc)  ((ibc)->state = DIRTY)
+#define SET_IBC_CLEAN(ibc)  ((ibc)->state == CLEAN)
+#define SET_IBC_EMPTY(ibc)  ((ibc)->state == EMPTY)
 #define IBC_DIRTY(ibc)      ((ibc)->state == DIRTY)
 #define IBC_CLEAN(ibc)      ((ibc)->state == CLEAN)
 #define IBC_EMPTY(ibc)      ((ibc)->state == EMPTY)
@@ -88,14 +88,9 @@ typedef struct ifs_block_cache
 	uint64_t vbn;
 	uint32_t state;
 	index_block_t *ib;
-	avl_node_t entry;
+	avl_node_t obj_entry; // recorded in object info
+	avl_node_t fs_entry;  // recorded in fs handle
 } ifs_block_cache_t;
-
-typedef struct ifs_old_block
-{
-	uint64_t vbn;
-	avl_node_t entry;
-} ifs_old_block_t;
 
 typedef struct object_info
 {
@@ -121,7 +116,6 @@ typedef struct object_info
 
     ifs_block_cache_t root_ibc;
     avl_tree_t caches;            // record all new block data
-    avl_tree_t old_blocks;        // record old block info
     os_rwlock caches_lock;
     
     uint32_t obj_ref_cnt;
@@ -178,6 +172,9 @@ typedef struct index_handle
     uint32_t index_ref_cnt;
     avl_tree_t obj_list;              // all opened object info
 
+    avl_tree_t metadata_cache;              // cache
+    os_rwlock metadata_cache_lock;          // lock
+    
     avl_node_t entry;
     
     os_rwlock index_lock;             // lock
@@ -195,11 +192,9 @@ typedef struct index_handle
 extern int32_t index_block_read(object_handle_t *obj, uint64_t vbn);
 extern int32_t index_alloc_cache_and_block(object_info_t *obj_info, ifs_block_cache_t **cache);
 extern int32_t index_release_all_dirty_blocks(object_info_t *obj_info);
-extern void index_release_all_old_blocks_mem(object_info_t *obj_info);
-extern void index_release_all_old_blocks(object_info_t *obj_info);
-extern int32_t index_record_old_block(object_info_t *obj_info, uint64_t vbn);
 extern int32_t index_release_all_caches(object_info_t *obj_info);
 extern int32_t index_flush_all_dirty_caches(object_info_t * obj_info);
+void change_cache_vbn(object_info_t *obj_info, ifs_block_cache_t *cache, uint64_t new_vbn);
 
 extern int32_t walk_all_opened_index(
     int32_t (*func)(void *, index_handle_t *), void *para);
