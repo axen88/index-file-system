@@ -53,12 +53,14 @@ History:
 extern "C" {
 #endif
 
+#define STATUS_MASK   0x00FF
+#define STATUS_FLUSH  0x8000
+
 typedef enum cache_status
 {
     EMPTY = 0,  /* no data in cache */
     CLEAN,      /* data in buffer is the same to data on disk */
-    DIRTY,      /* data in buffer read from disk is changed */
-    FLUSH       /* the dirty data is flushed to disk */
+    DIRTY      /* data in buffer read from disk is changed */
 } cache_status_t;
 
 #define INVALID_OBJID                 ((uint64_t)(-1))
@@ -68,7 +70,8 @@ typedef enum cache_status
 #define SET_IBC_DIRTY(ibc)  ((ibc)->state = DIRTY)
 #define SET_IBC_CLEAN(ibc)  ((ibc)->state = CLEAN)
 #define SET_IBC_EMPTY(ibc)  ((ibc)->state = EMPTY)
-#define IBC_DIRTY(ibc)      ((ibc)->state == DIRTY)
+#define SET_IBC_FLUSH(ibc)  ((ibc)->state |= STATUS_FLUSH)
+#define IBC_DIRTY(ibc)      (((ibc)->state & STATUS_MASK) == DIRTY)
 #define IBC_CLEAN(ibc)      ((ibc)->state == CLEAN)
 #define IBC_EMPTY(ibc)      ((ibc)->state == EMPTY)
 
@@ -83,11 +86,13 @@ typedef enum cache_status
 #define CLR_INODE_DIRTY(obj)      ((obj)->obj_state &= ~OBJ_FLAG_DIRTY)
 #define INODE_DIRTY(obj)          ((obj)->obj_state & OBJ_FLAG_DIRTY)
 
+#define IB(b)   ((index_block_t *)(b))
+
 typedef struct ifs_block_cache
 {
 	uint64_t vbn;
 	uint32_t state;
-	index_block_t *ib;
+	block_head_t *ib;
 	avl_node_t obj_entry; // recorded in object info
 	avl_node_t fs_entry;  // recorded in fs handle
 } ifs_block_cache_t;
@@ -97,6 +102,8 @@ typedef struct object_info
     struct index_handle *index;       // index handle
     
     inode_record_t inode;                // inode
+
+    ifs_block_cache_t *inode_cache;      //
     
     uint32_t obj_state;                // state
 
@@ -183,18 +190,14 @@ typedef struct index_handle
 #define INDEX_UPDATE_INODE(obj_info) \
     index_update_block_fixup((obj_info)->index, &(obj_info)->inode.head, (obj_info)->inode_no);
 
-#define INDEX_READ_INODE(obj_info, inode_no) \
-    index_read_block_fixup((obj_info)->index, &(obj_info)->inode.head, inode_no, INODE_MAGIC, INODE_SIZE);
-
-#define INDEX_ALLOC_BLOCK(index, objid, vbn) index_alloc_space(index, objid, 1, vbn)
-#define INDEX_FREE_BLOCK(index, objid, vbn)  index_free_space(index, objid, vbn, 1)
-
-extern int32_t index_block_read(object_handle_t *obj, uint64_t vbn);
-extern int32_t index_alloc_cache_and_block(object_info_t *obj_info, ifs_block_cache_t **cache);
+extern int32_t index_block_read(object_handle_t *obj, uint64_t vbn, uint32_t blk_type);
+int32_t index_alloc_cache_and_block(object_info_t *obj_info, ifs_block_cache_t **cache, uint32_t blk_type);
 extern int32_t index_release_all_dirty_blocks(object_info_t *obj_info);
 extern int32_t index_release_all_caches(object_info_t *obj_info);
-extern int32_t index_flush_all_dirty_caches(object_info_t * obj_info);
+extern int32_t flush_obj_cache(object_info_t * obj_info);
 void change_cache_vbn(object_info_t *obj_info, ifs_block_cache_t *cache, uint64_t new_vbn);
+int32_t index_block_read2(object_info_t *obj_info, uint64_t vbn, uint32_t blk_type,
+    ifs_block_cache_t **cache_out);
 
 extern int32_t walk_all_opened_index(
     int32_t (*func)(void *, index_handle_t *), void *para);

@@ -52,6 +52,9 @@ void index_init_sm(space_manager_t *sm, object_handle_t *obj, uint64_t first_fre
 int32_t index_alloc_space(index_handle_t *index, uint64_t objid, uint32_t blk_cnt, uint64_t *real_start_blk);
 int32_t index_free_space(index_handle_t *index, uint64_t objid, uint64_t start_blk, uint32_t blk_cnt);
 
+#define INDEX_ALLOC_BLOCK(index, objid, vbn) index_alloc_space(index, objid, 1, vbn)
+#define INDEX_FREE_BLOCK(index, objid, vbn)  index_free_space(index, objid, vbn, 1)
+
 
 #ifdef	__cplusplus
 }

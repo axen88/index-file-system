@@ -122,13 +122,13 @@ static void get_last_ie(object_handle_t * tree)
     
     ASSERT(NULL != tree);
 
-    if (tree->cache->ib->node_type & INDEX_BLOCK_LARGE)
+    if (IB(tree->cache->ib)->node_type & INDEX_BLOCK_LARGE)
     {
         last_ie_len += VBN_SIZE;
     }
 
     tree->ie = (index_entry_t *)(GET_END_IE(tree->cache->ib) - last_ie_len);
-    tree->position = tree->cache->ib->head.real_size - last_ie_len;
+    tree->position = tree->cache->ib->real_size - last_ie_len;
 
     return;
 }
@@ -149,7 +149,7 @@ static void reset_cache_stack(object_handle_t * tree, uint8_t flags)
     }
 
     tree->ie = GET_FIRST_IE(tree->cache->ib);
-    tree->position = tree->cache->ib->first_entry_off;
+    tree->position = IB(tree->cache->ib)->first_entry_off;
 
     return;
 }   
@@ -174,8 +174,8 @@ static int32_t push_cache_stack(object_handle_t *tree, uint8_t flags)
 
     LOG_DEBUG("Depth increase. depth(%d) vbn(%lld) pos(%d)\n", tree->depth, vbn, tree->position);
 
-    ret = index_block_read(tree, vbn);
-    if (0 > ret)
+    ret = index_block_read(tree, vbn, INDEX_MAGIC);
+    if (ret < 0)
     {
         LOG_ERROR("Read index block failed. vbn(%lld) ret(%d)\n", vbn, ret);
         return ret;
@@ -185,7 +185,7 @@ static int32_t push_cache_stack(object_handle_t *tree, uint8_t flags)
     tree->depth++;
     tree->cache_stack[tree->depth] = tree->cache;
 
-    if (((tree->cache->ib->node_type & INDEX_BLOCK_LARGE) == 0)
+    if (((IB(tree->cache->ib)->node_type & INDEX_BLOCK_LARGE) == 0)
         && (tree->max_depth != tree->depth))
     {
         LOG_INFO("The max depth changed. oldMaxDepth(%d) newMaxDepth(%d)\n",
@@ -200,7 +200,7 @@ static int32_t push_cache_stack(object_handle_t *tree, uint8_t flags)
     }
 
     // go to the first entry of the new block
-    tree->position = tree->cache->ib->first_entry_off;
+    tree->position = IB(tree->cache->ib)->first_entry_off;
     tree->ie = GET_FIRST_IE(tree->cache->ib);
 
     return 0;
@@ -213,10 +213,10 @@ static int32_t get_prev_ie(object_handle_t *tree)
     
     tree->position -= tree->ie->prev_len;
     tree->ie = GET_PREV_IE(tree->ie);
-    if ((uint8_t *) tree->ie < (uint8_t *) &tree->cache->ib->begin_entry)
+    if ((uint8_t *)tree->ie < (uint8_t *)&IB(tree->cache->ib)->begin_entry)
     {   /* Check valid */
         LOG_ERROR("The ie is invalid. ie(%p) begin_entry(%p)\n",
-            tree->ie, &tree->cache->ib->begin_entry);
+            tree->ie, &IB(tree->cache->ib)->begin_entry);
         return -INDEX_ERR_FORMAT;
     }
 
@@ -354,7 +354,7 @@ static int32_t get_next_ie(object_handle_t *tree)
         || (0 == tree->ie->len))
     {   /* Check valid */
         LOG_ERROR("The ie is invalid. len(%d) ib real_size(%d)\n",
-            tree->ie->len, tree->cache->ib->head.real_size);
+            tree->ie->len, tree->cache->ib->real_size);
         return -INDEX_ERR_FORMAT;
     }
 
@@ -840,18 +840,18 @@ static index_entry_t *split_ib(object_handle_t *tree, index_entry_t *ie)
     ASSERT(NULL != tree);
     ASSERT(NULL != ie);
 
-    mid_ie = get_middle_ie(tree->cache->ib);
+    mid_ie = get_middle_ie(IB(tree->cache->ib));
 
-    ret = index_alloc_cache_and_block(tree->obj_info, &new_ibc);
+    ret = index_alloc_cache_and_block(tree->obj_info, &new_ibc, INDEX_MAGIC);
     if (0 > ret)
     {
         LOG_ERROR("Allocate cache failed.\n");
         return NULL;
     }
     
-    new_ib = new_ibc->ib;
+    new_ib = IB(new_ibc->ib);
 
-    copy_ib_tail(new_ib, tree->cache->ib, mid_ie);
+    copy_ib_tail(new_ib, IB(tree->cache->ib), mid_ie);
 
     pos = (int32_t)((uint8_t *) mid_ie - (uint8_t *) tree->ie);
     if (pos < 0)
@@ -880,10 +880,10 @@ static index_entry_t *split_ib(object_handle_t *tree, index_entry_t *ie)
         return NULL;
     }
 
-    cut_ib_tail(tree->cache->ib, mid_ie);
+    cut_ib_tail(IB(tree->cache->ib), mid_ie);
     if (pos >= 0)
     {   /* Insert the entry onto old index block */
-        insert_ie(tree->cache->ib, ie, tree->ie);
+        insert_ie(IB(tree->cache->ib), ie, tree->ie);
     }
 
     if (pop_cache_stack(tree, 0) < 0)
@@ -918,17 +918,17 @@ static int32_t reparent_root(object_handle_t * tree)
         return -INDEX_ERR_MAX_DEPTH;
     }
 
-    old_ib = tree->cache->ib;
+    old_ib = IB(tree->cache->ib);
     alloc_size = old_ib->head.alloc_size;
     
-    ret = index_alloc_cache_and_block(tree->obj_info, &new_ibc);
+    ret = index_alloc_cache_and_block(tree->obj_info, &new_ibc, INDEX_MAGIC);
     if (0 > ret)
     {
         LOG_ERROR("Allocate cache failed.\n");
         return ret;
     } 
 
-    new_ib = new_ibc->ib;
+    new_ib = IB(new_ibc->ib);
 
     memcpy(new_ib, old_ib, old_ib->head.real_size);
     new_ib->head.alloc_size = tree->obj_info->index->sb.block_size;
@@ -949,7 +949,7 @@ static int32_t reparent_root(object_handle_t * tree)
         return ret;
     }
     
-	tree->position_stack[tree->depth] = tree->cache->ib->first_entry_off;
+	tree->position_stack[tree->depth] = IB(tree->cache->ib)->first_entry_off;
     tree->depth++;
     tree->cache_stack[tree->depth] = new_ibc;
 	tree->position_stack[tree->depth] = tree->position;
@@ -973,10 +973,10 @@ static int32_t tree_insert_ie(object_handle_t *tree, index_entry_t **new_ie)
     
     for (;;)
     {   /* The entry can't be inserted */
-        uiNewSize = tree->cache->ib->head.real_size + ie->len;
-        if (uiNewSize <= tree->cache->ib->head.alloc_size)
+        uiNewSize = tree->cache->ib->real_size + ie->len;
+        if (uiNewSize <= tree->cache->ib->alloc_size)
         {
-            insert_ie(tree->cache->ib, ie, tree->ie);       /* Insert the entry before current entry */
+            insert_ie(IB(tree->cache->ib), ie, tree->ie);       /* Insert the entry before current entry */
             return set_ib_dirty(tree, (uint64_t)0, tree->depth);
         }
 
@@ -984,7 +984,7 @@ static int32_t tree_insert_ie(object_handle_t *tree, index_entry_t **new_ie)
         {       /* Current the $INDEX_ROOT opened */
             if (reparent_root(tree) < 0)
             {
-                LOG_ERROR("reparent_root failed. real_size(%d)\n", tree->cache->ib->head.real_size);
+                LOG_ERROR("reparent_root failed. real_size(%d)\n", tree->cache->ib->real_size);
                 return -INDEX_ERR_REPARENT;
             }
         }
@@ -993,7 +993,7 @@ static int32_t tree_insert_ie(object_handle_t *tree, index_entry_t **new_ie)
             ie = split_ib(tree, *new_ie);
             if (NULL == ie)
             {
-                LOG_ERROR("split_ib failed. real_size(%d)\n", tree->cache->ib->head.real_size);
+                LOG_ERROR("split_ib failed. real_size(%d)\n", tree->cache->ib->real_size);
                 return -INDEX_ERR_INSERT_ENTRY;
             }
 
@@ -1048,7 +1048,7 @@ int32_t check_removed_ib(object_handle_t * tree)
         // there are no entries in this node
         if (0 == tree->depth)
         {   /* root node */
-            make_ib_small(tree->cache->ib);
+            make_ib_small(IB(tree->cache->ib));
             return set_ib_dirty(tree, (uint64_t)0, tree->depth);
         }
     }
@@ -1065,7 +1065,7 @@ int32_t remove_leaf(object_handle_t *tree)
     
     ASSERT(NULL != tree);
 
-    remove_ie(tree->cache->ib, tree->ie);
+    remove_ie(IB(tree->cache->ib), tree->ie);
     ret = set_ib_dirty(tree, (uint64_t)0, tree->depth);
     if (0 > ret)
     {
@@ -1103,7 +1103,7 @@ int32_t remove_leaf(object_handle_t *tree)
         return -INDEX_ERR_DEL_VBN;
     }
 
-    remove_ie(tree->cache->ib, prev_ie);   /* Remove the entry */
+    remove_ie(IB(tree->cache->ib), prev_ie);   /* Remove the entry */
     ret = set_ib_dirty(tree, (uint64_t)0, tree->depth);
     if (0 > ret)
     {
@@ -1179,7 +1179,7 @@ int32_t remove_node(object_handle_t *tree)
     tree->position -= len;
     
     /* remove the old entry */
-    remove_ie(tree->cache->ib, tree->ie);
+    remove_ie(IB(tree->cache->ib), tree->ie);
     ret = set_ib_dirty(tree, (uint64_t)0, tree->depth);
     if (0 > ret)
     {

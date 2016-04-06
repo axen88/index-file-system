@@ -72,7 +72,7 @@ void init_attr(object_info_t *obj_info, uint64_t inode_no)
 {
     obj_info->attr_record = INODE_GET_ATTR_RECORD(&obj_info->inode);
     obj_info->root_ibc.vbn = inode_no;
-    obj_info->root_ibc.ib = (index_block_t *)obj_info->attr_record->content;
+    obj_info->root_ibc.ib = (block_head_t *)obj_info->attr_record->content;
 }
 
 int32_t get_object_info(index_handle_t *index, uint64_t objid, object_info_t **obj_info_out)
@@ -164,14 +164,18 @@ void put_object_handle(object_handle_t *obj)
 int32_t recover_obj_inode(object_info_t *obj_info, uint64_t inode_no)
 {
     int32_t ret;
+    ifs_block_cache_t *cache;
     
-    ret = INDEX_READ_INODE(obj_info, inode_no);
+    ret = index_block_read2(obj_info, inode_no, INODE_MAGIC, &cache);
     if (0 > ret)
     {
         LOG_ERROR("Read inode failed. ret(%d)\n", ret);
         return ret;
     }
 
+    memcpy(&obj_info->inode, cache->ib, cache->ib->alloc_size);
+
+    obj_info->inode_cache = cache;
     obj_info->inode_no = inode_no;
     strncpy(obj_info->obj_name, obj_info->inode.name, obj_info->inode.name_size);
     init_attr(obj_info, inode_no);
@@ -228,7 +232,7 @@ int32_t commit_object_modification(object_info_t *obj_info)
     ASSERT(obj_info != NULL);
 
     // write dirty block caches to disk
-    ret = index_flush_all_dirty_caches(obj_info);
+    ret = flush_obj_cache(obj_info);
     if (0 > ret)
     {
         LOG_ERROR("Flush index block cache failed. objid(%lld) ret(%d)\n",
@@ -248,6 +252,7 @@ int32_t commit_object_modification(object_info_t *obj_info)
 
 	return 0;
 }
+
 
 void put_all_object_handle(object_info_t *obj_info)
 {

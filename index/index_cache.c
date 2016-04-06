@@ -93,7 +93,7 @@ void change_cache_vbn(object_info_t *obj_info, ifs_block_cache_t *cache, uint64_
 
 
 
-ifs_block_cache_t *alloc_cache(object_info_t *obj_info, uint64_t vbn)
+ifs_block_cache_t *alloc_cache(object_info_t *obj_info, uint64_t vbn, uint32_t blk_type)
 {
     ifs_block_cache_t *cache = NULL;
 
@@ -139,7 +139,7 @@ void free_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
 
 }
 
-int32_t index_alloc_cache_and_block(object_info_t *obj_info, ifs_block_cache_t **cache)
+int32_t index_alloc_cache_and_block(object_info_t *obj_info, ifs_block_cache_t **cache, uint32_t blk_type)
 {
     ifs_block_cache_t *tmp_cache = NULL;
     int32_t ret = 0;
@@ -155,7 +155,7 @@ int32_t index_alloc_cache_and_block(object_info_t *obj_info, ifs_block_cache_t *
     }
 
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
-    tmp_cache = alloc_cache(obj_info, vbn);
+    tmp_cache = alloc_cache(obj_info, vbn, blk_type);
     if (NULL == tmp_cache)
     {
         OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
@@ -171,7 +171,7 @@ int32_t index_alloc_cache_and_block(object_info_t *obj_info, ifs_block_cache_t *
     return 0;
 }
 
-int32_t flush_dirty_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
+int32_t flush_obj_dirty_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
 {
     int32_t ret = 0;
 
@@ -183,26 +183,26 @@ int32_t flush_dirty_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
         return 0;
     }
 
-    ret = index_update_block_fixup(obj_info->index, &cache->ib->head, cache->vbn);
-    if (ret != (int32_t)cache->ib->head.alloc_size)
+    ret = index_update_block_fixup(obj_info->index, cache->ib, cache->vbn);
+    if (ret != (int32_t)cache->ib->alloc_size)
     {
         LOG_ERROR("Update index block failed. objid(%lld) vbn(%lld) size(%d) ret(%d)\n",
-            obj_info->objid, cache->vbn, cache->ib->head.alloc_size, ret);
+            obj_info->objid, cache->vbn, cache->ib->alloc_size, ret);
         return -INDEX_ERR_UPDATE;
     }
 
     LOG_DEBUG("Update index block success. objid(%lld) vbn(%lld) size(%d)\n",
-            obj_info->objid, cache->vbn, cache->ib->head.alloc_size);
+            obj_info->objid, cache->vbn, cache->ib->alloc_size);
     
     SET_IBC_CLEAN(cache);
 
     return 0;
 }
 
-int32_t index_flush_all_dirty_caches(object_info_t *obj_info)
+int32_t flush_obj_cache(object_info_t *obj_info)
 {
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
-    avl_walk_all(&obj_info->caches, (avl_walk_cb_t)flush_dirty_cache, obj_info);
+    avl_walk_all(&obj_info->caches, (avl_walk_cb_t)flush_obj_dirty_cache, obj_info);
     OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
 
     return 0;
@@ -265,58 +265,113 @@ int32_t index_release_all_dirty_blocks(object_info_t *obj_info)
     return 0;
 }
 
-int32_t index_block_read(object_handle_t *obj, uint64_t vbn)
+int32_t index_block_read2(object_info_t *obj_info, uint64_t vbn, uint32_t blk_type,
+    ifs_block_cache_t **cache_out)
 {
     int32_t ret = 0;
-    index_block_t *ib = NULL;
     ifs_block_cache_t *cache = NULL;
     avl_index_t where = 0;
-    object_info_t *obj_info;
 
-    ASSERT(NULL != obj);
+    ASSERT(NULL != obj_info);
     
-    obj_info = obj->obj_info;
-
-    if (obj->cache->vbn == vbn)
-    {
-        return 0;
-    }
-
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
     cache = avl_find(&obj_info->caches, (avl_find_fn_t)compare_cache2, &vbn, &where);
     if (NULL != cache) // block already in the cache
     {
         OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
-        obj->cache = cache;
+        *cache_out = cache;
         return 0;
     }
 
-    cache = alloc_cache(obj_info, vbn);
+    cache = alloc_cache(obj_info, vbn, blk_type);
     if (NULL == cache)
     {
         OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
         LOG_ERROR("Allocate cache failed.\n");
+        *cache_out = NULL;
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
     
-    obj->cache = cache;
-    ib = cache->ib;
-
-    ret = index_read_block_fixup(obj->index, &ib->head, vbn, INDEX_MAGIC, obj->index->sb.block_size);
+    ret = index_read_block_fixup(obj_info->index, cache->ib, vbn, blk_type, obj_info->index->sb.block_size);
     if (ret < 0)
     {   // Read the block
-        LOG_ERROR("Read index block failed. objid(%lld) ib(%p) vbn(%lld) size(%d) ret(%d)\n",
-            obj_info->objid, ib, vbn, obj->index->sb.block_size, ret);
+        LOG_ERROR("Read index block failed. objid(%lld) vbn(%lld) size(%d) ret(%d)\n",
+            obj_info->objid, vbn, obj_info->index->sb.block_size, ret);
         OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
+        *cache_out = NULL;
         return ret;
     }
 
-    LOG_DEBUG("Read index block success. objid(%lld) ib(%p) vbn(%lld) size(%d)\n",
-        obj_info->objid, ib, vbn, obj->index->sb.block_size);
+    LOG_DEBUG("Read index block success. objid(%lld) vbn(%lld) size(%d)\n",
+        obj_info->objid, vbn, obj_info->index->sb.block_size);
 
-    SET_IBC_CLEAN(obj->cache);
+    SET_IBC_CLEAN(cache);
     OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
 
+    *cache_out = cache;
     return 0;
+}
+
+int32_t index_block_read(object_handle_t *obj, uint64_t vbn, uint32_t blk_type)
+{
+    int32_t ret = 0;
+
+    ASSERT(NULL != obj);
+    
+    if (obj->cache->vbn == vbn)
+    {
+        return 0;
+    }
+
+    ret = index_block_read2(obj->obj_info, vbn, blk_type, &obj->cache);
+    if (ret < 0)
+    {
+        LOG_ERROR("Read block failed. vbn(%lld) blk_type(0x%x) ret(%d)\n", vbn, blk_type, ret);
+        return ret;
+    }
+
+    return 0;
+}
+
+int32_t flush_fs_dirty_cache(index_handle_t *index, ifs_block_cache_t *cache)
+{
+    int32_t ret = 0;
+
+    ASSERT(NULL != index);
+    ASSERT(NULL != cache);
+
+    if (!IBC_DIRTY(cache))
+    {
+        return 0;
+    }
+
+    ret = index_update_block_fixup(index, cache->ib, cache->vbn);
+    if (ret != (int32_t)cache->ib->alloc_size)
+    {
+        LOG_ERROR("Update index block failed. index(%s) vbn(%lld) size(%d) ret(%d)\n",
+            index->name, cache->vbn, cache->ib->alloc_size, ret);
+        return -INDEX_ERR_UPDATE;
+    }
+
+    LOG_DEBUG("Update index block success. index(%s) vbn(%lld) size(%d)\n",
+            index->name, cache->vbn, cache->ib->alloc_size);
+    
+    SET_IBC_CLEAN(cache);
+
+    return 0;
+}
+
+
+int32_t flush_fs_cache(index_handle_t *index)
+{
+    int32_t ret = 0;
+    
+    ASSERT(index != NULL);
+
+    OS_RWLOCK_WRLOCK(&index->metadata_cache_lock);
+    avl_walk_all(&index->metadata_cache, (avl_walk_cb_t)flush_fs_dirty_cache, index);
+    OS_RWLOCK_WRUNLOCK(&index->metadata_cache_lock);
+
+	return 0;
 }
 
