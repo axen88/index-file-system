@@ -27,10 +27,10 @@ This project comes from https://github.com/axenhook/index-file-system
 |description|command example|
 |-----------|---------------|
 |create index named i       | create -i i |
-|create object with objid 1 | create -i i -o 1|
-|insert kv in object 1      | insert -i i -o 1 -k 1 -v abcdjkjkj |
-|dump all kv in object 1    | dump   -i i -o 1 |
-|remove kv in object 1      | remove -i i -o 1 -k 1 |
+|create object with objid 300 | create -i i -o 300|
+|insert kv in object 300      | insert -i i -o 300 -k axen -v abcdjkjkj |
+|dump all kv in object 300    | dump   -i i -o 300 |
+|remove kv in object 300      | remove -i i -o 300 -k axen |
 
 # feature
 1. support multi fs
