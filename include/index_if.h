@@ -66,8 +66,8 @@ typedef enum cache_status
 
 
 #define SET_IBC_DIRTY(ibc)  ((ibc)->state = DIRTY)
-#define SET_IBC_CLEAN(ibc)  ((ibc)->state == CLEAN)
-#define SET_IBC_EMPTY(ibc)  ((ibc)->state == EMPTY)
+#define SET_IBC_CLEAN(ibc)  ((ibc)->state = CLEAN)
+#define SET_IBC_EMPTY(ibc)  ((ibc)->state = EMPTY)
 #define IBC_DIRTY(ibc)      ((ibc)->state == DIRTY)
 #define IBC_CLEAN(ibc)      ((ibc)->state == CLEAN)
 #define IBC_EMPTY(ibc)      ((ibc)->state == EMPTY)
