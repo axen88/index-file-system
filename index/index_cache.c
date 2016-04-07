@@ -59,7 +59,7 @@ int32_t compare_cache2(const uint64_t *vbn, ifs_block_cache_t *cache_node)
     return 0;
 }
 
-void insert_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
+void insert_obj_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
 {
     index_handle_t *index = obj_info->index;
     
@@ -71,7 +71,7 @@ void insert_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
     
 }
 
-void remove_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
+void remove_obj_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
 {
     index_handle_t *index = obj_info->index;
     
@@ -84,16 +84,16 @@ void remove_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
 }
 
 
-void change_cache_vbn(object_info_t *obj_info, ifs_block_cache_t *cache, uint64_t new_vbn)
+void change_obj_cache_vbn(object_info_t *obj_info, ifs_block_cache_t *cache, uint64_t new_vbn)
 {
-    remove_cache(obj_info, cache);
+    remove_obj_cache(obj_info, cache);
     cache->vbn = new_vbn;
-    insert_cache(obj_info, cache);
+    insert_obj_cache(obj_info, cache);
 }
 
 
 
-ifs_block_cache_t *alloc_cache(object_info_t *obj_info, uint64_t vbn, uint32_t blk_type)
+ifs_block_cache_t *alloc_obj_cache(object_info_t *obj_info, uint64_t vbn, uint32_t blk_type)
 {
     ifs_block_cache_t *cache = NULL;
 
@@ -117,17 +117,17 @@ ifs_block_cache_t *alloc_cache(object_info_t *obj_info, uint64_t vbn, uint32_t b
     SET_IBC_EMPTY(cache);
     cache->vbn = vbn;
     
-    insert_cache(obj_info, cache);
+    insert_obj_cache(obj_info, cache);
 
     return cache;
 }
 
-void free_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
+void free_obj_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
 {
     ASSERT(NULL != obj_info);
     ASSERT(NULL != cache);
     
-    remove_cache(obj_info, cache);
+    remove_obj_cache(obj_info, cache);
     
     if (NULL != cache->ib)
     {
@@ -139,7 +139,7 @@ void free_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
 
 }
 
-int32_t index_alloc_cache_and_block(object_info_t *obj_info, ifs_block_cache_t **cache, uint32_t blk_type)
+int32_t alloc_obj_cache_and_block(object_info_t *obj_info, ifs_block_cache_t **cache, uint32_t blk_type)
 {
     ifs_block_cache_t *tmp_cache = NULL;
     int32_t ret = 0;
@@ -155,7 +155,7 @@ int32_t index_alloc_cache_and_block(object_info_t *obj_info, ifs_block_cache_t *
     }
 
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
-    tmp_cache = alloc_cache(obj_info, vbn, blk_type);
+    tmp_cache = alloc_obj_cache(obj_info, vbn, blk_type);
     if (NULL == tmp_cache)
     {
         OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
@@ -171,99 +171,34 @@ int32_t index_alloc_cache_and_block(object_info_t *obj_info, ifs_block_cache_t *
     return 0;
 }
 
-int32_t flush_obj_dirty_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
+int32_t release_obj_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
 {
-    int32_t ret = 0;
-
     ASSERT(NULL != obj_info);
     ASSERT(NULL != cache);
 
-    if (!IBC_DIRTY(cache))
+    if (IBC_DIRTY(cache))
     {
-        return 0;
+        SET_IBC_FLUSH(cache);
+        avl_remove(&obj_info->caches, cache);  // remove from obj tree
     }
-
-    ret = index_update_block_fixup(obj_info->index, cache->ib, cache->vbn);
-    if (ret != (int32_t)cache->ib->alloc_size)
+    else
     {
-        LOG_ERROR("Update index block failed. objid(%lld) vbn(%lld) size(%d) ret(%d)\n",
-            obj_info->objid, cache->vbn, cache->ib->alloc_size, ret);
-        return -INDEX_ERR_UPDATE;
+        free_obj_cache(obj_info, cache); // remove from obj and fs tree
     }
-
-    LOG_DEBUG("Update index block success. objid(%lld) vbn(%lld) size(%d)\n",
-            obj_info->objid, cache->vbn, cache->ib->alloc_size);
-    
-    SET_IBC_CLEAN(cache);
 
     return 0;
 }
 
-int32_t flush_obj_cache(object_info_t *obj_info)
+int32_t release_obj_all_cache(object_info_t *obj_info)
 {
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
-    avl_walk_all(&obj_info->caches, (avl_walk_cb_t)flush_obj_dirty_cache, obj_info);
+    avl_walk_all(&obj_info->caches, (avl_walk_cb_t)release_obj_cache, obj_info);
     OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
 
     return 0;
 }
 
-int32_t release_cache(object_info_t *obj_info, ifs_block_cache_t *cache)
-{
-    ASSERT(NULL != obj_info);
-    ASSERT(NULL != cache);
 
-    if (IBC_DIRTY(cache))  // all cache should be CLEAN or EMPTY state
-    {
-        LOG_ERROR("The dirty cache will be released. objid(%lld) vbn(%lld)\n",
-            obj_info->objid, cache->vbn);
-    }
-
-    free_cache(obj_info, cache);
-
-    return 0;
-}
-
-int32_t index_release_all_caches(object_info_t *obj_info)
-{
-    OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
-    avl_walk_all(&obj_info->caches, (avl_walk_cb_t)release_cache, obj_info);
-    OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
-
-    return 0;
-}
-
-int32_t release_dirty_block(object_info_t *obj_info, ifs_block_cache_t *cache)
-{
-    int32_t ret = 0;
-
-    ASSERT(NULL != obj_info);
-    ASSERT(NULL != cache);
-
-    if (!(IBC_DIRTY(cache)))
-    {
-        return 0;
-    }
-
-    ret = INDEX_FREE_BLOCK(obj_info->index, obj_info->objid, cache->vbn);
-    if (0 > ret)
-    {
-        LOG_ERROR("Free block failed. vbn(%lld) ret(%d)\n", cache->vbn, ret);
-    }
-
-    free_cache(obj_info, cache);
-
-    return 0;
-}
-
-int32_t index_release_all_dirty_blocks(object_info_t *obj_info)
-{
-    OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
-    avl_walk_all(&obj_info->caches, (avl_walk_cb_t)release_dirty_block, obj_info);
-    OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
-
-    return 0;
-}
 
 int32_t index_block_read2(object_info_t *obj_info, uint64_t vbn, uint32_t blk_type,
     ifs_block_cache_t **cache_out)
@@ -283,7 +218,7 @@ int32_t index_block_read2(object_info_t *obj_info, uint64_t vbn, uint32_t blk_ty
         return 0;
     }
 
-    cache = alloc_cache(obj_info, vbn, blk_type);
+    cache = alloc_obj_cache(obj_info, vbn, blk_type);
     if (NULL == cache)
     {
         OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
@@ -333,6 +268,23 @@ int32_t index_block_read(object_handle_t *obj, uint64_t vbn, uint32_t blk_type)
     return 0;
 }
 
+void free_fs_cache(index_handle_t *index, ifs_block_cache_t *cache)
+{
+    ASSERT(NULL != index);
+    ASSERT(NULL != cache);
+    
+    avl_remove(&index->metadata_cache, cache);
+    
+    if (NULL != cache->ib)
+    {
+        OS_FREE(cache->ib);
+        cache->ib = NULL;
+    }
+    
+    OS_FREE(cache);
+
+}
+
 int32_t flush_fs_dirty_cache(index_handle_t *index, ifs_block_cache_t *cache)
 {
     int32_t ret = 0;
@@ -355,6 +307,12 @@ int32_t flush_fs_dirty_cache(index_handle_t *index, ifs_block_cache_t *cache)
 
     LOG_DEBUG("Update index block success. index(%s) vbn(%lld) size(%d)\n",
             index->name, cache->vbn, cache->ib->alloc_size);
+
+    if (IBC_FLUSH(cache))  // the object had been released
+    {
+        free_fs_cache(index, cache);
+        return 0;
+    }
     
     SET_IBC_CLEAN(cache);
 
@@ -374,4 +332,37 @@ int32_t flush_fs_cache(index_handle_t *index)
 
 	return 0;
 }
+
+int32_t release_fs_cache(index_handle_t *index, ifs_block_cache_t *cache)
+{
+    int32_t ret = 0;
+
+    ASSERT(NULL != index);
+    ASSERT(NULL != cache);
+
+    if (IBC_DIRTY(cache))
+    {
+        LOG_ERROR("YOU ARE RELEASE DIRTY CACHE. index(%s) vbn(%lld) size(%d) ret(%d)\n",
+            index->name, cache->vbn, cache->ib->alloc_size, ret);
+    }
+
+    free_fs_cache(index, cache);
+
+    return 0;
+}
+
+int32_t release_fs_all_cache(index_handle_t *index)
+{
+    int32_t ret = 0;
+    
+    ASSERT(index != NULL);
+
+    OS_RWLOCK_WRLOCK(&index->metadata_cache_lock);
+    avl_walk_all(&index->metadata_cache, (avl_walk_cb_t)release_fs_cache, index);
+    OS_RWLOCK_WRUNLOCK(&index->metadata_cache_lock);
+
+    return 0;
+}
+
+
 

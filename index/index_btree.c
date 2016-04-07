@@ -88,7 +88,7 @@ static int32_t set_ib_dirty(object_handle_t *tree, uint64_t vbn, uint8_t depth)
 			ret = INDEX_FREE_BLOCK(tree->index, tree->obj_info->objid, tree->cache_stack[depth]->vbn);
             
             OS_RWLOCK_WRLOCK(&tree->obj_info->caches_lock);
-            change_cache_vbn(tree->obj_info,tree->cache_stack[depth], new_vbn);
+            change_obj_cache_vbn(tree->obj_info,tree->cache_stack[depth], new_vbn);
             OS_RWLOCK_WRUNLOCK(&tree->obj_info->caches_lock);
             
             if (0 > ret)
@@ -842,7 +842,7 @@ static index_entry_t *split_ib(object_handle_t *tree, index_entry_t *ie)
 
     mid_ie = get_middle_ie(IB(tree->cache->ib));
 
-    ret = index_alloc_cache_and_block(tree->obj_info, &new_ibc, INDEX_MAGIC);
+    ret = alloc_obj_cache_and_block(tree->obj_info, &new_ibc, INDEX_MAGIC);
     if (0 > ret)
     {
         LOG_ERROR("Allocate cache failed.\n");
@@ -921,7 +921,7 @@ static int32_t reparent_root(object_handle_t * tree)
     old_ib = IB(tree->cache->ib);
     alloc_size = old_ib->head.alloc_size;
     
-    ret = index_alloc_cache_and_block(tree->obj_info, &new_ibc, INDEX_MAGIC);
+    ret = alloc_obj_cache_and_block(tree->obj_info, &new_ibc, INDEX_MAGIC);
     if (0 > ret)
     {
         LOG_ERROR("Allocate cache failed.\n");

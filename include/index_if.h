@@ -74,6 +74,7 @@ typedef enum cache_status
 #define IBC_DIRTY(ibc)      (((ibc)->state & STATUS_MASK) == DIRTY)
 #define IBC_CLEAN(ibc)      ((ibc)->state == CLEAN)
 #define IBC_EMPTY(ibc)      ((ibc)->state == EMPTY)
+#define IBC_FLUSH(ibc)      ((ibc)->state & STATUS_FLUSH)
 
 #define INDEX_NAME_SIZE     256
 
@@ -101,7 +102,7 @@ typedef struct object_info
 {
     struct index_handle *index;       // index handle
     
-    inode_record_t inode;                // inode
+    inode_record_t *inode;                // inode
 
     ifs_block_cache_t *inode_cache;      //
     
@@ -187,17 +188,15 @@ typedef struct index_handle
     os_rwlock index_lock;             // lock
 } index_handle_t;
 
-#define INDEX_UPDATE_INODE(obj_info) \
-    index_update_block_fixup((obj_info)->index, &(obj_info)->inode.head, (obj_info)->inode_no);
-
 extern int32_t index_block_read(object_handle_t *obj, uint64_t vbn, uint32_t blk_type);
-int32_t index_alloc_cache_and_block(object_info_t *obj_info, ifs_block_cache_t **cache, uint32_t blk_type);
-extern int32_t index_release_all_dirty_blocks(object_info_t *obj_info);
-extern int32_t index_release_all_caches(object_info_t *obj_info);
-extern int32_t flush_obj_cache(object_info_t * obj_info);
-void change_cache_vbn(object_info_t *obj_info, ifs_block_cache_t *cache, uint64_t new_vbn);
+int32_t alloc_obj_cache_and_block(object_info_t *obj_info, ifs_block_cache_t **cache, uint32_t blk_type);
+extern int32_t release_obj_all_cache(object_info_t *obj_info);
+void change_obj_cache_vbn(object_info_t *obj_info, ifs_block_cache_t *cache, uint64_t new_vbn);
 int32_t index_block_read2(object_info_t *obj_info, uint64_t vbn, uint32_t blk_type,
     ifs_block_cache_t **cache_out);
+int32_t flush_fs_cache(index_handle_t *index);
+ifs_block_cache_t *alloc_obj_cache(object_info_t *obj_info, uint64_t vbn, uint32_t blk_type);
+int32_t release_fs_all_cache(index_handle_t *index);
 
 extern int32_t walk_all_opened_index(
     int32_t (*func)(void *, index_handle_t *), void *para);

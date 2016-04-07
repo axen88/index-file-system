@@ -194,7 +194,7 @@ int32_t create_system_objects(index_handle_t *index)
 
     set_object_name(obj, BASE_OBJ_NAME);
     index->sb.base_inode_no = obj->obj_info->inode_no;
-    index->sb.base_id = obj->obj_info->inode.objid;
+    index->sb.base_id = obj->obj_info->inode->objid;
     
     index_init_sm(&index->bsm, obj, 0, 0);
 
@@ -208,7 +208,7 @@ int32_t create_system_objects(index_handle_t *index)
     
     set_object_name(obj, SPACE_OBJ_NAME);
     index->sb.space_inode_no = obj->obj_info->inode_no;
-    index->sb.space_id = obj->obj_info->inode.objid;
+    index->sb.space_id = obj->obj_info->inode->objid;
     
     index->sb.first_free_block += 2;
     index->sb.free_blocks -= 2;
@@ -231,7 +231,7 @@ int32_t create_system_objects(index_handle_t *index)
 
     set_object_name(obj, OBJID_OBJ_NAME);
     index->sb.objid_inode_no = obj->obj_info->inode_no;
-    index->sb.objid_id = obj->obj_info->inode.objid;
+    index->sb.objid_id = obj->obj_info->inode->objid;
     index->id_obj = obj;
     
     return 0;
@@ -575,22 +575,25 @@ void close_index(index_handle_t *index)
     // close system object
     if (index->id_obj != NULL)
     {
-        (void)close_object(index->id_obj->obj_info);
+        close_object(index->id_obj->obj_info);
         index->id_obj = NULL;
     }
 
     if (index->sm.space_obj != NULL)
     {
-        (void)close_object(index->sm.space_obj->obj_info);
+        close_object(index->sm.space_obj->obj_info);
         index->sm.space_obj = NULL;
     }
 
     if (index->bsm.space_obj != NULL)
     {
-        (void)close_object(index->bsm.space_obj->obj_info);
+        close_object(index->bsm.space_obj->obj_info);
         index->bsm.space_obj = NULL;
     }
 
+    flush_fs_cache(index);
+    release_fs_all_cache(index);
+    
     if (index->file_hnd != NULL)
     {
         if (index->flags & FLAG_DIRTY)

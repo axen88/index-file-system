@@ -62,7 +62,7 @@ int32_t set_object_name(object_handle_t *obj, char *name);
 /* for internal only */
 int32_t create_object(index_handle_t *index, uint64_t objid, uint16_t flags, object_handle_t **obj);
 int32_t open_object(index_handle_t *index, uint64_t objid, uint64_t inode_no, object_handle_t **obj);
-extern int32_t close_object(object_info_t *obj_info);
+extern void close_object(object_info_t *obj_info);
 int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t inode_no,
     uint16_t flags, object_handle_t **obj_out);
 

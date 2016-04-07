@@ -70,7 +70,7 @@ int32_t compare_cache1(const ifs_block_cache_t *cache, const ifs_block_cache_t *
 
 void init_attr(object_info_t *obj_info, uint64_t inode_no)
 {
-    obj_info->attr_record = INODE_GET_ATTR_RECORD(&obj_info->inode);
+    obj_info->attr_record = INODE_GET_ATTR_RECORD(obj_info->inode);
     obj_info->root_ibc.vbn = inode_no;
     obj_info->root_ibc.ib = (block_head_t *)obj_info->attr_record->content;
 }
@@ -117,7 +117,7 @@ void put_object_info(object_info_t *obj_info)
 
     avl_remove(&obj_info->index->obj_list, obj_info);
 
-    index_release_all_caches(obj_info);
+    release_obj_all_cache(obj_info);
     avl_destroy(&obj_info->caches);
     
     OS_RWLOCK_DESTROY(&obj_info->caches_lock);
@@ -173,84 +173,31 @@ int32_t recover_obj_inode(object_info_t *obj_info, uint64_t inode_no)
         return ret;
     }
 
-    memcpy(&obj_info->inode, cache->ib, cache->ib->alloc_size);
+    //memcpy(&obj_info->inode, cache->ib, cache->ib->alloc_size);
 
     obj_info->inode_cache = cache;
+	obj_info->inode = (inode_record_t *)obj_info->inode_cache->ib;
     obj_info->inode_no = inode_no;
-    strncpy(obj_info->obj_name, obj_info->inode.name, obj_info->inode.name_size);
+    strncpy(obj_info->obj_name, obj_info->inode->name, obj_info->inode->name_size);
     init_attr(obj_info, inode_no);
     SET_IBC_CLEAN(&obj_info->root_ibc);
 
     return 0;
 }
 
-int32_t flush_inode(object_info_t *obj_info)
-{
-    int32_t ret = 0;
-
-    ASSERT(NULL != obj_info);
-
-    if (!INODE_DIRTY(obj_info))
-    {
-        return 0;
-    }
-
-    ret = INDEX_UPDATE_INODE(obj_info);
-    if (0 > ret)
-    {
-        LOG_ERROR("Update inode failed. objid(%lld) inode(%p) inode_no(%lld) ret(%d)\n",
-            obj_info->objid, obj_info->inode, obj_info->inode_no, ret);
-        return ret;
-    }
-
-    LOG_DEBUG("Update inode success. objid(%lld) inode(%p) inode_no(%lld)\n",
-        obj_info->objid, obj_info->inode, obj_info->inode_no);
-
-    CLR_INODE_DIRTY(obj_info);
-
-    return 0;
-}
-
-void cancel_object_modification(object_info_t *obj_info)
+void validate_obj_inode(object_info_t *obj_info)
 {
     ASSERT(obj_info != NULL);
 
-    // recover obj inode
-    recover_obj_inode(obj_info, obj_info->inode_no);
-    CLR_INODE_DIRTY(obj_info);
-
-    // discard all dirty block cache
-    index_release_all_dirty_blocks(obj_info);
-
-    return;
-}
-
-int32_t commit_object_modification(object_info_t *obj_info)
-{
-    int32_t ret = 0;
-    
-    ASSERT(obj_info != NULL);
-
-    // write dirty block caches to disk
-    ret = flush_obj_cache(obj_info);
-    if (0 > ret)
+    if (!IBC_DIRTY(&obj_info->root_ibc))
     {
-        LOG_ERROR("Flush index block cache failed. objid(%lld) ret(%d)\n",
-            obj_info->objid, ret);
-        return ret;
+        return;
     }
 
-    SET_INODE_DIRTY(obj_info);
-
-    ret = flush_inode(obj_info);
-    if (0 > ret)
-    {
-        LOG_ERROR("Flush object inode failed. objid(%lld) ret(%d)\n",
-            obj_info->objid, ret);
-        return ret;
-    }
-
-	return 0;
+    //cache = obj_info->inode_cache;
+   // memcpy(cache->ib, &obj_info->inode, cache->ib->alloc_size);
+    SET_IBC_CLEAN(&obj_info->root_ibc);
+    SET_IBC_DIRTY(obj_info->inode_cache);
 }
 
 
@@ -265,22 +212,11 @@ void put_all_object_handle(object_info_t *obj_info)
     }
 }
 
-int32_t close_object(object_info_t *obj_info)
+void close_object(object_info_t *obj_info)
 {
-    int32_t ret;
-    
     put_all_object_handle(obj_info);
-    
-    ret = commit_object_modification(obj_info);
-    if (ret < 0)
-    {
-        cancel_object_modification(obj_info);
-        LOG_ERROR("commit object modification failed. objid(%lld) ret(%d)\n", obj_info->objid, ret);
-    }
-    
+    validate_obj_inode(obj_info);
     put_object_info(obj_info);
-
-    return 0;
 }
 
 void init_inode(inode_record_t *inode, uint64_t objid, uint64_t inode_no, uint16_t flags)
@@ -324,9 +260,9 @@ void init_inode(inode_record_t *inode, uint64_t objid, uint64_t inode_no, uint16
 
 int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t inode_no, uint16_t flags, object_handle_t **obj_out)
 {
-     int32_t ret;
-     object_handle_t *obj;
-     object_info_t *obj_info;
+    int32_t ret;
+    object_handle_t *obj;
+    object_info_t *obj_info;
 
     ASSERT(NULL != index);
     ASSERT(NULL != obj_out);
@@ -339,26 +275,26 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
         return ret;
     }
 
+    obj_info->inode_cache = alloc_obj_cache(obj_info, inode_no, INODE_MAGIC);
+    if (obj_info->inode_cache == NULL)
+    {
+        put_object_info(obj_info);
+        LOG_ERROR("alloc_obj_cache failed\n");
+        return -INDEX_ERR_ALLOCATE_MEMORY;
+    }
+
+	obj_info->inode = (inode_record_t *)obj_info->inode_cache->ib;
+
     /* init inode */
-    init_inode(&obj_info->inode, objid, inode_no, flags);
+    init_inode(obj_info->inode, objid, inode_no, flags);
 
     obj_info->inode_no = inode_no;
-    strncpy(obj_info->obj_name, obj_info->inode.name, obj_info->inode.name_size);
+    strncpy(obj_info->obj_name, obj_info->inode->name, obj_info->inode->name_size);
     init_attr(obj_info, inode_no);
     SET_IBC_DIRTY(&obj_info->root_ibc);
 
     SET_INODE_DIRTY(obj_info);
 
-    // update index block
-    ret = index_update_block_fixup(index, &obj_info->inode.head, inode_no);
-    if (0 > ret)
-    {
-        put_object_info(obj_info);
-        LOG_ERROR("Create inode failed. obj_id(%lld) vbn(%lld) ret(%d)\n",
-            objid, inode_no, ret);
-        return ret;
-    }
-    
     LOG_DEBUG("Create inode success. obj_id(%lld) vbn(%lld)\n", objid, inode_no);
 
     ret = get_object_handle(obj_info, &obj);
@@ -458,8 +394,8 @@ int32_t set_object_name(object_handle_t *obj, char *name)
     }
 
     strncpy(obj->obj_info->obj_name, name, name_size);
-    strncpy(obj->obj_info->inode.name, name, name_size);
-    obj->obj_info->inode.name_size = name_size;
+    strncpy(obj->obj_info->inode->name, name, name_size);
+    obj->obj_info->inode->name_size = name_size;
 
     SET_INODE_DIRTY(obj->obj_info);
 
