@@ -174,7 +174,7 @@ int32_t recover_obj_inode(object_info_t *obj_info, uint64_t inode_no)
     }
 
     obj_info->inode_cache = cache;
-	obj_info->inode = (inode_record_t *)obj_info->inode_cache->ib;
+	obj_info->inode = (inode_record_t *)cache->ib;
     obj_info->inode_no = inode_no;
     strncpy(obj_info->obj_name, obj_info->inode->name, obj_info->inode->name_size);
     init_attr(obj_info, inode_no);
@@ -259,6 +259,7 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
     int32_t ret;
     object_handle_t *obj;
     object_info_t *obj_info;
+    ifs_block_cache_t *cache;
 
     ASSERT(NULL != index);
     ASSERT(NULL != obj_out);
@@ -271,20 +272,19 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
         return ret;
     }
 
-    obj_info->inode_cache = alloc_obj_cache(obj_info, inode_no, INODE_MAGIC);
-    if (obj_info->inode_cache == NULL)
+    cache = alloc_obj_cache(obj_info, inode_no, INODE_MAGIC);
+    if (cache == NULL)
     {
         put_object_info(obj_info);
         LOG_ERROR("alloc_obj_cache failed\n");
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 
-	obj_info->inode = (inode_record_t *)obj_info->inode_cache->ib;
-
-    /* init inode */
-    init_inode(obj_info->inode, objid, inode_no, flags);
-
+	obj_info->inode_cache = cache;
+	obj_info->inode = (inode_record_t *)cache->ib;
     obj_info->inode_no = inode_no;
+
+    init_inode(obj_info->inode, objid, inode_no, flags);
     strncpy(obj_info->obj_name, obj_info->inode->name, obj_info->inode->name_size);
     init_attr(obj_info, inode_no);
     SET_INODE_DIRTY(obj_info);
