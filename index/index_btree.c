@@ -76,6 +76,7 @@ static int32_t set_ib_dirty(object_handle_t *tree, uint64_t vbn, uint8_t depth)
     do
     {
         if ((0 != depth) && (!IBC_DIRTY(tree->cache_stack[depth])))
+        //if (!IBC_DIRTY(tree->cache_stack[depth]))
         {   // allocate new block for modified data
             ret = INDEX_ALLOC_BLOCK(tree->index, tree->obj_info->objid, &new_vbn);
             if (ret < 0)
@@ -100,7 +101,7 @@ static int32_t set_ib_dirty(object_handle_t *tree, uint64_t vbn, uint8_t depth)
 
         if (0 != vbn)
         {
-            ie = (index_entry_t *) ((uint8_t *) tree->cache_stack[depth]->ib + tree->position_stack[depth]);
+            ie = (index_entry_t *)((uint8_t *)tree->cache_stack[depth]->ib + tree->position_stack[depth]);
             SET_IE_VBN(ie, vbn);
         }
 

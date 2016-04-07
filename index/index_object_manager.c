@@ -173,14 +173,12 @@ int32_t recover_obj_inode(object_info_t *obj_info, uint64_t inode_no)
         return ret;
     }
 
-    //memcpy(&obj_info->inode, cache->ib, cache->ib->alloc_size);
-
     obj_info->inode_cache = cache;
 	obj_info->inode = (inode_record_t *)obj_info->inode_cache->ib;
     obj_info->inode_no = inode_no;
     strncpy(obj_info->obj_name, obj_info->inode->name, obj_info->inode->name_size);
     init_attr(obj_info, inode_no);
-    SET_IBC_CLEAN(&obj_info->root_ibc);
+    SET_INODE_CLEAN(obj_info);
 
     return 0;
 }
@@ -189,14 +187,12 @@ void validate_obj_inode(object_info_t *obj_info)
 {
     ASSERT(obj_info != NULL);
 
-    if (!IBC_DIRTY(&obj_info->root_ibc))
+    if (!INODE_DIRTY(obj_info))
     {
         return;
     }
 
-    //cache = obj_info->inode_cache;
-   // memcpy(cache->ib, &obj_info->inode, cache->ib->alloc_size);
-    SET_IBC_CLEAN(&obj_info->root_ibc);
+    SET_INODE_CLEAN(obj_info);
     SET_IBC_DIRTY(obj_info->inode_cache);
 }
 
@@ -291,8 +287,6 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
     obj_info->inode_no = inode_no;
     strncpy(obj_info->obj_name, obj_info->inode->name, obj_info->inode->name_size);
     init_attr(obj_info, inode_no);
-    SET_IBC_DIRTY(&obj_info->root_ibc);
-
     SET_INODE_DIRTY(obj_info);
 
     LOG_DEBUG("Create inode success. obj_id(%lld) vbn(%lld)\n", objid, inode_no);
