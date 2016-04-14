@@ -195,7 +195,8 @@ int32_t index_init_free_space(space_manager_t *sm, uint64_t start_blk, uint64_t 
 
 void index_destroy_sm(space_manager_t *sm)
 {
-    OS_RWLOCK_DESTROY(&sm->lock);
+    close_object(sm->space_obj->obj_info);
+    sm->space_obj = NULL;
     OS_RWLOCK_DESTROY(&sm->lock);
 }
 

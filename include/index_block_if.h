@@ -42,10 +42,6 @@ extern "C"
 {
 #endif
 
-/* BLOCK_HANDLE_S.flags */
-#define FLAG_NOSPACE     0x00000002     // no space
-#define FLAG_DIRTY       0x00000001     // dirty
-
 extern int32_t index_update_block(index_handle_t * hnd, void * buf,
     uint32_t size, uint32_t start_lba, uint64_t vbn);
 extern int32_t index_read_block(index_handle_t * hnd, void * buf,

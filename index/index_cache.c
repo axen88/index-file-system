@@ -330,6 +330,25 @@ int32_t flush_fs_cache(index_handle_t *index)
     avl_walk_all(&index->metadata_cache, (avl_walk_cb_t)flush_fs_dirty_cache, index);
     OS_RWLOCK_WRUNLOCK(&index->metadata_cache_lock);
 
+    if (index->flags & FLAG_DIRTY)
+    {
+        index->sb.free_blocks = index->sm.total_free_blocks;
+        index->sb.first_free_block = index->sm.first_free_block;
+        
+        index->sb.base_free_blocks = index->bsm.total_free_blocks;
+        index->sb.base_first_free_block = index->bsm.first_free_block;
+        
+        index->sb.base_blk = index->base_blk;
+
+        ret = index_update_super_block(index);
+        if (0 > ret)
+        {
+            LOG_ERROR("Update super block failed. index(%p) ret(%d)\n", index, ret);
+        }
+
+        index->flags &= ~FLAG_DIRTY;
+    }
+
 	return 0;
 }
 

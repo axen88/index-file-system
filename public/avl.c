@@ -1059,6 +1059,11 @@ int avl_walk_all(avl_tree_t * tree,
 	void *next_node = NULL;
     int ret = 0;
 
+	if (tree->avl_numnodes == 0)
+	{
+		return 0;
+	}
+
     node = avl_first(tree);
 
     while (node != NULL)

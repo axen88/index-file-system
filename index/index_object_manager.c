@@ -185,15 +185,64 @@ int32_t recover_obj_inode(object_info_t *obj_info, uint64_t inode_no)
 
 void validate_obj_inode(object_info_t *obj_info)
 {
+    uint64_t new_vbn;
+    
     ASSERT(obj_info != NULL);
 
-    if (!INODE_DIRTY(obj_info))
+    if (INODE_DIRTY(obj_info))
     {
-        return;
+        SET_INODE_CLEAN(obj_info);
+        SET_IBC_DIRTY(obj_info->inode_cache);
     }
 
-    SET_INODE_CLEAN(obj_info);
-    SET_IBC_DIRTY(obj_info->inode_cache);
+    new_vbn = obj_info->root_ibc.vbn;
+
+    if (IBC_DIRTY(&obj_info->root_ibc) && (new_vbn != obj_info->inode_cache->vbn))
+    {
+        ifs_super_block_t *sb;
+        
+        change_obj_cache_vbn(obj_info, obj_info->inode_cache, new_vbn);
+        obj_info->inode_no = new_vbn;
+        sb = &obj_info->index->sb;
+
+        switch (obj_info->objid)
+        {
+            case BASE_OBJ_ID:
+            {
+                sb->base_inode_no = obj_info->inode_no;
+                obj_info->index->flags |= FLAG_DIRTY;
+                break;
+            }
+                
+            case SPACE_OBJ_ID:
+            {
+                sb->space_inode_no = obj_info->inode_no;
+                obj_info->index->flags |= FLAG_DIRTY;
+                break;
+            }
+                
+            case OBJID_OBJ_ID:
+            {
+                sb->objid_inode_no = obj_info->inode_no;
+                obj_info->index->flags |= FLAG_DIRTY;
+                break;
+            }
+                
+            default:
+            {
+                uint8_t key_str[U64_MAX_SIZE];
+                uint8_t value_str[U64_MAX_SIZE];
+                uint16_t key_size;
+                uint16_t value_size;
+                
+                key_size = os_u64_to_bstr(obj_info->objid, key_str);
+                value_size = os_u64_to_bstr(new_vbn, value_str);
+                
+                index_update_value(obj_info->index->id_obj, key_str, key_size, value_str, value_size);
+                break;
+            }
+        }
+    }
 }
 
 
@@ -288,6 +337,7 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
     strncpy(obj_info->obj_name, obj_info->inode->name, obj_info->inode->name_size);
     init_attr(obj_info, inode_no);
     SET_INODE_DIRTY(obj_info);
+    SET_IBC_DIRTY(&obj_info->root_ibc);
 
     LOG_DEBUG("Create inode success. obj_id(%lld) vbn(%lld)\n", objid, inode_no);
 

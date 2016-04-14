@@ -70,13 +70,13 @@ static int32_t set_ib_dirty(object_handle_t *tree, uint64_t vbn, uint8_t depth)
     int32_t ret = 0;
     index_entry_t *ie = NULL;
 
-    ASSERT(NULL != tree);
+    ASSERT(tree != NULL);
     ASSERT(depth < INDEX_MAX_DEPTH);
 
     do
     {
-        if ((0 != depth) && (!IBC_DIRTY(tree->cache_stack[depth])))
-        //if (!IBC_DIRTY(tree->cache_stack[depth]))
+        //if ((0 != depth) && (!IBC_DIRTY(tree->cache_stack[depth])))
+        if (!IBC_DIRTY(tree->cache_stack[depth]))
         {   // allocate new block for modified data
             ret = INDEX_ALLOC_BLOCK(tree->index, tree->obj_info->objid, &new_vbn);
             if (ret < 0)
@@ -89,17 +89,24 @@ static int32_t set_ib_dirty(object_handle_t *tree, uint64_t vbn, uint8_t depth)
 			ret = INDEX_FREE_BLOCK(tree->index, tree->obj_info->objid, tree->cache_stack[depth]->vbn);
             
             OS_RWLOCK_WRLOCK(&tree->obj_info->caches_lock);
-            change_obj_cache_vbn(tree->obj_info,tree->cache_stack[depth], new_vbn);
+            if (depth == 0)
+            { // inode cache should be treated specially
+                tree->obj_info->root_ibc.vbn = new_vbn;
+            }
+            else
+            {
+                change_obj_cache_vbn(tree->obj_info, tree->cache_stack[depth], new_vbn);
+            }
             OS_RWLOCK_WRUNLOCK(&tree->obj_info->caches_lock);
             
-            if (0 > ret)
+            if (ret < 0)
             {
                 LOG_ERROR("Free old block failed. ret(%d)\n", ret);
                 return ret;
             }
         }
 
-        if (0 != vbn)
+        if (vbn != 0)
         {
             ie = (index_entry_t *)((uint8_t *)tree->cache_stack[depth]->ib + tree->position_stack[depth]);
             SET_IE_VBN(ie, vbn);

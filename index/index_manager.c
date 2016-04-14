@@ -305,9 +305,6 @@ int32_t init_super_block(ifs_super_block_t *sb, uint64_t total_sectors, uint32_t
     sb->block_size_shift = block_size_shift;
     sb->block_size = 1 << block_size_shift;
     sb->sectors_per_block = sb->block_size / BYTES_PER_SECTOR;
-    sb->bitmap_start_block = reserved_blocks;
-    sb->bitmap_blocks = (uint32_t)RoundUp2(RoundUp2(total_blocks, BITS_PER_BYTE,
-            BITS_PER_BYTE_SHIFT), sb->block_size, block_size_shift);
     sb->total_blocks = total_blocks;
     sb->free_blocks = total_blocks;
     sb->first_free_block = 1;
@@ -565,8 +562,6 @@ int32_t index_open(const char *index_name, uint64_t start_lba, index_handle_t **
 
 void close_index(index_handle_t *index)
 {
-    int32_t ret;
-    
     ASSERT(NULL != index);
 
     // close all user object
@@ -579,34 +574,15 @@ void close_index(index_handle_t *index)
         index->id_obj = NULL;
     }
 
-    if (index->sm.space_obj != NULL)
-    {
-        close_object(index->sm.space_obj->obj_info);
-        index->sm.space_obj = NULL;
-    }
-
-    if (index->bsm.space_obj != NULL)
-    {
-        close_object(index->bsm.space_obj->obj_info);
-        index->bsm.space_obj = NULL;
-    }
+    index_destroy_sm(&index->sm);
+    index_destroy_sm(&index->bsm);
 
     flush_fs_cache(index);
+    
     release_fs_all_cache(index);
     
     if (index->file_hnd != NULL)
     {
-        if (index->flags & FLAG_DIRTY)
-        {
-            index->flags &= ~FLAG_DIRTY;
-            index->sb.base_blk = index->base_blk;
-            ret = index_update_super_block(index);
-            if (0 > ret)
-            {
-                LOG_ERROR("Update super block failed. index(%p) ret(%d)\n", index, ret);
-            }
-        }
-        
         (void) os_disk_close(index->file_hnd);
         index->file_hnd = NULL;
     }

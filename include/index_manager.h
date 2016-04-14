@@ -42,6 +42,9 @@ History:
 extern "C" {
 #endif
 
+#define FLAG_DIRTY       0x00000001     // dirty
+
+
 extern int32_t index_open(const char *index_name, uint64_t start_lba, index_handle_t **index);
 
 extern int32_t index_create(const char *index_name, uint64_t total_sectors, uint64_t start_lba,

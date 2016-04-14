@@ -46,9 +46,6 @@ extern "C" {
 #define BLOCK_MAGIC_NUMBER  0xAA55      /* 0x55, 0xAA */
 #define SUPER_BLOCK_SIZE    512         
 
-/* flags in BLOCK_BOOT_SECTOR_S */
-#define FLAG_FIXUP       0x00000001     /* need fixup */
-
 #define INODE_MAGIC                0x454A424F   // "OBJE"
 #define INDEX_MAGIC                0x58444E49   // "INDX"
 
@@ -81,6 +78,7 @@ extern "C" {
 #define BASE_OBJ_ID               0ULL
 #define SPACE_OBJ_ID              1ULL
 #define OBJID_OBJ_ID              2ULL
+#define SPECIAL_OBJ_ID            10ULL  // The inode_no is recorded in super block if objid < SPECIAL_OBJ_ID
 #define RESERVED_OBJ_ID           256ULL
 
 #define ATTR_RECORD_HEAD_SIZE       OS_OFFSET(attr_record_t, content)
@@ -136,30 +134,26 @@ typedef struct ifs_super_block
     uint32_t block_size;                /* by bytes */
     uint32_t sectors_per_block;         /* by sectors */
 
-    uint32_t bitmap_blocks;             /* bitmap blocks */
-    uint64_t bitmap_start_block;        /* start block of bitmap */
-
+    uint64_t start_lba;                 /* super block's lba */
     uint64_t total_blocks;              /* total blocks = reserved blocks + bitmap blocks + data blocks */
 
-
-    uint64_t start_lba;                 /* super block's lba */
-    
-    uint64_t objid_inode_no;
     uint64_t objid_id;
+    uint64_t objid_inode_no;
 
-    uint64_t space_inode_no;
     uint64_t space_id;
+    uint64_t space_inode_no;
     uint64_t free_blocks;               /* total free blocks */
     uint64_t first_free_block;          /* first possible free block */
 
-    uint64_t base_blk;
-    uint64_t base_inode_no;
     uint64_t base_id;
+    uint64_t base_inode_no;
     uint64_t base_free_blocks;               /* total free blocks */
     uint64_t base_first_free_block;          /* first possible free block */
     
+    uint64_t base_blk;
+    
     uint64_t snapshot_no;
-    uint8_t aucReserved2[PRV_AREA_SIZE - 64];    // Reserved bytes
+    uint8_t aucReserved2[PRV_AREA_SIZE - 64 + 12];    // Reserved bytes
     uint8_t aucReserved[160];            
     uint32_t flags;                     /* flags */
     uint16_t version;                   /* version */
