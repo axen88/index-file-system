@@ -154,7 +154,7 @@ int32_t init_index_resource(index_handle_t ** index, const char * index_name)
     ASSERT(NULL != index);
     ASSERT(NULL != index_name);
 
-    tmp_index = (index_handle_t *) OS_MALLOC(sizeof(index_handle_t));
+    tmp_index = (index_handle_t *)OS_MALLOC(sizeof(index_handle_t));
     if (NULL == tmp_index)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(index_handle_t));
@@ -166,7 +166,7 @@ int32_t init_index_resource(index_handle_t ** index, const char * index_name)
     OS_RWLOCK_INIT(&tmp_index->index_lock);
     OS_RWLOCK_INIT(&tmp_index->metadata_cache_lock);
     tmp_index->index_ref_cnt = 1;
-    avl_create(&tmp_index->obj_list, (int (*)(const void *, const void*))compare_object1, sizeof(object_info_t),
+    avl_create(&tmp_index->obj_info_list, (int (*)(const void *, const void*))compare_object1, sizeof(object_info_t),
         OS_OFFSET(object_info_t, entry));
     avl_create(&tmp_index->metadata_cache, (int (*)(const void *, const void*))compare_cache1, sizeof(ifs_block_cache_t),
         OS_OFFSET(ifs_block_cache_t, fs_entry));
@@ -233,6 +233,8 @@ int32_t create_system_objects(index_handle_t *index)
     index->sb.objid_inode_no = obj->obj_info->inode_no;
     index->sb.objid_id = obj->obj_info->inode->objid;
     index->id_obj = obj;
+
+    index->flags |= FLAG_DIRTY;
     
     return 0;
 }
@@ -283,7 +285,7 @@ int32_t init_super_block(ifs_super_block_t *sb, uint64_t total_sectors, uint32_t
     int32_t ret = 0;
     uint64_t total_blocks = 0;
 
-    if (block_size_shift < BYTES_PER_SECTOR_SHIFT)
+    if (block_size_shift != BYTES_PER_BLOCK_SHIFT)
     {
         LOG_ERROR("The parameter is invalid. block_size_shift(%d)\n", block_size_shift);
         return -FILE_BLOCK_ERR_PARAMETER;
@@ -306,7 +308,7 @@ int32_t init_super_block(ifs_super_block_t *sb, uint64_t total_sectors, uint32_t
     sb->block_size = 1 << block_size_shift;
     sb->sectors_per_block = sb->block_size / BYTES_PER_SECTOR;
     sb->total_blocks = total_blocks;
-    sb->free_blocks = total_blocks;
+    sb->free_blocks = total_blocks - 1;
     sb->first_free_block = 1;
     sb->start_lba = start_lba;
     sb->version = VERSION;
@@ -565,7 +567,7 @@ void close_index(index_handle_t *index)
     ASSERT(NULL != index);
 
     // close all user object
-    avl_walk_all(&index->obj_list, (avl_walk_cb_t)close_one_object, NULL);
+    avl_walk_all(&index->obj_info_list, (avl_walk_cb_t)close_one_object, NULL);
 
     // close system object
     if (index->id_obj != NULL)
@@ -587,7 +589,7 @@ void close_index(index_handle_t *index)
         index->file_hnd = NULL;
     }
 
-    avl_destroy(&index->obj_list);
+    avl_destroy(&index->obj_info_list);
     avl_destroy(&index->metadata_cache);
     OS_RWLOCK_DESTROY(&index->index_lock);
     OS_RWLOCK_DESTROY(&index->metadata_cache_lock);

@@ -178,7 +178,7 @@ typedef struct index_handle
     uint64_t        base_blk; // base block for bsm object
     
     uint32_t index_ref_cnt;
-    avl_tree_t obj_list;              // all opened object info
+    avl_tree_t obj_info_list;              // all opened object info
 
     avl_tree_t metadata_cache;              // cache
     os_rwlock metadata_cache_lock;          // lock

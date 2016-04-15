@@ -57,8 +57,8 @@ static int32_t dump_callback(object_handle_t *tree, dump_para_t *para)
     {
         para->depth = tree->depth;
         para->vbn = tree->cache->vbn;
-        OS_PRINT(para->net, "-------------iDepth: %d, llVbn: %lld-------------\n",
-            tree->depth, tree->cache->vbn);
+        //OS_PRINT(para->net, "-------------depth: %d, vbn: %lld-------------\n",
+         //   tree->depth, tree->cache->vbn);
     }
 
     OS_PRINT(para->net, "%-7d(%d, %d) ", ++para->no,
@@ -118,12 +118,16 @@ static int32_t dump_key(object_handle_t *tree, const bool_t v_bReverse, net_para
 {
     int32_t ret = 0;
     dump_para_t para;
+    object_info_t *obj_info;
 
     ASSERT(NULL != tree);
 
 	memset(&para, 0, sizeof(dump_para_t));
+
+    obj_info = tree->obj_info;
     
-	OS_PRINT(net, "Start dump all keys. objid(%lld)\n", tree->obj_info->objid);
+    OS_PRINT(net, "objid: %lld, inode_no: %lld, obj_state: 0x%x, ref_cnt: %u, name: %s\n",
+        obj_info->objid, obj_info->inode_no, obj_info->obj_state, obj_info->obj_ref_cnt, obj_info->obj_name);
 
     para.net = net;
     ret = index_walk_all(tree, v_bReverse, 0, &para, (tree_walk_cb_t)dump_callback);
@@ -131,8 +135,6 @@ static int32_t dump_key(object_handle_t *tree, const bool_t v_bReverse, net_para
     {
         OS_PRINT(net, "Walk tree failed. objid(%lld) ret(%d)\n", tree->obj_info->objid, ret);
     }
-    
-	OS_PRINT(net, "Finished dump all keys. objid(%lld)\n", tree->obj_info->objid);
     
 	return ret;
 }

@@ -102,7 +102,7 @@ int32_t get_object_info(index_handle_t *index, uint64_t objid, object_info_t **o
     
     OS_RWLOCK_INIT(&obj_info->obj_lock);
 
-    avl_add(&index->obj_list, obj_info);
+    avl_add(&index->obj_info_list, obj_info);
 
     *obj_info_out = obj_info;
     
@@ -115,7 +115,7 @@ void put_object_info(object_info_t *obj_info)
 {
     LOG_INFO("destroy object info start. objid(%lld)\n", obj_info->objid);
 
-    avl_remove(&obj_info->index->obj_list, obj_info);
+    avl_remove(&obj_info->index->obj_info_list, obj_info);
 
     release_obj_all_cache(obj_info);
     avl_destroy(&obj_info->caches);
@@ -189,12 +189,6 @@ void validate_obj_inode(object_info_t *obj_info)
     
     ASSERT(obj_info != NULL);
 
-    if (INODE_DIRTY(obj_info))
-    {
-        SET_INODE_CLEAN(obj_info);
-        SET_IBC_DIRTY(obj_info->inode_cache);
-    }
-
     new_vbn = obj_info->root_ibc.vbn;
 
     if (IBC_DIRTY(&obj_info->root_ibc) && (new_vbn != obj_info->inode_cache->vbn))
@@ -267,6 +261,8 @@ void close_object(object_info_t *obj_info)
 void init_inode(inode_record_t *inode, uint64_t objid, uint64_t inode_no, uint16_t flags)
 {
     attr_record_t *attr_record = NULL;
+
+	memset(inode, 0, sizeof(inode_record_t));
 
     inode->head.blk_id = INODE_MAGIC;
     inode->head.alloc_size = INODE_SIZE;
@@ -466,7 +462,7 @@ int32_t index_create_object_nolock(index_handle_t *index, uint64_t objid, uint16
 
     LOG_INFO("Create the obj start. objid(%lld)\n", objid);
 
-    obj_info = avl_find(&index->obj_list, (avl_find_fn_t)compare_object2, &objid, &where);
+    obj_info = avl_find(&index->obj_info_list, (avl_find_fn_t)compare_object2, &objid, &where);
     if (NULL != obj_info)
     {
         LOG_ERROR("The obj already exist. obj(%p) objid(%lld) ret(%d)\n", obj, objid, ret);
@@ -543,7 +539,7 @@ int32_t index_open_object_nolock(index_handle_t *index, uint64_t objid, uint32_t
 
     LOG_INFO("Open the obj. objid(%lld)\n", objid);
 
-    obj_info = avl_find(&index->obj_list, (avl_find_fn_t)compare_object2, &objid, &where);
+    obj_info = avl_find(&index->obj_info_list, (avl_find_fn_t)compare_object2, &objid, &where);
     if (NULL != obj_info)
     {
         ret = get_object_handle(obj_info, &obj);
@@ -602,19 +598,40 @@ int32_t index_open_object(index_handle_t *index, uint64_t objid, object_handle_t
     return ret;
 }      
 
-object_handle_t *index_get_object_handle(index_handle_t *index, uint64_t objid)
+object_info_t *index_get_object_info(index_handle_t *index, uint64_t objid)
 {
-    object_handle_t *tmp_obj = NULL;
+    object_info_t *obj_info = NULL;
     avl_index_t where = 0;
 
     ASSERT(NULL != index);
     ASSERT(!OBJID_IS_INVALID(objid));
 
     OS_RWLOCK_RDLOCK(&index->index_lock);
-    tmp_obj = avl_find(&index->obj_list, (avl_find_fn_t)compare_object2, &objid, &where);
+    obj_info = avl_find(&index->obj_info_list, (avl_find_fn_t)compare_object2, &objid, &where);
     OS_RWLOCK_RDLOCK(&index->index_lock);
 
-    return tmp_obj;
+    return obj_info;
+}
+
+object_handle_t *index_get_object_handle(index_handle_t *index, uint64_t objid)
+{
+    object_info_t *obj_info = NULL;
+
+    ASSERT(NULL != index);
+    ASSERT(!OBJID_IS_INVALID(objid));
+
+    obj_info = index_get_object_info(index, objid);
+    if (obj_info == NULL)
+    {
+        return NULL;
+    }
+
+    if (obj_info->obj_ref_cnt == 0)
+    {
+        return NULL;
+    }
+
+    return OS_CONTAINER(obj_info->obj_hnd_list.head.next, object_handle_t, entry);
 }
 
 int32_t index_close_object_nolock(object_handle_t *obj)

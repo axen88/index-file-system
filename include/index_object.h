@@ -55,7 +55,8 @@ extern int32_t index_delete_object(index_handle_t *index, uint64_t objid);
 /* rename object */
 extern int32_t index_rename_object(object_handle_t *obj, const char *new_obj_name);
 
-extern object_handle_t *index_get_object_handle(index_handle_t *index, uint64_t objid);
+object_info_t *index_get_object_info(index_handle_t *index, uint64_t objid);
+object_handle_t *index_get_object_handle(index_handle_t *index, uint64_t objid);
 
 int32_t set_object_name(object_handle_t *obj, char *name);
 

@@ -36,52 +36,40 @@ History:
 *******************************************************************************/
 #include "index_if.h"
 
-int32_t print_index_info(net_para_t *net, index_handle_t *index)
-{
-    ASSERT(NULL != index);
-
-    OS_PRINT(net, "index: %p, ref: %u, name: %s\n",
-        index, index->index_ref_cnt, index->name);
-
-    return 0;
-}
-
-int32_t print_obj_info(net_para_t *net, object_info_t *obj_info)
-{
-    ASSERT(NULL != obj_info);
-
-    OS_PRINT(net, "obj_info: %p, objid: %lld, inode_no: %lld, obj_state: 0x%x, ref_cnt: %u, name: %s\n",
-        obj_info, obj_info->objid, obj_info->inode_no, obj_info->obj_state, obj_info->obj_ref_cnt, obj_info->obj_name);
-
-    return 0;
-}
-
-int32_t print_cache_info(net_para_t *net, ifs_block_cache_t *cache)
+int32_t print_one_cache_info(net_para_t *net, ifs_block_cache_t *cache)
 {
     ASSERT(NULL != cache);
 
-    OS_PRINT(net, "cache: %p, vbn: %lld, state: %d, ib: %p\n",
+    OS_PRINT(net, "cache: %p, vbn: %lld, state: 0x%x, ib: %p\n",
         cache, cache->vbn, cache->state, cache->ib);
 
     return 0;
 }
 
-int32_t print_attr_info(net_para_t *net, object_info_t *obj_info)
+int32_t print_one_fs_info(net_para_t *net, index_handle_t *index)
 {
-    ASSERT(NULL != obj_info);
+    ASSERT(NULL != index);
 
-    OS_PRINT(net, "obj_info: %p, state: %d, ref_cnt: %d\n",
-        obj_info, obj_info->root_ibc.state, obj_info->obj_ref_cnt);
+    OS_PRINT(net, "name: %s, flags: 0x%x, ref: %u\n", index->name, index->flags, index->index_ref_cnt);
 
     return 0;
 }
 
-int32_t list_super_block(char *index_name, uint64_t start_lba, net_para_t *net)
+int32_t print_one_obj_info(net_para_t *net, object_info_t *obj_info)
+{
+    ASSERT(NULL != obj_info);
+
+    OS_PRINT(net, "objid: %lld, inode_no: %lld, obj_state: 0x%x, ref_cnt: %u, name: %s\n",
+        obj_info->objid, obj_info->inode_no, obj_info->obj_state, obj_info->obj_ref_cnt, obj_info->obj_name);
+
+    return 0;
+}
+
+int32_t print_super_block(char *index_name, uint64_t start_lba, net_para_t *net)
 {
     index_handle_t *index = NULL;
     int32_t ret = 0;
     
-    /* 检查输入参数 */
     ASSERT (NULL != index_name);
     ASSERT (0 != strlen(index_name));
 
@@ -137,17 +125,51 @@ int32_t list_super_block(char *index_name, uint64_t start_lba, net_para_t *net)
     return 0;
 }
 
+void print_fs_info(net_para_t *net, index_handle_t *index)
+{
+    OS_PRINT(net, "FS info:\n");
+    OS_PRINT(net, "-----------------------------------------\n");
+    OS_PRINT(net, "name        : %s\n", index->name);
+    OS_PRINT(net, "flags       : 0x%x\n", index->flags);
+    OS_PRINT(net, "ref_cnt     : %u\n", index->index_ref_cnt);
+    
+    OS_PRINT(net, "\nObject list:\n");
+    OS_PRINT(net, "-----------------------------------------\n");
+    avl_walk_all(&index->obj_info_list, (avl_walk_cb_t)print_one_obj_info, net);
+    
+    OS_PRINT(net, "\nCache list:\n");
+    OS_PRINT(net, "-----------------------------------------\n");
+    avl_walk_all(&index->metadata_cache, (avl_walk_cb_t)print_one_cache_info, net);
+}
+
+void print_obj_info(net_para_t *net, object_info_t *obj_info)
+{
+    OS_PRINT(net, "Object info:\n");
+    OS_PRINT(net, "-----------------------------------------\n");
+    OS_PRINT(net, "objid                  : %lld\n", obj_info->objid);
+    OS_PRINT(net, "inode_no               : %lld\n", obj_info->inode_no);
+    OS_PRINT(net, "obj_name               : %s\n",   obj_info->obj_name);
+    OS_PRINT(net, "state                  : 0x%x\n", obj_info->obj_state);
+    OS_PRINT(net, "ref_cnt                : %d\n",   obj_info->obj_ref_cnt);
+    OS_PRINT(net, "vbn                    : %lld\n", obj_info->root_ibc.vbn);
+    OS_PRINT(net, "state                  : 0x%x\n", obj_info->root_ibc.state);
+    
+    OS_PRINT(net, "\nCache info:\n");
+    OS_PRINT(net, "-----------------------------------------\n");
+    avl_walk_all(&obj_info->caches, (avl_walk_cb_t)print_one_cache_info, net);
+}
+
 int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, net_para_t *net)
 {
     int32_t ret = 0;
     index_handle_t *index = NULL;
-    object_handle_t *obj = NULL;
+    object_info_t *obj_info = NULL;
     
     ASSERT(NULL != index_name);
     
     if (0 == strlen(index_name))
     {
-        ret = walk_all_opened_index((int32_t (*)(void *, index_handle_t *))print_index_info, net);
+        ret = walk_all_opened_index((int32_t (*)(void *, index_handle_t *))print_one_fs_info, net);
         if (0 > ret)
         {
             OS_PRINT(net, "Walk all opened index failed. ret(%d)\n", ret);
@@ -165,32 +187,18 @@ int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, net_para_
     
     if (OBJID_IS_INVALID(objid))
     {
-        avl_walk_all(&index->obj_list, (avl_walk_cb_t)print_obj_info, net);
-		return ret;
+        print_fs_info(net, index);
+		return 0;
     }
 
-    obj = index_get_object_handle(index, objid);
-    if (NULL == obj)
+    obj_info = index_get_object_info(index, objid);
+    if (NULL == obj_info)
     {
         OS_PRINT(net, "The object is not opened. index(%p) objid(%lld)\n", index, objid);
         return ret;
     }
 
-    OS_PRINT(net, "Obj info:\n");
-    OS_PRINT(net, "-----------------------------------------\n");
-    OS_PRINT(net, "objid                  : %lld\n", obj->obj_info->objid);
-    OS_PRINT(net, "inode_no               : %lld\n", obj->obj_info->inode_no);
-    OS_PRINT(net, "obj_name               : %s\n",   obj->obj_info->obj_name);
-    OS_PRINT(net, "state                  : 0x%x\n", obj->obj_info->obj_state);
-    OS_PRINT(net, "ref_cnt                : %d\n",   obj->obj_info->obj_ref_cnt);
-    
-    OS_PRINT(net, "\nAttr info:\n");
-    OS_PRINT(net, "-----------------------------------------\n");
-    print_attr_info(net, obj->obj_info);
-    
-    OS_PRINT(net, "\nCache info:\n");
-    OS_PRINT(net, "-----------------------------------------\n");
-    avl_walk_all(&obj->obj_info->caches, (avl_walk_cb_t)print_cache_info, net);
+    print_obj_info(net, obj_info);
 
     return ret;
 }
@@ -212,7 +220,7 @@ int do_list_cmd(int argc, char *argv[], net_para_t *net)
     
     if (0 != (para->flags & TOOLS_FLAGS_SB))
     {
-        (void)list_super_block(para->index_name, para->start_lba, net);
+        (void)print_super_block(para->index_name, para->start_lba, net);
         OS_FREE(para);
         return -2;
     }
