@@ -315,7 +315,7 @@ int32_t index_alloc_space(index_handle_t *index, uint64_t objid, uint32_t blk_cn
 {
     int32_t ret;
     
-    if (objid == index->sm.space_obj->obj_info->objid)
+    if (objid == index->bsm.space_obj->obj_info->objid)
     {
         if (index->base_blk != 0)
         {
@@ -328,7 +328,7 @@ int32_t index_alloc_space(index_handle_t *index, uint64_t objid, uint32_t blk_cn
         return -INDEX_ERR_NO_FREE_BLOCKS;
     }
 
-    if (objid == index->bsm.space_obj->obj_info->objid) // base
+    if (objid == index->sm.space_obj->obj_info->objid) // base
     {
         ret = sm_alloc_space(&index->bsm, blk_cnt, real_start_blk);
         return ret;

@@ -200,6 +200,38 @@ void test_space_manager_3(void)
     CU_ASSERT(0 == index_close(index));
 }
 
+#define TEST_OBJID   200
+#define TEST_NUM     5
+
+void test_space_manager_4(void)
+{
+    index_handle_t *index;
+    uint64_t start_blk[TEST_NUM];
+    int32_t ret[TEST_NUM];
+    int32_t i = 0;
+    uint32_t blk_cnt[TEST_NUM] = {1, 20, 100, 500, 2000};
+    
+    CU_ASSERT(0 == index_create("index0", 100000, 0, &index));
+
+    for (i = 0; i < TEST_NUM; i++)
+    {
+        ret[i] = index_alloc_space(index, TEST_OBJID, blk_cnt[i], &start_blk[i]);
+        CU_ASSERT(start_blk[i] > 0);
+        CU_ASSERT(ret[i] == blk_cnt[i]);
+    }
+
+    for (i = 0; i < TEST_NUM; i++)
+    {
+        ret[i] = index_free_space(index, TEST_OBJID, start_blk[i], blk_cnt[i]);
+        CU_ASSERT(ret[i] == 0);
+    }
+    
+    CU_ASSERT(0 == index_close(index));
+
+    CU_ASSERT(0 == index_open("index0", 0, &index));
+    CU_ASSERT(0 == index_close(index));
+}
+
 int add_space_manager_test_case(void)
 {
     CU_pSuite pSuite = NULL;
@@ -220,6 +252,11 @@ int add_space_manager_test_case(void)
     }
 
     if (NULL == CU_add_test(pSuite, "test space manager 3", test_space_manager_3))
+    {
+       return -3;
+    }
+
+    if (NULL == CU_add_test(pSuite, "test space manager 4", test_space_manager_4))
     {
        return -3;
     }
