@@ -126,8 +126,7 @@ static int32_t dump_key(object_handle_t *tree, const bool_t v_bReverse, net_para
 
     obj_info = tree->obj_info;
     
-    OS_PRINT(net, "objid: %lld, inode_no: %lld, obj_state: 0x%x, ref_cnt: %u, name: %s\n",
-        obj_info->objid, obj_info->inode_no, obj_info->obj_state, obj_info->obj_ref_cnt, obj_info->obj_name);
+    OS_PRINT(net, "objid: %lld, inode_no: %lld, name: %s\n", obj_info->objid, obj_info->inode_no, obj_info->obj_name);
 
     para.net = net;
     ret = index_walk_all(tree, v_bReverse, 0, &para, (tree_walk_cb_t)dump_callback);

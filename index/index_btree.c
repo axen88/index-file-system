@@ -64,20 +64,23 @@ MODULE(PID_INDEX);
 #endif
 
 // set the block from current block to root block as dirty
-static int32_t set_ib_dirty(object_handle_t *tree, uint64_t vbn, uint8_t depth)
+static int32_t set_ib_dirty(object_handle_t *tree)
 {
     uint64_t new_vbn = 0;
     int32_t ret = 0;
     index_entry_t *ie = NULL;
+    uint64_t old_vbn = 0;
+    uint64_t vbn = 0;
+    uint8_t depth = tree->depth;
 
     ASSERT(tree != NULL);
     ASSERT(depth < INDEX_MAX_DEPTH);
 
     do
     {
-        //if ((0 != depth) && (!IBC_DIRTY(tree->cache_stack[depth])))
         if (!IBC_DIRTY(tree->cache_stack[depth]))
-        {   // allocate new block for modified data
+        {
+            // allocate new block for modified data
             ret = INDEX_ALLOC_BLOCK(tree->index, tree->obj_info->objid, &new_vbn);
             if (ret < 0)
             {
@@ -85,12 +88,12 @@ static int32_t set_ib_dirty(object_handle_t *tree, uint64_t vbn, uint8_t depth)
                 return ret;
             }
             
-            // free old block
-			ret = INDEX_FREE_BLOCK(tree->index, tree->obj_info->objid, tree->cache_stack[depth]->vbn);
+            // record old block
+            old_vbn = tree->cache_stack[depth]->vbn;
             
             OS_RWLOCK_WRLOCK(&tree->obj_info->caches_lock);
             if (depth == 0)
-            { // inode cache should be treated specially
+            { // root node should be treated specially
                 tree->obj_info->root_ibc.vbn = new_vbn;
             }
             else
@@ -99,11 +102,6 @@ static int32_t set_ib_dirty(object_handle_t *tree, uint64_t vbn, uint8_t depth)
             }
             OS_RWLOCK_WRUNLOCK(&tree->obj_info->caches_lock);
             
-            if (ret < 0)
-            {
-                LOG_ERROR("Free old block failed. ret(%d)\n", ret);
-                return ret;
-            }
         }
 
         if (vbn != 0)
@@ -119,7 +117,13 @@ static int32_t set_ib_dirty(object_handle_t *tree, uint64_t vbn, uint8_t depth)
 
         SET_IBC_DIRTY(tree->cache_stack[depth]);
         vbn = new_vbn;
-    } while (depth-- > 0);
+        ret = INDEX_FREE_BLOCK(tree->index, tree->obj_info->objid, old_vbn);
+        if (ret < 0)
+        {
+            LOG_ERROR("Free old block failed. ret(%d)\n", ret);
+            return ret;
+        }
+    }  while (depth--);
 
     return 0;
 }
@@ -873,7 +877,7 @@ static index_entry_t *split_ib(object_handle_t *tree, index_entry_t *ie)
 
     //LOG_DEBUG("Write new index block success. vbn(%lld)\n", new_ibc->vbn);
 
-    ret = set_ib_dirty(tree, (uint64_t)0, tree->depth);
+    ret = set_ib_dirty(tree);
     if (0 > ret)
     {
         LOG_ERROR("Set index block dirty failed. tree(%p) ret(%d)\n", tree, ret);
@@ -949,7 +953,7 @@ static int32_t reparent_root(object_handle_t * tree)
     ie = GET_FIRST_IE(old_ib);
     SET_IE_VBN(ie, new_ibc->vbn);
     
-    ret = set_ib_dirty(tree, (uint64_t)0, tree->depth);
+    ret = set_ib_dirty(tree);
     if (0 > ret)
     {
         LOG_ERROR("Set index block dirty failed. tree(%p) ret(%d)\n", tree, ret);
@@ -985,7 +989,7 @@ static int32_t tree_insert_ie(object_handle_t *tree, index_entry_t **new_ie)
         if (uiNewSize <= tree->cache->ib->alloc_size)
         {
             insert_ie(IB(tree->cache->ib), ie, tree->ie);       /* Insert the entry before current entry */
-            return set_ib_dirty(tree, (uint64_t)0, tree->depth);
+            return set_ib_dirty(tree);
         }
 
         if (0 == tree->depth)
@@ -1057,7 +1061,7 @@ int32_t check_removed_ib(object_handle_t * tree)
         if (0 == tree->depth)
         {   /* root node */
             make_ib_small(IB(tree->cache->ib));
-            return set_ib_dirty(tree, (uint64_t)0, tree->depth);
+            return set_ib_dirty(tree);
         }
     }
 
@@ -1074,7 +1078,7 @@ int32_t remove_leaf(object_handle_t *tree)
     ASSERT(NULL != tree);
 
     remove_ie(IB(tree->cache->ib), tree->ie);
-    ret = set_ib_dirty(tree, (uint64_t)0, tree->depth);
+    ret = set_ib_dirty(tree);
     if (0 > ret)
     {
         LOG_ERROR("Set index block dirty failed. tree(%p) ret(%d)\n", tree, ret);
@@ -1112,7 +1116,7 @@ int32_t remove_leaf(object_handle_t *tree)
     }
 
     remove_ie(IB(tree->cache->ib), prev_ie);   /* Remove the entry */
-    ret = set_ib_dirty(tree, (uint64_t)0, tree->depth);
+    ret = set_ib_dirty(tree);
     if (0 > ret)
     {
         LOG_ERROR("Set index block dirty failed. tree(%p) ret(%d)\n", tree, ret);
@@ -1188,7 +1192,7 @@ int32_t remove_node(object_handle_t *tree)
     
     /* remove the old entry */
     remove_ie(IB(tree->cache->ib), tree->ie);
-    ret = set_ib_dirty(tree, (uint64_t)0, tree->depth);
+    ret = set_ib_dirty(tree);
     if (0 > ret)
     {
         LOG_ERROR("Set index block dirty failed. tree(%p) ret(%d)\n", tree, ret);

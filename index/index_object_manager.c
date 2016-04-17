@@ -191,6 +191,11 @@ void validate_obj_inode(object_info_t *obj_info)
 
     new_vbn = obj_info->root_ibc.vbn;
 
+    if (IBC_DIRTY(&obj_info->root_ibc))
+    {
+        SET_INODE_DIRTY(obj_info);
+    }
+
     if (IBC_DIRTY(&obj_info->root_ibc) && (new_vbn != obj_info->inode_cache->vbn))
     {
         ifs_super_block_t *sb;
@@ -395,7 +400,7 @@ int32_t open_object(index_handle_t *index, uint64_t objid, uint64_t inode_no, ob
     }
 
     ret = recover_obj_inode(obj_info, inode_no);
-    if (0 > ret)
+    if (ret < 0)
     {
         put_object_info(obj_info);
         LOG_ERROR("Read inode failed. ret(%d)\n", ret);

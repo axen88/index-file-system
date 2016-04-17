@@ -66,7 +66,7 @@ typedef struct test_kv_pair
     char *value;
 } test_kv_pair_t;
 
-test_kv_pair_t test_kv_pairs[]
+test_kv_pair_t test_kv_pairs1[]
 = {
     {"a", TEST_V1},
     {"b", TEST_V1},
@@ -202,7 +202,6 @@ test_kv_pair_t test_kv_pairs[]
     {"xerhrwhrweterwhgtrewh45w", TEST_V2},
     {"yerhrwhrweterwhgtrewh45w", TEST_V2},
     {"zerhrwhrweterwhgtrewh45w", TEST_V2},
-        
 
     {"asdgkjheaoifewjfopiehrjseonjsldkdgjropie", TEST_V3},
     {"bsdgkjheaoifewjfopiehrjseonjsldkdgjropie", TEST_V3},
@@ -231,14 +230,224 @@ test_kv_pair_t test_kv_pairs[]
     {"ysdgkjheaoifewjfopiehrjseonjsldkdgjropie", TEST_V3},
     {"zsdgkjheaoifewjfopiehrjseonjsldkdgjropie", TEST_V3},
 
-
+    {"adlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"bdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"cdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"ddlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"edlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"fdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"gdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"hdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"idlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"jdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"kdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"ldlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"mdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"ndlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"odlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"pdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"qdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"rdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"sdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
     {"tdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
     {"udlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
     {"vdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
     {"wdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
-    {"xdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL}
+    {"xdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"ydlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL},
+    {"zdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore", NULL}
+};
 
+test_kv_pair_t test_kv_pairs2[]
+= {
+    {"a2", TEST_V1},
+    {"b2", TEST_V1},
+    {"c2", TEST_V1},
+    {"d2", TEST_V1},
+    {"e2", TEST_V1},
+    {"f2", TEST_V1},
+    {"g2", TEST_V1},
+    {"h2", TEST_V1},
+    {"i2", TEST_V1},
+    {"j2", TEST_V1},
+    {"k2", TEST_V1},
+    {"l2", TEST_V1},
+    {"m2", TEST_V1},
+    {"n2", TEST_V1},
+    {"o2", TEST_V1},
+    {"p2", TEST_V1},
+    {"q2", TEST_V1},
+    {"r2", TEST_V1},
+    {"s2", TEST_V1},
+    {"t2", TEST_V1},
+    {"u2", TEST_V1},
+    {"v2", TEST_V1},
+    {"w2", TEST_V1},
+    {"x2", TEST_V1},
+    {"y2", TEST_V1},
+    {"z2", TEST_V1},
 
+    {"aj2", TEST_V2},
+    {"bj2", TEST_V2},
+    {"cj2", TEST_V2},
+    {"dj2", TEST_V2},
+    {"ej2", TEST_V2},
+    {"fj2", TEST_V2},
+    {"gj2", TEST_V2},
+    {"hj2", TEST_V2},
+    {"ij2", TEST_V2},
+    {"jj2", TEST_V2},
+    {"kj2", TEST_V2},
+    {"lj2", TEST_V2},
+    {"mj2", TEST_V2},
+    {"nj2", TEST_V2},
+    {"oj2", TEST_V2},
+    {"pj2", TEST_V2},
+    {"qj2", TEST_V2},
+    {"rj2", TEST_V2},
+    {"sj2", TEST_V2},
+    {"tj2", TEST_V2},
+    {"uj2", TEST_V2},
+    {"vj2", TEST_V2},
+    {"wj2", TEST_V2},
+    {"xj2", TEST_V2},
+    {"yj2", TEST_V2},
+    {"zj2", TEST_V2},
+
+    {"aerg2", TEST_V3},
+    {"berg2", TEST_V3},
+    {"cerg2", TEST_V3},
+    {"derg2", TEST_V3},
+    {"eerg2", TEST_V3},
+    {"ferg2", TEST_V3},
+    {"gerg2", TEST_V3},
+    {"herg2", TEST_V3},
+    {"ierg2", TEST_V3},
+    {"jerg2", TEST_V3},
+    {"kerg2", TEST_V3},
+    {"lerg2", TEST_V3},
+    {"merg2", TEST_V3},
+    {"nerg2", TEST_V3},
+    {"oerg2", TEST_V3},
+    {"perg2", TEST_V3},
+    {"qerg2", TEST_V3},
+    {"rerg2", TEST_V3},
+    {"serg2", TEST_V3},
+    {"terg2", TEST_V3},
+    {"uerg2", TEST_V3},
+    {"verg2", TEST_V3},
+    {"werg2", TEST_V3},
+    {"xerg2", TEST_V3},
+    {"yerg2", TEST_V3},
+    {"zerg2", TEST_V3},
+
+    {"afgjdryjt2", TEST_V1},
+    {"bfgjdryjt2", TEST_V1},
+    {"cfgjdryjt2", TEST_V1},
+    {"dfgjdryjt2", TEST_V1},
+    {"efgjdryjt2", TEST_V1},
+    {"ffgjdryjt2", TEST_V1},
+    {"gfgjdryjt2", TEST_V1},
+    {"hfgjdryjt2", TEST_V1},
+    {"ifgjdryjt2", TEST_V1},
+    {"jfgjdryjt2", TEST_V1},
+    {"kfgjdryjt2", TEST_V1},
+    {"lfgjdryjt2", TEST_V1},
+    {"mfgjdryjt2", TEST_V1},
+    {"nfgjdryjt2", TEST_V1},
+    {"ofgjdryjt2", TEST_V1},
+    {"pfgjdryjt2", TEST_V1},
+    {"qfgjdryjt2", TEST_V1},
+    {"rfgjdryjt2", TEST_V1},
+    {"sfgjdryjt2", TEST_V1},
+    {"tfgjdryjt2", TEST_V1},
+    {"ufgjdryjt2", TEST_V1},
+    {"vfgjdryjt2", TEST_V1},
+    {"wfgjdryjt2", TEST_V1},
+    {"xfgjdryjt2", TEST_V1},
+    {"yfgjdryjt2", TEST_V1},
+    {"zfgjdryjt2", TEST_V1},
+
+    {"aerhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"berhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"cerhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"derhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"eerhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"ferhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"gerhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"herhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"ierhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"jerhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"kerhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"lerhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"merhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"nerhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"oerhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"perhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"qerhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"rerhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"serhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"terhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"uerhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"verhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"werhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"xerhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"yerhrwhrweterwhgtrewh45w2", TEST_V2},
+    {"zerhrwhrweterwhgtrewh45w2", TEST_V2},
+        
+    {"asdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"bsdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"csdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"dsdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"esdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"fsdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"gsdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"hsdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"isdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"jsdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"ksdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"lsdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"msdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"nsdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"osdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"psdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"qsdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"rsdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"ssdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"tsdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"usdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"vsdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"wsdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"xsdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"ysdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+    {"zsdgkjheaoifewjfopiehrjseonjsldkdgjropie2", TEST_V3},
+
+    {"adlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"bdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"cdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"ddlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"edlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"fdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"gdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"hdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"idlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"jdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"kdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"ldlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"mdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"ndlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"odlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"pdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"qdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"rdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"sdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"tdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"udlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"vdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"wdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"xdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"ydlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL},
+    {"zdlckbjeoairjgtlaeksjgseoiugoireejrhgljehore2", NULL}
 };
 
 
@@ -252,19 +461,39 @@ void test_kv_1(void)
     CU_ASSERT(0 == index_create("idx0", 1000, 0, &index));
     CU_ASSERT(0 == index_create_object(index, 500, FLAG_TABLE | CR_ANSI_STRING | (CR_ANSI_STRING << 4), &obj));
 
-    for (i = 0; i < ArraySize(test_kv_pairs); i++)
+    for (i = 0; i < ArraySize(test_kv_pairs1); i++)
     {
-        if (test_kv_pairs[i].value != NULL)
+        if (test_kv_pairs1[i].value != NULL)
         {
-            CU_ASSERT(0 == index_insert_key(obj, test_kv_pairs[i].key, strlen(test_kv_pairs[i].key),
-                test_kv_pairs[i].value, strlen(test_kv_pairs[i].value)));
+            CU_ASSERT(0 == index_insert_key(obj, test_kv_pairs1[i].key, strlen(test_kv_pairs1[i].key),
+                test_kv_pairs1[i].value, strlen(test_kv_pairs1[i].value)));
         }
         else
         {
-            CU_ASSERT(0 == index_insert_key(obj, test_kv_pairs[i].key, strlen(test_kv_pairs[i].key), NULL, 0));
+            CU_ASSERT(0 == index_insert_key(obj, test_kv_pairs1[i].key, strlen(test_kv_pairs1[i].key), NULL, 0));
         }
     }
 
+    CU_ASSERT(0 == index_close_object(obj));
+    CU_ASSERT(0 == index_close(index));
+
+    // open index and object, insert key
+    CU_ASSERT(0 == index_open("idx0", 0, &index));
+    CU_ASSERT(0 == index_open_object(index, 500, &obj));
+
+    for (i = 0; i < ArraySize(test_kv_pairs2); i++)
+    {
+        if (test_kv_pairs2[i].value != NULL)
+        {
+            CU_ASSERT(0 == index_insert_key(obj, test_kv_pairs2[i].key, strlen(test_kv_pairs2[i].key),
+                test_kv_pairs2[i].value, strlen(test_kv_pairs2[i].value)));
+        }
+        else
+        {
+            CU_ASSERT(0 == index_insert_key(obj, test_kv_pairs2[i].key, strlen(test_kv_pairs2[i].key), NULL, 0));
+        }
+    }
+    
     CU_ASSERT(0 == index_close_object(obj));
     CU_ASSERT(0 == index_close(index));
 
@@ -272,9 +501,21 @@ void test_kv_1(void)
     CU_ASSERT(0 == index_open("idx0", 0, &index));
     CU_ASSERT(0 == index_open_object(index, 500, &obj));
 
-    for (i = 0; i < ArraySize(test_kv_pairs); i++)
+    for (i = 0; i < ArraySize(test_kv_pairs1); i++)
     {
-        CU_ASSERT(0 == index_remove_key(obj, test_kv_pairs[i].key, strlen(test_kv_pairs[i].key)));
+        CU_ASSERT(0 == index_remove_key(obj, test_kv_pairs1[i].key, strlen(test_kv_pairs1[i].key)));
+    }
+    
+    CU_ASSERT(0 == index_close_object(obj));
+    CU_ASSERT(0 == index_close(index));
+    
+    // open index and object, remove key
+    CU_ASSERT(0 == index_open("idx0", 0, &index));
+    CU_ASSERT(0 == index_open_object(index, 500, &obj));
+
+    for (i = 0; i < ArraySize(test_kv_pairs2); i++)
+    {
+        CU_ASSERT(0 == index_remove_key(obj, test_kv_pairs2[i].key, strlen(test_kv_pairs2[i].key)));
     }
     
     CU_ASSERT(0 == index_close_object(obj));
