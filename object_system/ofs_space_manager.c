@@ -317,21 +317,17 @@ int32_t index_alloc_space(index_handle_t *index, uint64_t objid, uint32_t blk_cn
     
     if (objid == index->bsm.space_obj->obj_info->objid)
     {
-        if (index->base_blk != 0)
-        {
-            *real_start_blk = index->base_blk;
-            index->base_blk = 0;
-            return 1; // allocate one block
-        }
+        ASSERT(index->base_blk != 0);
+        ASSERT(blk_cnt == 1);
         
-        LOG_ERROR("fatal error occured.\n");
-        return -INDEX_ERR_NO_FREE_BLOCKS;
+        *real_start_blk = index->base_blk;
+        index->base_blk = 0;
+        return blk_cnt;
     }
 
-    if (objid == index->sm.space_obj->obj_info->objid) // base
+    if (objid == index->sm.space_obj->obj_info->objid)
     {
-        ret = sm_alloc_space(&index->bsm, blk_cnt, real_start_blk);
-        return ret;
+        return sm_alloc_space(&index->bsm, blk_cnt, real_start_blk);
     }
 
     ret = reserve_base_space(index);
@@ -346,6 +342,20 @@ int32_t index_alloc_space(index_handle_t *index, uint64_t objid, uint32_t blk_cn
 
 int32_t index_free_space(index_handle_t *index, uint64_t objid, uint64_t start_blk, uint32_t blk_cnt)
 {
+    if (objid == index->bsm.space_obj->obj_info->objid)
+    {
+        ASSERT(index->base_blk == 0);
+        ASSERT(blk_cnt == 1);
+        
+        index->base_blk = start_blk;
+        return 0;
+    }
+    
+    if (objid == index->sm.space_obj->obj_info->objid)
+    {
+        return sm_free_space(&index->bsm, start_blk, blk_cnt);
+    }
+
     return sm_free_space(&index->sm, start_blk, blk_cnt);
 }
 
