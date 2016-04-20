@@ -48,7 +48,8 @@ int main(int argc, char **argv)
 {    
     struct sockaddr_in servaddr;    
     struct event *shellev;    
-    int res;    
+    char *res;    
+    int ret;    
     struct event_base *base;    
     struct bufferevent *sockbev;    
     struct bufferevent *stdbev;    
@@ -67,17 +68,17 @@ int main(int argc, char **argv)
     res = inet_ntop(host->h_addrtype, host->h_addr, address, sizeof(address));  
     if(res == NULL)    
         error_quit("inet_ntop error");       
-    res = inet_pton(AF_INET, address, &servaddr.sin_addr);      
-    if(res != 1)    
+    ret = inet_pton(AF_INET, address, &servaddr.sin_addr);      
+    if(ret != 1)    
         error_quit("inet_pton error");       
   
     base = event_base_new();    
   
     // connect to the server and listen   
     sockbev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);    
-    res = bufferevent_socket_connect(sockbev,    
+    ret = bufferevent_socket_connect(sockbev,    
         (struct sockaddr *)&servaddr, sizeof(servaddr));    
-    if ( res < 0 )     
+    if ( ret < 0 )     
         error_quit("connect error");    
   
     bufferevent_setcb(sockbev, sockreadcb, NULL, eventcb, (void*)base);    

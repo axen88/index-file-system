@@ -37,7 +37,7 @@ History:
 #include <stdarg.h>
 #include "ofs_if.h"
 
-MODULE(PID_INDEX);
+MODULE(PID_TOOLS);
 #include "os_log.h"
 
 extern os_cmd_list_t ifs_cmd_list[];
@@ -63,7 +63,7 @@ int32_t main(int32_t argc, char *argv[])
     net_para_t net;
     
     LOG_SYSTEM_INIT();
-    ret = index_init_system();
+    ret = ofs_init_system();
     if (0 > ret)
     {
         printf("Index system init failed.\n");
@@ -73,7 +73,7 @@ int32_t main(int32_t argc, char *argv[])
         net.net = NULL;
         net.print = tools_print;
         os_cmd_ui(ifs_cmd_list, &net);
-        index_exit_system();
+        ofs_exit_system();
     }
     
     LOG_SYSTEM_EXIT();

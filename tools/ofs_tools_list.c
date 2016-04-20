@@ -50,7 +50,7 @@ int32_t print_one_fs_info(net_para_t *net, container_handle_t *ct)
 {
     ASSERT(NULL != ct);
 
-    OS_PRINT(net, "name: %s, flags: 0x%x, ref: %u\n", ct->name, ct->flags, ct->index_ref_cnt);
+    OS_PRINT(net, "name: %s, flags: 0x%x, ref: %u\n", ct->name, ct->flags, ct->ref_cnt);
 
     return 0;
 }
@@ -81,7 +81,7 @@ int32_t print_super_block(char *index_name, uint64_t start_lba, net_para_t *net)
         return ret;
     }
     
-    OS_RWLOCK_WRLOCK(&ct->index_lock);
+    OS_RWLOCK_WRLOCK(&ct->ct_lock);
 
     OS_PRINT(net, "blk_id                : 0x%X\n",   ct->sb.head.blk_id);
     OS_PRINT(net, "alloc_size            : %d\n",     ct->sb.head.alloc_size);
@@ -118,7 +118,7 @@ int32_t print_super_block(char *index_name, uint64_t start_lba, net_para_t *net)
     OS_PRINT(net, "version               : %d\n",     ct->sb.version);
     OS_PRINT(net, "magic_num             : 0x%04X\n", ct->sb.magic_num);
     
-    OS_RWLOCK_WRUNLOCK(&ct->index_lock);
+    OS_RWLOCK_WRUNLOCK(&ct->ct_lock);
     
     (void)ofs_close_container(ct);
     
@@ -131,7 +131,7 @@ void print_fs_info(net_para_t *net, container_handle_t *ct)
     OS_PRINT(net, "-----------------------------------------\n");
     OS_PRINT(net, "name        : %s\n", ct->name);
     OS_PRINT(net, "flags       : 0x%x\n", ct->flags);
-    OS_PRINT(net, "ref_cnt     : %u\n", ct->index_ref_cnt);
+    OS_PRINT(net, "ref_cnt     : %u\n", ct->ref_cnt);
     
     OS_PRINT(net, "\nObject list:\n");
     OS_PRINT(net, "-----------------------------------------\n");
@@ -178,7 +178,7 @@ int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, net_para_
         return ret;
     }
 
-    ct = index_get_handle(index_name);
+    ct = ofs_get_handle(index_name);
     if (NULL == ct)
     {
         OS_PRINT(net, "The ct is not opened. ct(%s)\n", index_name);
@@ -191,7 +191,7 @@ int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, net_para_
 		return 0;
     }
 
-    obj_info = index_get_object_info(ct, objid);
+    obj_info = ofs_get_object_info(ct, objid);
     if (NULL == obj_info)
     {
         OS_PRINT(net, "The object is not opened. ct(%p) objid(%lld)\n", ct, objid);

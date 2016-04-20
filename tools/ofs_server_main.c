@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
     event_add(listen_event, NULL);
     
     LOG_SYSTEM_INIT();
-    ret = index_init_system();
+    ret = ofs_init_system();
     if (0 > ret)
     {
         printf("Index system init failed.\n");
@@ -118,6 +118,7 @@ int main(int argc, char *argv[])
     else
     {
         event_base_dispatch(base);
+        ofs_exit_system();
     }
 
     LOG_SYSTEM_EXIT();

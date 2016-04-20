@@ -67,7 +67,7 @@ static int32_t cmd_create(ifs_tools_para_t *para)
     }
 
     /* find the specified ct */
-    ct = index_get_handle(para->index_name);
+    ct = ofs_get_handle(para->index_name);
     if (ct == NULL)
     {
         OS_PRINT(para->net, "The ct(%s) is not opened.\n", para->index_name);
@@ -75,7 +75,7 @@ static int32_t cmd_create(ifs_tools_para_t *para)
     }
 
     // create object
-    ret = ofs_create_container_object(ct, para->objid, FLAG_TABLE | CR_ANSI_STRING | (CR_ANSI_STRING << 4), &obj);
+    ret = ofs_create_object(ct, para->objid, FLAG_TABLE | CR_ANSI_STRING | (CR_ANSI_STRING << 4), &obj);
     if (ret < 0)
     {
         OS_PRINT(para->net, "Create obj failed. objid(%lld) ret(%d)\n", para->objid, ret);
@@ -112,11 +112,11 @@ static int32_t cmd_open(ifs_tools_para_t *para)
         }
         
         OS_PRINT(para->net, "Open ct success. ct(%s) start_lba(%lld) ct(%p), ref_cnt(%d)\n",
-            para->index_name, para->start_lba, ct, ct->index_ref_cnt);
+            para->index_name, para->start_lba, ct, ct->ref_cnt);
         return 0;
     }
 
-    ct = index_get_handle(para->index_name);
+    ct = ofs_get_handle(para->index_name);
     if (NULL == ct)
     {
         OS_PRINT(para->net, "The ct is not opened. ct(%s)\n", para->index_name);
@@ -150,7 +150,7 @@ static int32_t cmd_close(ifs_tools_para_t *para)
         return -1;
     }
 
-    ct = index_get_handle(para->index_name);
+    ct = ofs_get_handle(para->index_name);
     if (NULL == ct)
     {
         OS_PRINT(para->net, "The ct is not opened. ct(%s)\n", para->index_name);
@@ -170,7 +170,7 @@ static int32_t cmd_close(ifs_tools_para_t *para)
         return 0;
     }
 
-    obj = index_get_object_handle(ct, para->objid);
+    obj = ofs_get_object_handle(ct, para->objid);
     if (NULL == obj)
     {
         OS_PRINT(para->net, "The object is not opened. objid(%lld)\n", para->objid);
@@ -216,7 +216,7 @@ static int32_t cmd_delete(ifs_tools_para_t *para)
         return ret;
     }
 
-    ret = index_delete_object(ct, para->objid);
+    ret = ofs_delete_object(ct, para->objid);
     if (ret < 0)
     {
         OS_PRINT(para->net, "Delete obj failed. objid(%lld) ret(%d)\n",
