@@ -22,7 +22,7 @@
 
             Copyright(C), 2016~2019, axen.hook@foxmail.com
 ********************************************************************************
-File Name: INDEX_SPACE_MANAGER.H
+File Name: OFS_SPACE_MANAGER.H
 Author   : axen.hook
 Version  : 1.00
 Date     : 20/Mar/2016
@@ -34,27 +34,43 @@ History:
 --------------------------------------------------------------------------------
     1. Primary version
 *******************************************************************************/
-#ifndef __INDEX_SPACE_MANAGER_H__
-#define __INDEX_SPACE_MANAGER_H__
+#ifndef __OFS_SPACE_MANAGER_H__
+#define __OFS_SPACE_MANAGER_H__
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
+#define MAX_BLK_NUM  10
+#define MIN_BLK_NUM  3
+
+
+
+struct space_manager
+{
+    object_handle_t *space_obj;
+
+    uint64_t first_free_block;
+    uint64_t total_free_blocks;
+
+    os_rwlock lock;
+};
+
 int32_t alloc_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt, uint64_t *real_start_blk);
 int32_t free_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt);
 
-int32_t index_init_free_space(space_manager_t *sm, uint64_t start_blk, uint64_t blk_cnt);
+#define OFS_ALLOC_BLOCK(ct, objid, vbn) ofs_alloc_space(ct, objid, 1, vbn)
+#define OFS_FREE_BLOCK(ct, objid, vbn)  ofs_free_space(ct, objid, vbn, 1)
 
-void index_init_sm(space_manager_t *sm, object_handle_t *obj, uint64_t first_free_block,
-    uint64_t total_free_blocks);
-void index_destroy_sm(space_manager_t *sm);
+int32_t ofs_alloc_space(container_handle_t *ct, uint64_t objid, uint32_t blk_cnt, uint64_t *real_start_blk);
+int32_t ofs_free_space(container_handle_t *ct, uint64_t objid, uint64_t start_blk, uint32_t blk_cnt);
 
-int32_t index_alloc_space(index_handle_t *index, uint64_t objid, uint32_t blk_cnt, uint64_t *real_start_blk);
-int32_t index_free_space(index_handle_t *index, uint64_t objid, uint64_t start_blk, uint32_t blk_cnt);
-
-#define INDEX_ALLOC_BLOCK(index, objid, vbn) index_alloc_space(index, objid, 1, vbn)
-#define INDEX_FREE_BLOCK(index, objid, vbn)  index_free_space(index, objid, vbn, 1)
+// space manager API
+void ofs_init_sm(space_manager_t *sm, object_handle_t *obj, uint64_t first_free_block, uint64_t total_free_blocks);
+int32_t ofs_init_free_space(space_manager_t *sm, uint64_t start_blk, uint64_t blk_cnt);
+int32_t sm_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *real_start_blk);
+int32_t sm_free_space(space_manager_t *sm, uint64_t start_blk, uint32_t blk_cnt);
+void ofs_destroy_sm(space_manager_t *sm);
 
 
 #ifdef	__cplusplus

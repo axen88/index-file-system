@@ -22,7 +22,7 @@
 
             Copyright(C), 2016~2019, axen.hook@foxmail.com
 ********************************************************************************
-File Name: INDEX_COLLATE.H
+File Name: OFS_COLLATE.H
 Author   : axen.hook
 Version  : 1.00
 Date     : 02/Mar/2016
@@ -34,8 +34,8 @@ History:
 --------------------------------------------------------------------------------
     1. Primary version
 *******************************************************************************/
-#ifndef __INDEX_COLLATE_H__
-#define __INDEX_COLLATE_H__
+#ifndef __OFS_COLLATE_H__
+#define __OFS_COLLATE_H__
 
 #ifdef  __cplusplus
 extern "C"
@@ -69,16 +69,12 @@ enum
 
 #define EXT_PAIR_HEADER_SIZE    sizeof(uint8_t)  // ext_pair: header, addr, len
 
-extern int32_t os_collate_binary(const uint8_t *b1, uint32_t v_sizeB1,
-    const uint8_t *b2, uint32_t b2_size);
-extern int32_t os_collate_unicode_string(const unicode_char_t *str1, uint32_t str1_size,
-    const unicode_char_t *str2, uint32_t str2_size);
-extern int32_t os_collate_ansi_string(const char *str1, uint32_t str1_size,
-    const char *str2, uint32_t str2_size);
+int32_t os_collate_binary(const uint8_t *b1, uint32_t b1_size, const uint8_t *b2, uint32_t b2_size);
+int32_t os_collate_unicode_string(const unicode_char_t *s1, uint32_t s1_size, const unicode_char_t *s2, uint32_t s2_size);
+int32_t os_collate_ansi_string(const char *s1, uint32_t s1_size, const char *s2, uint32_t s2_size);
 uint32_t os_u64_to_bstr(uint64_t u64, uint8_t *b);
 uint64_t os_bstr_to_u64(const uint8_t *b, uint32_t b_size);
-int32_t os_collate_u64(const uint8_t *b1, uint32_t b1_size,
-    const uint8_t *b2, uint32_t b2_size);
+int32_t os_collate_u64(const uint8_t *b1, uint32_t b1_size, const uint8_t *b2, uint32_t b2_size);
 uint32_t os_u64_size(uint64_t u64);
 uint32_t os_extent_to_extent_pair(const index_extent_t *ext, uint8_t *ext_pair);
 uint64_t os_extent_pair_to_extent(const uint8_t *ext_pair, uint32_t ext_pair_size, uint64_t *addr);
@@ -86,7 +82,7 @@ uint32_t os_extent_to_extent_pair2(uint64_t addr, uint64_t len, uint8_t *ext_pai
 int32_t os_collate_extent(const uint8_t *k1, uint32_t k1_size, const uint8_t *v1, uint32_t v1_size,
     const uint8_t *k2, uint32_t k2_size, const uint8_t *v2, uint32_t v2_size);
 
-extern int32_t collate_key(uint16_t collate_rule, index_entry_t *ie,
+int32_t collate_key(uint16_t collate_rule, index_entry_t *ie,
     const void *key, uint16_t key_len, const void *value, uint16_t value_len);
 
 

@@ -45,12 +45,12 @@ History:
 static int init_suite(void)
 {
     LOG_SYSTEM_INIT();
-    return index_init_system();
+    return ofs_init_system();
 }
 
 static int clean_suite(void)
 {
-    index_exit_system();
+    ofs_exit_system();
     LOG_SYSTEM_EXIT();
     //_CrtDumpMemoryLeaks();
 	return 0;
@@ -453,13 +453,13 @@ test_kv_pair_t test_kv_pairs2[]
 
 void test_kv_1(void)
 {
-    index_handle_t *index;
+    container_handle_t *ct;
     object_handle_t *obj;
     int32_t i;
     
-    // create index and object, insert key
-    CU_ASSERT(0 == index_create("idx0", 1000, 0, &index));
-    CU_ASSERT(0 == index_create_object(index, 500, FLAG_TABLE | CR_ANSI_STRING | (CR_ANSI_STRING << 4), &obj));
+    // create ct and object, insert key
+    CU_ASSERT(0 == ofs_create_container("idx0", 1000, 0, &ct));
+    CU_ASSERT(0 == ofs_create_object(ct, 500, FLAG_TABLE | CR_ANSI_STRING | (CR_ANSI_STRING << 4), &obj));
 
     for (i = 0; i < ArraySize(test_kv_pairs1); i++)
     {
@@ -474,12 +474,12 @@ void test_kv_1(void)
         }
     }
 
-    CU_ASSERT(0 == index_close_object(obj));
-    CU_ASSERT(0 == index_close(index));
+    CU_ASSERT(0 == ofs_close_object(obj));
+    CU_ASSERT(0 == ofs_close_container(ct));
 
-    // open index and object, insert key
-    CU_ASSERT(0 == index_open("idx0", 0, &index));
-    CU_ASSERT(0 == index_open_object(index, 500, &obj));
+    // open ct and object, insert key
+    CU_ASSERT(0 == ofs_open_container("idx0", 0, &ct));
+    CU_ASSERT(0 == ofs_open_object(ct, 500, &obj));
 
     for (i = 0; i < ArraySize(test_kv_pairs2); i++)
     {
@@ -494,32 +494,32 @@ void test_kv_1(void)
         }
     }
     
-    CU_ASSERT(0 == index_close_object(obj));
-    CU_ASSERT(0 == index_close(index));
+    CU_ASSERT(0 == ofs_close_object(obj));
+    CU_ASSERT(0 == ofs_close_container(ct));
 
-    // open index and object, remove key
-    CU_ASSERT(0 == index_open("idx0", 0, &index));
-    CU_ASSERT(0 == index_open_object(index, 500, &obj));
+    // open ct and object, remove key
+    CU_ASSERT(0 == ofs_open_container("idx0", 0, &ct));
+    CU_ASSERT(0 == ofs_open_object(ct, 500, &obj));
 
     for (i = 0; i < ArraySize(test_kv_pairs1); i++)
     {
         CU_ASSERT(0 == index_remove_key(obj, test_kv_pairs1[i].key, strlen(test_kv_pairs1[i].key)));
     }
     
-    CU_ASSERT(0 == index_close_object(obj));
-    CU_ASSERT(0 == index_close(index));
+    CU_ASSERT(0 == ofs_close_object(obj));
+    CU_ASSERT(0 == ofs_close_container(ct));
     
-    // open index and object, remove key
-    CU_ASSERT(0 == index_open("idx0", 0, &index));
-    CU_ASSERT(0 == index_open_object(index, 500, &obj));
+    // open ct and object, remove key
+    CU_ASSERT(0 == ofs_open_container("idx0", 0, &ct));
+    CU_ASSERT(0 == ofs_open_object(ct, 500, &obj));
 
     for (i = 0; i < ArraySize(test_kv_pairs2); i++)
     {
         CU_ASSERT(0 == index_remove_key(obj, test_kv_pairs2[i].key, strlen(test_kv_pairs2[i].key)));
     }
     
-    CU_ASSERT(0 == index_close_object(obj));
-    CU_ASSERT(0 == index_close(index));
+    CU_ASSERT(0 == ofs_close_object(obj));
+    CU_ASSERT(0 == ofs_close_container(ct));
 }
 
 int add_kv_test_case(void)

@@ -45,12 +45,12 @@ History:
 static int init_suite(void)
 {
     LOG_SYSTEM_INIT();
-    return index_init_system();
+    return ofs_init_system();
 }
 
 static int clean_suite(void)
 {
-    index_exit_system();
+    ofs_exit_system();
     LOG_SYSTEM_EXIT();
     //_CrtDumpMemoryLeaks();
 	return 0;

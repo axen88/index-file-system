@@ -22,7 +22,7 @@
 
             Copyright(C), 2016~2019, axen.hook@foxmail.com
 ********************************************************************************
-File Name: INDEX_BLOCK_IF.H
+File Name: OFS_BLOCK.H
 Author   : axen.hook
 Version  : 1.00
 Date     : 02/Mar/2016
@@ -34,42 +34,36 @@ History:
 --------------------------------------------------------------------------------
     1. Primary version
 *******************************************************************************/
-#ifndef __OS_BLOCK_MAN_H__
-#define __OS_BLOCK_MAN_H__
+#ifndef __OFS_BLOCK_H__
+#define __OFS_BLOCK_H__
 
 #ifdef  __cplusplus
 extern "C"
 {
 #endif
 
-extern int32_t index_update_block(index_handle_t * hnd, void * buf,
-    uint32_t size, uint32_t start_lba, uint64_t vbn);
-extern int32_t index_read_block(index_handle_t * hnd, void * buf,
-    uint32_t size, uint32_t start_lba, uint64_t vbn);
+int32_t ofs_update_block(container_handle_t *ct, void *buf, uint32_t size, uint32_t start_lba, uint64_t vbn);
+int32_t ofs_read_block(container_handle_t *ct, void *buf, uint32_t size, uint32_t start_lba, uint64_t vbn);
 
-extern int32_t index_update_block_fixup(index_handle_t * hnd, block_head_t * obj,
-    uint64_t vbn);
-extern int32_t index_read_block_fixup(index_handle_t * hnd, block_head_t * obj,
-     uint64_t vbn, uint32_t objid, uint32_t alloc_size);
+int32_t ofs_update_block_fixup(container_handle_t *ct, block_head_t *blk, uint64_t vbn);
+int32_t ofs_read_block_fixup(container_handle_t *ct, block_head_t *blk, uint64_t vbn, uint32_t objid, uint32_t alloc_size);
 
-extern int32_t index_update_block_pingpong_init(index_handle_t * hnd, block_head_t * obj,
-    uint64_t vbn);
-extern int32_t index_update_block_pingpong(index_handle_t * hnd, block_head_t * obj,
-    uint64_t vbn);
-extern int32_t index_read_block_pingpong(index_handle_t * hnd, block_head_t * obj,
-    uint64_t vbn, uint32_t objid, uint32_t alloc_size);
+int32_t ofs_update_block_pingpong_init(container_handle_t *ct, block_head_t *blk, uint64_t vbn);
+int32_t ofs_update_block_pingpong(container_handle_t *ct, block_head_t *blk, uint64_t vbn);
+int32_t ofs_read_block_pingpong(container_handle_t *ct, block_head_t *blk, uint64_t vbn, uint32_t objid, uint32_t alloc_size);
 
-extern int32_t index_update_sectors(index_handle_t * f, void * buf,
-    uint32_t size, uint64_t lba);
-extern int32_t index_read_sectors(index_handle_t * f, void * buf,
-    uint32_t size, uint64_t lba);
+int32_t ofs_update_sectors(container_handle_t *ct, void *buf, uint32_t size, uint64_t lba);
+int32_t ofs_read_sectors(container_handle_t *ct, void *buf, uint32_t size, uint64_t lba);
 
-static int32_t index_update_super_block(index_handle_t *hnd)
+static int32_t ofs_update_super_block(container_handle_t *ct)
 {
-    return index_update_block_pingpong(hnd, &hnd->sb.head, SUPER_BLOCK_VBN);
+    return ofs_update_block_pingpong(ct, &ct->sb.head, SUPER_BLOCK_VBN);
 }
 
-
+static int32_t ofs_read_super_block(container_handle_t *ct)
+{
+    return ofs_read_block_pingpong(ct, &ct->sb.head, SUPER_BLOCK_VBN, SUPER_BLOCK_ID, SUPER_BLOCK_SIZE);
+}
 
 #ifdef  __cplusplus
 }

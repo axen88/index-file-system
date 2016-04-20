@@ -37,31 +37,10 @@ History:
 
 #include "ofs_if.h"
 
-MODULE(PID_INDEX);
+MODULE(PID_BTREE);
 #include "os_log.h"
 
 #define INDEX_GETTO_BEGIN  1
-
-#if 0
-
-#define PRINT_KEY(comment, tree, pcKey, keyLen) \
-{ \
-    char str[64]; \
-    char *pStr = str; \
-    int32_t i = 0; \
-    for (i = 0; i < keyLen; i++) \
-    { \
-        OS_SNPRINTF(pStr, 64, "%02X", ((uint8_t *)pcKey)[i]); \
-        pStr += 2; \
-    } \
-    LOG_ERROR("%s: %s, name: %s\n", comment, str, tree->pstInode->name); \
-}
-
-#else
-
-#define PRINT_KEY(comment, tree, pcKey, keyLen)
-
-#endif
 
 // set the block from current block to root block as dirty
 static int32_t set_ib_dirty(object_handle_t *tree)
@@ -74,14 +53,14 @@ static int32_t set_ib_dirty(object_handle_t *tree)
     uint8_t depth = tree->depth;
 
     ASSERT(tree != NULL);
-    ASSERT(depth < INDEX_MAX_DEPTH);
+    ASSERT(depth < TREE_MAX_DEPTH);
 
     do
     {
-        if (!IBC_DIRTY(tree->cache_stack[depth]))
+        if (!CACHE_DIRTY(tree->cache_stack[depth]))
         {
             // allocate new block for modified data
-            ret = INDEX_ALLOC_BLOCK(tree->index, tree->obj_info->objid, &new_vbn);
+            ret = OFS_ALLOC_BLOCK(tree->ct, tree->obj_info->objid, &new_vbn);
             if (ret < 0)
             {
                 LOG_ERROR("Allocate new block failed. ret(%d)\n", ret);
@@ -94,7 +73,7 @@ static int32_t set_ib_dirty(object_handle_t *tree)
             OS_RWLOCK_WRLOCK(&tree->obj_info->caches_lock);
             if (depth == 0)
             { // root node should be treated specially
-                tree->obj_info->root_ibc.vbn = new_vbn;
+                tree->obj_info->root_cache.vbn = new_vbn;
             }
             else
             {
@@ -110,14 +89,14 @@ static int32_t set_ib_dirty(object_handle_t *tree)
             SET_IE_VBN(ie, vbn);
         }
 
-        if (IBC_DIRTY(tree->cache_stack[depth]))
+        if (CACHE_DIRTY(tree->cache_stack[depth]))
         {
             return 0;
         }
 
-        SET_IBC_DIRTY(tree->cache_stack[depth]);
+        SET_CACHE_DIRTY(tree->cache_stack[depth]);
         vbn = new_vbn;
-        ret = INDEX_FREE_BLOCK(tree->index, tree->obj_info->objid, old_vbn);
+        ret = OFS_FREE_BLOCK(tree->ct, tree->obj_info->objid, old_vbn);
         if (ret < 0)
         {
             LOG_ERROR("Free old block failed. ret(%d)\n", ret);
@@ -150,7 +129,7 @@ static void reset_cache_stack(object_handle_t * tree, uint8_t flags)
     ASSERT(NULL != tree);
     
     /* get to first entry */
-    tree->cache = &tree->obj_info->root_ibc;
+    tree->cache = &tree->obj_info->root_cache;
     tree->cache_stack[0] = tree->cache;
     tree->depth = 0;
 
@@ -175,7 +154,7 @@ static int32_t push_cache_stack(object_handle_t *tree, uint8_t flags)
     ASSERT(NULL != tree);
     
     /* get to max depth */
-    if (tree->depth >= (INDEX_MAX_DEPTH - 1))
+    if (tree->depth >= (TREE_MAX_DEPTH - 1))
     {
         LOG_ERROR("Depth get to MAX. depth(%d)\n", tree->depth);
         return -INDEX_ERR_MAX_DEPTH;
@@ -189,7 +168,7 @@ static int32_t push_cache_stack(object_handle_t *tree, uint8_t flags)
     ret = index_block_read(tree, vbn, INDEX_MAGIC);
     if (ret < 0)
     {
-        LOG_ERROR("Read index block failed. vbn(%lld) ret(%d)\n", vbn, ret);
+        LOG_ERROR("Read ct block failed. vbn(%lld) ret(%d)\n", vbn, ret);
         return ret;
     }
 
@@ -381,7 +360,7 @@ static int32_t add_or_remove_ib(object_handle_t *tree, uint8_t flags)
         
     if (flags & INDEX_REMOVE_BLOCK)
     {
-        ret = INDEX_FREE_BLOCK(tree->index, tree->obj_info->objid, tree->cache->vbn);
+        ret = OFS_FREE_BLOCK(tree->ct, tree->obj_info->objid, tree->cache->vbn);
         if (0 > ret)
         {
             LOG_ERROR("Free block failed. vbn(%lld) ret(%d)\n", tree->cache->vbn, ret);
@@ -390,7 +369,7 @@ static int32_t add_or_remove_ib(object_handle_t *tree, uint8_t flags)
     }
     else if (flags & INDEX_ADD_BLOCK)
     {
-       // ret = block_set_status(tree->obj_info->index->hnd, tree->cache->vbn,
+       // ret = block_set_status(tree->obj_info->ct->hnd, tree->cache->vbn,
        //     1, B_TRUE);
        // if (0 > ret)
         {
@@ -411,7 +390,7 @@ static int32_t get_current_ie(object_handle_t *tree, uint8_t flags)
     { /* Have children */
         ret = push_cache_stack(tree, flags);
         if (ret < 0)
-        { /* Push the information OS_S32o the history, and read new index block */
+        { /* Push the information OS_S32o the history, and read new ct block */
             LOG_ERROR("Go to child node failed. ret(%d)\n", ret);
             return ret;
         }
@@ -558,7 +537,7 @@ int32_t search_key_internal(object_handle_t *tree, const void *key,
         /* Have child */
         ret = push_cache_stack(tree, 0);
         if (0 > ret)
-        {   /* Push the information OS_S32o the history, and read new index block */
+        {   /* Push the information OS_S32o the history, and read new ct block */
             LOG_ERROR("Get child node failed. ret(%d)\n", ret);
             return ret;
         }
@@ -845,7 +824,7 @@ static index_entry_t *split_ib(object_handle_t *tree, index_entry_t *ie)
     index_entry_t *mid_ie = NULL;
     index_entry_t *new_ie = NULL;
     index_block_t *new_ib = NULL;
-    ifs_block_cache_t *new_ibc = NULL;
+    ofs_block_cache_t *new_cache = NULL;
     int32_t pos = 0;         /* Insert iOffset to the new indexHeader */
     int32_t ret = 0;
     
@@ -854,14 +833,14 @@ static index_entry_t *split_ib(object_handle_t *tree, index_entry_t *ie)
 
     mid_ie = get_middle_ie(IB(tree->cache->ib));
 
-    ret = alloc_obj_cache_and_block(tree->obj_info, &new_ibc, INDEX_MAGIC);
+    ret = alloc_obj_cache_and_block(tree->obj_info, &new_cache, INDEX_MAGIC);
     if (0 > ret)
     {
         LOG_ERROR("Allocate cache failed.\n");
         return NULL;
     }
     
-    new_ib = IB(new_ibc->ib);
+    new_ib = IB(new_cache->ib);
 
     copy_ib_tail(new_ib, IB(tree->cache->ib), mid_ie);
 
@@ -873,18 +852,18 @@ static index_entry_t *split_ib(object_handle_t *tree, index_entry_t *ie)
                 - mid_ie->len));
     }
 
-    SET_IBC_DIRTY(new_ibc);
+    SET_CACHE_DIRTY(new_cache);
 
-    //LOG_DEBUG("Write new index block success. vbn(%lld)\n", new_ibc->vbn);
+    //LOG_DEBUG("Write new ct block success. vbn(%lld)\n", new_cache->vbn);
 
     ret = set_ib_dirty(tree);
     if (0 > ret)
     {
-        LOG_ERROR("Set index block dirty failed. tree(%p) ret(%d)\n", tree, ret);
+        LOG_ERROR("Set ct block dirty failed. tree(%p) ret(%d)\n", tree, ret);
         return NULL;
     }
 
-    // Cut block tail and whether insert the @pstIE OS_S32o the old index block
+    // Cut block tail and whether insert the @pstIE OS_S32o the old ct block
     new_ie = dump_ie_add_vbn(mid_ie, tree->cache->vbn);
     if (NULL == new_ie)
     {
@@ -894,7 +873,7 @@ static index_entry_t *split_ib(object_handle_t *tree, index_entry_t *ie)
 
     cut_ib_tail(IB(tree->cache->ib), mid_ie);
     if (pos >= 0)
-    {   /* Insert the entry onto old index block */
+    {   /* Insert the entry onto old ct block */
         insert_ie(IB(tree->cache->ib), ie, tree->ie);
     }
 
@@ -905,7 +884,7 @@ static index_entry_t *split_ib(object_handle_t *tree, index_entry_t *ie)
         return NULL;
     }
 
-    SET_IE_VBN(tree->ie, new_ibc->vbn);     /* Change the link */
+    SET_IE_VBN(tree->ie, new_cache->vbn);     /* Change the link */
 
     return new_ie;
 }
@@ -915,7 +894,7 @@ static int32_t reparent_root(object_handle_t * tree)
 {
     index_entry_t *ie = NULL;
     index_block_t *new_ib = NULL;
-    ifs_block_cache_t *new_ibc = NULL;
+    ofs_block_cache_t *new_cache = NULL;
     index_block_t *old_ib = NULL;
     uint32_t alloc_size = 0;
     int32_t ret = 0;
@@ -924,7 +903,7 @@ static int32_t reparent_root(object_handle_t * tree)
     ASSERT(NULL != tree->cache);
     ASSERT(NULL != tree->cache->ib);
 
-    if (tree->max_depth >= (INDEX_MAX_DEPTH - 1))
+    if (tree->max_depth >= (TREE_MAX_DEPTH - 1))
     {   /* Get to max ucDepth */
         LOG_ERROR("Depth get to MAX. depth(%d)\n", tree->max_depth);
         return -INDEX_ERR_MAX_DEPTH;
@@ -933,40 +912,40 @@ static int32_t reparent_root(object_handle_t * tree)
     old_ib = IB(tree->cache->ib);
     alloc_size = old_ib->head.alloc_size;
     
-    ret = alloc_obj_cache_and_block(tree->obj_info, &new_ibc, INDEX_MAGIC);
+    ret = alloc_obj_cache_and_block(tree->obj_info, &new_cache, INDEX_MAGIC);
     if (0 > ret)
     {
         LOG_ERROR("Allocate cache failed.\n");
         return ret;
     } 
 
-    new_ib = IB(new_ibc->ib);
+    new_ib = IB(new_cache->ib);
 
     memcpy(new_ib, old_ib, old_ib->head.real_size);
-    new_ib->head.alloc_size = tree->obj_info->index->sb.block_size;
+    new_ib->head.alloc_size = tree->obj_info->ct->sb.block_size;
 
-    SET_IBC_DIRTY(new_ibc);
+    SET_CACHE_DIRTY(new_cache);
 
-    //LOG_DEBUG("Write new index block success. vbn(%lld)\n", new_ibc->vbn);
+    //LOG_DEBUG("Write new ct block success. vbn(%lld)\n", new_cache->vbn);
 
     init_ib(old_ib, INDEX_BLOCK_LARGE, alloc_size);
     ie = GET_FIRST_IE(old_ib);
-    SET_IE_VBN(ie, new_ibc->vbn);
+    SET_IE_VBN(ie, new_cache->vbn);
     
     ret = set_ib_dirty(tree);
     if (0 > ret)
     {
-        LOG_ERROR("Set index block dirty failed. tree(%p) ret(%d)\n", tree, ret);
+        LOG_ERROR("Set ct block dirty failed. tree(%p) ret(%d)\n", tree, ret);
         OS_FREE(new_ib);
         return ret;
     }
     
 	tree->position_stack[tree->depth] = IB(tree->cache->ib)->first_entry_off;
     tree->depth++;
-    tree->cache_stack[tree->depth] = new_ibc;
+    tree->cache_stack[tree->depth] = new_cache;
 	tree->position_stack[tree->depth] = tree->position;
 
-	tree->cache = new_ibc;
+	tree->cache = new_cache;
     tree->ie = (index_entry_t *)((uint8_t *)new_ib + tree->position);
 
     return 0;
@@ -1032,17 +1011,17 @@ int32_t check_removed_ib(object_handle_t * tree)
 
     for (;;)
     {
-        ret = INDEX_FREE_BLOCK(tree->index, tree->obj_info->objid, tree->cache->vbn);
+        ret = OFS_FREE_BLOCK(tree->ct, tree->obj_info->objid, tree->cache->vbn);
         if (0 > ret)
         {
             LOG_ERROR("Free block failed. ret(%d)\n", ret);
             return ret;
         }
 
-        //LOG_DEBUG("delete index block success. vbn(%lld)\n", tree->cache->vbn);
+        //LOG_DEBUG("delete ct block success. vbn(%lld)\n", tree->cache->vbn);
 
         // this block will be deleted
-        SET_IBC_EMPTY(tree->cache);
+        SET_CACHE_EMPTY(tree->cache);
 
         ret = pop_cache_stack(tree, 0);
         if (0 > ret)
@@ -1081,7 +1060,7 @@ int32_t remove_leaf(object_handle_t *tree)
     ret = set_ib_dirty(tree);
     if (0 > ret)
     {
-        LOG_ERROR("Set index block dirty failed. tree(%p) ret(%d)\n", tree, ret);
+        LOG_ERROR("Set ct block dirty failed. tree(%p) ret(%d)\n", tree, ret);
         return ret;
     }
 
@@ -1119,7 +1098,7 @@ int32_t remove_leaf(object_handle_t *tree)
     ret = set_ib_dirty(tree);
     if (0 > ret)
     {
-        LOG_ERROR("Set index block dirty failed. tree(%p) ret(%d)\n", tree, ret);
+        LOG_ERROR("Set ct block dirty failed. tree(%p) ret(%d)\n", tree, ret);
         OS_FREE(ie);
         return ret;
     }
@@ -1195,7 +1174,7 @@ int32_t remove_node(object_handle_t *tree)
     ret = set_ib_dirty(tree);
     if (0 > ret)
     {
-        LOG_ERROR("Set index block dirty failed. tree(%p) ret(%d)\n", tree, ret);
+        LOG_ERROR("Set ct block dirty failed. tree(%p) ret(%d)\n", tree, ret);
         OS_FREE(succ_ie);
         return ret;
     }
@@ -1256,8 +1235,6 @@ int32_t index_remove_key_nolock(object_handle_t *tree, const void *key,
         return -INDEX_ERR_PARAMETER;
     }
 
-    PRINT_KEY("Remove key start", tree, key, key_len);
-
     ASSERT(tree->obj_info->attr_record->flags & FLAG_TABLE);
 
     ret = search_key_internal(tree, key, key_len, NULL, 0);
@@ -1274,8 +1251,6 @@ int32_t index_remove_key_nolock(object_handle_t *tree, const void *key,
         return ret;
     }
    
-    PRINT_KEY("Remove key finished", tree, key, key_len);
-
     return ret;
 }
 
@@ -1313,8 +1288,6 @@ int32_t index_insert_key_nolock(object_handle_t *tree, const void *key,
     }
 
     ASSERT(tree->obj_info->attr_record->flags & FLAG_TABLE);
-
-    PRINT_KEY("Insert key start", tree, key, key_len);
 
     ret = search_key_internal(tree, key, key_len, value, value_len);
     if (ret >= 0)
@@ -1356,8 +1329,6 @@ int32_t index_insert_key_nolock(object_handle_t *tree, const void *key,
     }
     
     OS_FREE(ie);
-
-    PRINT_KEY("Insert key finished", tree, key, key_len);
 
     return ret;
 }
@@ -1401,10 +1372,6 @@ int32_t index_update_value(object_handle_t *tree, const void *key,
     return ret;
 }
 
-
-EXPORT_SYMBOL(index_create);
-EXPORT_SYMBOL(index_open);
-EXPORT_SYMBOL(index_close);
 
 EXPORT_SYMBOL(index_search_key);
 EXPORT_SYMBOL(walk_tree);

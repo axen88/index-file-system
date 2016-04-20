@@ -22,7 +22,7 @@
 
             Copyright(C), 2016~2019, axen.hook@foxmail.com
 ********************************************************************************
-File Name: INDEX_LAYOUT.H
+File Name: OFS_LAYOUT.H
 Author   : axen.hook
 Version  : 1.00
 Date     : 02/Mar/2016
@@ -34,8 +34,8 @@ History:
 --------------------------------------------------------------------------------
     1. Primary version
 *******************************************************************************/
-#ifndef __INDEX_LAYOUT_H__
-#define __INDEX_LAYOUT_H__
+#ifndef __OFS_LAYOUT_H__
+#define __OFS_LAYOUT_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,11 +49,10 @@ extern "C" {
 #define INODE_MAGIC                0x454A424F   // "OBJE"
 #define INDEX_MAGIC                0x58444E49   // "INDX"
 
-#define ENTRY_END_SIZE    sizeof(index_entry_t)
-#define ENTRY_BEGIN_SIZE  sizeof(index_entry_t)
+#define ENTRY_END_SIZE             sizeof(index_entry_t)
+#define ENTRY_BEGIN_SIZE           sizeof(index_entry_t)
 
 #define PRV_AREA_SIZE              256       
-#define FILE_NAME_SIZE             256
 #define OBJ_NAME_MAX_SIZE          256
 
 /* flags */
@@ -158,12 +157,12 @@ typedef struct ifs_super_block
     uint32_t flags;                     /* flags */
     uint16_t version;                   /* version */
     uint16_t magic_num;                 /* 0x55AA */
-} ifs_super_block_t;
+} ofs_super_block_t;
 
 typedef struct index_entry
 {
-    uint16_t len;               // Byte size of this index entry
-    uint16_t prev_len;          // Byte size of this index entry
+    uint16_t len;               // Byte size of this ct entry
+    uint16_t prev_len;          // Byte size of this ct entry
 
     uint16_t key_len;           // Byte size of the key, no this field in INDEX_ENTRY_END entry
     uint16_t value_len;         // Byte size of the c, no this field in INDEX_ENTRY_END entry
@@ -172,7 +171,7 @@ typedef struct index_entry
     
     //uint8_t key[];            // The key
     //uint8_t value[];          // The value
-    //uint64_t vbn;             // Virtual index number of child index block
+    //uint64_t vbn;             // Virtual ct number of child ct block
 } index_entry_t;
 
 typedef struct index_block
@@ -180,7 +179,7 @@ typedef struct index_block
     block_head_t head;
 
     uint16_t first_entry_off;       // Byte offset to first index_entry_t
-    uint8_t node_type;              // The ucFlags of current index block
+    uint8_t node_type;              // The ucFlags of current ct block
     uint8_t padding[5];             // Reserved/align to 8-byte boundary
 
     index_entry_t begin_entry;

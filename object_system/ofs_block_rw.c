@@ -35,224 +35,216 @@ History:
     1. Primary version
 *******************************************************************************/
 #include "ofs_if.h"
-MODULE(PID_INDEX);
+
+MODULE(PID_BLOCK);
 #include "os_log.h"
 
-int32_t index_update_block(index_handle_t * hnd, void * buf, uint32_t size,
-    uint32_t start_lba, uint64_t vbn)
+int32_t ofs_update_block(container_handle_t *ct, void *buf, uint32_t size, uint32_t start_lba, uint64_t vbn)
 {
     int32_t ret = 0;
     uint64_t tmp_start_lba = 0;
 
-    if ((NULL == hnd) || (NULL == buf) || (0 >= (int32_t) size))
+    if ((NULL == ct) || (NULL == buf) || (0 >= (int32_t)size))
     {
-        LOG_ERROR("Invalid parameter. hnd(%p) buf(%p) size(%d)\n", hnd, buf, size);
+        LOG_ERROR("Invalid parameter. ct(%p) buf(%p) size(%d)\n", ct, buf, size);
         return -FILE_BLOCK_ERR_PARAMETER;
     }
 
-    tmp_start_lba = start_lba + vbn * hnd->sb.sectors_per_block
-        + hnd->sb.start_lba;
-    ret = os_disk_pwrite(hnd->file_hnd, buf, size, tmp_start_lba);
-    if (ret != (int32_t) size)
+    tmp_start_lba = start_lba + vbn * ct->sb.sectors_per_block + ct->sb.start_lba;
+    ret = os_disk_pwrite(ct->disk_hnd, buf, size, tmp_start_lba);
+    if (ret != (int32_t)size)
     {
-        LOG_ERROR("Write lba failed. file_hnd(%p) buf(%p) size(%d) lba(%lld) ret(%d)\n",
-            hnd->file_hnd, buf, size, tmp_start_lba, ret);
+        LOG_ERROR("Write lba failed. disk_hnd(%p) buf(%p) size(%d) lba(%lld) ret(%d)\n",
+            ct->disk_hnd, buf, size, tmp_start_lba, ret);
     }
 
     return ret;
 }
 
-int32_t index_read_block(index_handle_t * hnd, void * buf, uint32_t size,
-    uint32_t start_lba, uint64_t vbn)
+int32_t ofs_read_block(container_handle_t *ct, void *buf, uint32_t size, uint32_t start_lba, uint64_t vbn)
 {
     int32_t ret = 0;
     uint64_t tmp_start_lba = 0;
 
-    if ((NULL == hnd) || (NULL == buf) || (0 >= (int32_t) size))
+    if ((NULL == ct) || (NULL == buf) || (0 >= (int32_t)size))
     {
-        LOG_ERROR("Invalid parameter. hnd(%p) buf(%p) size(%d)\n", hnd, buf, size);
+        LOG_ERROR("Invalid parameter. ct(%p) buf(%p) size(%d)\n", ct, buf, size);
         return -FILE_BLOCK_ERR_PARAMETER;
     }
 
-    tmp_start_lba = start_lba + vbn * hnd->sb.sectors_per_block +
-        hnd->sb.start_lba;
-    ret = os_disk_pread(hnd->file_hnd, buf, size, tmp_start_lba);
-    if (ret != (int32_t) size)
+    tmp_start_lba = start_lba + vbn * ct->sb.sectors_per_block + ct->sb.start_lba;
+    ret = os_disk_pread(ct->disk_hnd, buf, size, tmp_start_lba);
+    if (ret != (int32_t)size)
     {
-        LOG_ERROR("Read lba failed. file_hnd(%p) buf(%p) size(%d) lba(%lld) ret(%d)\n",
-            hnd->file_hnd, buf, size, tmp_start_lba, ret);
+        LOG_ERROR("Read lba failed. disk_hnd(%p) buf(%p) size(%d) lba(%lld) ret(%d)\n",
+            ct->disk_hnd, buf, size, tmp_start_lba, ret);
     }
 
     return ret;
 }
 
-void assemble_object(block_head_t * obj)
+static void assemble_block(block_head_t *blk)
 {
     uint16_t *foot = NULL; // the last 2 bytes
 
-    ASSERT(NULL != obj);
-    ASSERT(obj->alloc_size >= obj->real_size);
+    ASSERT(NULL != blk);
+    ASSERT(blk->alloc_size >= blk->real_size);
 
-    foot = (uint16_t *) ((uint8_t *) obj + obj->alloc_size - sizeof(uint16_t));
+    foot = (uint16_t *)((uint8_t *)blk + blk->alloc_size - sizeof(uint16_t));
 
-    obj->fixup = *foot;
-    *foot = obj->seq_no;
+    blk->fixup = *foot;
+    *foot = blk->seq_no;
 
     return;
 }
 
-int32_t fixup_object(block_head_t * obj)
+static int32_t fixup_block(block_head_t *blk)
 {
     uint16_t *foot = NULL; // the last 2 bytes
 
-    ASSERT(NULL != obj);
-    ASSERT(obj->alloc_size >= obj->real_size);
+    ASSERT(NULL != blk);
+    ASSERT(blk->alloc_size >= blk->real_size);
 
-    foot = (uint16_t *) ((uint8_t *) obj + obj->alloc_size - sizeof(uint16_t));
+    foot = (uint16_t *)((uint8_t *)blk + blk->alloc_size - sizeof(uint16_t));
 
-    if (*foot == obj->seq_no)
+    if (*foot == blk->seq_no)
     {
-        *foot = obj->fixup;
+        *foot = blk->fixup;
     }
     else
     {
-        LOG_ERROR("Found invalid object. obj(%p)\n", obj);
+        LOG_ERROR("Found invalid block. blk(%p)\n", blk);
         return -FILE_BLOCK_ERR_INVALID_OBJECT;
     }
 
-    obj->seq_no++;
+    blk->seq_no++;
 
     return 0;
 }
 
-int32_t verify_object(block_head_t * obj, uint32_t objid,
-    uint32_t alloc_size)
+static int32_t verify_block(block_head_t *blk, uint32_t blk_id, uint32_t alloc_size)
 {
-    ASSERT(NULL != obj);
-    ASSERT(0 != objid);
+    ASSERT(NULL != blk);
+    ASSERT(0 != blk_id);
     ASSERT(0 != alloc_size);
 
-    if (obj->blk_id != objid)
+    if (blk->blk_id != blk_id)
     {
-        LOG_ERROR("Object id not match. obj(%p) objid(%x) expect(%x)",
-            obj, obj->blk_id, objid);
+        LOG_ERROR("Object id not match. blk(%p) blk_id(%x) expect(%x)",
+            blk, blk->blk_id, blk_id);
         return -FILE_BLOCK_ERR_INVALID_OBJECT;
     }
 
-    if (obj->alloc_size != alloc_size)
+    if (blk->alloc_size != alloc_size)
     {
-        LOG_ERROR("alloc_size not match. obj(%p) alloc_size(%d) expect(%d)",
-            obj, obj->alloc_size, alloc_size);
+        LOG_ERROR("alloc_size not match. blk(%p) alloc_size(%d) expect(%d)",
+            blk, blk->alloc_size, alloc_size);
         return -FILE_BLOCK_ERR_INVALID_OBJECT;
     }
 
-    if ((obj->real_size > obj->alloc_size)
-        || (obj->real_size < sizeof(block_head_t)))
+    if ((blk->real_size > blk->alloc_size) || (blk->real_size < sizeof(block_head_t)))
     {
-        LOG_ERROR("real_size not match. obj(%p) real_size(%d) alloc_size(%d) sizeof(%d)",
-            obj, obj->real_size, alloc_size, (uint32_t)sizeof(block_head_t));
+        LOG_ERROR("real_size not match. blk(%p) real_size(%d) alloc_size(%d) sizeof(%d)",
+            blk, blk->real_size, alloc_size, (uint32_t)sizeof(block_head_t));
         return -FILE_BLOCK_ERR_INVALID_OBJECT;
     }
 
     return 0;
 }
 
-int32_t index_update_block_fixup(index_handle_t * hnd, block_head_t * obj,
-    uint64_t vbn)
+int32_t ofs_update_block_fixup(container_handle_t *ct, block_head_t *blk, uint64_t vbn)
 {
     int32_t ret = 0;
     int32_t ret2 = 0;
 
-    if ((NULL == hnd) || (NULL == obj))
+    if ((NULL == ct) || (NULL == blk))
     {
-        LOG_ERROR("Invalid parameter. hnd(%p) obj(%p)\n", hnd, obj);
+        LOG_ERROR("Invalid parameter. ct(%p) blk(%p)\n", ct, blk);
         return -FILE_BLOCK_ERR_PARAMETER;
     }
 
-    assemble_object(obj);
+    assemble_block(blk);
 
-    ret = index_update_block(hnd, obj, obj->alloc_size, 0, vbn);
+    ret = ofs_update_block(ct, blk, blk->alloc_size, 0, vbn);
     if (0 > ret)
     {
-        LOG_ERROR("Update object failed. hnd(%p) obj(%p) ret(%d)\n",
-            hnd, obj, ret);
+        LOG_ERROR("Update object failed. ct(%p) blk(%p) ret(%d)\n",
+            ct, blk, ret);
     }
 
-    ret2 = fixup_object(obj);
+    ret2 = fixup_block(blk);
     if (0 > ret2)
     {
-        LOG_ERROR("Fixup object failed. obj(%p) ret(%d)\n", obj, ret2);
+        LOG_ERROR("Fixup object failed. blk(%p) ret(%d)\n", blk, ret2);
         return ret2;
     }
 
     return ret;
 }
 
-int32_t index_read_block_fixup(index_handle_t * hnd, block_head_t * obj,
-    uint64_t vbn, uint32_t objid, uint32_t alloc_size)
+int32_t ofs_read_block_fixup(container_handle_t *ct, block_head_t *blk, uint64_t vbn, uint32_t blk_id, uint32_t alloc_size)
 {
     int32_t ret = 0;
 
-    if ((NULL == hnd) || (NULL == obj))
+    if ((NULL == ct) || (NULL == blk))
     {
-        LOG_ERROR("Invalid parameter. hnd(%p) obj(%p)\n", hnd, obj);
+        LOG_ERROR("Invalid parameter. ct(%p) blk(%p)\n", ct, blk);
         return -FILE_BLOCK_ERR_PARAMETER;
     }
 
-    ret = index_read_block(hnd, obj, alloc_size, 0, vbn);
+    ret = ofs_read_block(ct, blk, alloc_size, 0, vbn);
     if (0 > ret)
     {
-        LOG_ERROR("Read data failed. hnd(%p) obj(%p) objid(%x) alloc_size(%d) vbn(%lld) ret(%d)",
-            hnd, obj, objid, alloc_size, vbn, ret);
+        LOG_ERROR("Read data failed. ct(%p) blk(%p) blk_id(%x) alloc_size(%d) vbn(%lld) ret(%d)",
+            ct, blk, blk_id, alloc_size, vbn, ret);
         return ret;
     }
 
-    ret = verify_object(obj, objid, alloc_size);
+    ret = verify_block(blk, blk_id, alloc_size);
     if (0 > ret)
     {
-        LOG_ERROR("Verify object failed. hnd(%p) obj(%p) objid(%x) alloc_size(%d) vbn(%lld) ret(%d)",
-            hnd, obj, objid, alloc_size, vbn, ret);
+        LOG_ERROR("Verify object failed. ct(%p) blk(%p) blk_id(%x) alloc_size(%d) vbn(%lld) ret(%d)",
+            ct, blk, blk_id, alloc_size, vbn, ret);
         return ret;
     }
 
-    return fixup_object(obj);
+    return fixup_block(blk);
 }
 
-int32_t check_obj(index_handle_t *hnd, block_head_t *obj)
+static int32_t check_block(container_handle_t *ct, block_head_t *blk)
 {
-    if ((NULL == hnd) || (NULL == obj))
+    if ((NULL == ct) || (NULL == blk))
     {
-        LOG_ERROR("Invalid parameter. hnd(%p) obj(%p)\n", hnd, obj);
+        LOG_ERROR("Invalid parameter. ct(%p) blk(%p)\n", ct, blk);
         return -FILE_BLOCK_ERR_PARAMETER;
     }
 
-    if ((obj->real_size > obj->alloc_size)
-        || (obj->alloc_size > hnd->sb.block_size))
+    if ((blk->real_size > blk->alloc_size)
+        || (blk->alloc_size > ct->sb.block_size))
     {
         LOG_ERROR("size is invalid. real_size(%d) alloc_size(%d) block_size(%d)\n",
-            obj->real_size, obj->alloc_size, hnd->sb.block_size);
+            blk->real_size, blk->alloc_size, ct->sb.block_size);
         return -FILE_BLOCK_ERR_INVALID_PARA;
     }
 
     return 0;
 }
 
-int32_t index_update_block_pingpong_init(index_handle_t * hnd, block_head_t * obj,
-    uint64_t vbn)
+int32_t ofs_update_block_pingpong_init(container_handle_t *ct, block_head_t *blk, uint64_t vbn)
 {
     int32_t ret = 0;
     int32_t ret2 = 0;
     uint32_t block_size = 0;
     uint8_t *buf = NULL;
 
-    ret = check_obj(hnd, obj);
+    ret = check_block(ct, blk);
     if (ret < 0)
     {
-        LOG_ERROR("Get blocksize failed. hnd(%p) buf(%p) ret(%d)", hnd, obj, ret);
+        LOG_ERROR("Get blocksize failed. ct(%p) buf(%p) ret(%d)", ct, blk, ret);
         return -FILE_BLOCK_ERR_INVALID_PARA;
     }
 
-    block_size = hnd->sb.block_size;
+    block_size = ct->sb.block_size;
 
     buf = OS_MALLOC(block_size);
     if (NULL == buf)
@@ -261,127 +253,125 @@ int32_t index_update_block_pingpong_init(index_handle_t * hnd, block_head_t * ob
         return -FILE_BLOCK_ERR_ALLOCATE_MEMORY;
     }
 
-    assemble_object(obj);
+    assemble_block(blk);
 
     memset(buf, 0, block_size);
-    memcpy(buf + (obj->alloc_size * (obj->seq_no % (block_size / obj->alloc_size))), obj, obj->real_size);       /*lint !e414 */
+    memcpy(buf + (blk->alloc_size * (blk->seq_no % (block_size / blk->alloc_size))), blk, blk->real_size);       /*lint !e414 */
 
-    ret = index_update_block(hnd, buf, block_size, 0, vbn);
+    ret = ofs_update_block(ct, buf, block_size, 0, vbn);
 
     OS_FREE(buf);
     buf = NULL;
 
-    ret2 = fixup_object(obj);
+    ret2 = fixup_block(blk);
     if (0 > ret2)
     {
-        LOG_ERROR("Fixup object failed. obj(%p) ret(%d)\n", obj, ret2);
+        LOG_ERROR("Fixup object failed. blk(%p) ret(%d)\n", blk, ret2);
         return ret2;
     }
 
     if (ret != (int32_t)block_size)
     {
-        LOG_ERROR("Update block data failed. hnd(%p) obj(%p) size(%d) vbn(%lld) ret(%d)\n",
-            hnd, obj, block_size, vbn, ret);
+        LOG_ERROR("Update block data failed. ct(%p) blk(%p) size(%d) vbn(%lld) ret(%d)\n",
+            ct, blk, block_size, vbn, ret);
         return -FILE_BLOCK_ERR_WRITE;
     }
 
     return 0;
 }
 
-int32_t index_update_block_pingpong(index_handle_t * hnd, block_head_t * obj,
-    uint64_t vbn)
+int32_t ofs_update_block_pingpong(container_handle_t *ct, block_head_t *blk, uint64_t vbn)
 {
     int32_t ret = 0;
     int32_t ret2 = 0;
     uint32_t block_size = 0;
     uint32_t update_lba = 0;
 
-    ret = check_obj(hnd, obj);
+    ret = check_block(ct, blk);
     if (ret < 0)
     {
-        LOG_ERROR("Get blocksize failed. hnd(%p) buf(%p) ret(%d)\n", hnd, obj, ret);
+        LOG_ERROR("Get blocksize failed. ct(%p) buf(%p) ret(%d)\n", ct, blk, ret);
         return -FILE_BLOCK_ERR_INVALID_PARA;
     }
 
-    block_size = hnd->sb.block_size;
+    block_size = ct->sb.block_size;
 
-    assemble_object(obj);
+    assemble_block(blk);
 
-    update_lba = (obj->alloc_size * (obj->seq_no % (block_size / obj->alloc_size))) >> BYTES_PER_SECTOR_SHIFT;    /*lint !e414 */
+    update_lba = (blk->alloc_size * (blk->seq_no % (block_size / blk->alloc_size))) >> BYTES_PER_SECTOR_SHIFT;    /*lint !e414 */
 
-    ret = index_update_block(hnd, obj, obj->alloc_size, update_lba, vbn);
+    ret = ofs_update_block(ct, blk, blk->alloc_size, update_lba, vbn);
 
-    ret2 = fixup_object(obj);
+    ret2 = fixup_block(blk);
     if (0 > ret2)
     {
-        LOG_ERROR("Fixup object failed. obj(%p) ret(%d)\n", obj, ret2);
+        LOG_ERROR("Fixup object failed. blk(%p) ret(%d)\n", blk, ret2);
         return ret2;
     }
 
-    if (ret != (int32_t) obj->alloc_size)
+    if (ret != (int32_t)blk->alloc_size)
     {
-        LOG_ERROR("Update block data failed. hnd(%p) obj(%p) size(%d) vbn(%lld) ret(%d)\n",
-            hnd, obj, obj->alloc_size, vbn, ret);
+        LOG_ERROR("Update block data failed. ct(%p) blk(%p) size(%d) vbn(%lld) ret(%d)\n",
+            ct, blk, blk->alloc_size, vbn, ret);
         return -FILE_BLOCK_ERR_WRITE;
     }
 
     return 0;
 }
 
-block_head_t *get_last_correct_dat(uint8_t * buf, uint32_t objid,
-    uint32_t alloc_size, uint32_t cnt)
+block_head_t *get_last_correct_block(uint8_t *buf, uint32_t blk_id, uint32_t alloc_size, uint32_t cnt)
 {
     uint32_t i = 0;
     uint32_t prev_i = 0;
     uint16_t prev_seq_no = 0;
     int32_t ret = 0;
-    block_head_t *obj = NULL;
+    block_head_t *blk = NULL;
 
     ASSERT(NULL != buf);
     ASSERT(0 != alloc_size);
 
     for (i = 0; i < cnt; i++)
     {
-        obj = (block_head_t *)(buf + alloc_size * i);
+        blk = (block_head_t *)(buf + alloc_size * i);
 
-        if (0 == obj->blk_id)
+        if (0 == blk->blk_id)
         { // not written yet
             break;
         }
 
-        if ((0 != i) && ((prev_seq_no + 1) != obj->seq_no))
+        if ((0 != i) && ((prev_seq_no + 1) != blk->seq_no))
         { // current and next data is not the newest
             break;
         }
 
-        prev_seq_no = obj->seq_no;
+        prev_seq_no = blk->seq_no;
         prev_i = i;
     }
 
     for (i = 0; i < cnt; i++)
     {
-        obj = (block_head_t *)(buf + alloc_size * prev_i);
+        blk = (block_head_t *)(buf + alloc_size * prev_i);
 
-        if (0 == obj->blk_id)
+        if (0 == blk->blk_id)
         { // not written yet
             break;
         }
 
-        ret = verify_object(obj, objid, alloc_size);
+        ret = verify_block(blk, blk_id, alloc_size);
         if (0 > ret)
         {
-            LOG_ERROR("Verify object failed. buf(%p) obj(%p) objid(%x) alloc_size(%d) ret(%d)\n",
-                buf, obj, objid, alloc_size, ret);
+            LOG_ERROR("Verify object failed. buf(%p) blk(%p) blk_id(%x) alloc_size(%d) ret(%d)\n",
+                buf, blk, blk_id, alloc_size, ret);
         }
         else
         {
-            ret = fixup_object(obj);
+            ret = fixup_block(blk);
             if (0 <= ret)
             {
-                return obj;
+                return blk;
             }
 
-            LOG_ERROR("Fixup object failed. obj(%p) ret(%d)\n", obj, ret);
+            LOG_ERROR("Fixup object failed. blk(%p) ret(%d)\n", blk, ret);
         }
 
         if (0 == prev_i)
@@ -392,27 +382,26 @@ block_head_t *get_last_correct_dat(uint8_t * buf, uint32_t objid,
         prev_i--;
     }
 
-    LOG_ERROR("No valid object. buf(%p) obj(%p) objid(%x) alloc_size(%d)",
-        buf, obj, objid, alloc_size);
+    LOG_ERROR("No valid object. buf(%p) blk(%p) blk_id(%x) alloc_size(%d)",
+        buf, blk, blk_id, alloc_size);
 
     return NULL;
 }
 
-int32_t index_read_block_pingpong(index_handle_t * hnd, block_head_t * obj,
-    uint64_t vbn, uint32_t objid, uint32_t alloc_size)
+int32_t ofs_read_block_pingpong(container_handle_t *ct, block_head_t *blk, uint64_t vbn, uint32_t blk_id, uint32_t alloc_size)
 {
     int32_t ret = 0;
     uint32_t block_size = 0;
     uint8_t *buf = NULL;
     block_head_t * tmp_obj = NULL;
 
-    if ((NULL == hnd) || (NULL == obj) || (0 == alloc_size))
+    if ((NULL == ct) || (NULL == blk) || (0 == alloc_size))
     {
-        LOG_ERROR("Invalid parameter. hnd(%p) obj(%p) alloc_size(%d)\n", hnd, obj, alloc_size);
+        LOG_ERROR("Invalid parameter. ct(%p) blk(%p) alloc_size(%d)\n", ct, blk, alloc_size);
         return -FILE_BLOCK_ERR_PARAMETER;
     }
 
-    block_size = hnd->sb.block_size;
+    block_size = ct->sb.block_size;
 
     if (block_size < alloc_size)
     {
@@ -427,82 +416,80 @@ int32_t index_read_block_pingpong(index_handle_t * hnd, block_head_t * obj,
         return -FILE_BLOCK_ERR_ALLOCATE_MEMORY;
     }
 
-    ret = index_read_block(hnd, buf, block_size, 0, vbn);
+    ret = ofs_read_block(ct, buf, block_size, 0, vbn);
     if (0 > ret)
     {
         OS_FREE(buf);
         return ret;
     }
 
-    tmp_obj = get_last_correct_dat(buf, objid, alloc_size, block_size / alloc_size);
+    tmp_obj = get_last_correct_block(buf, blk_id, alloc_size, block_size / alloc_size);
     if (NULL == tmp_obj)
     {
-        LOG_ERROR("Get invalid object. hnd(%p) obj(%p) vbn(%lld)\n", hnd, tmp_obj, vbn);
+        LOG_ERROR("Get invalid object. ct(%p) blk(%p) vbn(%lld)\n", ct, tmp_obj, vbn);
         OS_FREE(buf);
         return -FILE_BLOCK_ERR_INVALID_OBJECT;
     }
 
     ASSERT(alloc_size >= tmp_obj->real_size);
-    memcpy(obj, tmp_obj, tmp_obj->real_size);
+    memcpy(blk, tmp_obj, tmp_obj->real_size);
     OS_FREE(buf);
 
     return 0;
 }
 
-int32_t index_update_sectors(index_handle_t * hnd, void * buf, uint32_t size,
-    uint64_t start_lba)
+int32_t ofs_update_sectors(container_handle_t *ct, void *buf, uint32_t size, uint64_t start_lba)
 {
     int32_t ret = 0;
 
-    if ((NULL == hnd) || (NULL == buf) || (0 >= (int32_t) size))
+    if ((NULL == ct) || (NULL == buf) || (0 >= (int32_t) size))
     {
-        LOG_ERROR("Invalid parameter. hnd(%p) buf(%p) size(%d)\n", hnd, buf, size);
+        LOG_ERROR("Invalid parameter. ct(%p) buf(%p) size(%d)\n", ct, buf, size);
         return -FILE_BLOCK_ERR_PARAMETER;
     }
 
-    start_lba += hnd->sb.start_lba;
-    ret = os_disk_pwrite(hnd->file_hnd, buf, size, start_lba);
+    start_lba += ct->sb.start_lba;
+    ret = os_disk_pwrite(ct->disk_hnd, buf, size, start_lba);
     if (ret != (int32_t)size)
     {
         LOG_ERROR("Write lba failed. f(%p) buf(%p) size(%d) lba(%lld) ret(%d)\n",
-            hnd->file_hnd, buf, size, start_lba, ret);
+            ct->disk_hnd, buf, size, start_lba, ret);
     }
 
     return ret;
 }
 
-int32_t index_read_sectors(index_handle_t * hnd, void * buf, uint32_t size,
-    uint64_t start_lba)
+int32_t ofs_read_sectors(container_handle_t *ct, void *buf, uint32_t size, uint64_t start_lba)
 {
     int32_t ret = 0;
 
-    if ((NULL == hnd) || (NULL == buf) || (0 >= (int32_t) size))
+    if ((NULL == ct) || (NULL == buf) || (0 >= (int32_t) size))
     {
-        LOG_ERROR("Invalid parameter. hnd(%p) buf(%p) size(%d)\n", hnd, buf, size);
+        LOG_ERROR("Invalid parameter. ct(%p) buf(%p) size(%d)\n", ct, buf, size);
         return -FILE_BLOCK_ERR_PARAMETER;
     }
 
-    start_lba += hnd->sb.start_lba;
-    ret = os_disk_pread(hnd->file_hnd, buf, size, start_lba);
+    start_lba += ct->sb.start_lba;
+    ret = os_disk_pread(ct->disk_hnd, buf, size, start_lba);
     if (ret != (int32_t)size)
     {
         LOG_ERROR("Read lba failed. f(%p) buf(%p) size(%d) lba(%lld) ret(%d)\n",
-            hnd->file_hnd, buf, size, start_lba, ret);
+            ct->disk_hnd, buf, size, start_lba, ret);
     }
 
     return ret;
 }
 
-EXPORT_SYMBOL(index_update_block);
-EXPORT_SYMBOL(index_read_block);
+EXPORT_SYMBOL(ofs_update_block);
+EXPORT_SYMBOL(ofs_read_block);
 
-EXPORT_SYMBOL(index_update_block_fixup);
-EXPORT_SYMBOL(index_read_block_fixup);
+EXPORT_SYMBOL(ofs_update_block_fixup);
+EXPORT_SYMBOL(ofs_read_block_fixup);
 
-EXPORT_SYMBOL(index_update_block_pingpong_init);
-EXPORT_SYMBOL(index_update_block_pingpong);
-EXPORT_SYMBOL(index_read_block_pingpong);
+EXPORT_SYMBOL(ofs_update_block_pingpong_init);
+EXPORT_SYMBOL(ofs_update_block_pingpong);
+EXPORT_SYMBOL(ofs_read_block_pingpong);
 
-EXPORT_SYMBOL(index_update_sectors);
-EXPORT_SYMBOL(index_read_sectors);
+EXPORT_SYMBOL(ofs_update_sectors);
+EXPORT_SYMBOL(ofs_read_sectors);
 

@@ -43,7 +43,7 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
     uint64_t objid, uint64_t keys_num, net_para_t *net)
 {
     int32_t ret = 0;
-    index_handle_t *index = NULL;
+    container_handle_t *ct = NULL;
     object_handle_t *obj = NULL;
     uint64_t key = 0;
     uint8_t c[TEST_VALUE_LEN];
@@ -53,19 +53,19 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
     ASSERT(0 != strlen(index_name));
     ASSERT(0 != objid);
 
-    ret = index_open(index_name, start_lba, &index);
+    ret = ofs_open_container(index_name, start_lba, &ct);
     if (ret < 0)
     {
-        OS_PRINT(net, "Open index failed. name(%s)  start_lba(%lld) ret(%d)\n",
+        OS_PRINT(net, "Open ct failed. name(%s)  start_lba(%lld) ret(%d)\n",
             index_name, start_lba, ret);
         return ret;
     }
 
-    ret = index_create_object(index, objid, FLAG_TABLE | CR_ANSI_STRING | (CR_ANSI_STRING << 4), &obj);
+    ret = ofs_create_object(ct, objid, FLAG_TABLE | CR_ANSI_STRING | (CR_ANSI_STRING << 4), &obj);
     if (ret < 0)
     {
         OS_PRINT(net, "Create obj failed. objid(%lld) ret(%d)\n", objid, ret);
-        (void)index_close(index);
+        (void)ofs_close_container(ct);
         return ret;
     }
 
@@ -88,8 +88,8 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
     OS_PRINT(net, "Finished insert key. objid(%lld) total(%lld) time(%lld ms)\n",
         objid, keys_num, os_get_ms_count() - ullTime);
 
-    (void)index_close_object(obj);
-    (void)index_close(index);
+    (void)ofs_close_object(obj);
+    (void)ofs_close_container(ct);
     
     return 0;
 }
@@ -98,7 +98,7 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
     uint64_t objid, uint64_t keys_num, net_para_t *net)
 {
     int32_t ret = 0;
-    index_handle_t *index = NULL;
+    container_handle_t *ct = NULL;
     object_handle_t *obj = NULL;
     uint64_t key = 0;
     uint64_t ullTime = 0;
@@ -107,19 +107,19 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
     ASSERT(0 != strlen(index_name));
     ASSERT(0 != objid);
 
-    ret = index_open(index_name, start_lba, &index);
+    ret = ofs_open_container(index_name, start_lba, &ct);
     if (ret < 0)
     {
-        OS_PRINT(net, "Open index failed. name(%s) start_lba(%lld) ret(%d)\n",
+        OS_PRINT(net, "Open ct failed. name(%s) start_lba(%lld) ret(%d)\n",
             index_name, start_lba, ret);
         return ret;
     }
 
-    ret = index_open_object(index, objid, &obj);
+    ret = ofs_open_object(ct, objid, &obj);
     if (ret < 0)
     {
         OS_PRINT(net, "Open tree failed. objid(%lld) ret(%d)\n", objid, ret);
-        (void)index_close(index);
+        (void)ofs_close_container(ct);
         return ret;
     }
 
@@ -139,8 +139,8 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
     OS_PRINT(net, "Finished remove key. objid(%lld) total(%lld) time(%lld ms)\n",
         objid, keys_num, os_get_ms_count() - ullTime);
 
-    (void)index_close_object(obj);
-    (void)index_close(index);
+    (void)ofs_close_object(obj);
+    (void)ofs_close_container(ct);
     
     return 0;
 }
@@ -230,7 +230,7 @@ int do_performance_cmd(int argc, char *argv[], net_para_t *net)
     if ((0 == strlen(para->index_name))
         || OBJID_IS_INVALID(para->objid))
     {
-        OS_PRINT(net, "invalid index name(%s) or objid(%lld).\n", para->index_name, para->objid);
+        OS_PRINT(net, "invalid ct name(%s) or objid(%lld).\n", para->index_name, para->objid);
         OS_FREE(para);
         return -2;
     }

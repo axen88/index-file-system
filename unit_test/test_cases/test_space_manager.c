@@ -45,12 +45,12 @@ History:
 static int init_suite(void)
 {
     LOG_SYSTEM_INIT();
-    return index_init_system();
+    return ofs_init_system();
 }
 
 static int clean_suite(void)
 {
-    index_exit_system();
+    ofs_exit_system();
     LOG_SYSTEM_EXIT();
     //_CrtDumpMemoryLeaks();
 	return 0;
@@ -59,32 +59,32 @@ static int clean_suite(void)
 // no space
 void test_space_manager_1(void)
 {
-    index_handle_t *index;
+    container_handle_t *ct;
     object_handle_t *obj;
     uint64_t start_blk;
     
-    CU_ASSERT(0 == index_create("index0", 1000, 0, &index));
-    CU_ASSERT(0 == index_create_object(index, 500, FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj));
+    CU_ASSERT(0 == ofs_create_container("index0", 1000, 0, &ct));
+    CU_ASSERT(0 == ofs_create_object(ct, 500, FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj));
 
     CU_ASSERT(alloc_space(obj, 100, 50, &start_blk) == -INDEX_ERR_NO_FREE_BLOCKS); // no space now
 
-    CU_ASSERT(0 == index_close_object(obj));
-    CU_ASSERT(0 == index_close(index));
+    CU_ASSERT(0 == ofs_close_object(obj));
+    CU_ASSERT(0 == ofs_close_container(ct));
 
-    CU_ASSERT(0 == index_open("index0", 0, &index));
-    CU_ASSERT(0 == index_close(index));
+    CU_ASSERT(0 == ofs_open_container("index0", 0, &ct));
+    CU_ASSERT(0 == ofs_close_container(ct));
 }
 
 // allocate all space by one/two allocation action
 void test_space_manager_2(void)
 {
-    index_handle_t *index;
+    container_handle_t *ct;
     object_handle_t *obj;
     uint64_t start_blk;
     int32_t ret;
     
-    CU_ASSERT(0 == index_create("index0", 1000, 0, &index));
-    CU_ASSERT(0 == index_create_object(index, 500, FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj));
+    CU_ASSERT(0 == ofs_create_container("index0", 1000, 0, &ct));
+    CU_ASSERT(0 == ofs_create_object(ct, 500, FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj));
 
     CU_ASSERT(free_space(obj, 100, 50) == 0);
     ret = alloc_space(obj, 10, 80, &start_blk); // will alloc 100, 50
@@ -152,22 +152,22 @@ void test_space_manager_2(void)
     ret = alloc_space(obj, 160, 60, &start_blk); // no space now
     CU_ASSERT(ret == -INDEX_ERR_NO_FREE_BLOCKS);
     
-    CU_ASSERT(0 == index_close_object(obj));
-    CU_ASSERT(0 == index_close(index));
+    CU_ASSERT(0 == ofs_close_object(obj));
+    CU_ASSERT(0 == ofs_close_container(ct));
 
-    CU_ASSERT(0 == index_open("index0", 0, &index));
-    CU_ASSERT(0 == index_close(index));
+    CU_ASSERT(0 == ofs_open_container("index0", 0, &ct));
+    CU_ASSERT(0 == ofs_close_container(ct));
 }
 
 void test_space_manager_3(void)
 {
-    index_handle_t *index;
+    container_handle_t *ct;
     object_handle_t *obj;
     uint64_t start_blk;
     int32_t ret;
     
-    CU_ASSERT(0 == index_create("index0", 1000, 0, &index));
-    CU_ASSERT(0 == index_create_object(index, 500, FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj));
+    CU_ASSERT(0 == ofs_create_container("index0", 1000, 0, &ct));
+    CU_ASSERT(0 == ofs_create_object(ct, 500, FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj));
 
     CU_ASSERT(free_space(obj, 100, 50) == 0);
     ret = alloc_space(obj, 110, 20, &start_blk); // will alloc 110, 20
@@ -193,11 +193,11 @@ void test_space_manager_3(void)
     
     CU_ASSERT(free_space(obj, 100, 50) == 0);
     
-    CU_ASSERT(0 == index_close_object(obj));
-    CU_ASSERT(0 == index_close(index));
+    CU_ASSERT(0 == ofs_close_object(obj));
+    CU_ASSERT(0 == ofs_close_container(ct));
 
-    CU_ASSERT(0 == index_open("index0", 0, &index));
-    CU_ASSERT(0 == index_close(index));
+    CU_ASSERT(0 == ofs_open_container("index0", 0, &ct));
+    CU_ASSERT(0 == ofs_close_container(ct));
 }
 
 #define TEST_OBJID   200
@@ -205,31 +205,31 @@ void test_space_manager_3(void)
 
 void test_space_manager_4(void)
 {
-    index_handle_t *index;
+    container_handle_t *ct;
     uint64_t start_blk[TEST_NUM];
     int32_t ret[TEST_NUM];
     int32_t i = 0;
     uint32_t blk_cnt[TEST_NUM] = {1, 20, 100, 500, 2000};
     
-    CU_ASSERT(0 == index_create("index0", 100000, 0, &index));
+    CU_ASSERT(0 == ofs_create_container("index0", 100000, 0, &ct));
 
     for (i = 0; i < TEST_NUM; i++)
     {
-        ret[i] = index_alloc_space(index, TEST_OBJID, blk_cnt[i], &start_blk[i]);
+        ret[i] = ofs_alloc_space(ct, TEST_OBJID, blk_cnt[i], &start_blk[i]);
         CU_ASSERT(start_blk[i] > 0);
         CU_ASSERT(ret[i] == blk_cnt[i]);
     }
 
     for (i = 0; i < TEST_NUM; i++)
     {
-        ret[i] = index_free_space(index, TEST_OBJID, start_blk[i], blk_cnt[i]);
+        ret[i] = ofs_free_space(ct, TEST_OBJID, start_blk[i], blk_cnt[i]);
         CU_ASSERT(ret[i] == 0);
     }
     
-    CU_ASSERT(0 == index_close(index));
+    CU_ASSERT(0 == ofs_close_container(ct));
 
-    CU_ASSERT(0 == index_open("index0", 0, &index));
-    CU_ASSERT(0 == index_close(index));
+    CU_ASSERT(0 == ofs_open_container("index0", 0, &ct));
+    CU_ASSERT(0 == ofs_close_container(ct));
 }
 
 int add_space_manager_test_case(void)

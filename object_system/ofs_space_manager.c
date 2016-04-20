@@ -37,7 +37,7 @@
  *******************************************************************************/
 #include "ofs_if.h"
  
- MODULE(PID_INDEX);
+ MODULE(PID_SPACE_MANAGER);
 #include "os_log.h"
 
 int32_t alloc_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt, uint64_t *real_start_blk)
@@ -171,7 +171,7 @@ int32_t free_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt)
     return index_insert_key_nolock(obj, addr_str, addr_size, len_str, len_size);
 }
 
-void index_init_sm(space_manager_t *sm, object_handle_t *obj, uint64_t first_free_block,
+void ofs_init_sm(space_manager_t *sm, object_handle_t *obj, uint64_t first_free_block,
     uint64_t total_free_blocks)
 {
     sm->space_obj = obj;
@@ -180,7 +180,7 @@ void index_init_sm(space_manager_t *sm, object_handle_t *obj, uint64_t first_fre
     OS_RWLOCK_INIT(&sm->lock);
 }
 
-int32_t index_init_free_space(space_manager_t *sm, uint64_t start_blk, uint64_t blk_cnt)
+int32_t ofs_init_free_space(space_manager_t *sm, uint64_t start_blk, uint64_t blk_cnt)
 {
     uint8_t addr_str[U64_MAX_SIZE];
     uint8_t len_str[U64_MAX_SIZE];
@@ -193,7 +193,7 @@ int32_t index_init_free_space(space_manager_t *sm, uint64_t start_blk, uint64_t 
     return index_insert_key_nolock(sm->space_obj, addr_str, addr_size, len_str, len_size);
 }
 
-void index_destroy_sm(space_manager_t *sm)
+void ofs_destroy_sm(space_manager_t *sm)
 {
     if (sm->space_obj == NULL)
     {
@@ -267,28 +267,28 @@ int32_t sm_free_space(space_manager_t *sm, uint64_t start_blk, uint32_t blk_cnt)
     return ret;
 }
 
-int32_t reserve_base_space(index_handle_t *index)
+int32_t reserve_base_space(container_handle_t *ct)
 {
     uint32_t blk_cnt;
     int32_t ret;
     uint64_t real_start_blk;
 
-    if (index->base_blk == 0)
+    if (ct->base_blk == 0)
     {
-        ret = sm_alloc_space(&index->sm, 1, &real_start_blk);
+        ret = sm_alloc_space(&ct->sm, 1, &real_start_blk);
         if (ret < 0)
         {
             LOG_ERROR("allocate base block failed. ret(%d)\n", ret);
             return ret;
         }
 
-        index->base_blk = real_start_blk;
+        ct->base_blk = real_start_blk;
     }
     
-    while (index->bsm.total_free_blocks <= MIN_BLK_NUM)
+    while (ct->bsm.total_free_blocks <= MIN_BLK_NUM)
     {
-        blk_cnt = (uint32_t)(MAX_BLK_NUM - index->bsm.total_free_blocks);
-        ret = sm_alloc_space(&index->sm, blk_cnt, &real_start_blk);
+        blk_cnt = (uint32_t)(MAX_BLK_NUM - ct->bsm.total_free_blocks);
+        ret = sm_alloc_space(&ct->sm, blk_cnt, &real_start_blk);
         if (ret < 0)
         {
             LOG_ERROR("allocate base space failed. blk_cnt(%d) ret(%d)\n", blk_cnt, ret);
@@ -296,7 +296,7 @@ int32_t reserve_base_space(index_handle_t *index)
         }
 
         blk_cnt = ret;
-        ret = sm_free_space(&index->bsm, real_start_blk, blk_cnt);
+        ret = sm_free_space(&ct->bsm, real_start_blk, blk_cnt);
         if (ret < 0)
         {
             LOG_ERROR("free base space failed. blk_cnt(%d) ret(%d)\n", blk_cnt, ret);
@@ -311,52 +311,52 @@ int32_t reserve_base_space(index_handle_t *index)
 // >  0: real blk cnt
 // == 0: no free blk
 // <  0: error code
-int32_t index_alloc_space(index_handle_t *index, uint64_t objid, uint32_t blk_cnt, uint64_t *real_start_blk)
+int32_t ofs_alloc_space(container_handle_t *ct, uint64_t objid, uint32_t blk_cnt, uint64_t *real_start_blk)
 {
     int32_t ret;
     
-    if (objid == index->bsm.space_obj->obj_info->objid)
+    if (objid == ct->bsm.space_obj->obj_info->objid)
     {
-        ASSERT(index->base_blk != 0);
+        ASSERT(ct->base_blk != 0);
         ASSERT(blk_cnt == 1);
         
-        *real_start_blk = index->base_blk;
-        index->base_blk = 0;
+        *real_start_blk = ct->base_blk;
+        ct->base_blk = 0;
         return blk_cnt;
     }
 
-    if (objid == index->sm.space_obj->obj_info->objid)
+    if (objid == ct->sm.space_obj->obj_info->objid)
     {
-        return sm_alloc_space(&index->bsm, blk_cnt, real_start_blk);
+        return sm_alloc_space(&ct->bsm, blk_cnt, real_start_blk);
     }
 
-    ret = reserve_base_space(index);
+    ret = reserve_base_space(ct);
     if (ret < 0)
     {
         LOG_ERROR("reserve base space failed. ret(%d)\n", ret);
         return ret;
     }
     
-    return sm_alloc_space(&index->sm, blk_cnt, real_start_blk);
+    return sm_alloc_space(&ct->sm, blk_cnt, real_start_blk);
 }
 
-int32_t index_free_space(index_handle_t *index, uint64_t objid, uint64_t start_blk, uint32_t blk_cnt)
+int32_t ofs_free_space(container_handle_t *ct, uint64_t objid, uint64_t start_blk, uint32_t blk_cnt)
 {
-    if (objid == index->bsm.space_obj->obj_info->objid)
+    if (objid == ct->bsm.space_obj->obj_info->objid)
     {
-        ASSERT(index->base_blk == 0);
+        ASSERT(ct->base_blk == 0);
         ASSERT(blk_cnt == 1);
         
-        index->base_blk = start_blk;
+        ct->base_blk = start_blk;
         return 0;
     }
     
-    if (objid == index->sm.space_obj->obj_info->objid)
+    if (objid == ct->sm.space_obj->obj_info->objid)
     {
-        return sm_free_space(&index->bsm, start_blk, blk_cnt);
+        return sm_free_space(&ct->bsm, start_blk, blk_cnt);
     }
 
-    return sm_free_space(&index->sm, start_blk, blk_cnt);
+    return sm_free_space(&ct->sm, start_blk, blk_cnt);
 }
 
 

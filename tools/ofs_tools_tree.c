@@ -39,14 +39,14 @@ History:
 static int32_t cmd_insert_key(ifs_tools_para_t *para)
 {
     int32_t ret = 0;
-    index_handle_t *index = NULL;
+    container_handle_t *ct = NULL;
     object_handle_t *obj = NULL;
 
     ASSERT(NULL != para);
 
     if ((0 == strlen(para->index_name)) || OBJID_IS_INVALID(para->objid))
     {
-        OS_PRINT(para->net, "invalid index name(%s) or objid(%lld).\n",
+        OS_PRINT(para->net, "invalid ct name(%s) or objid(%lld).\n",
             para->index_name, para->objid);
         return -1;
     }
@@ -59,20 +59,20 @@ static int32_t cmd_insert_key(ifs_tools_para_t *para)
         return -1;
     }
 
-    ret = index_open(para->index_name, para->start_lba, &index);
+    ret = ofs_open_container(para->index_name, para->start_lba, &ct);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Open index failed. index(%s) start_lba(%lld) ret(%d)\n",
+        OS_PRINT(para->net, "Open ct failed. ct(%s) start_lba(%lld) ret(%d)\n",
             para->index_name, para->start_lba, ret);
         return ret;
     }
 
-    ret = index_open_object(index, para->objid, &obj);
+    ret = ofs_open_object(ct, para->objid, &obj);
     if (ret < 0)
     {
         OS_PRINT(para->net, "Create obj failed. objid(%lld) ret(%d)\n",
             para->objid, ret);
-        (void)index_close(index);
+        (void)ofs_close_container(ct);
         return ret;
     }
 
@@ -84,8 +84,8 @@ static int32_t cmd_insert_key(ifs_tools_para_t *para)
             para->key, para->value, ret);
     }
 
-    (void)index_close_object(obj);
-    (void)index_close(index);
+    (void)ofs_close_object(obj);
+    (void)ofs_close_container(ct);
     
     return ret;
 }
@@ -93,14 +93,14 @@ static int32_t cmd_insert_key(ifs_tools_para_t *para)
 static int32_t cmd_remove_key(ifs_tools_para_t *para)
 {
     int32_t ret = 0;
-    index_handle_t *index = NULL;
+    container_handle_t *ct = NULL;
     object_handle_t *obj = NULL;
 
     ASSERT(NULL != para);
 
     if ((0 == strlen(para->index_name)) || OBJID_IS_INVALID(para->objid))
     {
-        OS_PRINT(para->net, "invalid index name(%s) or objid(%lld).\n",
+        OS_PRINT(para->net, "invalid ct name(%s) or objid(%lld).\n",
             para->index_name, para->objid);
         return -1;
     }
@@ -111,20 +111,20 @@ static int32_t cmd_remove_key(ifs_tools_para_t *para)
         return -1;
     }
 
-    ret = index_open(para->index_name, para->start_lba, &index);
+    ret = ofs_open_container(para->index_name, para->start_lba, &ct);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Open index failed. index(%s) start_lba(%lld) ret(%d)\n",
+        OS_PRINT(para->net, "Open ct failed. ct(%s) start_lba(%lld) ret(%d)\n",
             para->index_name, para->start_lba, ret);
         return ret;
     }
 
-    ret = index_open_object(index, para->objid, &obj);
+    ret = ofs_open_object(ct, para->objid, &obj);
     if (ret < 0)
     {
         OS_PRINT(para->net, "Open tree failed. objid(%lld) ret(%d)\n",
             para->objid, ret);
-        (void)index_close(index);
+        (void)ofs_close_container(ct);
         return ret;
     }
 
@@ -135,8 +135,8 @@ static int32_t cmd_remove_key(ifs_tools_para_t *para)
             para->key, ret);
     }
 
-    (void)index_close_object(obj);
-    (void)index_close(index);
+    (void)ofs_close_object(obj);
+    (void)ofs_close_container(ct);
     
     return ret;
 }

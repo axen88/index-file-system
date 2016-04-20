@@ -45,7 +45,7 @@ History:
 #include <stdarg.h>
 #include "ofs_if.h"
 
-MODULE(PID_INDEX);
+MODULE(PID_SERVER);
 #include "os_log.h"
 
 extern os_cmd_list_t ifs_cmd_list[];

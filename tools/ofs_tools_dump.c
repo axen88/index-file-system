@@ -114,7 +114,7 @@ static int32_t dump_callback(object_handle_t *tree, dump_para_t *para)
     return 0;
 }
 
-static int32_t dump_key(object_handle_t *tree, const bool_t v_bReverse, net_para_t *net)
+static int32_t dump_key(object_handle_t *tree, const bool_t reverse, net_para_t *net)
 {
     int32_t ret = 0;
     dump_para_t para;
@@ -129,7 +129,7 @@ static int32_t dump_key(object_handle_t *tree, const bool_t v_bReverse, net_para
     OS_PRINT(net, "objid: %lld, inode_no: %lld, name: %s\n", obj_info->objid, obj_info->inode_no, obj_info->obj_name);
 
     para.net = net;
-    ret = index_walk_all(tree, v_bReverse, 0, &para, (tree_walk_cb_t)dump_callback);
+    ret = index_walk_all(tree, reverse, 0, &para, (tree_walk_cb_t)dump_callback);
     if (ret < 0)
     {
         OS_PRINT(net, "Walk tree failed. objid(%lld) ret(%d)\n", tree->obj_info->objid, ret);
@@ -140,7 +140,7 @@ static int32_t dump_key(object_handle_t *tree, const bool_t v_bReverse, net_para
 
 void dump_cmd(ifs_tools_para_t *para)
 {
-    index_handle_t *index = NULL;
+    container_handle_t *ct = NULL;
     object_handle_t *obj = NULL;
     int32_t ret = 0;
     
@@ -148,14 +148,14 @@ void dump_cmd(ifs_tools_para_t *para)
 
     if (0 == strlen(para->index_name))
     {
-        OS_PRINT(para->net, "invalid index name.\n");
+        OS_PRINT(para->net, "invalid ct name.\n");
         return;
     }
     
-    ret = index_open(para->index_name, para->start_lba, &index);
+    ret = ofs_open_container(para->index_name, para->start_lba, &ct);
     if (0 > ret)
     {
-        OS_PRINT(para->net, "Open index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
+        OS_PRINT(para->net, "Open ct failed. index_name(%s) start_lba(%lld) ret(%d)\n",
             para->index_name, para->start_lba, ret);
         return;
     }
@@ -165,19 +165,19 @@ void dump_cmd(ifs_tools_para_t *para)
         para->objid = OBJID_OBJ_ID;
     }
     
-    ret = index_open_object(index, para->objid, &obj);
+    ret = ofs_open_object(ct, para->objid, &obj);
     if (0 > ret)
     {
         OS_PRINT(para->net, "Open obj failed. index_name(%s) start_lba(%lld) objid(%lld) ret(%d)\n",
             para->index_name, para->start_lba, para->objid, ret);
-        (void)index_close(index);
+        (void)ofs_close_container(ct);
 		return;
     }
 
     ret = dump_key(obj, para->flags & TOOLS_FLAGS_REVERSE, para->net);
 
-    (void)index_close_object(obj);
-	(void)index_close(index);
+    (void)ofs_close_object(obj);
+	(void)ofs_close_container(ct);
 	
 	return;
 }

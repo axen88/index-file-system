@@ -22,7 +22,7 @@
 
             Copyright(C), 2016~2019, axen.hook@foxmail.com
 ********************************************************************************
-File Name: INDEX_TREE.H
+File Name: OFS_TREE.H
 Author   : axen.hook
 Version  : 1.00
 Date     : 02/Mar/2016
@@ -35,12 +35,14 @@ History:
     1. Primary version
 *******************************************************************************/
 
-#ifndef __INDEX_TREE_H__
-#define __INDEX_TREE_H__
+#ifndef __OFS_TREE_H__
+#define __OFS_TREE_H__
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
+
+#define TREE_MAX_DEPTH     16
 
 /* flags in index_walk_all routine */
 #define INDEX_GET_FIRST      0x01 /* 0: get the next key, 1: get the first */
@@ -52,6 +54,8 @@ extern "C" {
 #define INDEX_ADD_BLOCK      0x40 /* add the block of the current key occupied */
 #define INDEX_WALK_MASK      0x1F
 
+#define IB(b)   ((index_block_t *)(b))
+
 typedef int32_t (*tree_walk_cb_t) (void *obj, void *para);
 
 extern int32_t index_search_key_nolock(object_handle_t *tree, const void *key,
@@ -61,17 +65,6 @@ extern int32_t index_remove_key_nolock(object_handle_t * obj, const void * key,
 extern int32_t index_insert_key_nolock(object_handle_t * obj, const void * key,
     uint16_t key_len, const void *value, uint16_t value_len);
 
-extern int32_t index_search_key(object_handle_t *obj, const void *key,
-    uint16_t key_len);
-extern int32_t index_remove_key(object_handle_t *obj, const void *key,
-    uint16_t key_len);
-extern int32_t index_insert_key(object_handle_t *obj, const void *key,
-    uint16_t key_len, const void *value, uint16_t value_len);
-extern int32_t index_update_value(object_handle_t * tree, const void * key,
-    uint16_t key_len, const void *value, uint16_t value_len);
-
-extern int32_t index_walk_all(object_handle_t *obj, bool_t v_bReverse,
-    uint8_t flags, void *para, tree_walk_cb_t cb);
 
 extern int32_t walk_tree(object_handle_t *obj, uint8_t flags);
 extern int64_t index_get_total_key(object_handle_t *obj);
@@ -94,6 +87,14 @@ extern void init_ib(index_block_t * v_pstIB, uint8_t v_ucNodeType,
 extern int32_t search_key_internal(object_handle_t *tree, const void *key,
     uint16_t key_len, const void *value, uint16_t value_len);
 int32_t tree_remove_ie(object_handle_t *tree);
+
+
+// table/KV/index API
+int32_t index_search_key(object_handle_t *obj, const void *key, uint16_t key_len);
+int32_t index_remove_key(object_handle_t *obj, const void *key, uint16_t key_len);
+int32_t index_insert_key(object_handle_t *obj, const void *key, uint16_t key_len, const void *value, uint16_t value_len);
+int32_t index_update_value(object_handle_t * tree, const void * key, uint16_t key_len, const void *value, uint16_t value_len);
+int32_t index_walk_all(object_handle_t *obj, bool_t reverse, uint8_t flags, void *para, tree_walk_cb_t cb);
 
 #ifdef	__cplusplus
 }

@@ -36,7 +36,7 @@ History:
 *******************************************************************************/
 #include "ofs_if.h"
 
-int32_t print_one_cache_info(net_para_t *net, ifs_block_cache_t *cache)
+int32_t print_one_cache_info(net_para_t *net, ofs_block_cache_t *cache)
 {
     ASSERT(NULL != cache);
 
@@ -46,11 +46,11 @@ int32_t print_one_cache_info(net_para_t *net, ifs_block_cache_t *cache)
     return 0;
 }
 
-int32_t print_one_fs_info(net_para_t *net, index_handle_t *index)
+int32_t print_one_fs_info(net_para_t *net, container_handle_t *ct)
 {
-    ASSERT(NULL != index);
+    ASSERT(NULL != ct);
 
-    OS_PRINT(net, "name: %s, flags: 0x%x, ref: %u\n", index->name, index->flags, index->index_ref_cnt);
+    OS_PRINT(net, "name: %s, flags: 0x%x, ref: %u\n", ct->name, ct->flags, ct->index_ref_cnt);
 
     return 0;
 }
@@ -67,79 +67,79 @@ int32_t print_one_obj_info(net_para_t *net, object_info_t *obj_info)
 
 int32_t print_super_block(char *index_name, uint64_t start_lba, net_para_t *net)
 {
-    index_handle_t *index = NULL;
+    container_handle_t *ct = NULL;
     int32_t ret = 0;
     
     ASSERT (NULL != index_name);
     ASSERT (0 != strlen(index_name));
 
-    ret = index_open(index_name, start_lba, &index);
+    ret = ofs_open_container(index_name, start_lba, &ct);
     if (0 > ret)
     {
-        OS_PRINT(net, "Open index failed. index_name(%s) start_lba(%lld) ret(%d)\n",
+        OS_PRINT(net, "Open ct failed. index_name(%s) start_lba(%lld) ret(%d)\n",
             index_name, start_lba, ret);
         return ret;
     }
     
-    OS_RWLOCK_WRLOCK(&index->index_lock);
+    OS_RWLOCK_WRLOCK(&ct->index_lock);
 
-    OS_PRINT(net, "blk_id                : 0x%X\n",   index->sb.head.blk_id);
-    OS_PRINT(net, "alloc_size            : %d\n",     index->sb.head.alloc_size);
-    OS_PRINT(net, "real_size             : %d\n",     index->sb.head.real_size);
-    OS_PRINT(net, "seq_no                : 0x%04X\n", index->sb.head.seq_no);
-    OS_PRINT(net, "fixup                 : 0x%04X\n\n", index->sb.head.fixup);
+    OS_PRINT(net, "blk_id                : 0x%X\n",   ct->sb.head.blk_id);
+    OS_PRINT(net, "alloc_size            : %d\n",     ct->sb.head.alloc_size);
+    OS_PRINT(net, "real_size             : %d\n",     ct->sb.head.real_size);
+    OS_PRINT(net, "seq_no                : 0x%04X\n", ct->sb.head.seq_no);
+    OS_PRINT(net, "fixup                 : 0x%04X\n\n", ct->sb.head.fixup);
 
     
-    OS_PRINT(net, "block_size_shift      : %d\n", index->sb.block_size_shift);
-    OS_PRINT(net, "block_size            : %d\n", index->sb.block_size);
-    OS_PRINT(net, "sectors_per_block     : %d\n\n", index->sb.sectors_per_block);
+    OS_PRINT(net, "block_size_shift      : %d\n", ct->sb.block_size_shift);
+    OS_PRINT(net, "block_size            : %d\n", ct->sb.block_size);
+    OS_PRINT(net, "sectors_per_block     : %d\n\n", ct->sb.sectors_per_block);
     
-    OS_PRINT(net, "start_lba             : %lld\n",  index->sb.start_lba);
-    OS_PRINT(net, "total_blocks          : %lld\n\n", index->sb.total_blocks);
+    OS_PRINT(net, "start_lba             : %lld\n",  ct->sb.start_lba);
+    OS_PRINT(net, "total_blocks          : %lld\n\n", ct->sb.total_blocks);
     
-    OS_PRINT(net, "objid_id              : %lld\n",  index->sb.objid_id);
-    OS_PRINT(net, "objid_inode_no        : %lld\n\n",  index->sb.objid_inode_no);
+    OS_PRINT(net, "objid_id              : %lld\n",  ct->sb.objid_id);
+    OS_PRINT(net, "objid_inode_no        : %lld\n\n",  ct->sb.objid_inode_no);
     
-    OS_PRINT(net, "space_id              : %lld\n",  index->sb.space_id);
-    OS_PRINT(net, "space_inode_no        : %lld\n",  index->sb.space_inode_no);
-    OS_PRINT(net, "free_blocks           : %lld\n",  index->sb.free_blocks);
-    OS_PRINT(net, "first_free_block      : %lld\n\n",  index->sb.first_free_block);
+    OS_PRINT(net, "space_id              : %lld\n",  ct->sb.space_id);
+    OS_PRINT(net, "space_inode_no        : %lld\n",  ct->sb.space_inode_no);
+    OS_PRINT(net, "free_blocks           : %lld\n",  ct->sb.free_blocks);
+    OS_PRINT(net, "first_free_block      : %lld\n\n",  ct->sb.first_free_block);
     
-    OS_PRINT(net, "base_id               : %lld\n",  index->sb.base_id);
-    OS_PRINT(net, "base_inode_no         : %lld\n",  index->sb.base_inode_no);
-    OS_PRINT(net, "base_free_blocks      : %lld\n",  index->sb.base_free_blocks);
-    OS_PRINT(net, "base_first_free_block : %lld\n\n",  index->sb.base_first_free_block);
+    OS_PRINT(net, "base_id               : %lld\n",  ct->sb.base_id);
+    OS_PRINT(net, "base_inode_no         : %lld\n",  ct->sb.base_inode_no);
+    OS_PRINT(net, "base_free_blocks      : %lld\n",  ct->sb.base_free_blocks);
+    OS_PRINT(net, "base_first_free_block : %lld\n\n",  ct->sb.base_first_free_block);
 
-    OS_PRINT(net, "base_blk              : %lld\n\n",  index->sb.base_blk);
+    OS_PRINT(net, "base_blk              : %lld\n\n",  ct->sb.base_blk);
 
-    OS_PRINT(net, "snapshot_no           : %lld\n\n",  index->sb.snapshot_no);
+    OS_PRINT(net, "snapshot_no           : %lld\n\n",  ct->sb.snapshot_no);
     
-    OS_PRINT(net, "flags                 : 0x%08X\n", index->sb.flags);
-    OS_PRINT(net, "version               : %d\n",     index->sb.version);
-    OS_PRINT(net, "magic_num             : 0x%04X\n", index->sb.magic_num);
+    OS_PRINT(net, "flags                 : 0x%08X\n", ct->sb.flags);
+    OS_PRINT(net, "version               : %d\n",     ct->sb.version);
+    OS_PRINT(net, "magic_num             : 0x%04X\n", ct->sb.magic_num);
     
-    OS_RWLOCK_WRUNLOCK(&index->index_lock);
+    OS_RWLOCK_WRUNLOCK(&ct->index_lock);
     
-    (void)index_close(index);
+    (void)ofs_close_container(ct);
     
     return 0;
 }
 
-void print_fs_info(net_para_t *net, index_handle_t *index)
+void print_fs_info(net_para_t *net, container_handle_t *ct)
 {
     OS_PRINT(net, "FS info:\n");
     OS_PRINT(net, "-----------------------------------------\n");
-    OS_PRINT(net, "name        : %s\n", index->name);
-    OS_PRINT(net, "flags       : 0x%x\n", index->flags);
-    OS_PRINT(net, "ref_cnt     : %u\n", index->index_ref_cnt);
+    OS_PRINT(net, "name        : %s\n", ct->name);
+    OS_PRINT(net, "flags       : 0x%x\n", ct->flags);
+    OS_PRINT(net, "ref_cnt     : %u\n", ct->index_ref_cnt);
     
     OS_PRINT(net, "\nObject list:\n");
     OS_PRINT(net, "-----------------------------------------\n");
-    avl_walk_all(&index->obj_info_list, (avl_walk_cb_t)print_one_obj_info, net);
+    avl_walk_all(&ct->obj_info_list, (avl_walk_cb_t)print_one_obj_info, net);
     
     OS_PRINT(net, "\nCache list:\n");
     OS_PRINT(net, "-----------------------------------------\n");
-    avl_walk_all(&index->metadata_cache, (avl_walk_cb_t)print_one_cache_info, net);
+    avl_walk_all(&ct->metadata_cache, (avl_walk_cb_t)print_one_cache_info, net);
 }
 
 void print_obj_info(net_para_t *net, object_info_t *obj_info)
@@ -151,8 +151,8 @@ void print_obj_info(net_para_t *net, object_info_t *obj_info)
     OS_PRINT(net, "obj_name               : %s\n",   obj_info->obj_name);
     OS_PRINT(net, "state                  : 0x%x\n", obj_info->obj_state);
     OS_PRINT(net, "ref_cnt                : %d\n",   obj_info->obj_ref_cnt);
-    OS_PRINT(net, "vbn                    : %lld\n", obj_info->root_ibc.vbn);
-    OS_PRINT(net, "state                  : 0x%x\n", obj_info->root_ibc.state);
+    OS_PRINT(net, "vbn                    : %lld\n", obj_info->root_cache.vbn);
+    OS_PRINT(net, "state                  : 0x%x\n", obj_info->root_cache.state);
     
     OS_PRINT(net, "\nCache info:\n");
     OS_PRINT(net, "-----------------------------------------\n");
@@ -162,39 +162,39 @@ void print_obj_info(net_para_t *net, object_info_t *obj_info)
 int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, net_para_t *net)
 {
     int32_t ret = 0;
-    index_handle_t *index = NULL;
+    container_handle_t *ct = NULL;
     object_info_t *obj_info = NULL;
     
     ASSERT(NULL != index_name);
     
     if (0 == strlen(index_name))
     {
-        ret = walk_all_opened_index((int32_t (*)(void *, index_handle_t *))print_one_fs_info, net);
+        ret = walk_all_opened_index((int32_t (*)(void *, container_handle_t *))print_one_fs_info, net);
         if (0 > ret)
         {
-            OS_PRINT(net, "Walk all opened index failed. ret(%d)\n", ret);
+            OS_PRINT(net, "Walk all opened ct failed. ret(%d)\n", ret);
         }
 
         return ret;
     }
 
-    index = index_get_handle(index_name);
-    if (NULL == index)
+    ct = index_get_handle(index_name);
+    if (NULL == ct)
     {
-        OS_PRINT(net, "The index is not opened. index(%s)\n", index_name);
+        OS_PRINT(net, "The ct is not opened. ct(%s)\n", index_name);
         return -2;
     }
     
     if (OBJID_IS_INVALID(objid))
     {
-        print_fs_info(net, index);
+        print_fs_info(net, ct);
 		return 0;
     }
 
-    obj_info = index_get_object_info(index, objid);
+    obj_info = index_get_object_info(ct, objid);
     if (NULL == obj_info)
     {
-        OS_PRINT(net, "The object is not opened. index(%p) objid(%lld)\n", index, objid);
+        OS_PRINT(net, "The object is not opened. ct(%p) objid(%lld)\n", ct, objid);
         return ret;
     }
 

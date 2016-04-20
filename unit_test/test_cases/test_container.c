@@ -45,12 +45,12 @@ History:
 static int init_suite(void)
 {
     LOG_SYSTEM_INIT();
-    return index_init_system();
+    return ofs_init_system();
 }
 
 static int clean_suite(void)
 {
-    index_exit_system();
+    ofs_exit_system();
     LOG_SYSTEM_EXIT();
     //_CrtDumpMemoryLeaks();
 	return 0;
@@ -58,36 +58,36 @@ static int clean_suite(void)
 
 void test_create_index(void)
 {
-    index_handle_t *index[5];
+    container_handle_t *ct[5];
     
-    CU_ASSERT(0 == index_create("index0", 1000, 0, &index[0]));
-    CU_ASSERT(0 == index_create("index1", 1000, 0, &index[1]));
-    CU_ASSERT(0 == index_create("index2", 1000, 0, &index[2]));
-    CU_ASSERT(0 == index_create("index3", 1000, 0, &index[3]));
-    CU_ASSERT(0 == index_create("index4", 1000, 0, &index[4]));
+    CU_ASSERT(0 == ofs_create_container("index0", 1000, 0, &ct[0]));
+    CU_ASSERT(0 == ofs_create_container("index1", 1000, 0, &ct[1]));
+    CU_ASSERT(0 == ofs_create_container("index2", 1000, 0, &ct[2]));
+    CU_ASSERT(0 == ofs_create_container("index3", 1000, 0, &ct[3]));
+    CU_ASSERT(0 == ofs_create_container("index4", 1000, 0, &ct[4]));
     
-    CU_ASSERT(0 == index_close(index[0]));
-    CU_ASSERT(0 == index_close(index[1]));
-    CU_ASSERT(0 == index_close(index[2]));
-    CU_ASSERT(0 == index_close(index[3]));
-    CU_ASSERT(0 == index_close(index[4]));
+    CU_ASSERT(0 == ofs_close_container(ct[0]));
+    CU_ASSERT(0 == ofs_close_container(ct[1]));
+    CU_ASSERT(0 == ofs_close_container(ct[2]));
+    CU_ASSERT(0 == ofs_close_container(ct[3]));
+    CU_ASSERT(0 == ofs_close_container(ct[4]));
 }
 
 void test_open_index(void)
 {
-    index_handle_t *index[5];
+    container_handle_t *ct[5];
     
-    CU_ASSERT(0 == index_open("index0", 0, &index[0]));
-    CU_ASSERT(0 == index_open("index1", 0, &index[1]));
-    CU_ASSERT(0 == index_open("index2", 0, &index[2]));
-    CU_ASSERT(0 == index_open("index3", 0, &index[3]));
-    CU_ASSERT(0 == index_open("index4", 0, &index[4]));
+    CU_ASSERT(0 == ofs_open_container("index0", 0, &ct[0]));
+    CU_ASSERT(0 == ofs_open_container("index1", 0, &ct[1]));
+    CU_ASSERT(0 == ofs_open_container("index2", 0, &ct[2]));
+    CU_ASSERT(0 == ofs_open_container("index3", 0, &ct[3]));
+    CU_ASSERT(0 == ofs_open_container("index4", 0, &ct[4]));
     
-    CU_ASSERT(0 == index_close(index[0]));
-    CU_ASSERT(0 == index_close(index[1]));
-    CU_ASSERT(0 == index_close(index[2]));
-    CU_ASSERT(0 == index_close(index[3]));
-    CU_ASSERT(0 == index_close(index[4]));
+    CU_ASSERT(0 == ofs_close_container(ct[0]));
+    CU_ASSERT(0 == ofs_close_container(ct[1]));
+    CU_ASSERT(0 == ofs_close_container(ct[2]));
+    CU_ASSERT(0 == ofs_close_container(ct[3]));
+    CU_ASSERT(0 == ofs_close_container(ct[4]));
 }
 
 #define TEST_BLOCK_FILE "Test.dat"
@@ -105,7 +105,7 @@ static void random_buffer(uint8_t *buf, uint32_t size)
 
 void test_index_rw(void)
 {
-    index_handle_t *hnd;
+    container_handle_t *hnd;
     int64_t vbn = 10;
     uint64_t blkNum = 100;
     uint8_t wrBuf[TEST_BLOCK_SIZE];
@@ -113,22 +113,22 @@ void test_index_rw(void)
     
     srand((unsigned)time(NULL));
     
-    CU_ASSERT(0 == index_create(TEST_BLOCK_FILE, 10000, TEST_START_LBA, &hnd));
+    CU_ASSERT(0 == ofs_create_container(TEST_BLOCK_FILE, 10000, TEST_START_LBA, &hnd));
     
     while (blkNum--)
     {
         random_buffer(wrBuf, TEST_BLOCK_SIZE);
-        CU_ASSERT(index_update_block(hnd, wrBuf, TEST_BLOCK_SIZE, 0, vbn) == TEST_BLOCK_SIZE);
-        CU_ASSERT(index_read_block(hnd, rdBuf, TEST_BLOCK_SIZE, 0, vbn) == TEST_BLOCK_SIZE);
+        CU_ASSERT(ofs_update_block(hnd, wrBuf, TEST_BLOCK_SIZE, 0, vbn) == TEST_BLOCK_SIZE);
+        CU_ASSERT(ofs_read_block(hnd, rdBuf, TEST_BLOCK_SIZE, 0, vbn) == TEST_BLOCK_SIZE);
         CU_ASSERT(memcmp(rdBuf, wrBuf, TEST_BLOCK_SIZE) == 0);
         vbn++;
     }
 
-    CU_ASSERT(index_close(hnd) == 0);
+    CU_ASSERT(ofs_close_container(hnd) == 0);
 
     
-    CU_ASSERT(index_open(TEST_BLOCK_FILE, TEST_START_LBA, &hnd) == 0);
-    CU_ASSERT(index_close(hnd) == 0);
+    CU_ASSERT(ofs_open_container(TEST_BLOCK_FILE, TEST_START_LBA, &hnd) == 0);
+    CU_ASSERT(ofs_close_container(hnd) == 0);
 }
 
 
@@ -141,17 +141,17 @@ int add_index_test_case(void)
        return -1;
     }
     
-    if (NULL == CU_add_test(pSuite, "test create index", test_create_index))
+    if (NULL == CU_add_test(pSuite, "test create ct", test_create_index))
     {
        return -2;
     }
 
-    if (NULL == CU_add_test(pSuite, "test open index", test_open_index))
+    if (NULL == CU_add_test(pSuite, "test open ct", test_open_index))
     {
        return -3;
     }
 
-    if (NULL == CU_add_test(pSuite, "test index rw", test_index_rw))
+    if (NULL == CU_add_test(pSuite, "test ct rw", test_index_rw))
     {
        return -3;
     }

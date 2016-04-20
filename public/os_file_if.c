@@ -51,7 +51,7 @@ History:
 
 typedef struct file_handle
 {
-    struct file *file_hnd;
+    struct file *disk_hnd;
     loff_t offset;
     char buf[FILE_BUF_LEN];
     os_rwlock rwlock;
@@ -74,8 +74,8 @@ int32_t file_open_or_create(void **hnd, const char *name, uint32_t flags)
 
     memset(tmp_hnd, 0, sizeof(file_handle_t));
     
-    tmp_hnd->file_hnd = filp_open(name, (int32_t)flags, 0);
-    if (IS_ERR(tmp_hnd->file_hnd))
+    tmp_hnd->disk_hnd = filp_open(name, (int32_t)flags, 0);
+    if (IS_ERR(tmp_hnd->disk_hnd))
     {
         OS_FREE(tmp_hnd);
     	return -FILE_IO_ERR_OPEN;
@@ -130,7 +130,7 @@ int32_t os_file_pwrite(void *hnd, void *buf,
     set_fs(get_ds());
 
     tmp_hnd->offset = (loff_t)offset;
-    ret = vfs_write(tmp_hnd->file_hnd, buf, size, &tmp_hnd->offset);
+    ret = vfs_write(tmp_hnd->disk_hnd, buf, size, &tmp_hnd->offset);
 
     set_fs(oldFs);
     OS_RWLOCK_WRUNLOCK(&tmp_hnd->rwlock);
@@ -155,7 +155,7 @@ int32_t os_file_pread(void *hnd, void *buf,
     set_fs(get_ds());
 
     tmp_hnd->offset = (loff_t)offset;
-    ret = vfs_read(tmp_hnd->file_hnd, buf, size, &tmp_hnd->offset);
+    ret = vfs_read(tmp_hnd->disk_hnd, buf, size, &tmp_hnd->offset);
 
     set_fs(oldFs);
     OS_RWLOCK_WRUNLOCK(&tmp_hnd->rwlock);
@@ -178,7 +178,7 @@ int32_t os_file_write(void *hnd, void *buf, uint32_t size)
     
     oldFs = get_fs();
     set_fs(get_ds());
-    ret = vfs_write(tmp_hnd->file_hnd, buf, size, &tmp_hnd->offset);
+    ret = vfs_write(tmp_hnd->disk_hnd, buf, size, &tmp_hnd->offset);
     set_fs(oldFs);
     
     OS_RWLOCK_WRUNLOCK(&tmp_hnd->rwlock);
@@ -202,7 +202,7 @@ int32_t os_file_read(void *hnd, void *buf, uint32_t size)
     
     oldFs = get_fs();
     set_fs(get_ds());
-    ret = vfs_read(tmp_hnd->file_hnd, buf, size, &tmp_hnd->offset);
+    ret = vfs_read(tmp_hnd->disk_hnd, buf, size, &tmp_hnd->offset);
     set_fs(oldFs);
     
     OS_RWLOCK_WRUNLOCK(&tmp_hnd->rwlock);
@@ -221,7 +221,7 @@ int32_t os_file_close(void *hnd)
 
     OS_RWLOCK_DESTROY(&tmp_hnd->rwlock);
 
-    if (filp_close(tmp_hnd->file_hnd, NULL) != 0)
+    if (filp_close(tmp_hnd->disk_hnd, NULL) != 0)
     {
     	//return -FILE_IO_ERR_CLOSE;
     }
@@ -278,7 +278,7 @@ EXPORT_SYMBOL(os_file_close);
 
 typedef struct file_handle
 {
-    FILE *file_hnd;
+    FILE *disk_hnd;
     os_rwlock rwlock;
 } file_handle_t;
 
@@ -299,8 +299,8 @@ int32_t file_open_or_create(void **hnd, const char *name, char *v_pcMethod)
     
     memset(tmp_hnd, 0, sizeof(file_handle_t));
     
-    tmp_hnd->file_hnd = fopen(name, v_pcMethod);
-    if (NULL == tmp_hnd->file_hnd)
+    tmp_hnd->disk_hnd = fopen(name, v_pcMethod);
+    if (NULL == tmp_hnd->disk_hnd)
     {
         OS_FREE(tmp_hnd);
     	return -FILE_IO_ERR_OPEN;
@@ -340,9 +340,9 @@ int32_t os_file_seek(void *hnd, uint64_t offset)
     }
 
 #ifdef WIN32
-    return (_fseeki64(tmp_hnd->file_hnd, offset, SEEK_SET));
+    return (_fseeki64(tmp_hnd->disk_hnd, offset, SEEK_SET));
 #else
-    return (fseeko(tmp_hnd->file_hnd, offset, SEEK_SET));
+    return (fseeko(tmp_hnd->disk_hnd, offset, SEEK_SET));
 #endif
 }
 
@@ -405,7 +405,7 @@ int32_t os_file_write(void *hnd, void *buf, uint32_t size)
         return -FILE_IO_ERR_INVALID_PARA;
     }
 
-    return (fwrite(buf, 1, size, tmp_hnd->file_hnd));
+    return (fwrite(buf, 1, size, tmp_hnd->disk_hnd));
     //fflush((FILE *)pF);
 }
 
@@ -418,7 +418,7 @@ int32_t os_file_read(void *hnd, void *buf, uint32_t size)
         return -FILE_IO_ERR_INVALID_PARA;
     }
 
-    return (fread(buf, 1, size, tmp_hnd->file_hnd));
+    return (fread(buf, 1, size, tmp_hnd->disk_hnd));
 }
 
 int32_t os_file_close(void *hnd)
@@ -432,7 +432,7 @@ int32_t os_file_close(void *hnd)
 
     OS_RWLOCK_DESTROY(&tmp_hnd->rwlock);
 
-    if (fclose(tmp_hnd->file_hnd) != 0)
+    if (fclose(tmp_hnd->disk_hnd) != 0)
     {
     	//return -FILE_IO_ERR_CLOSE;
     }
@@ -453,10 +453,10 @@ int32_t os_file_resize(void *hnd, uint64_t new_size)
     }
 
 #ifdef WIN32
-	fd = _fileno(tmp_hnd->file_hnd);
+	fd = _fileno(tmp_hnd->disk_hnd);
 	return _chsize_s(fd, new_size);
 #else
-	fd = fileno(tmp_hnd->file_hnd);
+	fd = fileno(tmp_hnd->disk_hnd);
 	return ftruncate(fd, new_size);
 #endif
 }
@@ -474,21 +474,21 @@ int64_t os_file_get_size(void *hnd)
     OS_RWLOCK_WRLOCK(&tmp_hnd->rwlock);
 
 #ifdef WIN32
-    if (_fseeki64(tmp_hnd->file_hnd, 0, SEEK_END))
+    if (_fseeki64(tmp_hnd->disk_hnd, 0, SEEK_END))
     {
         OS_RWLOCK_WRUNLOCK(&tmp_hnd->rwlock);
     	return -FILE_IO_ERR_SEEK;
     }
     
-    offset = _ftelli64(tmp_hnd->file_hnd);
+    offset = _ftelli64(tmp_hnd->disk_hnd);
 #else
-    if (fseeko(tmp_hnd->file_hnd, 0, SEEK_END))
+    if (fseeko(tmp_hnd->disk_hnd, 0, SEEK_END))
     {
         OS_RWLOCK_WRUNLOCK(&tmp_hnd->rwlock);
     	return -FILE_IO_ERR_SEEK;
     }
     
-    offset = ftell(tmp_hnd->file_hnd);
+    offset = ftell(tmp_hnd->disk_hnd);
 #endif
 
     OS_RWLOCK_WRUNLOCK(&tmp_hnd->rwlock);
@@ -506,9 +506,9 @@ void os_file_set_buf(void *hnd, void *buf, uint32_t size)
     }
     
 #ifdef WIN32
-    setvbuf(tmp_hnd->file_hnd, buf, _IONBF, size);
+    setvbuf(tmp_hnd->disk_hnd, buf, _IONBF, size);
 #else
-    setbuf(tmp_hnd->file_hnd, buf);
+    setbuf(tmp_hnd->disk_hnd, buf);
 #endif
 }
 
@@ -537,7 +537,7 @@ void os_file_printf(void *hnd, const char *format, ...)
     }
 
     va_start(ap, format);
-    (void)vfprintf(tmp_hnd->file_hnd, format, ap);
+    (void)vfprintf(tmp_hnd->disk_hnd, format, ap);
     va_end(ap);
 
     return;

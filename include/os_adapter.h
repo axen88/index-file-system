@@ -399,9 +399,16 @@ extern "C" {
 
 enum
 {
-    PID_INDEX = 10,
-    PID_BLOCK = 11,
-    PID_BITMAP = 12,
+    PID_BTREE = 10,
+    PID_CONTAINER = 11,
+    PID_OBJECT = 12,
+    PID_BLOCK = 13,
+    PID_SPACE_MANAGER = 14,
+    PID_CACHE = 15,
+    PID_SERVER = 16,
+    PID_CLIENT = 17,
+    PID_TOOLS = 18,
+    PID_UTILS = 19,
 
     PID_BUTT
 };

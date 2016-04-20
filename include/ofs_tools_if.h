@@ -22,7 +22,7 @@
 
             Copyright(C), 2016~2019, axen.hook@foxmail.com
 ********************************************************************************
-File Name: INDEX_TOOLS_IF.H
+File Name: OFS_TOOLS_IF.H
 Author   : axen.hook
 Version  : 1.00
 Date     : 02/Mar/2016
@@ -34,8 +34,8 @@ History:
 --------------------------------------------------------------------------------
     1. Primary version
 *******************************************************************************/
-#ifndef __OS_INDEX_CLI_H__
-#define __OS_INDEX_CLI_H__
+#ifndef __OFS_TOOLS_IF_H__
+#define __OFS_TOOLS_IF_H__
 
 #ifdef	__cplusplus
 extern "C" {
@@ -50,7 +50,7 @@ extern "C" {
 
 typedef struct ifs_tools_para
 {
-    char index_name[INDEX_NAME_SIZE];
+    char index_name[OFS_NAME_SIZE];
     char tmp[TMP_BUF_SIZE];
     char key[KEY_MAX_SIZE];
     char value[VALUE_MAX_SIZE];

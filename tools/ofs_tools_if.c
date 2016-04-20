@@ -38,7 +38,7 @@ History:
 
 void parse_index_para(int argc, char *argv[], ifs_tools_para_t *para)
 {
-    if (0 != os_parse_para(argc, argv, "-i", para->index_name, INDEX_NAME_SIZE))
+    if (0 != os_parse_para(argc, argv, "-i", para->index_name, OFS_NAME_SIZE))
     {
         para->index_name[0] = 0;
     }
@@ -143,52 +143,4 @@ os_cmd_list_t ifs_cmd_list[]
 	{NULL, {NULL, NULL, NULL}, NULL}
 };
 
-#ifdef __KERNEL__
-
-extern avl_tree_t *g_index_list;
-
-int32_t index_init(void)
-{
-    int32_t ret = 0;
-    
-    MML_MODULE index_mml;
-
-    strcpy(index_mml.name, "index");
-    index_mml.DoCmd = IndexDoCmd;
-
-    LOG_EVENT("Start insmod index module.\n");
-    
-    ret = index_init_system();
-    if (0 > ret)
-    {
-        LOG_ERROR("Insmod index module failed.\n");
-        return ret;
-    }
-    
-    MML_Register(PID_INDEX, &index_mml);
-    
-    LOG_EVENT("Finish insmod index module.\n");
-    
-    return 0;
-}
-
-void index_exit(void)
-{
-    LOG_EVENT("Start rmmod index module.\n");
-    
-    if (NULL != g_index_list)
-    {
-        MML_Unregister(PID_INDEX);
-        index_exit_system();
-    }
-    
-    LOG_EVENT("Finish rmmod index module.\n");
-
-    return;
-}
-
-module_init(index_init);
-module_exit(index_exit);
-
-#endif
 

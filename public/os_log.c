@@ -92,7 +92,7 @@ typedef struct log
     char buf[BUF_LEN];
     
     os_rwlock   rwlock;                  
-    void *file_hnd;  
+    void *disk_hnd;  
 } log_t; 
 
 static void *open_log(log_t *log)
@@ -105,15 +105,15 @@ static void *open_log(log_t *log)
     OS_SNPRINTF(name, LOG_NAME_LEN, "%s/%s.log",
         log->dir, log->name);
     
-    ret = os_file_create(&log->file_hnd, name);
+    ret = os_file_create(&log->disk_hnd, name);
     if (0 > ret)
     {
         return NULL;
     }
 
-    os_file_printf(log->file_hnd, "%s %s\n", log->name, log->version);
+    os_file_printf(log->disk_hnd, "%s %s\n", log->name, log->version);
     
-    return log->file_hnd;
+    return log->disk_hnd;
 }
 
 #ifdef __KERNEL__
@@ -177,10 +177,10 @@ static int32_t backup_log(log_t *log)
     OS_SNPRINTF(name, LOG_NAME_LEN, "%s/%s.log",
         log->dir, log->name);
 
-    if (NULL != log->file_hnd)
+    if (NULL != log->disk_hnd)
     {
-        os_file_close(log->file_hnd);
-        log->file_hnd = NULL;
+        os_file_close(log->disk_hnd);
+        log->disk_hnd = NULL;
     }
     
     unlink(bakName);
@@ -273,14 +273,14 @@ void log_close(void *log)
         return;
     }
 
-    if (NULL != tmp_log->file_hnd)
+    if (NULL != tmp_log->disk_hnd)
     {
         char date_time[DATA_TIME_STR_LEN];
         
         os_get_date_time_string(date_time, DATA_TIME_STR_LEN);
-        os_file_printf(tmp_log->file_hnd, "%s %s\n", date_time, "NOTE: LOG FILE CLOSE!!!");
-        os_file_close(tmp_log->file_hnd);
-        tmp_log->file_hnd = NULL;
+        os_file_printf(tmp_log->disk_hnd, "%s %s\n", date_time, "NOTE: LOG FILE CLOSE!!!");
+        os_file_close(tmp_log->disk_hnd);
+        tmp_log->disk_hnd = NULL;
     }
 
     OS_RWLOCK_DESTROY(&tmp_log->rwlock);
@@ -294,7 +294,7 @@ void log_trace(void *log, uint32_t pid, uint32_t level, const char *format, ...)
 
     if ((NULL == tmp_log) || (pid >= PIDS_NUM) || (level > tmp_log->levels[pid])
         || (0 == (tmp_log->mode & LOG_TO_SCNFILE))
-        || ((0 == (tmp_log->mode & LOG_TO_SCREEN)) && (NULL == tmp_log->file_hnd)))
+        || ((0 == (tmp_log->mode & LOG_TO_SCREEN)) && (NULL == tmp_log->disk_hnd)))
     {
         return;
     }
@@ -312,9 +312,9 @@ void log_trace(void *log, uint32_t pid, uint32_t level, const char *format, ...)
         //OS_PRINT("%s %s", tmp_log->date_time, tmp_log->buf);
     }
     
-    if (NULL != tmp_log->file_hnd)
+    if (NULL != tmp_log->disk_hnd)
     {
-        os_file_printf(tmp_log->file_hnd, "%s %s", tmp_log->date_time, tmp_log->buf);
+        os_file_printf(tmp_log->disk_hnd, "%s %s", tmp_log->date_time, tmp_log->buf);
         tmp_log->total_lines++;
     }
     

@@ -35,10 +35,9 @@ History:
     1. Primary version
 *******************************************************************************/
 #include "ofs_if.h"
-MODULE(PID_INDEX);
-#include "os_log.h"
 
-extern int32_t FixupTree(void *tree, void *para);
+MODULE(PID_UTILS);
+#include "os_log.h"
 
 int64_t index_get_total_key(object_handle_t *tree)
 {
@@ -86,13 +85,13 @@ int64_t index_get_target_key(object_handle_t *tree, uint64_t target)
     return cnt;
 }
 
-int32_t index_walk_all(object_handle_t *tree, bool_t v_bReverse, uint8_t flags,
+int32_t index_walk_all(object_handle_t *tree, bool_t reverse, uint8_t flags,
     void *para, tree_walk_cb_t cb)
 {
     int32_t ret = 0;
-    uint8_t ucIfFlag = (B_FALSE == v_bReverse)
+    uint8_t ucIfFlag = (B_FALSE == reverse)
         ? INDEX_GET_FIRST : INDEX_GET_LAST;
-    uint8_t ucWhileFlag = (B_FALSE == v_bReverse)
+    uint8_t ucWhileFlag = (B_FALSE == reverse)
         ? 0 : INDEX_GET_PREV;
 
     if ((NULL == tree) || (NULL == cb))
@@ -126,88 +125,4 @@ int32_t index_walk_all(object_handle_t *tree, bool_t v_bReverse, uint8_t flags,
     
     return 0;
 }
-
-static int32_t tree_callback(void *tree, void *para)
-{
-#if 0
-    int32_t ret = 0;
-    char name[OBJ_NAME_SIZE];
-    tree_walk_para_t *para = para;
-    object_handle_t *tree = NULL;
-
-    ASSERT(NULL != tree);
-    ASSERT(NULL != para);
-
-    memset(name, 0, sizeof(name));
-    (void)IndexDumpKey(tree, name, (uint16_t)sizeof(name));
-    
-    ret = INDEX_OpenTreeNoLock(&tree, tree, name, 0);
-    if (ret < 0)
-    {
-        LOG_ERROR("Open tree failed. tree(%s) ret(%d)\n", name, ret);
-        return ret;
-    }
-
-    ret = para->pCallBack(tree, para);
-    if (0 > ret)
-    {
-        LOG_ERROR("pCallBack return failed. name(%s) ret(%d)\n",
-            tree->pstInode->name, ret);
-    }
-    else if (FixupTree == para->pCallBack)
-    {
-        SET_TREE_DIRTY(tree);
-        INDEX_CommitTreeTransNoLock(tree, COMMIT_FLAG_FORCE);
-        SET_TREE_DIRTY(tree);
-        INDEX_CommitTreeTransNoLock(tree, COMMIT_FLAG_FORCE);
-    }
-
-    (void)INDEX_CloseTreeNoLock(tree);
-
-    return ret;
-#endif
-	return 0;
-}
-
-int32_t index_walk_all_attrs(object_handle_t *dir_tree,
-    tree_walk_para_t *para)
-{
-#if 0
-    int32_t ret = 0;
-    
-    if ((NULL == dir_tree) || (NULL == para)
-        || (NULL == para->pCallBack))
-    {
-        LOG_ERROR("Invalid parameter. tree(%p) para(%p)\n",
-            dir_tree, para);
-        return -INDEX_ERR_PARAMETER;
-    }
-
-    ret = para->pCallBack(dir_tree, para);
-    if (0 > ret)
-    {
-        LOG_ERROR("pCallBack return failed. name(%s) ret(%d)\n",
-            dir_tree->pstInode->name, ret);
-    }
-    else if (FixupTree == para->pCallBack)
-    {
-        SET_TREE_DIRTY((object_handle_t *)dir_tree);
-        INDEX_CommitTreeTransNoLock(dir_tree, COMMIT_FLAG_FORCE);
-        SET_TREE_DIRTY((object_handle_t *)dir_tree);
-        INDEX_CommitTreeTransNoLock(dir_tree, COMMIT_FLAG_FORCE);
-    }
-
-    ret = index_walk_all(dir_tree, B_FALSE, para->flags, para, tree_callback);
-    if (0 > ret)
-    {
-        LOG_ERROR("index_walk_all return failed. name(%s) ret(%d)\n",
-            dir_tree->pstInode->name, ret);
-        return ret;
-    }
-    
-    return ret;
-#endif
-	return 0;
-}
-
 

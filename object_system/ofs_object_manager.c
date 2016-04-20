@@ -36,7 +36,7 @@ History:
 *******************************************************************************/
 #include "ofs_if.h"
 
-MODULE(PID_INDEX);
+MODULE(PID_OBJECT);
 #include "os_log.h"
 
 int32_t compare_object2(const void *objid, object_info_t *obj_info)
@@ -53,7 +53,7 @@ int32_t compare_object2(const void *objid, object_info_t *obj_info)
     return -1;
 }
 
-int32_t compare_cache1(const ifs_block_cache_t *cache, const ifs_block_cache_t *cache_node)
+int32_t compare_cache1(const ofs_block_cache_t *cache, const ofs_block_cache_t *cache_node)
 {
     if (cache->vbn > cache_node->vbn)
     {
@@ -71,11 +71,11 @@ int32_t compare_cache1(const ifs_block_cache_t *cache, const ifs_block_cache_t *
 void init_attr(object_info_t *obj_info, uint64_t inode_no)
 {
     obj_info->attr_record = INODE_GET_ATTR_RECORD(obj_info->inode);
-    obj_info->root_ibc.vbn = inode_no;
-    obj_info->root_ibc.ib = (block_head_t *)obj_info->attr_record->content;
+    obj_info->root_cache.vbn = inode_no;
+    obj_info->root_cache.ib = (block_head_t *)obj_info->attr_record->content;
 }
 
-int32_t get_object_info(index_handle_t *index, uint64_t objid, object_info_t **obj_info_out)
+int32_t get_object_info(container_handle_t *ct, uint64_t objid, object_info_t **obj_info_out)
 {
     object_info_t *obj_info = NULL;
     
@@ -88,7 +88,7 @@ int32_t get_object_info(index_handle_t *index, uint64_t objid, object_info_t **o
 
     memset(obj_info, 0, sizeof(object_info_t));
     obj_info->obj_ref_cnt = 0;
-    obj_info->index = index;
+    obj_info->ct = ct;
     obj_info->objid = objid;
     
     dlist_init_head(&obj_info->obj_hnd_list);
@@ -96,13 +96,13 @@ int32_t get_object_info(index_handle_t *index, uint64_t objid, object_info_t **o
     
     OS_RWLOCK_INIT(&obj_info->attr_lock);
     
-    avl_create(&obj_info->caches, (int (*)(const void *, const void*))compare_cache1, sizeof(ifs_block_cache_t),
-        OS_OFFSET(ifs_block_cache_t, obj_entry));
+    avl_create(&obj_info->caches, (int (*)(const void *, const void*))compare_cache1, sizeof(ofs_block_cache_t),
+        OS_OFFSET(ofs_block_cache_t, obj_entry));
     OS_RWLOCK_INIT(&obj_info->caches_lock);
     
     OS_RWLOCK_INIT(&obj_info->obj_lock);
 
-    avl_add(&index->obj_info_list, obj_info);
+    avl_add(&ct->obj_info_list, obj_info);
 
     *obj_info_out = obj_info;
     
@@ -115,7 +115,7 @@ void put_object_info(object_info_t *obj_info)
 {
     LOG_INFO("destroy object info start. objid(%lld)\n", obj_info->objid);
 
-    avl_remove(&obj_info->index->obj_info_list, obj_info);
+    avl_remove(&obj_info->ct->obj_info_list, obj_info);
 
     release_obj_all_cache(obj_info);
     avl_destroy(&obj_info->caches);
@@ -142,7 +142,7 @@ int32_t get_object_handle(object_info_t *obj_info, object_handle_t **obj_out)
 
     memset(obj, 0, sizeof(object_handle_t));
     obj->obj_info = obj_info;
-    obj->index = obj_info->index;
+    obj->ct = obj_info->ct;
 
     dlist_add_tail(&obj_info->obj_hnd_list, &obj->entry);
     obj_info->obj_ref_cnt++;
@@ -164,7 +164,7 @@ void put_object_handle(object_handle_t *obj)
 int32_t recover_obj_inode(object_info_t *obj_info, uint64_t inode_no)
 {
     int32_t ret;
-    ifs_block_cache_t *cache;
+    ofs_block_cache_t *cache;
     
     ret = index_block_read2(obj_info, inode_no, INODE_MAGIC, &cache);
     if (0 > ret)
@@ -189,41 +189,41 @@ void validate_obj_inode(object_info_t *obj_info)
     
     ASSERT(obj_info != NULL);
 
-    new_vbn = obj_info->root_ibc.vbn;
+    new_vbn = obj_info->root_cache.vbn;
 
-    if (IBC_DIRTY(&obj_info->root_ibc))
+    if (CACHE_DIRTY(&obj_info->root_cache))
     {
         SET_INODE_DIRTY(obj_info);
     }
 
-    if (IBC_DIRTY(&obj_info->root_ibc) && (new_vbn != obj_info->inode_cache->vbn))
+    if (CACHE_DIRTY(&obj_info->root_cache) && (new_vbn != obj_info->inode_cache->vbn))
     {
-        ifs_super_block_t *sb;
+        ofs_super_block_t *sb;
         
         change_obj_cache_vbn(obj_info, obj_info->inode_cache, new_vbn);
         obj_info->inode_no = new_vbn;
-        sb = &obj_info->index->sb;
+        sb = &obj_info->ct->sb;
 
         switch (obj_info->objid)
         {
             case BASE_OBJ_ID:
             {
                 sb->base_inode_no = obj_info->inode_no;
-                obj_info->index->flags |= FLAG_DIRTY;
+                obj_info->ct->flags |= FLAG_DIRTY;
                 break;
             }
                 
             case SPACE_OBJ_ID:
             {
                 sb->space_inode_no = obj_info->inode_no;
-                obj_info->index->flags |= FLAG_DIRTY;
+                obj_info->ct->flags |= FLAG_DIRTY;
                 break;
             }
                 
             case OBJID_OBJ_ID:
             {
                 sb->objid_inode_no = obj_info->inode_no;
-                obj_info->index->flags |= FLAG_DIRTY;
+                obj_info->ct->flags |= FLAG_DIRTY;
                 break;
             }
                 
@@ -237,7 +237,7 @@ void validate_obj_inode(object_info_t *obj_info)
                 key_size = os_u64_to_bstr(obj_info->objid, key_str);
                 value_size = os_u64_to_bstr(new_vbn, value_str);
                 
-                index_update_value(obj_info->index->id_obj, key_str, key_size, value_str, value_size);
+                index_update_value(obj_info->ct->id_obj, key_str, key_size, value_str, value_size);
                 break;
             }
         }
@@ -304,18 +304,18 @@ void init_inode(inode_record_t *inode, uint64_t objid, uint64_t inode_no, uint16
     }
 }
 
-int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t inode_no, uint16_t flags, object_handle_t **obj_out)
+int32_t create_object_at_inode(container_handle_t *ct, uint64_t objid, uint64_t inode_no, uint16_t flags, object_handle_t **obj_out)
 {
     int32_t ret;
     object_handle_t *obj;
     object_info_t *obj_info;
-    ifs_block_cache_t *cache;
+    ofs_block_cache_t *cache;
 
-    ASSERT(NULL != index);
+    ASSERT(NULL != ct);
     ASSERT(NULL != obj_out);
     ASSERT(INODE_SIZE == sizeof(inode_record_t));
 
-    ret = get_object_info(index, objid, &obj_info);
+    ret = get_object_info(ct, objid, &obj_info);
     if (ret < 0)
     {
         LOG_ERROR("get_object_info failed. ret(%d)\n", ret);
@@ -338,7 +338,7 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
     strncpy(obj_info->obj_name, obj_info->inode->name, obj_info->inode->name_size);
     init_attr(obj_info, inode_no);
     SET_INODE_DIRTY(obj_info);
-    SET_IBC_DIRTY(&obj_info->root_ibc);
+    SET_CACHE_DIRTY(&obj_info->root_cache);
 
     LOG_DEBUG("Create inode success. obj_id(%lld) vbn(%lld)\n", objid, inode_no);
 
@@ -355,27 +355,27 @@ int32_t create_object_at_inode(index_handle_t *index, uint64_t objid, uint64_t i
     return 0;
 }
 
-int32_t create_object(index_handle_t *index, uint64_t objid, uint16_t flags, object_handle_t **obj_out)
+int32_t create_object(container_handle_t *ct, uint64_t objid, uint16_t flags, object_handle_t **obj_out)
 {
      int32_t ret;
      uint64_t inode_no = 0;
 
-    ASSERT(NULL != index);
+    ASSERT(NULL != ct);
     ASSERT(NULL != obj_out);
     ASSERT(INODE_SIZE == sizeof(inode_record_t));
 
     /* allocate inode block */
-    ret = INDEX_ALLOC_BLOCK(index, objid, &inode_no);
+    ret = OFS_ALLOC_BLOCK(ct, objid, &inode_no);
     if (ret < 0)
     {
         LOG_ERROR("Allocate block failed. ret(%d)\n", ret);
         return ret;
     }
 
-    ret = create_object_at_inode(index, objid, inode_no, flags, obj_out);
+    ret = create_object_at_inode(ct, objid, inode_no, flags, obj_out);
     if (ret < 0)
     {
-        INDEX_FREE_BLOCK(index, objid, inode_no);
+        OFS_FREE_BLOCK(ct, objid, inode_no);
         LOG_ERROR("get_object_info failed. ret(%d)\n", ret);
         return ret;
     }
@@ -383,16 +383,16 @@ int32_t create_object(index_handle_t *index, uint64_t objid, uint16_t flags, obj
     return 0;
 }
 
-int32_t open_object(index_handle_t *index, uint64_t objid, uint64_t inode_no, object_handle_t **obj_out)
+int32_t open_object(container_handle_t *ct, uint64_t objid, uint64_t inode_no, object_handle_t **obj_out)
 {
     int32_t ret = 0;
     object_info_t *obj_info = NULL;
     object_handle_t *obj = NULL;
 
-    ASSERT(NULL != index);
+    ASSERT(NULL != ct);
     ASSERT(NULL != obj_out);
 
-    ret = get_object_info(index, objid, &obj_info);
+    ret = get_object_info(ct, objid, &obj_info);
     if (ret < 0)
     {
         LOG_ERROR("Get object info resource failed. objid(%lld)\n", objid);
@@ -420,12 +420,12 @@ int32_t open_object(index_handle_t *index, uint64_t objid, uint64_t inode_no, ob
     return 0;
 }
 
-uint64_t get_objid(index_handle_t *index)
+uint64_t get_objid(container_handle_t *ct)
 {
     return 1;
 }
 
-int32_t set_object_name(object_handle_t *obj, char *name)
+int32_t ofs_set_object_name(object_handle_t *obj, char *name)
 {
     uint32_t name_size;
     
@@ -447,7 +447,7 @@ int32_t set_object_name(object_handle_t *obj, char *name)
     return 0;
 }
 
-int32_t index_create_object_nolock(index_handle_t *index, uint64_t objid, uint16_t flags, object_handle_t **obj_out)
+int32_t ofs_create_object_nolock(container_handle_t *ct, uint64_t objid, uint16_t flags, object_handle_t **obj_out)
 {
     int32_t ret = 0;
     object_handle_t *obj = NULL;
@@ -455,7 +455,7 @@ int32_t index_create_object_nolock(index_handle_t *index, uint64_t objid, uint16
     avl_index_t where = 0;
     object_info_t *obj_info;
 
-    ASSERT(NULL != index);
+    ASSERT(NULL != ct);
     ASSERT(!OBJID_IS_INVALID(objid));
     ASSERT(NULL != obj_out);
 
@@ -467,14 +467,14 @@ int32_t index_create_object_nolock(index_handle_t *index, uint64_t objid, uint16
 
     LOG_INFO("Create the obj start. objid(%lld)\n", objid);
 
-    obj_info = avl_find(&index->obj_info_list, (avl_find_fn_t)compare_object2, &objid, &where);
+    obj_info = avl_find(&ct->obj_info_list, (avl_find_fn_t)compare_object2, &objid, &where);
     if (NULL != obj_info)
     {
         LOG_ERROR("The obj already exist. obj(%p) objid(%lld) ret(%d)\n", obj, objid, ret);
         return -INDEX_ERR_OBJ_EXIST;
     }
 
-    ret = search_key_internal(index->id_obj, &objid, sizeof(uint64_t), NULL, 0);
+    ret = search_key_internal(ct->id_obj, &objid, sizeof(uint64_t), NULL, 0);
     if (0 <= ret)
     {
         LOG_ERROR("The obj already exist. obj(%p) objid(%lld) ret(%d)\n", obj, objid, ret);
@@ -487,50 +487,50 @@ int32_t index_create_object_nolock(index_handle_t *index, uint64_t objid, uint16
         return ret;
     }
 
-    ret = create_object(index, objid, flags, &obj);
+    ret = create_object(ct, objid, flags, &obj);
     if (ret < 0)
     {
         LOG_ERROR("Create obj failed. objid(%lld) ret(%d)\n", objid, ret);
         return ret;
     }
 
-    ret = index_insert_key_nolock(index->id_obj, &objid, os_u64_size(objid),
+    ret = index_insert_key_nolock(ct->id_obj, &objid, os_u64_size(objid),
         &obj->obj_info->inode_no, os_u64_size(obj->obj_info->inode_no));
     if (ret < 0)
     {
         LOG_ERROR("Insert obj failed. obj(%p) objid(%lld) ret(%d)\n",
             obj, objid, ret);
-        (void)INDEX_FREE_BLOCK(obj->index, obj->obj_info->objid, obj->obj_info->inode_no);
+        (void)OFS_FREE_BLOCK(obj->ct, obj->obj_info->objid, obj->obj_info->inode_no);
         close_object(obj->obj_info);
         return ret;
     }
     
-    LOG_INFO("Create the obj success. objid(%lld) obj(%p) index_name(%s)\n",
-        objid, obj, index->name);
+    LOG_INFO("Create the obj success. objid(%lld) obj(%p) ct_name(%s)\n",
+        objid, obj, ct->name);
 
     *obj_out = obj;
     
     return 0;
 }    
 
-int32_t index_create_object(index_handle_t *index, uint64_t objid, uint16_t flags, object_handle_t **obj)
+int32_t ofs_create_object(container_handle_t *ct, uint64_t objid, uint16_t flags, object_handle_t **obj)
 {
     int32_t ret = 0;
 
-    if ((NULL == index) || (OBJID_IS_INVALID(objid || (NULL == obj))))
+    if ((NULL == ct) || (OBJID_IS_INVALID(objid || (NULL == obj))))
     {
-        LOG_ERROR("Invalid parameter. index(%p) objid(%lld) obj(%p)\n", index, objid, obj);
+        LOG_ERROR("Invalid parameter. ct(%p) objid(%lld) obj(%p)\n", ct, objid, obj);
         return -INDEX_ERR_PARAMETER;
     }
     
-    OS_RWLOCK_WRLOCK(&index->index_lock);
-    ret = index_create_object_nolock(index, objid, flags, obj);
-    OS_RWLOCK_WRUNLOCK(&index->index_lock);
+    OS_RWLOCK_WRLOCK(&ct->ct_lock);
+    ret = ofs_create_object_nolock(ct, objid, flags, obj);
+    OS_RWLOCK_WRUNLOCK(&ct->ct_lock);
     
     return ret;
 }    
 
-int32_t index_open_object_nolock(index_handle_t *index, uint64_t objid, uint32_t open_flags, object_handle_t **obj_out)
+int32_t ofs_open_object_nolock(container_handle_t *ct, uint64_t objid, uint32_t open_flags, object_handle_t **obj_out)
 {
     int32_t ret = 0;
     object_handle_t *obj = NULL;
@@ -539,12 +539,12 @@ int32_t index_open_object_nolock(index_handle_t *index, uint64_t objid, uint32_t
     object_handle_t *id_obj;
     object_info_t *obj_info = NULL;
 
-    ASSERT(NULL != index);
+    ASSERT(NULL != ct);
     ASSERT(NULL != obj_out);
 
     LOG_INFO("Open the obj. objid(%lld)\n", objid);
 
-    obj_info = avl_find(&index->obj_info_list, (avl_find_fn_t)compare_object2, &objid, &where);
+    obj_info = avl_find(&ct->obj_info_list, (avl_find_fn_t)compare_object2, &objid, &where);
     if (NULL != obj_info)
     {
         ret = get_object_handle(obj_info, &obj);
@@ -560,7 +560,7 @@ int32_t index_open_object_nolock(index_handle_t *index, uint64_t objid, uint32_t
         return 0;
     }
 
-    id_obj = index->id_obj;
+    id_obj = ct->id_obj;
     
     ret = search_key_internal(id_obj, &objid, sizeof(uint64_t), NULL, 0);
     if (0 > ret)
@@ -571,61 +571,61 @@ int32_t index_open_object_nolock(index_handle_t *index, uint64_t objid, uint32_t
     
     inode_no = os_bstr_to_u64(GET_IE_VALUE(id_obj->ie), id_obj->ie->value_len);
 
-    ret = open_object(index, objid, inode_no, &obj);
+    ret = open_object(ct, objid, inode_no, &obj);
     if (0 > ret)
     {
         LOG_ERROR("Open obj failed. objid(%lld) ret(%d)\n", objid, ret);
         return ret;
     }
 
-    LOG_INFO("Open the obj success. index(%p) objid(%lld) obj(%p)\n",
-        index, objid, obj);
+    LOG_INFO("Open the obj success. ct(%p) objid(%lld) obj(%p)\n",
+        ct, objid, obj);
 
     *obj_out = obj;
 
     return 0;
 }      
 
-int32_t index_open_object(index_handle_t *index, uint64_t objid, object_handle_t **obj)
+int32_t ofs_open_object(container_handle_t *ct, uint64_t objid, object_handle_t **obj)
 {
     int32_t ret = 0;
 
-    if ((NULL == index) || (NULL == obj))
+    if ((NULL == ct) || (NULL == obj))
     {
-        LOG_ERROR("Invalid parameter. index(%p) obj(%p)\n", index, obj);
+        LOG_ERROR("Invalid parameter. ct(%p) obj(%p)\n", ct, obj);
         return -INDEX_ERR_PARAMETER;
     }
 
-    OS_RWLOCK_WRLOCK(&index->index_lock);
-    ret = index_open_object_nolock(index, objid, 0, obj);
-    OS_RWLOCK_WRUNLOCK(&index->index_lock);
+    OS_RWLOCK_WRLOCK(&ct->ct_lock);
+    ret = ofs_open_object_nolock(ct, objid, 0, obj);
+    OS_RWLOCK_WRUNLOCK(&ct->ct_lock);
 
     return ret;
 }      
 
-object_info_t *index_get_object_info(index_handle_t *index, uint64_t objid)
+object_info_t *ofs_get_object_info(container_handle_t *ct, uint64_t objid)
 {
     object_info_t *obj_info = NULL;
     avl_index_t where = 0;
 
-    ASSERT(NULL != index);
+    ASSERT(NULL != ct);
     ASSERT(!OBJID_IS_INVALID(objid));
 
-    OS_RWLOCK_RDLOCK(&index->index_lock);
-    obj_info = avl_find(&index->obj_info_list, (avl_find_fn_t)compare_object2, &objid, &where);
-    OS_RWLOCK_RDLOCK(&index->index_lock);
+    OS_RWLOCK_RDLOCK(&ct->ct_lock);
+    obj_info = avl_find(&ct->obj_info_list, (avl_find_fn_t)compare_object2, &objid, &where);
+    OS_RWLOCK_RDLOCK(&ct->ct_lock);
 
     return obj_info;
 }
 
-object_handle_t *index_get_object_handle(index_handle_t *index, uint64_t objid)
+object_handle_t *ofs_get_object_handle(container_handle_t *ct, uint64_t objid)
 {
     object_info_t *obj_info = NULL;
 
-    ASSERT(NULL != index);
+    ASSERT(NULL != ct);
     ASSERT(!OBJID_IS_INVALID(objid));
 
-    obj_info = index_get_object_info(index, objid);
+    obj_info = ofs_get_object_info(ct, objid);
     if (obj_info == NULL)
     {
         return NULL;
@@ -639,7 +639,7 @@ object_handle_t *index_get_object_handle(index_handle_t *index, uint64_t objid)
     return OS_CONTAINER(obj_info->obj_hnd_list.head.next, object_handle_t, entry);
 }
 
-int32_t index_close_object_nolock(object_handle_t *obj)
+int32_t ofs_close_object_nolock(object_handle_t *obj)
 {
     object_info_t *obj_info = NULL;
     
@@ -679,10 +679,10 @@ int32_t index_close_object_nolock(object_handle_t *obj)
 	return 0;
 }     
 
-int32_t index_close_object(object_handle_t *obj)
+int32_t ofs_close_object(object_handle_t *obj)
 {
     int32_t ret = 0;
-	index_handle_t *index;
+	container_handle_t *ct;
 
     if (NULL == obj)
     {
@@ -690,21 +690,16 @@ int32_t index_close_object(object_handle_t *obj)
         return -INDEX_ERR_PARAMETER;
     }
 
-	index = obj->index;
+	ct = obj->ct;
     
-    OS_RWLOCK_WRLOCK(&index->index_lock);
-    ret = index_close_object_nolock(obj);
-    OS_RWLOCK_WRUNLOCK(&index->index_lock);
+    OS_RWLOCK_WRLOCK(&ct->ct_lock);
+    ret = ofs_close_object_nolock(obj);
+    OS_RWLOCK_WRUNLOCK(&ct->ct_lock);
     
     return ret;
 }     
 
-int32_t index_delete_object(index_handle_t *index, uint64_t objid)
-{
-    return 0;
-}
-
-int32_t index_rename_object(object_handle_t *obj, const char *new_obj_name)
+int32_t ofs_delete_object(container_handle_t *ct, uint64_t objid)
 {
     return 0;
 }
