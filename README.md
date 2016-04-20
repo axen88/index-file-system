@@ -1,4 +1,4 @@
-This project comes from https://github.com/axenhook/index-file-system
+This project comes from https://github.com/axenhook/object-file-system
 
 # compile on linux
 
