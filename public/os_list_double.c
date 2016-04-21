@@ -173,7 +173,7 @@ int32_t dlist_walk_all(dlist_head_t * head,
     while (next != &head->head)
     {
         ret = func(para, next);
-        if (0 != ret)
+        if (ret != 0)
         {
             return ret;
         }
@@ -206,7 +206,7 @@ int32_t dlist_walk_all_reverse(dlist_head_t * head,
     while (prev != &head->head)
     {
         ret = func(para, prev);
-        if (0 != ret)
+        if (ret != 0)
         {
             return ret;
         }

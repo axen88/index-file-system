@@ -62,7 +62,7 @@ struct object_info
     uint64_t objid;                    // object id
     uint64_t inode_no;                 // inode no, also the position stored on disk
 
-    char obj_name[OBJ_NAME_MAX_SIZE];
+    char name[OBJ_NAME_MAX_SIZE];
     
     avl_node_t entry;                  // register in ct handle
 
@@ -77,7 +77,7 @@ struct object_info
     avl_tree_t caches;            // record all new block data
     os_rwlock caches_lock;
     
-    uint32_t obj_ref_cnt;
+    uint32_t ref_cnt;
     
     os_rwlock obj_lock;
 };
@@ -99,20 +99,14 @@ struct object_handle
     dlist_entry_t entry;
 };
 
-
-
-object_info_t *ofs_get_object_info(container_handle_t *ct, uint64_t objid);
-object_handle_t *ofs_get_object_handle(container_handle_t *ct, uint64_t objid);
-
-
 /* for internal only */
 int32_t create_object(container_handle_t *ct, uint64_t objid, uint16_t flags, object_handle_t **obj);
 int32_t open_object(container_handle_t *ct, uint64_t objid, uint64_t inode_no, object_handle_t **obj);
 extern void close_object(object_info_t *obj_info);
 int32_t create_object_at_inode(container_handle_t *ct, uint64_t objid, uint64_t inode_no,
     uint16_t flags, object_handle_t **obj_out);
-
-extern int32_t compare_attr_info2(const char *attr_name, object_info_t *attr_info_node);
+object_info_t *ofs_get_object_info(container_handle_t *ct, uint64_t objid);
+object_handle_t *ofs_get_object_handle(container_handle_t *ct, uint64_t objid);
 
 
 // object API

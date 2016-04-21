@@ -106,7 +106,7 @@ static void *open_log(log_t *log)
         log->dir, log->name);
     
     ret = os_file_create(&log->disk_hnd, name);
-    if (0 > ret)
+    if (ret < 0)
     {
         return NULL;
     }

@@ -39,19 +39,18 @@ History:
 MODULE(PID_CONTAINER);
 #include "os_log.h"
 
-avl_tree_t *g_ofs_list = NULL;
-os_rwlock g_ofs_list_rwlock;
+avl_tree_t *g_container_list = NULL;
+os_rwlock g_container_list_rwlock;
 
-void close_index(container_handle_t *ct);
-extern int32_t fixup_index(container_handle_t *ct);
+void close_container(container_handle_t *ct);
 
-int32_t compare_index1(const container_handle_t *ct, const container_handle_t *ofs_node)
+int32_t compare_container1(const container_handle_t *ct, const container_handle_t *ofs_node)
 {
     return os_collate_ansi_string(ct->name, strlen(ct->name),
         ofs_node->name, strlen(ofs_node->name));
 }
 
-int32_t compare_index2(const char *ct_name, container_handle_t *ofs_node)
+int32_t compare_container2(const char *ct_name, container_handle_t *ofs_node)
 {
     return os_collate_ansi_string(ct_name, strlen(ct_name),
         ofs_node->name, strlen(ofs_node->name));
@@ -74,38 +73,38 @@ int32_t compare_object1(const object_info_t *obj_info, const object_info_t *targ
 
 int32_t ofs_init_system(void)
 {
-    if (NULL != g_ofs_list)
+    if (NULL != g_container_list)
     {
-        LOG_ERROR("Init ct system many times. g_ofs_list(%p)\n", g_ofs_list);
+        LOG_ERROR("Init ct system many times. g_container_list(%p)\n", g_container_list);
         return 0;
     }
 
-    g_ofs_list = OS_MALLOC(sizeof(avl_tree_t));
-    if (NULL == g_ofs_list)
+    g_container_list = OS_MALLOC(sizeof(avl_tree_t));
+    if (NULL == g_container_list)
     {
         LOG_ERROR("Malloc failed. size(%d)\n", (uint32_t)sizeof(avl_tree_t));
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 
-    avl_create(g_ofs_list, (int (*)(const void *, const void*))compare_index1, sizeof(container_handle_t),
+    avl_create(g_container_list, (int (*)(const void *, const void*))compare_container1, sizeof(container_handle_t),
         OS_OFFSET(container_handle_t, entry));
-    OS_RWLOCK_INIT(&g_ofs_list_rwlock);
+    OS_RWLOCK_INIT(&g_container_list_rwlock);
 
     return 0;
 }
 
-int32_t close_one_index(void *para, container_handle_t *ct)
+int32_t close_one_container(void *para, container_handle_t *ct)
 {
-    ASSERT(NULL != ct);
+    ASSERT(ct != NULL);
 
-    close_index(ct);
+    close_container(ct);
 
     return 0;
 }
 
 int32_t close_one_object(void *para, object_info_t *obj_info)
 {
-    ASSERT(NULL != obj_info);
+    ASSERT(obj_info != NULL);
 
     if (obj_info->objid < RESERVED_OBJ_ID)  // do not close the system object
     {
@@ -118,29 +117,28 @@ int32_t close_one_object(void *para, object_info_t *obj_info)
 
 void ofs_exit_system(void)
 {
-    if (NULL == g_ofs_list)
+    if (NULL == g_container_list)
     {
-        LOG_ERROR("Exit ct system many times. g_ofs_list(%p)\n", g_ofs_list);
+        LOG_ERROR("Exit ct system many times. g_container_list(%p)\n", g_container_list);
         return;
     }
 
-    (void)avl_walk_all(g_ofs_list, (avl_walk_cb_t)close_one_index, NULL);
+    (void)avl_walk_all(g_container_list, (avl_walk_cb_t)close_one_container, NULL);
 
-    OS_FREE(g_ofs_list);
-    g_ofs_list = NULL;
-    OS_RWLOCK_DESTROY(&g_ofs_list_rwlock);
+    OS_FREE(g_container_list);
+    g_container_list = NULL;
+    OS_RWLOCK_DESTROY(&g_container_list_rwlock);
 
 	return;
 }
 
-int32_t walk_all_opened_index(
-    int32_t (*func)(void *, container_handle_t *), void *para)
+int32_t ofs_walk_all_opened_container(container_cb_t cb, void *para)
 {
     int32_t ret = 0;
     
-    OS_RWLOCK_WRLOCK(&g_ofs_list_rwlock);
-    ret = avl_walk_all(g_ofs_list, (avl_walk_cb_t)func, para);
-    OS_RWLOCK_WRUNLOCK(&g_ofs_list_rwlock);
+    OS_RWLOCK_WRLOCK(&g_container_list_rwlock);
+    ret = avl_walk_all(g_container_list, (avl_walk_cb_t)cb, para);
+    OS_RWLOCK_WRUNLOCK(&g_container_list_rwlock);
     
     return ret;
 }
@@ -148,12 +146,12 @@ int32_t walk_all_opened_index(
 int32_t compare_cache1(const ofs_block_cache_t *cache, const ofs_block_cache_t *cache_node);
 
 
-int32_t init_ofs_resource(container_handle_t ** ct, const char * ct_name)
+int32_t init_container_resource(container_handle_t **ct, const char *ct_name)
 {
     container_handle_t *tmp_ct = NULL;
 
-    ASSERT(NULL != ct);
-    ASSERT(NULL != ct_name);
+    ASSERT(ct != NULL);
+    ASSERT(ct_name != NULL);
 
     tmp_ct = (container_handle_t *)OS_MALLOC(sizeof(container_handle_t));
     if (NULL == tmp_ct)
@@ -171,11 +169,22 @@ int32_t init_ofs_resource(container_handle_t ** ct, const char * ct_name)
         OS_OFFSET(object_info_t, entry));
     avl_create(&tmp_ct->metadata_cache, (int (*)(const void *, const void*))compare_cache1, sizeof(ofs_block_cache_t),
         OS_OFFSET(ofs_block_cache_t, fs_entry));
-    avl_add(g_ofs_list, tmp_ct);
+    avl_add(g_container_list, tmp_ct);
 
     *ct = tmp_ct;
 
     return 0;
+}
+
+void destroy_container_resource(container_handle_t *ct)
+{
+    avl_destroy(&ct->obj_info_list);
+    avl_destroy(&ct->metadata_cache);
+    OS_RWLOCK_DESTROY(&ct->ct_lock);
+    OS_RWLOCK_DESTROY(&ct->metadata_cache_lock);
+    avl_remove(g_container_list, ct);
+
+    OS_FREE(ct);
 }
 
 int32_t create_system_objects(container_handle_t *ct)
@@ -280,8 +289,7 @@ int32_t open_system_objects(container_handle_t *ct)
     return 0;
 }
 
-int32_t init_super_block(ofs_super_block_t *sb, uint64_t total_sectors, uint32_t block_size_shift,
-    uint32_t reserved_blocks)
+int32_t init_super_block(ofs_super_block_t *sb, uint64_t total_sectors, uint32_t block_size_shift)
 {
     int32_t ret = 0;
     uint64_t total_blocks = 0;
@@ -292,12 +300,10 @@ int32_t init_super_block(ofs_super_block_t *sb, uint64_t total_sectors, uint32_t
         return -FILE_BLOCK_ERR_PARAMETER;
     }
 
-    reserved_blocks++;
     total_blocks = total_sectors >> (block_size_shift - BYTES_PER_SECTOR_SHIFT);
-    if (total_blocks <= reserved_blocks)
+    if (total_blocks < MIN_BLOCKS_NUM)
     {
-        LOG_ERROR("The parameter is invalid. total_blocks(%lld) reserved_blocks(%d)\n",
-            total_blocks, reserved_blocks);
+        LOG_ERROR("The parameter is invalid. total_blocks(%lld)\n", total_blocks);
         return -FILE_BLOCK_ERR_PARAMETER;
     }
 
@@ -318,14 +324,13 @@ int32_t init_super_block(ofs_super_block_t *sb, uint64_t total_sectors, uint32_t
     return 0;
 }
 
-int32_t check_super_block(ofs_super_block_t * sb)
+int32_t check_super_block(ofs_super_block_t *sb)
 {
-    ASSERT(NULL != sb);
+    ASSERT(sb != NULL);
     
     if (sb->magic_num != BLOCK_MAGIC_NUMBER)
     {
-        LOG_ERROR( "magic_num not match. magic_num(%x) expect(%x)\n",
-            sb->magic_num, BLOCK_MAGIC_NUMBER);
+        LOG_ERROR( "magic_num not match. magic_num(%x) expect(%x)\n", sb->magic_num, BLOCK_MAGIC_NUMBER);
         return -FILE_BLOCK_ERR_FORMAT;
     }
 
@@ -344,25 +349,22 @@ int32_t check_super_block(ofs_super_block_t * sb)
 
     if (sb->block_size != BYTES_PER_BLOCK)
     {
-        LOG_ERROR("block_size not match. block_size(%d) expect(%d)\n",
-            sb->block_size, BYTES_PER_BLOCK);
+        LOG_ERROR("block_size not match. block_size(%d) expect(%d)\n", sb->block_size, BYTES_PER_BLOCK);
         return -FILE_BLOCK_ERR_FORMAT;
     }
 
     return 0;
 }
 
-
-int32_t ofs_create_nolock(const char *ct_name, uint64_t total_sectors, container_handle_t **ct)
+int32_t ofs_create_container_nolock(const char *ct_name, uint64_t total_sectors, container_handle_t **ct)
 {
     container_handle_t *tmp_ct = NULL;
     int32_t ret = 0;
     avl_index_t where = 0;
 
-    if ((NULL == ct) || (0 == total_sectors) || (NULL == ct_name))
+    if ((ct == NULL) || (total_sectors == 0) || (ct_name == NULL))
     {
-        LOG_ERROR("Invalid parameter. ct(%p) total_sectors(%lld) ct_name(%p)\n",
-            ct, total_sectors, ct_name);
+        LOG_ERROR("Invalid parameter. ct(%p) total_sectors(%lld) ct_name(%p)\n", ct, total_sectors, ct_name);
         return -INDEX_ERR_PARAMETER;
     }
     
@@ -375,7 +377,7 @@ int32_t ofs_create_nolock(const char *ct_name, uint64_t total_sectors, container
     LOG_INFO("Create the ct. ct_name(%s) total_sectors(%lld)\n", ct_name, total_sectors);
 
     /* already opened */
-    tmp_ct = avl_find(g_ofs_list, (avl_find_fn_t)compare_index2, ct_name, &where);
+    tmp_ct = avl_find(g_container_list, (avl_find_fn_t)compare_container2, ct_name, &where);
     if (NULL != tmp_ct)
     {
         *ct = tmp_ct;
@@ -384,52 +386,51 @@ int32_t ofs_create_nolock(const char *ct_name, uint64_t total_sectors, container
     }
 
     /* allocate resource */
-    ret = init_ofs_resource(&tmp_ct, ct_name);
-    if (0 > ret)
+    ret = init_container_resource(&tmp_ct, ct_name);
+    if (ret < 0)
     {
         LOG_ERROR("Init ct resource failed. ct_name(%s) ret(%d)", ct_name, ret);
         return ret;
     }
     
     /* init super block */
-    ret = init_super_block(&tmp_ct->sb, total_sectors, BYTES_PER_BLOCK_SHIFT, 0);
+    ret = init_super_block(&tmp_ct->sb, total_sectors, BYTES_PER_BLOCK_SHIFT);
     if (ret < 0)
     {
         LOG_ERROR("init super block failed. name(%s)\n", ct_name);
-        close_index(tmp_ct);
+        close_container(tmp_ct);
         return ret;
     }
 
     ret = os_disk_create(&tmp_ct->disk_hnd, ct_name);
-    if (0 > ret)
+    if (ret < 0)
     {
         LOG_ERROR("init disk failed. ret(%d)\n", ret);
-        close_index(tmp_ct);
+        close_container(tmp_ct);
         return ret;
     }
 
-    ret = ofs_update_block_pingpong_init(tmp_ct, &tmp_ct->sb.head, SUPER_BLOCK_VBN);
-    if (0 > ret)
+    ret = ofs_init_super_block(tmp_ct);
+    if (ret < 0)
     {
-        LOG_ERROR("Update super block failed. ct_name(%s) vbn(%lld) ret(%d)\n",
-            ct_name, SUPER_BLOCK_VBN, ret);
-        close_index(tmp_ct);
+        LOG_ERROR("Update super block failed. ct_name(%s) vbn(%lld) ret(%d)\n", ct_name, SUPER_BLOCK_VBN, ret);
+        close_container(tmp_ct);
         return ret;
     }
     
     ret = create_system_objects(tmp_ct);
-    if (0 > ret)
+    if (ret < 0)
     {
         LOG_ERROR("create system objects failed. ct_name(%s) ret(%d)\n", ct_name, ret);
-        close_index(tmp_ct);
+        close_container(tmp_ct);
         return ret;
     }
     
     ret = ofs_update_super_block(tmp_ct);
-    if (0 > ret)
+    if (ret < 0)
     {
         LOG_ERROR("Update super block failed. hnd(%p) ret(%d)\n", tmp_ct, ret);
-        close_index(tmp_ct);
+        close_container(tmp_ct);
         return ret;
     }
 
@@ -444,9 +445,9 @@ int32_t ofs_create_container(const char *ct_name, uint64_t total_sectors, contai
 {
     int32_t ret = 0;
     
-    OS_RWLOCK_WRLOCK(&g_ofs_list_rwlock);
-    ret = ofs_create_nolock(ct_name, total_sectors, ct);
-    OS_RWLOCK_WRUNLOCK(&g_ofs_list_rwlock);
+    OS_RWLOCK_WRLOCK(&g_container_list_rwlock);
+    ret = ofs_create_container_nolock(ct_name, total_sectors, ct);
+    OS_RWLOCK_WRUNLOCK(&g_container_list_rwlock);
 
     return ret;
 }     
@@ -459,7 +460,7 @@ int32_t ofs_open_nolock(const char *ct_name, container_handle_t **ct)
     avl_index_t where = 0;
     ofs_super_block_t *sb = NULL;
 
-    if ((NULL == ct) || (NULL == ct_name))
+    if ((ct == NULL) || (ct_name == NULL))
     {
         LOG_ERROR("Invalid parameter. ct(%p) ct_name(%p)\n", ct, ct_name);
         return -INDEX_ERR_PARAMETER;
@@ -473,7 +474,7 @@ int32_t ofs_open_nolock(const char *ct_name, container_handle_t **ct)
 
     LOG_INFO("Open the ct. ct_name(%s)\n", ct_name);
 
-    tmp_ct = avl_find(g_ofs_list, (avl_find_fn_t)compare_index2, ct_name, &where);
+    tmp_ct = avl_find(g_container_list, (avl_find_fn_t)compare_container2, ct_name, &where);
     if (NULL != tmp_ct)
     {
         tmp_ct->ref_cnt++;
@@ -482,8 +483,8 @@ int32_t ofs_open_nolock(const char *ct_name, container_handle_t **ct)
         return 0;
     }
 
-    ret = init_ofs_resource(&tmp_ct, ct_name);
-    if (0 > ret)
+    ret = init_container_resource(&tmp_ct, ct_name);
+    if (ret < 0)
     {
         LOG_ERROR("Init ct resource failed. ct_name(%s) ret(%d)\n", ct_name, ret);
         return ret;
@@ -493,7 +494,7 @@ int32_t ofs_open_nolock(const char *ct_name, container_handle_t **ct)
     if (ret < 0)
     {
         LOG_ERROR("Open disk failed. ct_name(%s) ret(%d)\n", ct_name, ret);
-        (void)close_index(tmp_ct);
+        (void)close_container(tmp_ct);
         return ret;
     }
 
@@ -503,19 +504,18 @@ int32_t ofs_open_nolock(const char *ct_name, container_handle_t **ct)
     sb->block_size = BYTES_PER_BLOCK;
 
     ret = ofs_read_super_block(tmp_ct);
-    if (0 > ret)
+    if (ret < 0)
     {
-        LOG_ERROR("Read block failed. ct_name(%s) vbn(%lld) ret(%d)\n",
-            ct_name, SUPER_BLOCK_VBN, ret);
-        (void)close_index(tmp_ct);
+        LOG_ERROR("Read block failed. ct_name(%s) vbn(%lld) ret(%d)\n", ct_name, SUPER_BLOCK_VBN, ret);
+        (void)close_container(tmp_ct);
         return ret;
     }
 
     ret = check_super_block(sb);
-    if (0 > ret)
+    if (ret < 0)
     {
         LOG_ERROR("Check super block failed. ct_name(%s) ret(%d)\n", ct_name, ret);
-        (void)close_index(tmp_ct);
+        (void)close_container(tmp_ct);
         return ret;
     }
 
@@ -524,7 +524,7 @@ int32_t ofs_open_nolock(const char *ct_name, container_handle_t **ct)
     if (ret < 0)
     {
         LOG_ERROR("Open system object failed. ct_name(%s) ret(%d)\n", ct_name, ret);
-        close_index(tmp_ct);
+        close_container(tmp_ct);
         return ret;
     }
 
@@ -539,16 +539,16 @@ int32_t ofs_open_container(const char *ct_name, container_handle_t **ct)
 {
     int32_t ret = 0;
 
-    OS_RWLOCK_WRLOCK(&g_ofs_list_rwlock);
+    OS_RWLOCK_WRLOCK(&g_container_list_rwlock);
     ret = ofs_open_nolock(ct_name, ct);
-    OS_RWLOCK_WRUNLOCK(&g_ofs_list_rwlock);
+    OS_RWLOCK_WRUNLOCK(&g_container_list_rwlock);
     
     return ret;
 }     
 
-void close_index(container_handle_t *ct)
+void close_container(container_handle_t *ct)
 {
-    ASSERT(NULL != ct);
+    ASSERT(ct != NULL);
 
     // close all user object
     avl_walk_all(&ct->obj_info_list, (avl_walk_cb_t)close_one_object, NULL);
@@ -573,45 +573,34 @@ void close_index(container_handle_t *ct)
         ct->disk_hnd = NULL;
     }
 
-    avl_destroy(&ct->obj_info_list);
-    avl_destroy(&ct->metadata_cache);
-    OS_RWLOCK_DESTROY(&ct->ct_lock);
-    OS_RWLOCK_DESTROY(&ct->metadata_cache_lock);
-    avl_remove(g_ofs_list, ct);
-
-    OS_FREE(ct);
-    ct = NULL;
+    destroy_container_resource(ct);
 
     return;
 }
 
 int32_t ofs_close_nolock(container_handle_t *ct)
 {
-    if (NULL == ct)
+    if (ct == NULL)
     {   /* Not allocated yet */
         LOG_ERROR("Invalid parameter. ct(%p)\n", ct);
         return -INDEX_ERR_PARAMETER;
     }
 
-    LOG_INFO("Close the ct. ct(%p) ref_cnt(%d) name(%s)\n",
-        ct, ct->ref_cnt, ct->name);
+    LOG_INFO("Close the ct. ct(%p) ref_cnt(%d) name(%s)\n", ct, ct->ref_cnt, ct->name);
     
     if (0 == ct->ref_cnt)
     {
-        LOG_ERROR("The ref_cnt is 0. ct(%p) ref_cnt(%d) name(%s)\n",
-            ct, ct->ref_cnt, ct->name);
-        
+        LOG_ERROR("The ref_cnt is 0. ct(%p) ref_cnt(%d) name(%s)\n", ct, ct->ref_cnt, ct->name);
         return 0;
     }
     
     if (--ct->ref_cnt)
     {
-        LOG_WARN("The ct ref_cnt dec. ct(%p) ref_cnt(%d) name(%s)\n",
-            ct, ct->ref_cnt, ct->name);
+        LOG_WARN("The ct ref_cnt dec. ct(%p) ref_cnt(%d) name(%s)\n", ct, ct->ref_cnt, ct->name);
         return 0;
     }
     
-    close_index(ct);
+    close_container(ct);
 
     LOG_INFO("Close the ct success. ct(%p)\n", ct);
 
@@ -622,27 +611,27 @@ int32_t ofs_close_container(container_handle_t *ct)
 {
     int32_t ret = 0;
 
-    OS_RWLOCK_WRLOCK(&g_ofs_list_rwlock);
+    OS_RWLOCK_WRLOCK(&g_container_list_rwlock);
     ret = ofs_close_nolock(ct);
-    OS_RWLOCK_WRUNLOCK(&g_ofs_list_rwlock);
+    OS_RWLOCK_WRUNLOCK(&g_container_list_rwlock);
 
     return ret;
 }     
 
-container_handle_t *ofs_get_handle(const char *ct_name)
+container_handle_t *ofs_get_container_handle(const char *ct_name)
 {
     container_handle_t *ct = NULL;
     avl_index_t where = 0;
  
-    if (NULL == ct_name)
+    if (ct_name == NULL)
     {   /* Not allocated yet */
         LOG_ERROR("Invalid parameter. ct_name(%p)\n", ct_name);
         return NULL;
     }
 
-    OS_RWLOCK_WRLOCK(&g_ofs_list_rwlock);
-    ct = avl_find(g_ofs_list, (avl_find_fn_t)compare_index2, ct_name, &where);
-    OS_RWLOCK_WRUNLOCK(&g_ofs_list_rwlock);
+    OS_RWLOCK_WRLOCK(&g_container_list_rwlock);
+    ct = avl_find(g_container_list, (avl_find_fn_t)compare_container2, ct_name, &where);
+    OS_RWLOCK_WRUNLOCK(&g_container_list_rwlock);
     
     return ct;
 }     

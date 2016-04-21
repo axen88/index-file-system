@@ -38,9 +38,9 @@ History:
 
 void parse_index_para(int argc, char *argv[], ifs_tools_para_t *para)
 {
-    if (0 != os_parse_para(argc, argv, "-i", para->index_name, OFS_NAME_SIZE))
+    if (0 != os_parse_para(argc, argv, "-i", para->ct_name, OFS_NAME_SIZE))
     {
-        para->index_name[0] = 0;
+        para->ct_name[0] = 0;
     }
 
     if (0 != os_parse_para(argc, argv, "-x", para->tmp, TMP_BUF_SIZE))
@@ -116,21 +116,21 @@ void parse_all_para(int argc, char *argv[], ifs_tools_para_t *para)
 
 os_cmd_list_t ifs_cmd_list[]
 = {
-    {do_create_cmd,   {"create",   NULL, NULL}, "<-i index_name> [-o obj_id] [-s start_lba]"},
-    {do_open_cmd,     {"open",     NULL, NULL}, "<-i index_name> [-o obj_id] [-s start_lba]"},
-    {do_close_cmd,    {"close",    NULL, NULL}, "<-i index_name> [-o obj_id]"},
-    {do_delete_cmd,   {"delete",   NULL, NULL}, "<-i index_name> [-o obj_id]"},
-    //{do_rename_cmd,   {"rename",   NULL, NULL}, "<-i index_name> [-o obj_name] [-no new_obj_name]"},
+    {do_create_cmd,   {"create",   NULL, NULL}, "<-i ct_name> [-o obj_id] [-s start_lba]"},
+    {do_open_cmd,     {"open",     NULL, NULL}, "<-i ct_name> [-o obj_id] [-s start_lba]"},
+    {do_close_cmd,    {"close",    NULL, NULL}, "<-i ct_name> [-o obj_id]"},
+    {do_delete_cmd,   {"delete",   NULL, NULL}, "<-i ct_name> [-o obj_id]"},
+    //{do_rename_cmd,   {"rename",   NULL, NULL}, "<-i ct_name> [-o name] [-no new_obj_name]"},
         
-	{do_list_cmd,     {"list",     NULL, NULL}, "[-i index_name] [-o obj_id]"},
-	{do_dump_cmd,     {"dump",     NULL, NULL}, "<-i index_name> [-o obj_id]"},
-	//{do_verify_cmd,   {"verify",   NULL, NULL}, "<-i index_name> [-o obj_id]"},
-    //{do_fixup_cmd,    {"fixup",    NULL, NULL}, "<-i index_name>"},
+	{do_list_cmd,     {"list",     NULL, NULL}, "[-i ct_name] [-o obj_id]"},
+	{do_dump_cmd,     {"dump",     NULL, NULL}, "<-i ct_name> [-o obj_id]"},
+	//{do_verify_cmd,   {"verify",   NULL, NULL}, "<-i ct_name> [-o obj_id]"},
+    //{do_fixup_cmd,    {"fixup",    NULL, NULL}, "<-i ct_name>"},
         
-	{do_insert_key_cmd,   {"insert",   NULL, NULL}, "<-i index_name> [-o obj_id] [-k key] [-v value]"},
-    {do_remove_key_cmd,   {"remove",   NULL, NULL}, "<-i index_name> [-o obj_id] [-k key]"},
+	{do_insert_key_cmd,   {"insert",   NULL, NULL}, "<-i ct_name> [-o obj_id] [-k key] [-v value]"},
+    {do_remove_key_cmd,   {"remove",   NULL, NULL}, "<-i ct_name> [-o obj_id] [-k key]"},
                 
-	//{do_performance_cmd, {"perf", NULL, NULL}, "<-i index_name> <-o obj_id> [-n threads_num]"},
+	//{do_performance_cmd, {"perf", NULL, NULL}, "<-i ct_name> <-o obj_id> [-n threads_num]"},
 	{NULL, {NULL, NULL, NULL}, NULL}
 };
 

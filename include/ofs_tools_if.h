@@ -50,7 +50,7 @@ extern "C" {
 
 typedef struct ifs_tools_para
 {
-    char index_name[OFS_NAME_SIZE];
+    char ct_name[OFS_NAME_SIZE];
     char tmp[TMP_BUF_SIZE];
     char key[KEY_MAX_SIZE];
     char value[VALUE_MAX_SIZE];

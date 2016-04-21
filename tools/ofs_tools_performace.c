@@ -39,7 +39,7 @@ History:
 #define TEST_KEY_LEN   8
 #define TEST_VALUE_LEN 20
 
-int32_t test_insert_key_performance(char *index_name, uint64_t objid, uint64_t keys_num, net_para_t *net)
+int32_t test_insert_key_performance(char *ct_name, uint64_t objid, uint64_t keys_num, net_para_t *net)
 {
     int32_t ret = 0;
     container_handle_t *ct = NULL;
@@ -48,14 +48,14 @@ int32_t test_insert_key_performance(char *index_name, uint64_t objid, uint64_t k
     uint8_t c[TEST_VALUE_LEN];
     uint64_t ullTime = 0;
 
-    ASSERT(NULL != index_name);
-    ASSERT(0 != strlen(index_name));
+    ASSERT(ct_name != NULL);
+    ASSERT(0 != strlen(ct_name));
     ASSERT(0 != objid);
 
-    ret = ofs_open_container(index_name, &ct);
+    ret = ofs_open_container(ct_name, &ct);
     if (ret < 0)
     {
-        OS_PRINT(net, "Open ct failed. name(%s) ret(%d)\n", index_name, ret);
+        OS_PRINT(net, "Open ct failed. name(%s) ret(%d)\n", ct_name, ret);
         return ret;
     }
 
@@ -76,7 +76,7 @@ int32_t test_insert_key_performance(char *index_name, uint64_t objid, uint64_t k
     {
         ret = index_insert_key(obj, &key, TEST_KEY_LEN,
             c, TEST_VALUE_LEN);
-        if (0 > ret)
+        if (ret < 0)
         {
             OS_PRINT(net, "Insert key failed. objid(%lld) key(%lld) ret(%d)\n", objid, key, ret);
             break;
@@ -92,7 +92,7 @@ int32_t test_insert_key_performance(char *index_name, uint64_t objid, uint64_t k
     return 0;
 }
 
-int32_t test_remove_key_performance(char *index_name, uint64_t objid, uint64_t keys_num, net_para_t *net)
+int32_t test_remove_key_performance(char *ct_name, uint64_t objid, uint64_t keys_num, net_para_t *net)
 {
     int32_t ret = 0;
     container_handle_t *ct = NULL;
@@ -100,14 +100,14 @@ int32_t test_remove_key_performance(char *index_name, uint64_t objid, uint64_t k
     uint64_t key = 0;
     uint64_t ullTime = 0;
 
-    ASSERT(NULL != index_name);
-    ASSERT(0 != strlen(index_name));
+    ASSERT(ct_name != NULL);
+    ASSERT(0 != strlen(ct_name));
     ASSERT(0 != objid);
 
-    ret = ofs_open_container(index_name, &ct);
+    ret = ofs_open_container(ct_name, &ct);
     if (ret < 0)
     {
-        OS_PRINT(net, "Open ct failed. name(%s) ret(%d)\n", index_name, ret);
+        OS_PRINT(net, "Open ct failed. name(%s) ret(%d)\n", ct_name, ret);
         return ret;
     }
 
@@ -125,7 +125,7 @@ int32_t test_remove_key_performance(char *index_name, uint64_t objid, uint64_t k
     for (key = 0; key < keys_num; key++)
     {
         ret = index_remove_key(obj, &key, TEST_KEY_LEN);
-        if (0 > ret)
+        if (ret < 0)
         {
             OS_PRINT(net, "Remove key failed. objid(%lld) key(%lld) ret(%d)\n", objid, key, ret);
             break;
@@ -144,21 +144,21 @@ int32_t test_remove_key_performance(char *index_name, uint64_t objid, uint64_t k
 void *test_performance_thread(void *para)
 {
     ifs_tools_para_t *tmp_para = para;
-    char obj_name[OBJ_NAME_MAX_SIZE];
+    char name[OBJ_NAME_MAX_SIZE];
 
     OS_RWLOCK_WRLOCK(&tmp_para->rwlock);
-    OS_SNPRINTF(obj_name, OBJ_NAME_MAX_SIZE, "%lld%d",
+    OS_SNPRINTF(name, OBJ_NAME_MAX_SIZE, "%lld%d",
         tmp_para->objid, tmp_para->no++);
     tmp_para->threads_cnt++;
     OS_RWLOCK_WRUNLOCK(&tmp_para->rwlock);
 
     if (tmp_para->insert)
     {
-        (void)test_insert_key_performance(tmp_para->index_name, tmp_para->objid, tmp_para->keys_num, tmp_para->net);
+        (void)test_insert_key_performance(tmp_para->ct_name, tmp_para->objid, tmp_para->keys_num, tmp_para->net);
     }
     else
     {
-        (void)test_remove_key_performance(tmp_para->index_name, tmp_para->objid, tmp_para->keys_num, tmp_para->net);
+        (void)test_remove_key_performance(tmp_para->ct_name, tmp_para->objid, tmp_para->keys_num, tmp_para->net);
     }
 
     OS_RWLOCK_WRLOCK(&tmp_para->rwlock);
@@ -211,7 +211,7 @@ int do_performance_cmd(int argc, char *argv[], net_para_t *net)
     ifs_tools_para_t *para = NULL;
 
     para = OS_MALLOC(sizeof(ifs_tools_para_t));
-    if (NULL == para)
+    if (para == NULL)
     {
         OS_PRINT(net, "Allocate memory failed. size(%d)\n",
             sizeof(ifs_tools_para_t));
@@ -221,10 +221,10 @@ int do_performance_cmd(int argc, char *argv[], net_para_t *net)
     parse_all_para(argc, argv, para);
     para->net = net;
 
-    if ((0 == strlen(para->index_name))
+    if ((0 == strlen(para->ct_name))
         || OBJID_IS_INVALID(para->objid))
     {
-        OS_PRINT(net, "invalid ct name(%s) or objid(%lld).\n", para->index_name, para->objid);
+        OS_PRINT(net, "invalid ct name(%s) or objid(%lld).\n", para->ct_name, para->objid);
         OS_FREE(para);
         return -2;
     }

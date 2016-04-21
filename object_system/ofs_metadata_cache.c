@@ -41,8 +41,6 @@ History:
 MODULE(PID_CACHE);
 #include "os_log.h"
 
-#define INDEX_WALK_FINISHED       1
-
 
 int32_t compare_cache2(const uint64_t *vbn, ofs_block_cache_t *cache_node)
 {
@@ -97,7 +95,7 @@ ofs_block_cache_t *alloc_obj_cache(object_info_t *obj_info, uint64_t vbn, uint32
 {
     ofs_block_cache_t *cache = NULL;
 
-    ASSERT(NULL != obj_info);
+    ASSERT(obj_info != NULL);
     
     cache = OS_MALLOC(sizeof(ofs_block_cache_t));
     if (NULL == cache)
@@ -124,8 +122,8 @@ ofs_block_cache_t *alloc_obj_cache(object_info_t *obj_info, uint64_t vbn, uint32
 
 void free_obj_cache(object_info_t *obj_info, ofs_block_cache_t *cache)
 {
-    ASSERT(NULL != obj_info);
-    ASSERT(NULL != cache);
+    ASSERT(obj_info != NULL);
+    ASSERT(cache != NULL);
     
     remove_obj_cache(obj_info, cache);
     
@@ -145,7 +143,7 @@ int32_t alloc_obj_cache_and_block(object_info_t *obj_info, ofs_block_cache_t **c
     int32_t ret = 0;
     uint64_t vbn = 0;
 
-    ASSERT(NULL != obj_info);
+    ASSERT(obj_info != NULL);
     
     ret = OFS_ALLOC_BLOCK(obj_info->ct, obj_info->objid, &vbn);
     if (ret < 0)
@@ -173,8 +171,8 @@ int32_t alloc_obj_cache_and_block(object_info_t *obj_info, ofs_block_cache_t **c
 
 int32_t release_obj_cache(object_info_t *obj_info, ofs_block_cache_t *cache)
 {
-    ASSERT(NULL != obj_info);
-    ASSERT(NULL != cache);
+    ASSERT(obj_info != NULL);
+    ASSERT(cache != NULL);
 
     if (CACHE_DIRTY(cache))
     {
@@ -207,7 +205,7 @@ int32_t index_block_read2(object_info_t *obj_info, uint64_t vbn, uint32_t blk_id
     ofs_block_cache_t *cache = NULL;
     avl_index_t where = 0;
 
-    ASSERT(NULL != obj_info);
+    ASSERT(obj_info != NULL);
     
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
     cache = avl_find(&obj_info->caches, (avl_find_fn_t)compare_cache2, &vbn, &where);
@@ -270,8 +268,8 @@ int32_t index_block_read(object_handle_t *obj, uint64_t vbn, uint32_t blk_id)
 
 void free_fs_cache(container_handle_t *ct, ofs_block_cache_t *cache)
 {
-    ASSERT(NULL != ct);
-    ASSERT(NULL != cache);
+    ASSERT(ct != NULL);
+    ASSERT(cache != NULL);
     
     avl_remove(&ct->metadata_cache, cache);
     
@@ -289,8 +287,8 @@ int32_t flush_fs_dirty_cache(container_handle_t *ct, ofs_block_cache_t *cache)
 {
     int32_t ret = 0;
 
-    ASSERT(NULL != ct);
-    ASSERT(NULL != cache);
+    ASSERT(ct != NULL);
+    ASSERT(cache != NULL);
 
     if (!CACHE_DIRTY(cache))
     {
@@ -341,7 +339,7 @@ int32_t flush_fs_cache(container_handle_t *ct)
         ct->sb.base_blk = ct->base_blk;
 
         ret = ofs_update_super_block(ct);
-        if (0 > ret)
+        if (ret < 0)
         {
             LOG_ERROR("Update super block failed. ct(%p) ret(%d)\n", ct, ret);
         }
@@ -356,8 +354,8 @@ int32_t release_fs_cache(container_handle_t *ct, ofs_block_cache_t *cache)
 {
     int32_t ret = 0;
 
-    ASSERT(NULL != ct);
-    ASSERT(NULL != cache);
+    ASSERT(ct != NULL);
+    ASSERT(cache != NULL);
 
     if (CACHE_DIRTY(cache))
     {

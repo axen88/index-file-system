@@ -69,7 +69,7 @@ int32_t alloc_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt, 
         if (obj->ie->flags & INDEX_ENTRY_END) // no key here
         {
             ret = walk_tree(obj, INDEX_GET_FIRST); // get first key
-            if (0 != ret)
+            if (ret != 0)
             { // no any key
                 if (ret != -INDEX_ERR_ROOT)
                 {

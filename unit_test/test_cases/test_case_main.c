@@ -55,25 +55,25 @@ int main(void)
         return CU_get_error();
 
     ret = add_index_test_case();
-    if (0 != ret) {
+    if (ret != 0) {
         CU_cleanup_registry();
         return CU_get_error();
     }
 
     ret = add_collate_test_case();
-    if (0 != ret) {
+    if (ret != 0) {
         CU_cleanup_registry();
         return CU_get_error();
     }
 
     ret = add_space_manager_test_case();
-    if (0 != ret) {
+    if (ret != 0) {
         CU_cleanup_registry();
         return CU_get_error();
     }
 
     ret = add_kv_test_case();
-    if (0 != ret) {
+    if (ret != 0) {
         CU_cleanup_registry();
         return CU_get_error();
     }

@@ -49,9 +49,6 @@ extern "C" {
 #define INODE_MAGIC                0x454A424F   // "OBJE"
 #define INDEX_MAGIC                0x58444E49   // "INDX"
 
-#define ENTRY_END_SIZE             sizeof(index_entry_t)
-#define ENTRY_BEGIN_SIZE           sizeof(index_entry_t)
-
 #define PRV_AREA_SIZE              256       
 #define OBJ_NAME_MAX_SIZE          256
 
@@ -61,7 +58,6 @@ extern "C" {
 
 #define BLOCK_SIZE            (4 * 1024)
 #define INODE_SIZE            (4 * 1024)
-
 
 #define INODE_RESERVED_SIZE  (1686 + 2048)
 #define INODE_HEAD_SIZE      OS_OFFSET(inode_record_t, reserved)
@@ -78,7 +74,7 @@ extern "C" {
 #define SPACE_OBJ_ID              1ULL
 #define OBJID_OBJ_ID              2ULL
 #define SPECIAL_OBJ_ID            10ULL  // The inode_no is recorded in super block if objid < SPECIAL_OBJ_ID
-#define RESERVED_OBJ_ID           256ULL
+#define RESERVED_OBJ_ID           128ULL
 
 #define ATTR_RECORD_HEAD_SIZE       OS_OFFSET(attr_record_t, content)
 
@@ -86,31 +82,6 @@ extern "C" {
 #define ATTR_RECORD_CONTENT_SIZE   (ATTR_RECORD_SIZE - ATTR_RECORD_HEAD_SIZE)
 
 #define INODE_GET_ATTR_RECORD(inode)  ((attr_record_t *)((uint8_t *)(inode) + (inode)->first_attr_off))
-
-#define KEY_MAX_SIZE    256
-#define VALUE_MAX_SIZE  1024
-
-// Index Entry ucFlags, bits field
-#define INDEX_ENTRY_LEAF          0x00
-#define INDEX_ENTRY_NODE          0x01
-#define INDEX_ENTRY_END           0x02
-#define INDEX_ENTRY_BEGIN         0x04
-
-// Index Block ucFlags, bits field
-#define INDEX_BLOCK_SMALL         0x00  // The block has no child block
-#define INDEX_BLOCK_LARGE         0x01  // The block has child block
-
-#define VBN_SIZE                  sizeof(uint64_t)
-
-#define GET_FIRST_IE(ib)     ((index_entry_t *)((uint8_t*)(ib) + ((index_block_t *)(ib))->first_entry_off))
-#define GET_END_IE(ib)       ((uint8_t *)(ib) + ((index_block_t *)(ib))->head.real_size)
-#define GET_NEXT_IE(ie)      ((index_entry_t *)((uint8_t*)(ie) + ((index_entry_t *)(ie))->len))
-#define GET_PREV_IE(ie)      ((index_entry_t *)((uint8_t*)(ie) - ((index_entry_t *)(ie))->prev_len))
-#define GET_IE_VBN(ie)       (*(uint64_t*)((uint8_t *)(ie)+ (((index_entry_t *)(ie))->len - VBN_SIZE)))
-#define SET_IE_VBN(ie, vbn)  (GET_IE_VBN(ie) = vbn)
-#define GET_IE_KEY(ie)       ((uint8_t*)(ie) + sizeof(index_entry_t))
-#define GET_IE_VALUE(ie)     ((uint8_t*)(ie) + sizeof(index_entry_t) + (((index_entry_t *)(ie))->key_len))
-
 
 
 #pragma pack(1) /* aligned by 1 byte */

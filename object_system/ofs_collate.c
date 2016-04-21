@@ -52,6 +52,7 @@ unicode_char_t os_to_wupper(unicode_char_t c)
 }
 
 #else
+
 #include <ctype.h>
 #include <wctype.h>
 
@@ -66,8 +67,7 @@ return value:
     =0: b1 == b2
     >0: b1 > b2
 */
-int32_t os_collate_binary(const uint8_t *b1, uint32_t b1_size,
-    const uint8_t *b2, uint32_t b2_size)
+int32_t os_collate_binary(const uint8_t *b1, uint32_t b1_size, const uint8_t *b2, uint32_t b2_size)
 {
     ASSERT(b1_size > 0);
     ASSERT(b2_size > 0);
@@ -118,23 +118,22 @@ int32_t os_collate_binary(const uint8_t *b1, uint32_t b1_size,
 
 /*
 return value
-    <0: str1 < str2
-    =0: str1 == str2
-    >0: str1 > str2
+    <0: s1 < s2
+    =0: s1 == s2
+    >0: s1 > s2
 */
-int32_t os_collate_unicode_string(const unicode_char_t *str1, uint32_t str1_size,
-	const unicode_char_t *str2, uint32_t str2_size)
+int32_t os_collate_unicode_string(const unicode_char_t *s1, uint32_t s1_size, const unicode_char_t *s2, uint32_t s2_size)
 {
 	unicode_char_t c1 = 0;
     unicode_char_t c2 = 0;
 
-    ASSERT(str1_size > 0);
-    ASSERT(str2_size > 0);
+    ASSERT(s1_size > 0);
+    ASSERT(s2_size > 0);
 
-	while ((0 != str1_size) && (0 != str2_size))
+	while ((0 != s1_size) && (0 != s2_size))
 	{
-		c1 = os_to_wupper(*str1);
-		c2 = os_to_wupper(*str2);
+		c1 = os_to_wupper(*s1);
+		c2 = os_to_wupper(*s2);
         if (c1 > c2)
 		{
 			return 1;
@@ -145,18 +144,18 @@ int32_t os_collate_unicode_string(const unicode_char_t *str1, uint32_t str1_size
 			return -1;
 		}
 
-		str1++;
-		str2++;
-        str1_size--;
-        str2_size--;
+		s1++;
+		s2++;
+        s1_size--;
+        s2_size--;
 	}
 
-    if (str1_size > str2_size)
+    if (s1_size > s2_size)
 	{
 		return 1;
 	}
     
-	if (str1_size < str2_size)
+	if (s1_size < s2_size)
 	{
 		return -1;
 	}
@@ -165,23 +164,22 @@ int32_t os_collate_unicode_string(const unicode_char_t *str1, uint32_t str1_size
 }
 
 /*
-    <0: str1 < str2
-    =0: str1 == str2
-    >0: str1 > str2
+    <0: s1 < s2
+    =0: s1 == s2
+    >0: s1 > s2
 */
-int32_t os_collate_ansi_string(const char *str1, uint32_t str1_size,
-	const char *str2, uint32_t str2_size)
+int32_t os_collate_ansi_string(const char *s1, uint32_t s1_size, const char *s2, uint32_t s2_size)
 {
 	char c1 = 0;
     char c2 = 0;
 
-    ASSERT(str1_size > 0);
-    ASSERT(str2_size > 0);
+    ASSERT(s1_size > 0);
+    ASSERT(s2_size > 0);
 
-	while ((0 != str1_size) && (0 != str2_size))
+	while ((0 != s1_size) && (0 != s2_size))
 	{
-		c1 = os_to_upper(*str1);
-		c2 = os_to_upper(*str2);
+		c1 = os_to_upper(*s1);
+		c2 = os_to_upper(*s2);
         if (c1 > c2)
 		{
 			return 1;
@@ -192,18 +190,18 @@ int32_t os_collate_ansi_string(const char *str1, uint32_t str1_size,
 			return -1;
 		}
 
-		str1++;
-		str2++;
-        str1_size--;
-        str2_size--;
+		s1++;
+		s2++;
+        s1_size--;
+        s2_size--;
 	}
 
-    if (str1_size > str2_size)
+    if (s1_size > s2_size)
 	{
 		return 1;
 	}
     
-	if (str1_size < str2_size)
+	if (s1_size < s2_size)
 	{
 		return -1;
 	}
@@ -284,8 +282,7 @@ return value:
     =0: b1 == b2
     >0: b1 > b2
 */
-int32_t os_collate_u64(const uint8_t *b1, uint32_t b1_size,
-    const uint8_t *b2, uint32_t b2_size)
+int32_t os_collate_u64(const uint8_t *b1, uint32_t b1_size, const uint8_t *b2, uint32_t b2_size)
 {
     uint64_t u64_1 = os_bstr_to_u64(b1, b1_size);
     uint64_t u64_2 = os_bstr_to_u64(b2, b2_size);
@@ -314,6 +311,7 @@ uint32_t os_extent_to_extent_pair(const index_extent_t *ext, uint8_t *ext_pair)
     
     addr_size = os_u64_to_bstr(ext->addr, ext_pair + EXT_PAIR_HEADER_SIZE);
     ext_pair[0] = addr_size;
+    
     return (EXT_PAIR_HEADER_SIZE + addr_size + os_u64_to_bstr(ext->len, ext_pair + EXT_PAIR_HEADER_SIZE + addr_size));
 }
 
@@ -328,6 +326,7 @@ uint32_t os_extent_to_extent_pair2(uint64_t addr, uint64_t len, uint8_t *ext_pai
     
     addr_size = os_u64_to_bstr(addr, ext_pair + EXT_PAIR_HEADER_SIZE);
     ext_pair[0] = addr_size;
+    
     return (EXT_PAIR_HEADER_SIZE + addr_size + os_u64_to_bstr(len, ext_pair + EXT_PAIR_HEADER_SIZE + addr_size));
 }
 
@@ -381,15 +380,15 @@ int32_t os_collate_extent(const uint8_t *k1, uint32_t k1_size, const uint8_t *v1
 
 
 // collate key
-int32_t collate_key(uint16_t collate_rule, index_entry_t *ie,
+int32_t collate_key(uint16_t cr, index_entry_t *ie,
     const void *key, uint16_t key_len, const void *value, uint16_t value_len)
 {
-    ASSERT(CR_BUTT > (collate_rule));
-    ASSERT(NULL != ie);
-    ASSERT(NULL != key);
-    ASSERT(0 != key_len);
+    ASSERT(cr < CR_BUTT);
+    ASSERT(ie != NULL);
+    ASSERT(key != NULL);
+    ASSERT(key_len != 0);
     
-    switch (collate_rule)
+    switch (cr)
     {
         case CR_BINARY:
             return os_collate_binary((uint8_t *)GET_IE_KEY(ie), ie->key_len,

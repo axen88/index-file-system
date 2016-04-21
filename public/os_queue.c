@@ -223,7 +223,7 @@ int32_t queue_walk_all(queue_t *q,
     {
         member = q->member[head];
         ret = func(member, para);
-        if (0 != ret)
+        if (ret != 0)
         {
             break;
         }

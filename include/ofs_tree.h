@@ -54,16 +54,46 @@ extern "C" {
 #define INDEX_ADD_BLOCK      0x40 /* add the block of the current key occupied */
 #define INDEX_WALK_MASK      0x1F
 
+#define KEY_MAX_SIZE    256
+#define VALUE_MAX_SIZE  1024
+
+#define ENTRY_END_SIZE             sizeof(index_entry_t)
+#define ENTRY_BEGIN_SIZE           sizeof(index_entry_t)
+
+
+
+// Index Entry ucFlags, bits field
+#define INDEX_ENTRY_LEAF          0x00
+#define INDEX_ENTRY_NODE          0x01
+#define INDEX_ENTRY_END           0x02
+#define INDEX_ENTRY_BEGIN         0x04
+
+// Index Block ucFlags, bits field
+#define INDEX_BLOCK_SMALL         0x00  // The block has no child block
+#define INDEX_BLOCK_LARGE         0x01  // The block has child block
+
+#define VBN_SIZE                  sizeof(uint64_t)
+
+#define GET_FIRST_IE(ib)     ((index_entry_t *)((uint8_t*)(ib) + ((index_block_t *)(ib))->first_entry_off))
+#define GET_END_IE(ib)       ((uint8_t *)(ib) + ((index_block_t *)(ib))->head.real_size)
+#define GET_NEXT_IE(ie)      ((index_entry_t *)((uint8_t*)(ie) + ((index_entry_t *)(ie))->len))
+#define GET_PREV_IE(ie)      ((index_entry_t *)((uint8_t*)(ie) - ((index_entry_t *)(ie))->prev_len))
+#define GET_IE_VBN(ie)       (*(uint64_t*)((uint8_t *)(ie)+ (((index_entry_t *)(ie))->len - VBN_SIZE)))
+#define SET_IE_VBN(ie, vbn)  (GET_IE_VBN(ie) = vbn)
+#define GET_IE_KEY(ie)       ((uint8_t*)(ie) + sizeof(index_entry_t))
+#define GET_IE_VALUE(ie)     ((uint8_t*)(ie) + sizeof(index_entry_t) + (((index_entry_t *)(ie))->key_len))
+
+
+
 #define IB(b)   ((index_block_t *)(b))
 
 typedef int32_t (*tree_walk_cb_t) (void *obj, void *para);
 
 extern int32_t index_search_key_nolock(object_handle_t *tree, const void *key,
     uint16_t key_len, const void *value, uint16_t value_len);
-extern int32_t index_remove_key_nolock(object_handle_t * obj, const void * key,
-    uint16_t key_len);
 extern int32_t index_insert_key_nolock(object_handle_t * obj, const void * key,
     uint16_t key_len, const void *value, uint16_t value_len);
+extern int32_t index_remove_key_nolock(object_handle_t * obj, const void * key, uint16_t key_len);
 
 
 extern int32_t walk_tree(object_handle_t *obj, uint8_t flags);

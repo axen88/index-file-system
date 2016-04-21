@@ -46,8 +46,7 @@ extern "C" {
 
 #define FLAG_DIRTY       0x00000001     // dirty
 
-
-
+#define MIN_BLOCKS_NUM   10
 
 struct container_handle
 {
@@ -74,20 +73,18 @@ struct container_handle
     os_rwlock ct_lock;             // lock
 };
 
+int32_t ofs_init_system(void);
+void ofs_exit_system(void);
 
-extern container_handle_t *ofs_get_handle(const char * ct_name);
+typedef int32_t (*container_cb_t)(void *, container_handle_t *);
 
-extern int32_t ofs_init_system(void);
-extern void ofs_exit_system(void);
-
-
-extern int32_t walk_all_opened_index(
-    int32_t (*func)(void *, container_handle_t *), void *para);
+int32_t ofs_walk_all_opened_container(container_cb_t cb, void *para);
 
 // container API
 int32_t ofs_open_container(const char *ct_name, container_handle_t **ct);
 int32_t ofs_create_container(const char *ct_name, uint64_t total_sectors, container_handle_t **ct);
 int32_t ofs_close_container(container_handle_t *ct);
+container_handle_t *ofs_get_container_handle(const char *ct_name);
 
 
 #ifdef __cplusplus

@@ -1052,8 +1052,7 @@ done:
 	return (AVL_NODE2DATA(node, off));
 }
 
-int avl_walk_all(avl_tree_t * tree,
-    int (*func) (void*, void *), void *para)
+int avl_walk_all(avl_tree_t * tree, avl_walk_cb_t cb, void *para)
 {
 	void *node = NULL;
 	void *next_node = NULL;
@@ -1070,7 +1069,7 @@ int avl_walk_all(avl_tree_t * tree,
     {
         next_node = AVL_NEXT(tree, node);
 
-        ret = func(para, node);
+        ret = cb(para, node);
         if (ret != 0)
         {
             return ret;

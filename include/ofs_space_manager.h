@@ -44,8 +44,6 @@ extern "C" {
 #define MAX_BLK_NUM  10
 #define MIN_BLK_NUM  3
 
-
-
 struct space_manager
 {
     object_handle_t *space_obj;

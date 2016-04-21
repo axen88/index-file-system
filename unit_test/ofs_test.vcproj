@@ -340,10 +340,6 @@
 				RelativePath="..\object_system\ofs_space_manager.c"
 				>
 			</File>
-			<File
-				RelativePath="..\object_system\ofs_utils.c"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="public"

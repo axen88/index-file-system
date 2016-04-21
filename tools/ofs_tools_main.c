@@ -64,7 +64,7 @@ int32_t main(int32_t argc, char *argv[])
     
     LOG_SYSTEM_INIT();
     ret = ofs_init_system();
-    if (0 > ret)
+    if (ret < 0)
     {
         printf("Index system init failed.\n");
     }

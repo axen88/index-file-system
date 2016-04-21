@@ -38,7 +38,7 @@ History:
 
 int32_t print_one_cache_info(net_para_t *net, ofs_block_cache_t *cache)
 {
-    ASSERT(NULL != cache);
+    ASSERT(cache != NULL);
 
     OS_PRINT(net, "cache: %p, vbn: %lld, state: 0x%x, ib: %p\n",
         cache, cache->vbn, cache->state, cache->ib);
@@ -48,7 +48,7 @@ int32_t print_one_cache_info(net_para_t *net, ofs_block_cache_t *cache)
 
 int32_t print_one_fs_info(net_para_t *net, container_handle_t *ct)
 {
-    ASSERT(NULL != ct);
+    ASSERT(ct != NULL);
 
     OS_PRINT(net, "name: %s, flags: 0x%x, ref: %u\n", ct->name, ct->flags, ct->ref_cnt);
 
@@ -57,27 +57,27 @@ int32_t print_one_fs_info(net_para_t *net, container_handle_t *ct)
 
 int32_t print_one_obj_info(net_para_t *net, object_info_t *obj_info)
 {
-    ASSERT(NULL != obj_info);
+    ASSERT(obj_info != NULL);
 
     OS_PRINT(net, "objid: %lld, inode_no: %lld, obj_state: 0x%x, ref_cnt: %u, name: %s\n",
-        obj_info->objid, obj_info->inode_no, obj_info->obj_state, obj_info->obj_ref_cnt, obj_info->obj_name);
+        obj_info->objid, obj_info->inode_no, obj_info->obj_state, obj_info->ref_cnt, obj_info->name);
 
     return 0;
 }
 
-int32_t print_super_block(char *index_name, net_para_t *net)
+int32_t print_super_block(char *ct_name, net_para_t *net)
 {
     container_handle_t *ct = NULL;
     int32_t ret = 0;
     
-    ASSERT (NULL != index_name);
-    ASSERT (0 != strlen(index_name));
+    ASSERT (NULL != ct_name);
+    ASSERT (0 != strlen(ct_name));
 
-    ret = ofs_open_container(index_name, &ct);
-    if (0 > ret)
+    ret = ofs_open_container(ct_name, &ct);
+    if (ret < 0)
     {
-        OS_PRINT(net, "Open ct failed. index_name(%s) ret(%d)\n",
-            index_name, ret);
+        OS_PRINT(net, "Open ct failed. ct_name(%s) ret(%d)\n",
+            ct_name, ret);
         return ret;
     }
     
@@ -147,9 +147,9 @@ void print_obj_info(net_para_t *net, object_info_t *obj_info)
     OS_PRINT(net, "-----------------------------------------\n");
     OS_PRINT(net, "objid                  : %lld\n", obj_info->objid);
     OS_PRINT(net, "inode_no               : %lld\n", obj_info->inode_no);
-    OS_PRINT(net, "obj_name               : %s\n",   obj_info->obj_name);
+    OS_PRINT(net, "name               : %s\n",   obj_info->name);
     OS_PRINT(net, "state                  : 0x%x\n", obj_info->obj_state);
-    OS_PRINT(net, "ref_cnt                : %d\n",   obj_info->obj_ref_cnt);
+    OS_PRINT(net, "ref_cnt                : %d\n",   obj_info->ref_cnt);
     OS_PRINT(net, "vbn                    : %lld\n", obj_info->root_cache.vbn);
     OS_PRINT(net, "state                  : 0x%x\n", obj_info->root_cache.state);
     
@@ -158,18 +158,18 @@ void print_obj_info(net_para_t *net, object_info_t *obj_info)
     avl_walk_all(&obj_info->caches, (avl_walk_cb_t)print_one_cache_info, net);
 }
 
-int32_t cmd_list(char *index_name, uint64_t objid, net_para_t *net)
+int32_t cmd_list(char *ct_name, uint64_t objid, net_para_t *net)
 {
     int32_t ret = 0;
     container_handle_t *ct = NULL;
     object_info_t *obj_info = NULL;
     
-    ASSERT(NULL != index_name);
+    ASSERT(ct_name != NULL);
     
-    if (0 == strlen(index_name))
+    if (0 == strlen(ct_name))
     {
-        ret = walk_all_opened_index((int32_t (*)(void *, container_handle_t *))print_one_fs_info, net);
-        if (0 > ret)
+        ret = ofs_walk_all_opened_container((int32_t (*)(void *, container_handle_t *))print_one_fs_info, net);
+        if (ret < 0)
         {
             OS_PRINT(net, "Walk all opened ct failed. ret(%d)\n", ret);
         }
@@ -177,10 +177,10 @@ int32_t cmd_list(char *index_name, uint64_t objid, net_para_t *net)
         return ret;
     }
 
-    ct = ofs_get_handle(index_name);
-    if (NULL == ct)
+    ct = ofs_get_container_handle(ct_name);
+    if (ct == NULL)
     {
-        OS_PRINT(net, "The ct is not opened. ct(%s)\n", index_name);
+        OS_PRINT(net, "The ct is not opened. ct(%s)\n", ct_name);
         return -2;
     }
     
@@ -191,7 +191,7 @@ int32_t cmd_list(char *index_name, uint64_t objid, net_para_t *net)
     }
 
     obj_info = ofs_get_object_info(ct, objid);
-    if (NULL == obj_info)
+    if (obj_info == NULL)
     {
         OS_PRINT(net, "The object is not opened. ct(%p) objid(%lld)\n", ct, objid);
         return ret;
@@ -207,7 +207,7 @@ int do_list_cmd(int argc, char *argv[], net_para_t *net)
     ifs_tools_para_t *para = NULL;
 
     para = OS_MALLOC(sizeof(ifs_tools_para_t));
-    if (NULL == para)
+    if (para == NULL)
     {
         OS_PRINT(net, "Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(ifs_tools_para_t));
@@ -219,12 +219,12 @@ int do_list_cmd(int argc, char *argv[], net_para_t *net)
     
     if (0 != (para->flags & TOOLS_FLAGS_SB))
     {
-        (void)print_super_block(para->index_name, net);
+        (void)print_super_block(para->ct_name, net);
         OS_FREE(para);
         return -2;
     }
 
-    cmd_list(para->index_name, para->objid, net);
+    cmd_list(para->ct_name, para->objid, net);
 
     OS_FREE(para);
     para = NULL;

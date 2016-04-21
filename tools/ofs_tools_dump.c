@@ -126,7 +126,7 @@ static int32_t dump_key(object_handle_t *tree, const bool_t reverse, net_para_t 
 
     obj_info = tree->obj_info;
     
-    OS_PRINT(net, "objid: %lld, inode_no: %lld, name: %s\n", obj_info->objid, obj_info->inode_no, obj_info->obj_name);
+    OS_PRINT(net, "objid: %lld, inode_no: %lld, name: %s\n", obj_info->objid, obj_info->inode_no, obj_info->name);
 
     para.net = net;
     ret = index_walk_all(tree, reverse, 0, &para, (tree_walk_cb_t)dump_callback);
@@ -146,17 +146,17 @@ void dump_cmd(ifs_tools_para_t *para)
     
     ASSERT (NULL != para);
 
-    if (0 == strlen(para->index_name))
+    if (0 == strlen(para->ct_name))
     {
         OS_PRINT(para->net, "invalid ct name.\n");
         return;
     }
     
-    ret = ofs_open_container(para->index_name, &ct);
-    if (0 > ret)
+    ret = ofs_open_container(para->ct_name, &ct);
+    if (ret < 0)
     {
-        OS_PRINT(para->net, "Open ct failed. index_name(%s) ret(%d)\n",
-            para->index_name, ret);
+        OS_PRINT(para->net, "Open ct failed. ct_name(%s) ret(%d)\n",
+            para->ct_name, ret);
         return;
     }
 
@@ -166,9 +166,9 @@ void dump_cmd(ifs_tools_para_t *para)
     }
     
     ret = ofs_open_object(ct, para->objid, &obj);
-    if (0 > ret)
+    if (ret < 0)
     {
-        OS_PRINT(para->net, "Open obj failed. index_name(%s) objid(%lld) ret(%d)\n", para->index_name, para->objid, ret);
+        OS_PRINT(para->net, "Open obj failed. ct_name(%s) objid(%lld) ret(%d)\n", para->ct_name, para->objid, ret);
         (void)ofs_close_container(ct);
 		return;
     }
@@ -187,7 +187,7 @@ int do_dump_cmd(int argc, char *argv[], net_para_t *net)
     ifs_tools_para_t *para = NULL;
 
     para = OS_MALLOC(sizeof(ifs_tools_para_t));
-    if (NULL == para)
+    if (para == NULL)
     {
         OS_PRINT(net, "Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(ifs_tools_para_t));

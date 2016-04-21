@@ -113,7 +113,7 @@ int32_t ofs_update_block_fixup(container_handle_t *ct, block_head_t *blk, uint64
     int32_t ret = 0;
     int32_t ret2 = 0;
 
-    if ((NULL == ct) || (NULL == blk))
+    if ((ct == NULL) || (blk == NULL))
     {
         LOG_ERROR("Invalid parameter. ct(%p) blk(%p)\n", ct, blk);
         return -FILE_BLOCK_ERR_PARAMETER;
@@ -122,14 +122,14 @@ int32_t ofs_update_block_fixup(container_handle_t *ct, block_head_t *blk, uint64
     assemble_block(blk);
 
     ret = ofs_update_block(ct, blk, blk->alloc_size, 0, vbn);
-    if (0 > ret)
+    if (ret < 0)
     {
         LOG_ERROR("Update object failed. ct(%p) blk(%p) ret(%d)\n",
             ct, blk, ret);
     }
 
     ret2 = fixup_block(blk);
-    if (0 > ret2)
+    if (ret2 < 0)
     {
         LOG_ERROR("Fixup object failed. blk(%p) ret(%d)\n", blk, ret2);
         return ret2;
@@ -142,14 +142,14 @@ int32_t ofs_read_block_fixup(container_handle_t *ct, block_head_t *blk, uint64_t
 {
     int32_t ret = 0;
 
-    if ((NULL == ct) || (NULL == blk))
+    if ((ct == NULL) || (blk == NULL))
     {
         LOG_ERROR("Invalid parameter. ct(%p) blk(%p)\n", ct, blk);
         return -FILE_BLOCK_ERR_PARAMETER;
     }
 
     ret = ofs_read_block(ct, blk, alloc_size, 0, vbn);
-    if (0 > ret)
+    if (ret < 0)
     {
         LOG_ERROR("Read data failed. ct(%p) blk(%p) blk_id(%x) alloc_size(%d) vbn(%lld) ret(%d)",
             ct, blk, blk_id, alloc_size, vbn, ret);
@@ -157,7 +157,7 @@ int32_t ofs_read_block_fixup(container_handle_t *ct, block_head_t *blk, uint64_t
     }
 
     ret = verify_block(blk, blk_id, alloc_size);
-    if (0 > ret)
+    if (ret < 0)
     {
         LOG_ERROR("Verify object failed. ct(%p) blk(%p) blk_id(%x) alloc_size(%d) vbn(%lld) ret(%d)",
             ct, blk, blk_id, alloc_size, vbn, ret);
@@ -167,9 +167,9 @@ int32_t ofs_read_block_fixup(container_handle_t *ct, block_head_t *blk, uint64_t
     return fixup_block(blk);
 }
 
-static int32_t check_block(container_handle_t *ct, block_head_t *blk)
+static inline int32_t check_block(container_handle_t *ct, block_head_t *blk)
 {
-    if ((NULL == ct) || (NULL == blk))
+    if ((ct == NULL) || (blk == NULL))
     {
         LOG_ERROR("Invalid parameter. ct(%p) blk(%p)\n", ct, blk);
         return -FILE_BLOCK_ERR_PARAMETER;
@@ -220,7 +220,7 @@ int32_t ofs_update_block_pingpong_init(container_handle_t *ct, block_head_t *blk
     buf = NULL;
 
     ret2 = fixup_block(blk);
-    if (0 > ret2)
+    if (ret2 < 0)
     {
         LOG_ERROR("Fixup object failed. blk(%p) ret(%d)\n", blk, ret2);
         return ret2;
@@ -259,7 +259,7 @@ int32_t ofs_update_block_pingpong(container_handle_t *ct, block_head_t *blk, uin
     ret = ofs_update_block(ct, blk, blk->alloc_size, update_lba, vbn);
 
     ret2 = fixup_block(blk);
-    if (0 > ret2)
+    if (ret2 < 0)
     {
         LOG_ERROR("Fixup object failed. blk(%p) ret(%d)\n", blk, ret2);
         return ret2;
@@ -314,7 +314,7 @@ block_head_t *get_last_correct_block(uint8_t *buf, uint32_t blk_id, uint32_t all
         }
 
         ret = verify_block(blk, blk_id, alloc_size);
-        if (0 > ret)
+        if (ret < 0)
         {
             LOG_ERROR("Verify object failed. buf(%p) blk(%p) blk_id(%x) alloc_size(%d) ret(%d)\n",
                 buf, blk, blk_id, alloc_size, ret);
@@ -351,7 +351,7 @@ int32_t ofs_read_block_pingpong(container_handle_t *ct, block_head_t *blk, uint6
     uint8_t *buf = NULL;
     block_head_t * tmp_obj = NULL;
 
-    if ((NULL == ct) || (NULL == blk) || (0 == alloc_size))
+    if ((ct == NULL) || (blk == NULL) || (0 == alloc_size))
     {
         LOG_ERROR("Invalid parameter. ct(%p) blk(%p) alloc_size(%d)\n", ct, blk, alloc_size);
         return -FILE_BLOCK_ERR_PARAMETER;
@@ -373,7 +373,7 @@ int32_t ofs_read_block_pingpong(container_handle_t *ct, block_head_t *blk, uint6
     }
 
     ret = ofs_read_block(ct, buf, block_size, 0, vbn);
-    if (0 > ret)
+    if (ret < 0)
     {
         OS_FREE(buf);
         return ret;
@@ -395,10 +395,6 @@ int32_t ofs_read_block_pingpong(container_handle_t *ct, block_head_t *blk, uint6
 }
 
 
-
-EXPORT_SYMBOL(ofs_update_block);
-EXPORT_SYMBOL(ofs_read_block);
-
 EXPORT_SYMBOL(ofs_update_block_fixup);
 EXPORT_SYMBOL(ofs_read_block_fixup);
 
@@ -406,6 +402,4 @@ EXPORT_SYMBOL(ofs_update_block_pingpong_init);
 EXPORT_SYMBOL(ofs_update_block_pingpong);
 EXPORT_SYMBOL(ofs_read_block_pingpong);
 
-EXPORT_SYMBOL(ofs_update_sectors);
-EXPORT_SYMBOL(ofs_read_sectors);
 

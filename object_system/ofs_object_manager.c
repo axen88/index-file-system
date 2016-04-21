@@ -80,14 +80,14 @@ int32_t get_object_info(container_handle_t *ct, uint64_t objid, object_info_t **
     object_info_t *obj_info = NULL;
     
     obj_info = (object_info_t *)OS_MALLOC(sizeof(object_info_t));
-    if (NULL == obj_info)
+    if (obj_info == NULL)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(object_info_t));
         return -INDEX_ERR_ALLOCATE_MEMORY;
     }
 
     memset(obj_info, 0, sizeof(object_info_t));
-    obj_info->obj_ref_cnt = 0;
+    obj_info->ref_cnt = 0;
     obj_info->ct = ct;
     obj_info->objid = objid;
     
@@ -134,7 +134,7 @@ int32_t get_object_handle(object_info_t *obj_info, object_handle_t **obj_out)
     object_handle_t *obj = NULL;
 
     obj = (object_handle_t *)OS_MALLOC(sizeof(object_handle_t));
-    if (NULL == obj)
+    if (obj == NULL)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(object_handle_t));
         return -INDEX_ERR_ALLOCATE_MEMORY;
@@ -145,7 +145,7 @@ int32_t get_object_handle(object_info_t *obj_info, object_handle_t **obj_out)
     obj->ct = obj_info->ct;
 
     dlist_add_tail(&obj_info->obj_hnd_list, &obj->entry);
-    obj_info->obj_ref_cnt++;
+    obj_info->ref_cnt++;
     
     *obj_out = obj;
 
@@ -154,7 +154,7 @@ int32_t get_object_handle(object_info_t *obj_info, object_handle_t **obj_out)
 
 void put_object_handle(object_handle_t *obj)
 {
-    obj->obj_info->obj_ref_cnt--;
+    obj->obj_info->ref_cnt--;
     dlist_remove_entry(&obj->obj_info->obj_hnd_list, &obj->entry);
     OS_FREE(obj);
 
@@ -167,7 +167,7 @@ int32_t recover_obj_inode(object_info_t *obj_info, uint64_t inode_no)
     ofs_block_cache_t *cache;
     
     ret = index_block_read2(obj_info, inode_no, INODE_MAGIC, &cache);
-    if (0 > ret)
+    if (ret < 0)
     {
         LOG_ERROR("Read inode failed. ret(%d)\n", ret);
         return ret;
@@ -176,7 +176,7 @@ int32_t recover_obj_inode(object_info_t *obj_info, uint64_t inode_no)
     obj_info->inode_cache = cache;
 	obj_info->inode = (inode_record_t *)cache->ib;
     obj_info->inode_no = inode_no;
-    strncpy(obj_info->obj_name, obj_info->inode->name, obj_info->inode->name_size);
+    strncpy(obj_info->name, obj_info->inode->name, obj_info->inode->name_size);
     init_attr(obj_info, inode_no);
     SET_INODE_CLEAN(obj_info);
 
@@ -249,7 +249,7 @@ void put_all_object_handle(object_info_t *obj_info)
 {
     object_handle_t *obj;
     
-    while (obj_info->obj_ref_cnt != 0)
+    while (obj_info->ref_cnt != 0)
     {
         obj = OS_CONTAINER(obj_info->obj_hnd_list.head.next, object_handle_t, entry);
         put_object_handle(obj);
@@ -311,9 +311,9 @@ int32_t create_object_at_inode(container_handle_t *ct, uint64_t objid, uint64_t 
     object_info_t *obj_info;
     ofs_block_cache_t *cache;
 
-    ASSERT(NULL != ct);
-    ASSERT(NULL != obj_out);
-    ASSERT(INODE_SIZE == sizeof(inode_record_t));
+    ASSERT(ct != NULL);
+    ASSERT(obj_out != NULL);
+    ASSERT(sizeof(inode_record_t) == INODE_SIZE);
 
     ret = get_object_info(ct, objid, &obj_info);
     if (ret < 0)
@@ -335,7 +335,7 @@ int32_t create_object_at_inode(container_handle_t *ct, uint64_t objid, uint64_t 
     obj_info->inode_no = inode_no;
 
     init_inode(obj_info->inode, objid, inode_no, flags);
-    strncpy(obj_info->obj_name, obj_info->inode->name, obj_info->inode->name_size);
+    strncpy(obj_info->name, obj_info->inode->name, obj_info->inode->name_size);
     init_attr(obj_info, inode_no);
     SET_INODE_DIRTY(obj_info);
     SET_CACHE_DIRTY(&obj_info->root_cache);
@@ -360,8 +360,8 @@ int32_t create_object(container_handle_t *ct, uint64_t objid, uint16_t flags, ob
      int32_t ret;
      uint64_t inode_no = 0;
 
-    ASSERT(NULL != ct);
-    ASSERT(NULL != obj_out);
+    ASSERT(ct != NULL);
+    ASSERT(obj_out != NULL);
     ASSERT(INODE_SIZE == sizeof(inode_record_t));
 
     /* allocate inode block */
@@ -389,8 +389,8 @@ int32_t open_object(container_handle_t *ct, uint64_t objid, uint64_t inode_no, o
     object_info_t *obj_info = NULL;
     object_handle_t *obj = NULL;
 
-    ASSERT(NULL != ct);
-    ASSERT(NULL != obj_out);
+    ASSERT(ct != NULL);
+    ASSERT(obj_out != NULL);
 
     ret = get_object_info(ct, objid, &obj_info);
     if (ret < 0)
@@ -438,7 +438,7 @@ int32_t ofs_set_object_name(object_handle_t *obj, char *name)
         return -INDEX_ERR_PARAMETER;
     }
 
-    strncpy(obj->obj_info->obj_name, name, name_size);
+    strncpy(obj->obj_info->name, name, name_size);
     strncpy(obj->obj_info->inode->name, name, name_size);
     obj->obj_info->inode->name_size = name_size;
 
@@ -455,9 +455,9 @@ int32_t ofs_create_object_nolock(container_handle_t *ct, uint64_t objid, uint16_
     avl_index_t where = 0;
     object_info_t *obj_info;
 
-    ASSERT(NULL != ct);
+    ASSERT(ct != NULL);
     ASSERT(!OBJID_IS_INVALID(objid));
-    ASSERT(NULL != obj_out);
+    ASSERT(obj_out != NULL);
 
     if (objid < RESERVED_OBJ_ID)
     {
@@ -498,15 +498,13 @@ int32_t ofs_create_object_nolock(container_handle_t *ct, uint64_t objid, uint16_
         &obj->obj_info->inode_no, os_u64_size(obj->obj_info->inode_no));
     if (ret < 0)
     {
-        LOG_ERROR("Insert obj failed. obj(%p) objid(%lld) ret(%d)\n",
-            obj, objid, ret);
+        LOG_ERROR("Insert obj failed. obj(%p) objid(%lld) ret(%d)\n", obj, objid, ret);
         (void)OFS_FREE_BLOCK(obj->ct, obj->obj_info->objid, obj->obj_info->inode_no);
         close_object(obj->obj_info);
         return ret;
     }
     
-    LOG_INFO("Create the obj success. objid(%lld) obj(%p) ct_name(%s)\n",
-        objid, obj, ct->name);
+    LOG_INFO("Create the obj success. objid(%lld) obj(%p) ct_name(%s)\n", objid, obj, ct->name);
 
     *obj_out = obj;
     
@@ -517,7 +515,7 @@ int32_t ofs_create_object(container_handle_t *ct, uint64_t objid, uint16_t flags
 {
     int32_t ret = 0;
 
-    if ((NULL == ct) || (OBJID_IS_INVALID(objid || (NULL == obj))))
+    if ((ct == NULL) || (OBJID_IS_INVALID(objid || (obj == NULL))))
     {
         LOG_ERROR("Invalid parameter. ct(%p) objid(%lld) obj(%p)\n", ct, objid, obj);
         return -INDEX_ERR_PARAMETER;
@@ -539,8 +537,8 @@ int32_t ofs_open_object_nolock(container_handle_t *ct, uint64_t objid, uint32_t 
     object_handle_t *id_obj;
     object_info_t *obj_info = NULL;
 
-    ASSERT(NULL != ct);
-    ASSERT(NULL != obj_out);
+    ASSERT(ct != NULL);
+    ASSERT(obj_out != NULL);
 
     LOG_INFO("Open the obj. objid(%lld)\n", objid);
 
@@ -555,15 +553,14 @@ int32_t ofs_open_object_nolock(container_handle_t *ct, uint64_t objid, uint32_t 
         }
 
         *obj_out = obj;
-        LOG_WARN("The obj obj_ref_cnt inc. obj(%p) obj_ref_cnt(%d) objid(%lld)\n",
-            obj_info, obj_info->obj_ref_cnt, objid);
+        LOG_WARN("The obj ref_cnt inc. obj(%p) ref_cnt(%d) objid(%lld)\n", obj_info, obj_info->ref_cnt, objid);
         return 0;
     }
 
     id_obj = ct->id_obj;
     
     ret = search_key_internal(id_obj, &objid, sizeof(uint64_t), NULL, 0);
-    if (0 > ret)
+    if (ret < 0)
     {
         LOG_DEBUG("Search for obj failed. obj(%p) objid(%lld) ret(%d)\n", obj, objid, ret);
         return ret;
@@ -572,14 +569,13 @@ int32_t ofs_open_object_nolock(container_handle_t *ct, uint64_t objid, uint32_t 
     inode_no = os_bstr_to_u64(GET_IE_VALUE(id_obj->ie), id_obj->ie->value_len);
 
     ret = open_object(ct, objid, inode_no, &obj);
-    if (0 > ret)
+    if (ret < 0)
     {
         LOG_ERROR("Open obj failed. objid(%lld) ret(%d)\n", objid, ret);
         return ret;
     }
 
-    LOG_INFO("Open the obj success. ct(%p) objid(%lld) obj(%p)\n",
-        ct, objid, obj);
+    LOG_INFO("Open the obj success. ct(%p) objid(%lld) obj(%p)\n", ct, objid, obj);
 
     *obj_out = obj;
 
@@ -590,7 +586,7 @@ int32_t ofs_open_object(container_handle_t *ct, uint64_t objid, object_handle_t 
 {
     int32_t ret = 0;
 
-    if ((NULL == ct) || (NULL == obj))
+    if ((ct == NULL) || (obj == NULL))
     {
         LOG_ERROR("Invalid parameter. ct(%p) obj(%p)\n", ct, obj);
         return -INDEX_ERR_PARAMETER;
@@ -608,7 +604,7 @@ object_info_t *ofs_get_object_info(container_handle_t *ct, uint64_t objid)
     object_info_t *obj_info = NULL;
     avl_index_t where = 0;
 
-    ASSERT(NULL != ct);
+    ASSERT(ct != NULL);
     ASSERT(!OBJID_IS_INVALID(objid));
 
     OS_RWLOCK_RDLOCK(&ct->ct_lock);
@@ -622,7 +618,7 @@ object_handle_t *ofs_get_object_handle(container_handle_t *ct, uint64_t objid)
 {
     object_info_t *obj_info = NULL;
 
-    ASSERT(NULL != ct);
+    ASSERT(ct != NULL);
     ASSERT(!OBJID_IS_INVALID(objid));
 
     obj_info = ofs_get_object_info(ct, objid);
@@ -631,7 +627,7 @@ object_handle_t *ofs_get_object_handle(container_handle_t *ct, uint64_t objid)
         return NULL;
     }
 
-    if (obj_info->obj_ref_cnt == 0)
+    if (obj_info->ref_cnt == 0)
     {
         return NULL;
     }
@@ -643,14 +639,14 @@ int32_t ofs_close_object_nolock(object_handle_t *obj)
 {
     object_info_t *obj_info = NULL;
     
-    if (NULL == obj)
+    if (obj == NULL)
     {
         LOG_ERROR("Invalid parameter. obj(%p)\n", obj);
         return -INDEX_ERR_PARAMETER;
     }
     
     obj_info = obj->obj_info;
-    if (NULL == obj_info)
+    if (obj_info == NULL)
     {
         LOG_ERROR("Invalid object info. obj(%p)\n", obj);
         return -INDEX_ERR_PARAMETER;
@@ -658,7 +654,7 @@ int32_t ofs_close_object_nolock(object_handle_t *obj)
 
     OS_RWLOCK_WRLOCK(&obj_info->obj_hnd_lock);
     
-    if (obj_info->obj_ref_cnt == 0)
+    if (obj_info->ref_cnt == 0)
     {
         OS_RWLOCK_WRUNLOCK(&obj_info->obj_hnd_lock);
         LOG_EMERG("Too many times put object info. objid(%lld)\n", obj_info->objid);
@@ -667,7 +663,7 @@ int32_t ofs_close_object_nolock(object_handle_t *obj)
 
     put_object_handle(obj);
 
-    if (obj_info->obj_ref_cnt == 0) // decrease to 0
+    if (obj_info->ref_cnt == 0) // decrease to 0
     {
         close_object(obj_info);
     }
@@ -684,7 +680,7 @@ int32_t ofs_close_object(object_handle_t *obj)
     int32_t ret = 0;
 	container_handle_t *ct;
 
-    if (NULL == obj)
+    if (obj == NULL)
     {
         LOG_ERROR("Invalid parameter. obj(%p)\n", obj);
         return -INDEX_ERR_PARAMETER;
