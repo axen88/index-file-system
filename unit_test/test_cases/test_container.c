@@ -56,15 +56,15 @@ static int clean_suite(void)
 	return 0;
 }
 
-void test_create_index(void)
+void test_create_container(void)
 {
     container_handle_t *ct[5];
     
-    CU_ASSERT(0 == ofs_create_container("index0", 1000, &ct[0]));
-    CU_ASSERT(0 == ofs_create_container("index1", 1000, &ct[1]));
-    CU_ASSERT(0 == ofs_create_container("index2", 1000, &ct[2]));
-    CU_ASSERT(0 == ofs_create_container("index3", 1000, &ct[3]));
-    CU_ASSERT(0 == ofs_create_container("index4", 1000, &ct[4]));
+    CU_ASSERT(0 == ofs_create_container("ct0", 1000, &ct[0]));
+    CU_ASSERT(0 == ofs_create_container("ct1", 1000, &ct[1]));
+    CU_ASSERT(0 == ofs_create_container("ct2", 1000, &ct[2]));
+    CU_ASSERT(0 == ofs_create_container("ct3", 1000, &ct[3]));
+    CU_ASSERT(0 == ofs_create_container("ct4", 1000, &ct[4]));
     
     CU_ASSERT(0 == ofs_close_container(ct[0]));
     CU_ASSERT(0 == ofs_close_container(ct[1]));
@@ -73,15 +73,15 @@ void test_create_index(void)
     CU_ASSERT(0 == ofs_close_container(ct[4]));
 }
 
-void test_open_index(void)
+void test_open_container(void)
 {
     container_handle_t *ct[5];
     
-    CU_ASSERT(0 == ofs_open_container("index0", &ct[0]));
-    CU_ASSERT(0 == ofs_open_container("index1", &ct[1]));
-    CU_ASSERT(0 == ofs_open_container("index2", &ct[2]));
-    CU_ASSERT(0 == ofs_open_container("index3", &ct[3]));
-    CU_ASSERT(0 == ofs_open_container("index4", &ct[4]));
+    CU_ASSERT(0 == ofs_open_container("ct0", &ct[0]));
+    CU_ASSERT(0 == ofs_open_container("ct1", &ct[1]));
+    CU_ASSERT(0 == ofs_open_container("ct2", &ct[2]));
+    CU_ASSERT(0 == ofs_open_container("ct3", &ct[3]));
+    CU_ASSERT(0 == ofs_open_container("ct4", &ct[4]));
     
     CU_ASSERT(0 == ofs_close_container(ct[0]));
     CU_ASSERT(0 == ofs_close_container(ct[1]));
@@ -90,7 +90,7 @@ void test_open_index(void)
     CU_ASSERT(0 == ofs_close_container(ct[4]));
 }
 
-#define TEST_BLOCK_FILE "Test.dat"
+#define TEST_BLOCK_FILE "blk_dat"
 #define TEST_BLOCK_SHIFT 12
 #define TEST_BLOCK_SIZE (1 << TEST_BLOCK_SHIFT)
 #define TEST_START_LBA   5
@@ -103,7 +103,7 @@ static void random_buffer(uint8_t *buf, uint32_t size)
 	}
 }
 
-void test_index_rw(void)
+void test_block_rw(void)
 {
     container_handle_t *hnd;
     int64_t vbn = 10;
@@ -141,17 +141,17 @@ int add_index_test_case(void)
        return -1;
     }
     
-    if (NULL == CU_add_test(pSuite, "test create ct", test_create_index))
+    if (NULL == CU_add_test(pSuite, "test create container", test_create_container))
     {
        return -2;
     }
 
-    if (NULL == CU_add_test(pSuite, "test open ct", test_open_index))
+    if (NULL == CU_add_test(pSuite, "test open container", test_open_container))
     {
        return -3;
     }
 
-    if (NULL == CU_add_test(pSuite, "test ct rw", test_index_rw))
+    if (NULL == CU_add_test(pSuite, "test block rw", test_block_rw))
     {
        return -3;
     }

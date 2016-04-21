@@ -63,7 +63,7 @@ void test_space_manager_1(void)
     object_handle_t *obj;
     uint64_t start_blk;
     
-    CU_ASSERT(0 == ofs_create_container("index0", 1000, &ct));
+    CU_ASSERT(0 == ofs_create_container("sm", 1000, &ct));
     CU_ASSERT(0 == ofs_create_object(ct, 500, FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj));
 
     CU_ASSERT(alloc_space(obj, 100, 50, &start_blk) == -INDEX_ERR_NO_FREE_BLOCKS); // no space now
@@ -71,7 +71,7 @@ void test_space_manager_1(void)
     CU_ASSERT(0 == ofs_close_object(obj));
     CU_ASSERT(0 == ofs_close_container(ct));
 
-    CU_ASSERT(0 == ofs_open_container("index0", &ct));
+    CU_ASSERT(0 == ofs_open_container("sm", &ct));
     CU_ASSERT(0 == ofs_close_container(ct));
 }
 
@@ -83,7 +83,7 @@ void test_space_manager_2(void)
     uint64_t start_blk;
     int32_t ret;
     
-    CU_ASSERT(0 == ofs_create_container("index0", 1000, &ct));
+    CU_ASSERT(0 == ofs_create_container("sm", 1000, &ct));
     CU_ASSERT(0 == ofs_create_object(ct, 500, FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj));
 
     CU_ASSERT(free_space(obj, 100, 50) == 0);
@@ -155,7 +155,7 @@ void test_space_manager_2(void)
     CU_ASSERT(0 == ofs_close_object(obj));
     CU_ASSERT(0 == ofs_close_container(ct));
 
-    CU_ASSERT(0 == ofs_open_container("index0", &ct));
+    CU_ASSERT(0 == ofs_open_container("sm", &ct));
     CU_ASSERT(0 == ofs_close_container(ct));
 }
 
@@ -166,7 +166,7 @@ void test_space_manager_3(void)
     uint64_t start_blk;
     int32_t ret;
     
-    CU_ASSERT(0 == ofs_create_container("index0", 1000, &ct));
+    CU_ASSERT(0 == ofs_create_container("sm", 1000, &ct));
     CU_ASSERT(0 == ofs_create_object(ct, 500, FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj));
 
     CU_ASSERT(free_space(obj, 100, 50) == 0);
@@ -196,7 +196,7 @@ void test_space_manager_3(void)
     CU_ASSERT(0 == ofs_close_object(obj));
     CU_ASSERT(0 == ofs_close_container(ct));
 
-    CU_ASSERT(0 == ofs_open_container("index0", &ct));
+    CU_ASSERT(0 == ofs_open_container("sm", &ct));
     CU_ASSERT(0 == ofs_close_container(ct));
 }
 
@@ -211,7 +211,7 @@ void test_space_manager_4(void)
     int32_t i = 0;
     uint32_t blk_cnt[TEST_NUM] = {1, 20, 100, 500, 2000};
     
-    CU_ASSERT(0 == ofs_create_container("index0", 100000, &ct));
+    CU_ASSERT(0 == ofs_create_container("sm", 100000, &ct));
 
     for (i = 0; i < TEST_NUM; i++)
     {
@@ -228,7 +228,7 @@ void test_space_manager_4(void)
     
     CU_ASSERT(0 == ofs_close_container(ct));
 
-    CU_ASSERT(0 == ofs_open_container("index0", &ct));
+    CU_ASSERT(0 == ofs_open_container("sm", &ct));
     CU_ASSERT(0 == ofs_close_container(ct));
 }
 

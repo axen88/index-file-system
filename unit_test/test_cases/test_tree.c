@@ -458,7 +458,7 @@ void test_kv_1(void)
     int32_t i;
     
     // create ct and object, insert key
-    CU_ASSERT(0 == ofs_create_container("idx0", 1000, &ct));
+    CU_ASSERT(0 == ofs_create_container("kv", 1000, &ct));
     CU_ASSERT(0 == ofs_create_object(ct, 500, FLAG_TABLE | CR_ANSI_STRING | (CR_ANSI_STRING << 4), &obj));
 
     for (i = 0; i < ArraySize(test_kv_pairs1); i++)
@@ -478,7 +478,7 @@ void test_kv_1(void)
     CU_ASSERT(0 == ofs_close_container(ct));
 
     // open ct and object, insert key
-    CU_ASSERT(0 == ofs_open_container("idx0", &ct));
+    CU_ASSERT(0 == ofs_open_container("kv", &ct));
     CU_ASSERT(0 == ofs_open_object(ct, 500, &obj));
 
     for (i = 0; i < ArraySize(test_kv_pairs2); i++)
@@ -498,7 +498,7 @@ void test_kv_1(void)
     CU_ASSERT(0 == ofs_close_container(ct));
 
     // open ct and object, remove key
-    CU_ASSERT(0 == ofs_open_container("idx0", &ct));
+    CU_ASSERT(0 == ofs_open_container("kv", &ct));
     CU_ASSERT(0 == ofs_open_object(ct, 500, &obj));
 
     for (i = 0; i < ArraySize(test_kv_pairs1); i++)
@@ -510,7 +510,7 @@ void test_kv_1(void)
     CU_ASSERT(0 == ofs_close_container(ct));
     
     // open ct and object, remove key
-    CU_ASSERT(0 == ofs_open_container("idx0", &ct));
+    CU_ASSERT(0 == ofs_open_container("kv", &ct));
     CU_ASSERT(0 == ofs_open_object(ct, 500, &obj));
 
     for (i = 0; i < ArraySize(test_kv_pairs2); i++)
