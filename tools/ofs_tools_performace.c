@@ -39,8 +39,7 @@ History:
 #define TEST_KEY_LEN   8
 #define TEST_VALUE_LEN 20
 
-int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
-    uint64_t objid, uint64_t keys_num, net_para_t *net)
+int32_t test_insert_key_performance(char *index_name, uint64_t objid, uint64_t keys_num, net_para_t *net)
 {
     int32_t ret = 0;
     container_handle_t *ct = NULL;
@@ -53,11 +52,10 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
     ASSERT(0 != strlen(index_name));
     ASSERT(0 != objid);
 
-    ret = ofs_open_container(index_name, start_lba, &ct);
+    ret = ofs_open_container(index_name, &ct);
     if (ret < 0)
     {
-        OS_PRINT(net, "Open ct failed. name(%s)  start_lba(%lld) ret(%d)\n",
-            index_name, start_lba, ret);
+        OS_PRINT(net, "Open ct failed. name(%s) ret(%d)\n", index_name, ret);
         return ret;
     }
 
@@ -94,8 +92,7 @@ int32_t test_insert_key_performance(char *index_name, uint64_t start_lba,
     return 0;
 }
 
-int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
-    uint64_t objid, uint64_t keys_num, net_para_t *net)
+int32_t test_remove_key_performance(char *index_name, uint64_t objid, uint64_t keys_num, net_para_t *net)
 {
     int32_t ret = 0;
     container_handle_t *ct = NULL;
@@ -107,11 +104,10 @@ int32_t test_remove_key_performance(char *index_name, uint64_t start_lba,
     ASSERT(0 != strlen(index_name));
     ASSERT(0 != objid);
 
-    ret = ofs_open_container(index_name, start_lba, &ct);
+    ret = ofs_open_container(index_name, &ct);
     if (ret < 0)
     {
-        OS_PRINT(net, "Open ct failed. name(%s) start_lba(%lld) ret(%d)\n",
-            index_name, start_lba, ret);
+        OS_PRINT(net, "Open ct failed. name(%s) ret(%d)\n", index_name, ret);
         return ret;
     }
 
@@ -158,13 +154,11 @@ void *test_performance_thread(void *para)
 
     if (tmp_para->insert)
     {
-        (void)test_insert_key_performance(tmp_para->index_name,
-            tmp_para->start_lba, tmp_para->objid, tmp_para->keys_num, tmp_para->net);
+        (void)test_insert_key_performance(tmp_para->index_name, tmp_para->objid, tmp_para->keys_num, tmp_para->net);
     }
     else
     {
-        (void)test_remove_key_performance(tmp_para->index_name,
-            tmp_para->start_lba, tmp_para->objid, tmp_para->keys_num, tmp_para->net);
+        (void)test_remove_key_performance(tmp_para->index_name, tmp_para->objid, tmp_para->keys_num, tmp_para->net);
     }
 
     OS_RWLOCK_WRLOCK(&tmp_para->rwlock);

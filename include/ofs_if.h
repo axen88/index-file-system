@@ -64,8 +64,8 @@ typedef struct container_handle container_handle_t;
 #include "ofs_tools_if.h"
 
 // container API
-int32_t ofs_open_container(const char *ct_name, uint64_t start_lba, container_handle_t **ct);
-int32_t ofs_create_container(const char *ct_name, uint64_t total_sectors, uint64_t start_lba, container_handle_t **ct);
+int32_t ofs_open_container(const char *ct_name, container_handle_t **ct);
+int32_t ofs_create_container(const char *ct_name, uint64_t total_sectors, container_handle_t **ct);
 int32_t ofs_close_container(container_handle_t *ct);
 
 // space manager API

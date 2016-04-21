@@ -53,16 +53,16 @@ static int32_t cmd_create(ifs_tools_para_t *para)
     
     if (OBJID_IS_INVALID(para->objid)) // obj id not specified
     {
-        ret = ofs_create_container(para->index_name, para->total_sectors, para->start_lba, &ct);
+        ret = ofs_create_container(para->index_name, para->total_sectors, &ct);
         if (ret < 0)
         {
-            OS_PRINT(para->net, "Create ct failed. ct(%s) total_sectors(%lld) start_lba(%lld) ret(%d)\n",
-                para->index_name, para->total_sectors, para->start_lba, ret);
+            OS_PRINT(para->net, "Create ct failed. ct(%s) total_sectors(%lld) ret(%d)\n",
+                para->index_name, para->total_sectors, ret);
             return ret;
         }
         
-        OS_PRINT(para->net, "Create ct success. ct(%s) total_sectors(%lld) start_lba(%lld) ct(%p)\n",
-            para->index_name, para->total_sectors, para->start_lba, ct);
+        OS_PRINT(para->net, "Create ct success. ct(%s) total_sectors(%lld) ct(%p)\n",
+            para->index_name, para->total_sectors, ct);
         return 0;
     }
 
@@ -103,16 +103,16 @@ static int32_t cmd_open(ifs_tools_para_t *para)
 
     if (OBJID_IS_INVALID(para->objid)) // obj id not specified
     {
-        ret = ofs_open_container(para->index_name, para->start_lba, &ct);
+        ret = ofs_open_container(para->index_name, &ct);
         if (ret < 0)
         {
-            OS_PRINT(para->net, "Open ct failed. ct(%s) start_lba(%lld) ret(%d)\n",
-                para->index_name, para->start_lba, ret);
+            OS_PRINT(para->net, "Open ct failed. ct(%s) ret(%d)\n",
+                para->index_name, ret);
             return ret;
         }
         
-        OS_PRINT(para->net, "Open ct success. ct(%s) start_lba(%lld) ct(%p), ref_cnt(%d)\n",
-            para->index_name, para->start_lba, ct, ct->ref_cnt);
+        OS_PRINT(para->net, "Open ct success. ct(%s) ct(%p), ref_cnt(%d)\n",
+            para->index_name, ct, ct->ref_cnt);
         return 0;
     }
 
@@ -208,11 +208,11 @@ static int32_t cmd_delete(ifs_tools_para_t *para)
         return -1;
     }
 
-    ret = ofs_open_container(para->index_name, para->start_lba, &ct);
+    ret = ofs_open_container(para->index_name, &ct);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Open ct failed. ct(%s) start_lba(%lld) ret(%d)\n",
-            para->index_name, para->start_lba, ret);
+        OS_PRINT(para->net, "Open ct failed. ct(%s) ret(%d)\n",
+            para->index_name, ret);
         return ret;
     }
 

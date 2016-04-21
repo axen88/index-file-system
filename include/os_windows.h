@@ -49,6 +49,8 @@ History:
 #include <stdio.h>
 #include <assert.h>
 
+#define inline _inline
+
 #if _MSC_VER
 #define snprintf _snprintf
 #endif

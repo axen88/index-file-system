@@ -85,8 +85,8 @@ extern int32_t walk_all_opened_index(
     int32_t (*func)(void *, container_handle_t *), void *para);
 
 // container API
-int32_t ofs_open_container(const char *ct_name, uint64_t start_lba, container_handle_t **ct);
-int32_t ofs_create_container(const char *ct_name, uint64_t total_sectors, uint64_t start_lba, container_handle_t **ct);
+int32_t ofs_open_container(const char *ct_name, container_handle_t **ct);
+int32_t ofs_create_container(const char *ct_name, uint64_t total_sectors, container_handle_t **ct);
 int32_t ofs_close_container(container_handle_t *ct);
 
 

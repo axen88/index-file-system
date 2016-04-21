@@ -152,11 +152,11 @@ void dump_cmd(ifs_tools_para_t *para)
         return;
     }
     
-    ret = ofs_open_container(para->index_name, para->start_lba, &ct);
+    ret = ofs_open_container(para->index_name, &ct);
     if (0 > ret)
     {
-        OS_PRINT(para->net, "Open ct failed. index_name(%s) start_lba(%lld) ret(%d)\n",
-            para->index_name, para->start_lba, ret);
+        OS_PRINT(para->net, "Open ct failed. index_name(%s) ret(%d)\n",
+            para->index_name, ret);
         return;
     }
 
@@ -168,8 +168,7 @@ void dump_cmd(ifs_tools_para_t *para)
     ret = ofs_open_object(ct, para->objid, &obj);
     if (0 > ret)
     {
-        OS_PRINT(para->net, "Open obj failed. index_name(%s) start_lba(%lld) objid(%lld) ret(%d)\n",
-            para->index_name, para->start_lba, para->objid, ret);
+        OS_PRINT(para->net, "Open obj failed. index_name(%s) objid(%lld) ret(%d)\n", para->index_name, para->objid, ret);
         (void)ofs_close_container(ct);
 		return;
     }

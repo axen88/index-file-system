@@ -65,7 +65,7 @@ int32_t print_one_obj_info(net_para_t *net, object_info_t *obj_info)
     return 0;
 }
 
-int32_t print_super_block(char *index_name, uint64_t start_lba, net_para_t *net)
+int32_t print_super_block(char *index_name, net_para_t *net)
 {
     container_handle_t *ct = NULL;
     int32_t ret = 0;
@@ -73,11 +73,11 @@ int32_t print_super_block(char *index_name, uint64_t start_lba, net_para_t *net)
     ASSERT (NULL != index_name);
     ASSERT (0 != strlen(index_name));
 
-    ret = ofs_open_container(index_name, start_lba, &ct);
+    ret = ofs_open_container(index_name, &ct);
     if (0 > ret)
     {
-        OS_PRINT(net, "Open ct failed. index_name(%s) start_lba(%lld) ret(%d)\n",
-            index_name, start_lba, ret);
+        OS_PRINT(net, "Open ct failed. index_name(%s) ret(%d)\n",
+            index_name, ret);
         return ret;
     }
     
@@ -94,7 +94,6 @@ int32_t print_super_block(char *index_name, uint64_t start_lba, net_para_t *net)
     OS_PRINT(net, "block_size            : %d\n", ct->sb.block_size);
     OS_PRINT(net, "sectors_per_block     : %d\n\n", ct->sb.sectors_per_block);
     
-    OS_PRINT(net, "start_lba             : %lld\n",  ct->sb.start_lba);
     OS_PRINT(net, "total_blocks          : %lld\n\n", ct->sb.total_blocks);
     
     OS_PRINT(net, "objid_id              : %lld\n",  ct->sb.objid_id);
@@ -159,7 +158,7 @@ void print_obj_info(net_para_t *net, object_info_t *obj_info)
     avl_walk_all(&obj_info->caches, (avl_walk_cb_t)print_one_cache_info, net);
 }
 
-int32_t cmd_list(char *index_name, uint64_t objid, uint64_t start_lba, net_para_t *net)
+int32_t cmd_list(char *index_name, uint64_t objid, net_para_t *net)
 {
     int32_t ret = 0;
     container_handle_t *ct = NULL;
@@ -220,12 +219,12 @@ int do_list_cmd(int argc, char *argv[], net_para_t *net)
     
     if (0 != (para->flags & TOOLS_FLAGS_SB))
     {
-        (void)print_super_block(para->index_name, para->start_lba, net);
+        (void)print_super_block(para->index_name, net);
         OS_FREE(para);
         return -2;
     }
 
-    cmd_list(para->index_name, para->objid, para->start_lba, net);
+    cmd_list(para->index_name, para->objid, net);
 
     OS_FREE(para);
     para = NULL;

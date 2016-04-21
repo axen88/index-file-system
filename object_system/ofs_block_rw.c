@@ -39,50 +39,6 @@ History:
 MODULE(PID_BLOCK);
 #include "os_log.h"
 
-int32_t ofs_update_block(container_handle_t *ct, void *buf, uint32_t size, uint32_t start_lba, uint64_t vbn)
-{
-    int32_t ret = 0;
-    uint64_t tmp_start_lba = 0;
-
-    if ((NULL == ct) || (NULL == buf) || (0 >= (int32_t)size))
-    {
-        LOG_ERROR("Invalid parameter. ct(%p) buf(%p) size(%d)\n", ct, buf, size);
-        return -FILE_BLOCK_ERR_PARAMETER;
-    }
-
-    tmp_start_lba = start_lba + vbn * ct->sb.sectors_per_block + ct->sb.start_lba;
-    ret = os_disk_pwrite(ct->disk_hnd, buf, size, tmp_start_lba);
-    if (ret != (int32_t)size)
-    {
-        LOG_ERROR("Write lba failed. disk_hnd(%p) buf(%p) size(%d) lba(%lld) ret(%d)\n",
-            ct->disk_hnd, buf, size, tmp_start_lba, ret);
-    }
-
-    return ret;
-}
-
-int32_t ofs_read_block(container_handle_t *ct, void *buf, uint32_t size, uint32_t start_lba, uint64_t vbn)
-{
-    int32_t ret = 0;
-    uint64_t tmp_start_lba = 0;
-
-    if ((NULL == ct) || (NULL == buf) || (0 >= (int32_t)size))
-    {
-        LOG_ERROR("Invalid parameter. ct(%p) buf(%p) size(%d)\n", ct, buf, size);
-        return -FILE_BLOCK_ERR_PARAMETER;
-    }
-
-    tmp_start_lba = start_lba + vbn * ct->sb.sectors_per_block + ct->sb.start_lba;
-    ret = os_disk_pread(ct->disk_hnd, buf, size, tmp_start_lba);
-    if (ret != (int32_t)size)
-    {
-        LOG_ERROR("Read lba failed. disk_hnd(%p) buf(%p) size(%d) lba(%lld) ret(%d)\n",
-            ct->disk_hnd, buf, size, tmp_start_lba, ret);
-    }
-
-    return ret;
-}
-
 static void assemble_block(block_head_t *blk)
 {
     uint16_t *foot = NULL; // the last 2 bytes
@@ -438,47 +394,7 @@ int32_t ofs_read_block_pingpong(container_handle_t *ct, block_head_t *blk, uint6
     return 0;
 }
 
-int32_t ofs_update_sectors(container_handle_t *ct, void *buf, uint32_t size, uint64_t start_lba)
-{
-    int32_t ret = 0;
 
-    if ((NULL == ct) || (NULL == buf) || (0 >= (int32_t) size))
-    {
-        LOG_ERROR("Invalid parameter. ct(%p) buf(%p) size(%d)\n", ct, buf, size);
-        return -FILE_BLOCK_ERR_PARAMETER;
-    }
-
-    start_lba += ct->sb.start_lba;
-    ret = os_disk_pwrite(ct->disk_hnd, buf, size, start_lba);
-    if (ret != (int32_t)size)
-    {
-        LOG_ERROR("Write lba failed. f(%p) buf(%p) size(%d) lba(%lld) ret(%d)\n",
-            ct->disk_hnd, buf, size, start_lba, ret);
-    }
-
-    return ret;
-}
-
-int32_t ofs_read_sectors(container_handle_t *ct, void *buf, uint32_t size, uint64_t start_lba)
-{
-    int32_t ret = 0;
-
-    if ((NULL == ct) || (NULL == buf) || (0 >= (int32_t) size))
-    {
-        LOG_ERROR("Invalid parameter. ct(%p) buf(%p) size(%d)\n", ct, buf, size);
-        return -FILE_BLOCK_ERR_PARAMETER;
-    }
-
-    start_lba += ct->sb.start_lba;
-    ret = os_disk_pread(ct->disk_hnd, buf, size, start_lba);
-    if (ret != (int32_t)size)
-    {
-        LOG_ERROR("Read lba failed. f(%p) buf(%p) size(%d) lba(%lld) ret(%d)\n",
-            ct->disk_hnd, buf, size, start_lba, ret);
-    }
-
-    return ret;
-}
 
 EXPORT_SYMBOL(ofs_update_block);
 EXPORT_SYMBOL(ofs_read_block);

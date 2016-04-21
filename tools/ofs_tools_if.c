@@ -43,15 +43,6 @@ void parse_index_para(int argc, char *argv[], ifs_tools_para_t *para)
         para->index_name[0] = 0;
     }
 
-    if (0 != os_parse_para(argc, argv, "-s", para->tmp, TMP_BUF_SIZE))
-    {
-        para->start_lba = 0;
-    }
-    else
-    {
-        para->start_lba = OSStrToUll(para->tmp, NULL, 0);
-    }
-
     if (0 != os_parse_para(argc, argv, "-x", para->tmp, TMP_BUF_SIZE))
     {
         para->total_sectors = 1000;

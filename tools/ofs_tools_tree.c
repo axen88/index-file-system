@@ -59,11 +59,10 @@ static int32_t cmd_insert_key(ifs_tools_para_t *para)
         return -1;
     }
 
-    ret = ofs_open_container(para->index_name, para->start_lba, &ct);
+    ret = ofs_open_container(para->index_name, &ct);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Open ct failed. ct(%s) start_lba(%lld) ret(%d)\n",
-            para->index_name, para->start_lba, ret);
+        OS_PRINT(para->net, "Open ct failed. ct(%s) ret(%d)\n", para->index_name, ret);
         return ret;
     }
 
@@ -111,11 +110,10 @@ static int32_t cmd_remove_key(ifs_tools_para_t *para)
         return -1;
     }
 
-    ret = ofs_open_container(para->index_name, para->start_lba, &ct);
+    ret = ofs_open_container(para->index_name, &ct);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Open ct failed. ct(%s) start_lba(%lld) ret(%d)\n",
-            para->index_name, para->start_lba, ret);
+        OS_PRINT(para->net, "Open ct failed. ct(%s) ret(%d)\n", para->index_name, ret);
         return ret;
     }
 

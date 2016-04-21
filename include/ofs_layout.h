@@ -133,7 +133,6 @@ typedef struct ifs_super_block
     uint32_t block_size;                /* by bytes */
     uint32_t sectors_per_block;         /* by sectors */
 
-    uint64_t start_lba;                 /* super block's lba */
     uint64_t total_blocks;              /* total blocks = reserved blocks + bitmap blocks + data blocks */
 
     uint64_t objid_id;
@@ -152,7 +151,7 @@ typedef struct ifs_super_block
     uint64_t base_blk;
     
     uint64_t snapshot_no;
-    uint8_t aucReserved2[PRV_AREA_SIZE - 64 + 12];    // Reserved bytes
+    uint8_t aucReserved2[PRV_AREA_SIZE - 64 + 20];    // Reserved bytes
     uint8_t aucReserved[160];            
     uint32_t flags;                     /* flags */
     uint16_t version;                   /* version */
