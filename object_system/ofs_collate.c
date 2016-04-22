@@ -34,9 +34,8 @@ History:
 --------------------------------------------------------------------------------
     1. Primary version
 *******************************************************************************/
-#include "os_types.h"
 #include "os_adapter.h"
-
+#include "ofs_globals.h"
 #include "ofs_if.h"
     
 #ifdef __KERNEL__

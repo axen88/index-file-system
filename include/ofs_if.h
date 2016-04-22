@@ -39,13 +39,12 @@ History:
 
 #include "avl.h"
 #include "os_adapter.h"
-#include "os_list_double.h"
-#include "os_queue.h"
+#include "os_dlist.h"
 #include "os_disk_if.h"
 #include "os_utils.h"
-#include "os_threads_group.h"
 #include "os_cmd_ui.h"
 
+#include "ofs_globals.h"
 #include "ofs_layout.h"
 #include "ofs_collate.h"
 

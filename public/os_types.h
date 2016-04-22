@@ -22,7 +22,7 @@
 
             Copyright(C), 2016~2019, axen.hook@foxmail.com
 ********************************************************************************
-File Name: OS_THREADS_GROUP.H
+File Name: OS_TYPES.H
 Author   : axen.hook
 Version  : 1.00
 Date     : 02/Mar/2016
@@ -35,26 +35,55 @@ History:
     1. Primary version
 *******************************************************************************/
 
-#ifndef __OSP_THREDS_GROUP_H__
-#define __OSP_THREDS_GROUP_H__
+#ifndef _OS_TYPES_H_
+#define _OS_TYPES_H_
 
-#ifdef __cplusplus
+#ifdef	__cplusplus
 extern "C" {
 #endif
 
-typedef enum tagTHREADS_GROUP_ERROR_CODE_E
-{
-    ERR_THREADS_GROUP_INVALID_PARA = 300,
-} THREADS_ARRAY_ERROR_CODE_E;
+//==========================================================
+// Complier options
+//  1. System options
+//  2. User defined options
+//==========================================================
+//#pragma pack(1)  // Aligned by 1 byte
+//#pragma pack()  // Use the default alignment
 
-extern void *threads_group_create(uint32_t num, void *(*func)(void *),
-    void *para, char *thread_name);
-extern int32_t threads_group_get_real_num(void *threads_group);
-extern void threads_group_destroy(void *threads_group, uint32_t force,
-    uint64_t over_time_ms);
+//==========================================================
+// Basic types
+//==========================================================
+typedef unsigned int         bool_t;
 
+typedef unsigned char        uint8_t;   // unsigned 8-bit
+typedef unsigned short       uint16_t;  // unsigned 16-bit
+typedef unsigned int         uint32_t;  // unsigned 32-bit
 
-#ifdef __cplusplus
+typedef short                int16_t;  // signed 16-bit
+typedef int                  int32_t;  // signed 32-bit
+
+#ifdef WIN32
+typedef char                 int8_t;   // signed 8-bit
+typedef unsigned long long       ptr_t;  // pointer
+typedef long long            int64_t;  // signed 64-bit
+typedef unsigned long long   uint64_t;  // unsigned 64-bit
+#else
+typedef unsigned long            ptr_t;  // pointer
+#endif
+
+#ifndef FALSE
+#define FALSE   0
+#endif
+
+#ifndef TRUE
+#define TRUE    1
+#endif
+
+#ifndef SUCCESS
+#define SUCCESS 0
+#endif
+
+#ifdef	__cplusplus
 }
 #endif
 

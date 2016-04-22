@@ -26,11 +26,11 @@ This project comes from https://github.com/axenhook/object-file-system
 
 |description|command example|
 |-----------|---------------|
-|create container named i       | create -i i |
-|create object with objid 300 | create -i i -o 300|
-|insert kv in object 300      | insert -i i -o 300 -k axen -v abcdjkjkj |
-|dump all kv in object 300    | dump   -i i -o 300 |
-|remove kv in object 300      | remove -i i -o 300 -k axen |
+|create container named ct0       | create -ct ct0 |
+|create object with objid 300 | create -ct ct0 -o 300|
+|insert kv in object 300      | insert -ct ct0 -o 300 -k axen -v abcdjkjkj |
+|dump all kv in object 300    | dump   -ct ct0 -o 300 |
+|remove kv in object 300      | remove -ct ct0 -o 300 -k axen |
 
 # feature
 1. support multi fs

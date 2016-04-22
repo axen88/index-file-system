@@ -22,7 +22,7 @@
 
             Copyright(C), 2016~2019, axen.hook@foxmail.com
 ********************************************************************************
-File Name: OS_TYPES.H
+File Name: OS_FILE_IF.H
 Author   : axen.hook
 Version  : 1.00
 Date     : 02/Mar/2016
@@ -35,52 +35,51 @@ History:
     1. Primary version
 *******************************************************************************/
 
-#ifndef _OS_TYPES_H_
-#define _OS_TYPES_H_
+#ifndef __OS_FILE_IO_H__
+#define __OS_FILE_IO_H__
 
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 extern "C" {
 #endif
 
-//==========================================================
-// Complier options
-//  1. System options
-//  2. User defined options
-//==========================================================
-//#pragma pack(1)  // Aligned by 1 byte
-//#pragma pack()  // Use the default alignment
+enum file_io_error_code
+{
+    FILE_IO_ERR_START = 100000,
+    FILE_IO_ERR_SEEK,
+    FILE_IO_ERR_MALLOC,
+    FILE_IO_ERR_OPEN,
+    FILE_IO_ERR_CREATE,
+    FILE_IO_ERR_READ,
+    FILE_IO_ERR_WRITE,
+    FILE_IO_ERR_CLOSE,
+    FILE_IO_ERR_INVALID_PARA,
 
-//==========================================================
-// Basic types
-//==========================================================
-typedef unsigned int         bool_t;
+    FILE_IO_ERR_BUTT
+};
 
-typedef unsigned char        uint8_t;   // unsigned 8-bit
-typedef unsigned short       uint16_t;  // unsigned 16-bit
-typedef unsigned int         uint32_t;  // unsigned 32-bit
+extern int32_t os_file_exist(const char *path);
+extern int32_t os_file_open_or_create(void **hnd, const char *path);
+extern int32_t os_file_resize(void *f, uint64_t newSize);
+extern int64_t os_file_get_size(void *f);
+extern void os_file_set_buf(void *f, void *buf, uint32_t size);
 
-typedef short                int16_t;  // signed 16-bit
-typedef int                  int32_t;  // signed 32-bit
+extern int32_t os_file_seek(void *f, uint64_t offset);
+extern int32_t os_file_read(void *f, void *buf, uint32_t size);
+extern int32_t os_file_write(void *f, void *buf, uint32_t size);
 
-#ifdef WIN32
-typedef char                 int8_t;   // signed 8-bit
-typedef unsigned long long       ptr_t;  // pointer
-typedef long long            int64_t;  // signed 64-bit
-typedef unsigned long long   uint64_t;  // unsigned 64-bit
-#else
-typedef unsigned long            ptr_t;  // pointer
-#endif
+extern int32_t os_file_open(void **hnd, const char *name);
+extern int32_t os_file_create(void **hnd, const char *name);
+extern int32_t os_file_close(void *f);
+extern int32_t os_file_pwrite(void *hnd, void *buf,
+    uint32_t size, uint64_t offset);
+extern int32_t os_file_pread(void *hnd, void *buf,
+    uint32_t size, uint64_t offset);
+extern void os_file_printf(void *hnd, const char *format, ...);
 
-#define B_FALSE   0
-#define B_TRUE    1
-
-#ifndef SUCCESS
-#define SUCCESS 0
-#endif
-
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 }
 #endif
+
 
 #endif
 

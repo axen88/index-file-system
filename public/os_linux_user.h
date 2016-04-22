@@ -57,15 +57,17 @@ extern "C" {
     
 #define _CrtDumpMemoryLeaks()
 
-#define OSStrToUll(pcBuf, end, base)   strtoull(pcBuf, end, base)
+#define OS_STR2ULL(pcBuf, end, base)   strtoull(pcBuf, end, base)
 #define OS_SLEEP_SECOND(x)               sleep(x)
 #define OS_SLEEP_MS(x)                  
-#define OSThreadExit()                  pthread_exit(NULL)
+#define OS_THREAD_EXIT()                  pthread_exit(NULL)
 
 typedef pthread_mutex_t             os_mutex_t;
 typedef pthread_rwlock_t            os_rwlock;
 typedef pthread_t                   os_thread_id_t;
 typedef pthread_t                   os_thread_t;
+
+#define INVALID_TID                 0
 
 #define OS_GET_THREAD_ID()         pthread_self()
 
@@ -87,6 +89,34 @@ typedef pthread_t                   os_thread_t;
 #define EXPORT_SYMBOL(x)
 #define module_init(x)
 #define module_exit(x)
+
+
+static inline os_thread_t thread_create(void *(*func)(void *), void *para, char *thread_name)
+{
+    int32_t ret = 0;
+    os_thread_t tid;
+
+    ret = pthread_create(&tid, NULL, func, para);
+    if (ret == 0)
+    {
+        return tid;
+    }
+
+    return INVALID_TID;
+}
+
+static inline void thread_destroy(os_thread_t tid, bool_t force)
+{
+    if (force)
+    {
+        pthread_cancel(tid);
+    }
+    
+    pthread_join(tid, NULL);
+
+    return;
+}
+
 
 #ifdef	__cplusplus
 }

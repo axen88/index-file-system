@@ -365,7 +365,7 @@ static int32_t add_or_remove_ib(object_handle_t *tree, uint8_t flags)
     else if (flags & INDEX_ADD_BLOCK)
     {
        // ret = block_set_status(tree->obj_info->ct->hnd, tree->cache->vbn,
-       //     1, B_TRUE);
+       //     1, TRUE);
        // if (ret < 0)
         {
         //    LOG_ERROR("Set block status failed. vbn(%lld) ret(%d)\n", tree->cache->vbn, ret);
@@ -1029,7 +1029,7 @@ int32_t remove_leaf(object_handle_t *tree)
 {
     index_entry_t *ie = NULL;
     index_entry_t *prev_ie = NULL;        /* The previous entry */
-    bool_t is_end = B_FALSE;
+    bool_t is_end = FALSE;
     int32_t ret = 0;
     
     ASSERT(tree != NULL);
@@ -1057,12 +1057,12 @@ int32_t remove_leaf(object_handle_t *tree)
     {   /* It is the end key, change the ullVBN link and take out the entry */
         prev_ie = GET_PREV_IE(tree->ie);
         SET_IE_VBN(tree->ie, GET_IE_VBN(prev_ie));
-        is_end = B_TRUE;    /* Set insert OS_S32o the block's last entry position */
+        is_end = TRUE;    /* Set insert OS_S32o the block's last entry position */
     }
     else
     {   /* The parent key is not the end key, take out the entry */
         prev_ie = tree->ie;
-        is_end = B_FALSE;    /* Set insert OS_S32o the block's first entry position */
+        is_end = FALSE;    /* Set insert OS_S32o the block's first entry position */
     }
 
     ie = dump_ie_del_vbn(prev_ie);
@@ -1390,8 +1390,8 @@ int32_t index_walk_all(object_handle_t *tree, bool_t reverse, uint8_t flags,
     void *para, tree_walk_cb_t cb)
 {
     int32_t ret = 0;
-    uint8_t if_flag = (B_FALSE == reverse) ? INDEX_GET_FIRST : INDEX_GET_LAST;
-    uint8_t while_flag = (B_FALSE == reverse) ? 0 : INDEX_GET_PREV;
+    uint8_t if_flag = (FALSE == reverse) ? INDEX_GET_FIRST : INDEX_GET_LAST;
+    uint8_t while_flag = (FALSE == reverse) ? 0 : INDEX_GET_PREV;
 
     if ((NULL == tree) || (NULL == cb))
     {

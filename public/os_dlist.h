@@ -22,7 +22,7 @@
 
             Copyright(C), 2016~2019, axen.hook@foxmail.com
 ********************************************************************************
-File Name: OS_LIST_DOUBLE.C
+File Name: OS_DLIST.H
 Author   : axen.hook
 Version  : 1.00
 Date     : 02/Mar/2016
@@ -35,10 +35,28 @@ History:
     1. Primary version
 *******************************************************************************/
 
-#include "os_adapter.h"
-#include "os_list_double.h"
+#ifndef __OS_DLIST_H__
+#define __OS_DLIST_H__
 
-void dlist_init_entry(dlist_entry_t * entry)
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+typedef struct dlist_entry
+{
+    struct dlist_entry *next;
+    struct dlist_entry *prev;
+} dlist_entry_t;
+
+typedef struct dlist_head
+{
+    dlist_entry_t head;
+    uint32_t num;
+} dlist_head_t;
+
+
+static inline void dlist_init_entry(dlist_entry_t *entry)
 {
     ASSERT(NULL != entry);
 
@@ -46,7 +64,7 @@ void dlist_init_entry(dlist_entry_t * entry)
     entry->prev = entry;
 }
 
-void dlist_init_head(dlist_head_t * head)
+static inline void dlist_init_head(dlist_head_t *head)
 {
     ASSERT(NULL != head);
 
@@ -54,8 +72,7 @@ void dlist_init_head(dlist_head_t * head)
     dlist_init_entry(&head->head);
 }
 
-static void add_entry(dlist_entry_t * entry, dlist_entry_t * prev,
-    dlist_entry_t * next)
+static void add_entry(dlist_entry_t *entry, dlist_entry_t *prev, dlist_entry_t *next)
 {
     ASSERT(NULL != entry);
     ASSERT(NULL != prev);
@@ -67,8 +84,7 @@ static void add_entry(dlist_entry_t * entry, dlist_entry_t * prev,
     prev->next = entry;
 }
 
-static void remove_entry(dlist_entry_t * entry, dlist_entry_t * prev,
-    dlist_entry_t * next)
+static void remove_entry(dlist_entry_t *entry, dlist_entry_t *prev, dlist_entry_t *next)
 {
     ASSERT(NULL != prev);
     ASSERT(NULL != next);
@@ -78,7 +94,7 @@ static void remove_entry(dlist_entry_t * entry, dlist_entry_t * prev,
     dlist_init_entry(entry);
 }
 
-void dlist_add_head(dlist_head_t * head, dlist_entry_t * entry)
+static inline void dlist_add_head(dlist_head_t *head, dlist_entry_t *entry)
 {
     ASSERT(NULL != head);
     ASSERT(NULL != entry);
@@ -88,7 +104,7 @@ void dlist_add_head(dlist_head_t * head, dlist_entry_t * entry)
     head->num++;
 }
 
-void dlist_add_tail(dlist_head_t * head, dlist_entry_t * entry)
+static inline void dlist_add_tail(dlist_head_t *head, dlist_entry_t *entry)
 {
     ASSERT(NULL != head);
     ASSERT(NULL != entry);
@@ -98,7 +114,7 @@ void dlist_add_tail(dlist_head_t * head, dlist_entry_t * entry)
     head->num++;
 }
 
-void dlist_remove_entry(dlist_head_t * head, dlist_entry_t * entry)
+static inline void dlist_remove_entry(dlist_head_t *head, dlist_entry_t *entry)
 {
     ASSERT(NULL != entry);
     ASSERT(NULL != entry->prev);
@@ -111,7 +127,7 @@ void dlist_remove_entry(dlist_head_t * head, dlist_entry_t * entry)
     }
 }
 
-dlist_entry_t *dlist_get_entry(dlist_head_t * head, uint32_t position)
+static inline dlist_entry_t *dlist_get_entry(dlist_head_t *head, uint32_t position)
 {
     uint32_t cnt = 0;
     dlist_entry_t *next = NULL;
@@ -137,7 +153,7 @@ dlist_entry_t *dlist_get_entry(dlist_head_t * head, uint32_t position)
     return NULL;
 }
 
-int32_t dlist_remove_target_entry(dlist_head_t * head, uint32_t position)
+static inline int32_t dlist_remove_target_entry(dlist_head_t *head, uint32_t position)
 {
     dlist_entry_t *entry = NULL;
 
@@ -154,14 +170,15 @@ int32_t dlist_remove_target_entry(dlist_head_t * head, uint32_t position)
     return -1;
 }
 
-int32_t dlist_walk_all(dlist_head_t * head,
-    int32_t (*func)(void *, dlist_entry_t *), void * para)
+typedef int32_t (*dlist_cb)(void *, dlist_entry_t *);
+
+static inline int32_t dlist_walk_all(dlist_head_t *head, dlist_cb cb, void *para)
 {
     int32_t ret = 0;
     dlist_entry_t *next = NULL;
     dlist_entry_t *next_next = NULL;
 
-    ASSERT(NULL != func);
+    ASSERT(NULL != cb);
     ASSERT(NULL != head);
 
     next = head->head.next;
@@ -172,7 +189,7 @@ int32_t dlist_walk_all(dlist_head_t * head,
 
     while (next != &head->head)
     {
-        ret = func(para, next);
+        ret = cb(para, next);
         if (ret != 0)
         {
             return ret;
@@ -187,51 +204,24 @@ int32_t dlist_walk_all(dlist_head_t * head,
     return 0;
 }
 
-int32_t dlist_walk_all_reverse(dlist_head_t * head,
-    int32_t (*func)(void *, dlist_entry_t *), void * para)
-{
-    int32_t ret = 0;
-    dlist_entry_t *prev = NULL;
-    dlist_entry_t *prev_prev = NULL;
-
-    ASSERT(NULL != func);
-    ASSERT(NULL != head);
-
-    prev = head->head.prev;
-    ASSERT(NULL != prev);
-
-    prev_prev = prev->prev;
-    ASSERT(NULL != prev_prev);
-
-    while (prev != &head->head)
-    {
-        ret = func(para, prev);
-        if (ret != 0)
-        {
-            return ret;
-        }
-
-        prev = prev_prev;
-
-        prev_prev = prev->prev;
-        ASSERT(NULL != prev_prev);
-    }
-
-    return 0;
-}
-
-int32_t dlist_count(dlist_head_t * head)
+static inline int32_t dlist_count(dlist_head_t *head)
 {
     ASSERT(NULL != head);
 
     return (int32_t)head->num;
 }
 
-bool_t dlist_is_empty(dlist_head_t * head)
+static inline bool_t dlist_is_empty(dlist_head_t *head)
 {
     ASSERT(NULL != head);
     ASSERT(NULL != head->head.next);
 
-    return (head->head.next == &head->head) ? B_TRUE : B_FALSE;
+    return (head->head.next == &head->head) ? TRUE : FALSE;
 }
 
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

@@ -22,7 +22,7 @@
 
             Copyright(C), 2016~2019, axen.hook@foxmail.com
 ********************************************************************************
-File Name: OS_ERRORS.H
+File Name: OFS_GLOBALS.H
 Author   : axen.hook
 Version  : 1.00
 Date     : 02/Mar/2016
@@ -35,53 +35,58 @@ History:
     1. Primary version
 *******************************************************************************/
 
-#ifndef __OS_ERRORS_H__
-#define __OS_ERRORS_H__
+#ifndef __OFS_GLOBALS_H__
+#define __OFS_GLOBALS_H__
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
+#ifndef BYTES_PER_SECTOR
+#define BYTES_PER_SECTOR  512
+#endif
+
+#ifndef BYTES_PER_SECTOR_SHIFT
+#define BYTES_PER_SECTOR_SHIFT 9
+#endif
+
+#define BITS_PER_SECTOR_SHIFT (BYTES_PER_SECTOR_SHIFT + 3)
+#define BITS_PER_SECTOR       (1 << BITS_PER_SECTOR_SHIFT)
+        
+#ifndef BYTES_PER_BLOCK_SHIFT
+#define BYTES_PER_BLOCK_SHIFT 12
+#endif
+
+#ifndef BYTES_PER_BLOCK
+#define BYTES_PER_BLOCK 4096
+#endif
+
+#ifndef SECTORS_PER_BLOCK_SHIFT
+#define SECTORS_PER_BLOCK_SHIFT 3
+#endif
+
+#ifndef SECTORS_PER_BLOCK
+#define SECTORS_PER_BLOCK (1 << SECTORS_PER_BLOCK_SHIFT)
+#endif
+
+enum
+{
+    PID_BTREE = 10,
+    PID_CONTAINER = 11,
+    PID_OBJECT = 12,
+    PID_BLOCK = 13,
+    PID_SPACE_MANAGER = 14,
+    PID_CACHE = 15,
+    PID_SERVER = 16,
+    PID_CLIENT = 17,
+    PID_TOOLS = 18,
+    PID_UTILS = 19,
+
+    PID_BUTT
+};
+
 typedef enum error_code
 {
-    // FILE_IO errors
-    FILE_IO_ERR_START = 100000,
-    FILE_IO_ERR_SEEK,
-    FILE_IO_ERR_MALLOC,
-    FILE_IO_ERR_OPEN,
-    FILE_IO_ERR_CREATE,
-    FILE_IO_ERR_READ,
-    FILE_IO_ERR_WRITE,
-    FILE_IO_ERR_CLOSE,
-    FILE_IO_ERR_INVALID_PARA,
-
-    // FILE_BITMAP errors
-    FILE_BITMAP_ERR_START = 200000,
-    FILE_BITMAP_ERR_SEEK,
-    FILE_BITMAP_ERR_READ,
-    FILE_BITMAP_ERR_WRITE,
-    FILE_BITMAP_ERR_0BIT_NOT_FOUND,
-    FILE_BITMAP_ERR_EXCEPTION,
-    FILE_BITMAP_ERR_MALLOC,
-    FILE_BITMAP_ERR_INVALID_PARA,
-
-    // FILE_BLOCK errors
-    FILE_BLOCK_ERR_START = 300000,
-    FILE_BLOCK_ERR_SEEK,
-    FILE_BLOCK_ERR_OPEN,
-    FILE_BLOCK_ERR_READ,
-    FILE_BLOCK_ERR_WRITE,
-    FILE_BLOCK_ERR_0BIT_NOT_FOUND,
-    FILE_BLOCK_ERR_EXCEPTION,
-    FILE_BLOCK_ERR_PARAMETER,
-    FILE_BLOCK_ERR_ALLOCATE_MEMORY,
-    FILE_BLOCK_ERR_FORMAT,
-    FILE_BLOCK_ERR_NO_CONTENT,
-    FILE_BLOCK_ERR_NO_FREE_BLOCKS,
-    FILE_BLOCK_ERR_INVALID_PARA,
-    FILE_BLOCK_ERR_INVALID_OBJECT,
-    FILE_BLOCK_ERR_BITMAP_BLOCKS_ALLOC,
-
     // INDEX errors
     INDEX_ERR_START = 400000,
     INDEX_ERR_SEEK,

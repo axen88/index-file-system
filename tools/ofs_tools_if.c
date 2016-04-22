@@ -38,7 +38,7 @@ History:
 
 void parse_index_para(int argc, char *argv[], ifs_tools_para_t *para)
 {
-    if (0 != os_parse_para(argc, argv, "-i", para->ct_name, OFS_NAME_SIZE))
+    if (0 != os_parse_para(argc, argv, "-ct", para->ct_name, OFS_NAME_SIZE))
     {
         para->ct_name[0] = 0;
     }
@@ -49,7 +49,7 @@ void parse_index_para(int argc, char *argv[], ifs_tools_para_t *para)
     }
     else
     {
-        para->total_sectors = OSStrToUll(para->tmp, NULL, 0);
+        para->total_sectors = OS_STR2ULL(para->tmp, NULL, 0);
     }
 
     return;
@@ -63,7 +63,7 @@ void parse_object_para(int argc, char *argv[], ifs_tools_para_t *para)
     }
     else
     {
-        para->objid = OSStrToUll(para->tmp, NULL, 0);
+        para->objid = OS_STR2ULL(para->tmp, NULL, 0);
     }
 
     if (os_parse_para(argc, argv, "-k", para->key, KEY_MAX_SIZE) < 0)
@@ -93,7 +93,16 @@ void parse_all_para(int argc, char *argv[], ifs_tools_para_t *para)
     }
     else
     {
-        para->threads_num = OSStrToUll(para->tmp, NULL, 0);
+        para->threads_num = OS_STR2ULL(para->tmp, NULL, 0);
+    }
+
+    if (0 != os_parse_para(argc, argv, "-kn", para->tmp, TMP_BUF_SIZE))
+    {
+        para->keys_num = 10;
+    }
+    else
+    {
+        para->keys_num = OS_STR2ULL(para->tmp, NULL, 0);
     }
 
     if (0 == os_parse_para(argc, argv, "-r", NULL, 0))
@@ -116,21 +125,21 @@ void parse_all_para(int argc, char *argv[], ifs_tools_para_t *para)
 
 os_cmd_list_t ifs_cmd_list[]
 = {
-    {do_create_cmd,   {"create",   NULL, NULL}, "<-i ct_name> [-o obj_id] [-s start_lba]"},
-    {do_open_cmd,     {"open",     NULL, NULL}, "<-i ct_name> [-o obj_id] [-s start_lba]"},
-    {do_close_cmd,    {"close",    NULL, NULL}, "<-i ct_name> [-o obj_id]"},
-    {do_delete_cmd,   {"delete",   NULL, NULL}, "<-i ct_name> [-o obj_id]"},
-    //{do_rename_cmd,   {"rename",   NULL, NULL}, "<-i ct_name> [-o name] [-no new_obj_name]"},
+    {do_create_cmd,   {"create",   NULL, NULL}, "<-ct ct_name> [-o obj_id] [-s start_lba]"},
+    {do_open_cmd,     {"open",     NULL, NULL}, "<-ct ct_name> [-o obj_id] [-s start_lba]"},
+    {do_close_cmd,    {"close",    NULL, NULL}, "<-ct ct_name> [-o obj_id]"},
+    {do_delete_cmd,   {"delete",   NULL, NULL}, "<-ct ct_name> [-o obj_id]"},
+    //{do_rename_cmd,   {"rename",   NULL, NULL}, "<-ct ct_name> [-o name] [-no new_obj_name]"},
         
-	{do_list_cmd,     {"list",     NULL, NULL}, "[-i ct_name] [-o obj_id]"},
-	{do_dump_cmd,     {"dump",     NULL, NULL}, "<-i ct_name> [-o obj_id]"},
-	//{do_verify_cmd,   {"verify",   NULL, NULL}, "<-i ct_name> [-o obj_id]"},
-    //{do_fixup_cmd,    {"fixup",    NULL, NULL}, "<-i ct_name>"},
+	{do_list_cmd,     {"list",     NULL, NULL}, "[-ct ct_name] [-o obj_id]"},
+	{do_dump_cmd,     {"dump",     NULL, NULL}, "<-ct ct_name> [-o obj_id]"},
+	//{do_verify_cmd,   {"verify",   NULL, NULL}, "<-ct ct_name> [-o obj_id]"},
+    //{do_fixup_cmd,    {"fixup",    NULL, NULL}, "<-ct ct_name>"},
         
-	{do_insert_key_cmd,   {"insert",   NULL, NULL}, "<-i ct_name> [-o obj_id] [-k key] [-v value]"},
-    {do_remove_key_cmd,   {"remove",   NULL, NULL}, "<-i ct_name> [-o obj_id] [-k key]"},
+	{do_insert_key_cmd,   {"insert",   NULL, NULL}, "<-ct ct_name> [-o obj_id] [-k key] [-v value]"},
+    {do_remove_key_cmd,   {"remove",   NULL, NULL}, "<-ct ct_name> [-o obj_id] [-k key]"},
                 
-	//{do_performance_cmd, {"perf", NULL, NULL}, "<-i ct_name> <-o obj_id> [-n threads_num]"},
+	{do_performance_cmd, {"perf", NULL, NULL}, "<-ct ct_name> <-o obj_id> [-n threads_num]"},
 	{NULL, {NULL, NULL, NULL}, NULL}
 };
 

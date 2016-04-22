@@ -368,7 +368,7 @@ extern boolean_t avl_update_gt(avl_tree_t *, void *);
 extern unsigned long avl_numnodes(avl_tree_t *tree);
 
 /*
- * Return B_TRUE if there are zero nodes in the tree, B_FALSE otherwise.
+ * Return TRUE if there are zero nodes in the tree, FALSE otherwise.
  */
 extern boolean_t avl_is_empty(avl_tree_t *tree);
 

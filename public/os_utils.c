@@ -99,7 +99,7 @@ int32_t os_str_to_u64(const char *str, uint64_t *value, uint32_t base)
 {
     char *end = NULL;
 
-    *value = OSStrToUll(str, &end, base);
+    *value = OS_STR2ULL(str, &end, base);
 
 #if 0
     /*

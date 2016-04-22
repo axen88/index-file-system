@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../include"
+				AdditionalIncludeDirectories="../include;../public"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;__EN_FILE_IF__;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -186,12 +186,12 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="Í·ÎÄ¼þ"
+			Name="include"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\include\avl.h"
+				RelativePath="..\public\avl.h"
 				>
 			</File>
 			<File
@@ -204,6 +204,10 @@
 			</File>
 			<File
 				RelativePath="..\include\ofs_container.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\ofs_globals.h"
 				>
 			</File>
 			<File
@@ -239,59 +243,51 @@
 				>
 			</File>
 			<File
-				RelativePath="..\include\os_adapter.h"
+				RelativePath="..\public\os_adapter.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\os_cmd_ui.h"
+				RelativePath="..\public\os_cmd_ui.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\os_disk_if.h"
+				RelativePath="..\public\os_disk_if.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\os_errors.h"
+				RelativePath="..\public\os_dlist.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\os_file_if.h"
+				RelativePath="..\public\os_file_if.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\os_linux_kernel.h"
+				RelativePath="..\public\os_linux_kernel.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\os_linux_user.h"
+				RelativePath="..\public\os_linux_user.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\os_list_double.h"
+				RelativePath="..\public\os_log.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\os_log.h"
+				RelativePath="..\public\os_ring_buffer.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\os_queue.h"
+				RelativePath="..\public\os_types.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\os_threads_group.h"
+				RelativePath="..\public\os_utils.h"
 				>
 			</File>
 			<File
-				RelativePath="..\include\os_types.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\os_utils.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\os_windows.h"
+				RelativePath="..\public\os_windows.h"
 				>
 			</File>
 		</Filter>
@@ -355,23 +351,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\public\os_list_double.c"
-				>
-			</File>
-			<File
-				RelativePath="..\public\os_list_queue.c"
-				>
-			</File>
-			<File
 				RelativePath="..\public\os_log.c"
-				>
-			</File>
-			<File
-				RelativePath="..\public\os_queue.c"
-				>
-			</File>
-			<File
-				RelativePath="..\public\os_threads_group.c"
 				>
 			</File>
 			<File

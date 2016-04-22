@@ -42,6 +42,19 @@ extern "C"
 {
 #endif
 
+enum ofs_block_error_code
+{
+    // BLOCK errors
+    BLOCK_ERR_START = 300000,
+    BLOCK_ERR_WRITE,
+    BLOCK_ERR_PARAMETER,
+    BLOCK_ERR_ALLOCATE_MEMORY,
+    BLOCK_ERR_FORMAT,
+    FILE_BLOCK_ERR_INVALID_OBJECT,
+
+    FILE_BLOCK_ERR_BUTT
+};
+
 int32_t ofs_update_block_fixup(container_handle_t *ct, block_head_t *blk, uint64_t vbn);
 int32_t ofs_read_block_fixup(container_handle_t *ct, block_head_t *blk, uint64_t vbn, uint32_t objid, uint32_t alloc_size);
 

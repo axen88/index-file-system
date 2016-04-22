@@ -63,18 +63,20 @@ extern "C" {
 #define OS_FREE     free
 #define OS_PRINT(n, fmt, ...)   (n)->print((n)->net, fmt, ##__VA_ARGS__)
 
-#define OSStrToUll(pcBuf, end, base)   strtoul(pcBuf, end, base)
+#define OS_STR2ULL(pcBuf, end, base)   strtoul(pcBuf, end, base)
 #define OS_SLEEP_SECOND(x)               Sleep(x)
 #define OS_SLEEP_MS(x)                  
-#define OSThreadExit()                  ExitThread(0)
+#define OS_THREAD_EXIT()                  ExitThread(0)
 
 typedef CRITICAL_SECTION            os_mutex_t;
 typedef CRITICAL_SECTION            os_rwlock;
 typedef uint64_t                     os_thread_id_t;
 typedef HANDLE                      os_thread_t;
-    
+
+#define INVALID_TID                 NULL
+
 #define OS_GET_THREAD_ID()         GetCurrentThreadId()
-    
+   
 #define OS_MUTEX_INIT(v_pMutex)    InitializeCriticalSection(v_pMutex)
 #define OS_MUTEX_LOCK(v_pMutex)    EnterCriticalSection(v_pMutex)
 #define OS_MUTEX_UNLOCK(v_pMutex)  LeaveCriticalSection(v_pMutex)
@@ -103,6 +105,23 @@ do { \
 #define EXPORT_SYMBOL(x)
 #define module_init(x)
 #define module_exit(x)
+
+
+
+static inline os_thread_t thread_create(void *(*func)(void *), void *para, char *thread_name)
+{
+    return CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)func, para, 0, NULL);
+}
+
+static inline void thread_destroy(os_thread_t tid, bool_t force)
+{
+    if (force)
+    {
+        TerminateThread(tid, 0);
+    }
+}
+
+
 
 #ifdef	__cplusplus
 }

@@ -116,7 +116,7 @@ int32_t ofs_update_block_fixup(container_handle_t *ct, block_head_t *blk, uint64
     if ((ct == NULL) || (blk == NULL))
     {
         LOG_ERROR("Invalid parameter. ct(%p) blk(%p)\n", ct, blk);
-        return -FILE_BLOCK_ERR_PARAMETER;
+        return -BLOCK_ERR_PARAMETER;
     }
 
     assemble_block(blk);
@@ -145,7 +145,7 @@ int32_t ofs_read_block_fixup(container_handle_t *ct, block_head_t *blk, uint64_t
     if ((ct == NULL) || (blk == NULL))
     {
         LOG_ERROR("Invalid parameter. ct(%p) blk(%p)\n", ct, blk);
-        return -FILE_BLOCK_ERR_PARAMETER;
+        return -BLOCK_ERR_PARAMETER;
     }
 
     ret = ofs_read_block(ct, blk, alloc_size, 0, vbn);
@@ -172,7 +172,7 @@ static inline int32_t check_block(container_handle_t *ct, block_head_t *blk)
     if ((ct == NULL) || (blk == NULL))
     {
         LOG_ERROR("Invalid parameter. ct(%p) blk(%p)\n", ct, blk);
-        return -FILE_BLOCK_ERR_PARAMETER;
+        return -BLOCK_ERR_PARAMETER;
     }
 
     if ((blk->real_size > blk->alloc_size)
@@ -180,7 +180,7 @@ static inline int32_t check_block(container_handle_t *ct, block_head_t *blk)
     {
         LOG_ERROR("size is invalid. real_size(%d) alloc_size(%d) block_size(%d)\n",
             blk->real_size, blk->alloc_size, ct->sb.block_size);
-        return -FILE_BLOCK_ERR_INVALID_PARA;
+        return -FILE_BLOCK_ERR_INVALID_OBJECT;
     }
 
     return 0;
@@ -197,7 +197,7 @@ int32_t ofs_update_block_pingpong_init(container_handle_t *ct, block_head_t *blk
     if (ret < 0)
     {
         LOG_ERROR("Get blocksize failed. ct(%p) buf(%p) ret(%d)", ct, blk, ret);
-        return -FILE_BLOCK_ERR_INVALID_PARA;
+        return ret;
     }
 
     block_size = ct->sb.block_size;
@@ -206,7 +206,7 @@ int32_t ofs_update_block_pingpong_init(container_handle_t *ct, block_head_t *blk
     if (NULL == buf)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", block_size);
-        return -FILE_BLOCK_ERR_ALLOCATE_MEMORY;
+        return -BLOCK_ERR_ALLOCATE_MEMORY;
     }
 
     assemble_block(blk);
@@ -230,7 +230,7 @@ int32_t ofs_update_block_pingpong_init(container_handle_t *ct, block_head_t *blk
     {
         LOG_ERROR("Update block data failed. ct(%p) blk(%p) size(%d) vbn(%lld) ret(%d)\n",
             ct, blk, block_size, vbn, ret);
-        return -FILE_BLOCK_ERR_WRITE;
+        return -BLOCK_ERR_WRITE;
     }
 
     return 0;
@@ -247,7 +247,7 @@ int32_t ofs_update_block_pingpong(container_handle_t *ct, block_head_t *blk, uin
     if (ret < 0)
     {
         LOG_ERROR("Get blocksize failed. ct(%p) buf(%p) ret(%d)\n", ct, blk, ret);
-        return -FILE_BLOCK_ERR_INVALID_PARA;
+        return ret;
     }
 
     block_size = ct->sb.block_size;
@@ -269,7 +269,7 @@ int32_t ofs_update_block_pingpong(container_handle_t *ct, block_head_t *blk, uin
     {
         LOG_ERROR("Update block data failed. ct(%p) blk(%p) size(%d) vbn(%lld) ret(%d)\n",
             ct, blk, blk->alloc_size, vbn, ret);
-        return -FILE_BLOCK_ERR_WRITE;
+        return -BLOCK_ERR_WRITE;
     }
 
     return 0;
@@ -354,7 +354,7 @@ int32_t ofs_read_block_pingpong(container_handle_t *ct, block_head_t *blk, uint6
     if ((ct == NULL) || (blk == NULL) || (0 == alloc_size))
     {
         LOG_ERROR("Invalid parameter. ct(%p) blk(%p) alloc_size(%d)\n", ct, blk, alloc_size);
-        return -FILE_BLOCK_ERR_PARAMETER;
+        return -BLOCK_ERR_PARAMETER;
     }
 
     block_size = ct->sb.block_size;
@@ -362,14 +362,14 @@ int32_t ofs_read_block_pingpong(container_handle_t *ct, block_head_t *blk, uint6
     if (block_size < alloc_size)
     {
         LOG_ERROR("size is invalid. block_size(%d) alloc_size(%d)\n", block_size, alloc_size);
-        return -FILE_BLOCK_ERR_INVALID_PARA;
+        return -FILE_BLOCK_ERR_INVALID_OBJECT;
     }
 
     buf = OS_MALLOC(block_size);
     if (NULL == buf)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", block_size);
-        return -FILE_BLOCK_ERR_ALLOCATE_MEMORY;
+        return -BLOCK_ERR_ALLOCATE_MEMORY;
     }
 
     ret = ofs_read_block(ct, buf, block_size, 0, vbn);

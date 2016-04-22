@@ -843,10 +843,10 @@ avl_update_lt(avl_tree_t *t, void *obj)
 	neighbor = AVL_PREV(t, obj);
 	if ((neighbor != NULL) && (t->avl_compar(obj, neighbor) < 0)) {
 		AVL_REINSERT(t, obj);
-		return (B_TRUE);
+		return (TRUE);
 	}
 
-	return (B_FALSE);
+	return (FALSE);
 }
 
 boolean_t
@@ -860,10 +860,10 @@ avl_update_gt(avl_tree_t *t, void *obj)
 	neighbor = AVL_NEXT(t, obj);
 	if ((neighbor != NULL) && (t->avl_compar(obj, neighbor) > 0)) {
 		AVL_REINSERT(t, obj);
-		return (B_TRUE);
+		return (TRUE);
 	}
 
-	return (B_FALSE);
+	return (FALSE);
 }
 
 boolean_t
@@ -874,16 +874,16 @@ avl_update(avl_tree_t *t, void *obj)
 	neighbor = AVL_PREV(t, obj);
 	if ((neighbor != NULL) && (t->avl_compar(obj, neighbor) < 0)) {
 		AVL_REINSERT(t, obj);
-		return (B_TRUE);
+		return (TRUE);
 	}
 
 	neighbor = AVL_NEXT(t, obj);
 	if ((neighbor != NULL) && (t->avl_compar(obj, neighbor) > 0)) {
 		AVL_REINSERT(t, obj);
-		return (B_TRUE);
+		return (TRUE);
 	}
 
-	return (B_FALSE);
+	return (FALSE);
 }
 
 /*

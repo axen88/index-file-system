@@ -297,14 +297,14 @@ int32_t init_super_block(ofs_super_block_t *sb, uint64_t total_sectors, uint32_t
     if (block_size_shift != BYTES_PER_BLOCK_SHIFT)
     {
         LOG_ERROR("The parameter is invalid. block_size_shift(%d)\n", block_size_shift);
-        return -FILE_BLOCK_ERR_PARAMETER;
+        return -BLOCK_ERR_PARAMETER;
     }
 
     total_blocks = total_sectors >> (block_size_shift - BYTES_PER_SECTOR_SHIFT);
     if (total_blocks < MIN_BLOCKS_NUM)
     {
         LOG_ERROR("The parameter is invalid. total_blocks(%lld)\n", total_blocks);
-        return -FILE_BLOCK_ERR_PARAMETER;
+        return -BLOCK_ERR_PARAMETER;
     }
 
     sb->head.blk_id = SUPER_BLOCK_ID;
@@ -331,26 +331,26 @@ int32_t check_super_block(ofs_super_block_t *sb)
     if (sb->magic_num != BLOCK_MAGIC_NUMBER)
     {
         LOG_ERROR( "magic_num not match. magic_num(%x) expect(%x)\n", sb->magic_num, BLOCK_MAGIC_NUMBER);
-        return -FILE_BLOCK_ERR_FORMAT;
+        return -BLOCK_ERR_FORMAT;
     }
 
     if (sb->version != VERSION)
     {
         LOG_ERROR("version not match. version(%04d) expect(%04d)\n", sb->version, VERSION);
-        return -FILE_BLOCK_ERR_FORMAT;
+        return -BLOCK_ERR_FORMAT;
     }
 
     if (sb->sectors_per_block != SECTORS_PER_BLOCK)
     {
         LOG_ERROR("sectors_per_block not match. sectors_per_block(%d) expect(%d)\n",
             sb->sectors_per_block, SECTORS_PER_BLOCK);
-        return -FILE_BLOCK_ERR_FORMAT;
+        return -BLOCK_ERR_FORMAT;
     }
 
     if (sb->block_size != BYTES_PER_BLOCK)
     {
         LOG_ERROR("block_size not match. block_size(%d) expect(%d)\n", sb->block_size, BYTES_PER_BLOCK);
-        return -FILE_BLOCK_ERR_FORMAT;
+        return -BLOCK_ERR_FORMAT;
     }
 
     return 0;
