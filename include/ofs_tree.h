@@ -83,8 +83,6 @@ extern "C" {
 #define GET_IE_KEY(ie)       ((uint8_t*)(ie) + sizeof(index_entry_t))
 #define GET_IE_VALUE(ie)     ((uint8_t*)(ie) + sizeof(index_entry_t) + (((index_entry_t *)(ie))->key_len))
 
-
-
 #define IB(b)   ((index_block_t *)(b))
 
 typedef int32_t (*tree_walk_cb_t) (void *obj, void *para);

@@ -66,7 +66,7 @@ extern "C" {
 #define OS_STR2ULL(pcBuf, end, base)   simple_strtoull(pcBuf, end, base)
 #define OS_SLEEP_SECOND(x)               msleep(x * 1000)
 #define OS_SLEEP_MS(x)                  
-#define OS_THREAD_EXIT()                while (!kthread_should_stop()) msleep(100);
+#define OS_THREAD_EXIT()                do {while (!kthread_should_stop()) msleep(100);} while (0)
 
 typedef struct semaphore            os_mutex_t;
 typedef rwlock_t                    os_rwlock;

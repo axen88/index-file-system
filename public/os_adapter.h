@@ -136,12 +136,16 @@ extern "C" {
 
 #define OS_OFFSET(type, member) \
     (((ptr_t)(&(((type *)0x1234)->member))) - 0x1234)
+    
 #define OS_CONTAINER(ptr, type, member) \
     ((type *)(((char *)(ptr)) - OS_OFFSET(type, member)))
+    
 #define RoundUp(num, round)    (((num) + ((round) - 1)) & ~((round) - 1))
 #define RoundUp2(num, round, roundShift)    (((num) + ((round) - 1)) >> roundShift)
 #define RoundUp3(num, round)    (((num) + ((round) - 1)) / (round))
+
 #define RoundDown(num, round)  ((num) & ~((round) - 1))
+
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
     
