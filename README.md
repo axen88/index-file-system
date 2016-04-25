@@ -4,9 +4,11 @@
 1. support key-value operations like insert/remove/search etc.
 4. support variant length key or value
 5. support NULL value or zero length value
+
 ## object system
 1. support object read/write if the object is data stream type
 2. support object size to 2^64-1
+
 ## file system
 1. support all kinds of file system operations like file/directory/xattr create/delete/read/write etc.
 
