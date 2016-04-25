@@ -1,25 +1,27 @@
 
 # features
-## key-value system
-1. support key-value operations like insert/remove/search etc.
-4. support variant length key or value
-5. support NULL value or zero length value
+1. all data structure is btree or b+tree 
+2. kv/object/file system are all in one system, sharing the same disk space and layout
+3. the data on disk is consistent at any time
+4. support snapshot management
 
-## object system
-1. support object read/write if the object is data stream type
-2. support object size to 2^64-1
+## support key-value operations
+1. support kv operations like insert/remove/search etc.
+2. support variant length key or value
+3. support NULL value or zero length value
+4. support big value (TODO)
+5. support both b tree and b+ tree
 
-## file system
+## support object system operations (TODO)
+1. support object operations like read/write etc
+2. object size can be up to 2^64-1 bytes
+
+## support file system operations (TODO)
 1. support all kinds of file system operations like file/directory/xattr create/delete/read/write etc.
+2. support linux fs posix API
+3. support fuse
+4. support docking other service
 
-# TODO
-1. using btree manager the space instead of bitmap
-2. support both b tree and b+ tree
-3. support snapshot management
-4. support the data on disk is consistent at any time
-5. support object read/write
-6. support big value
-7. support file system operation
 
 # compile on linux
 
