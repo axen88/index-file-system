@@ -335,17 +335,32 @@ int32_t index_block_read2(object_info_t *obj_info, uint64_t vbn, uint32_t blk_id
     int32_t ret = 0;
     ofs_block_cache_t *cache = NULL;
     avl_index_t where = 0;
+    container_handle_t *ct;
 
     ASSERT(obj_info != NULL);
+
+    ct = obj_info->ct;
     
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
     cache = avl_find(&obj_info->caches, (avl_find_fn_t)compare_cache2, &vbn, &where);
-    if (NULL != cache) // block already in the cache
+    if (NULL != cache) // block already in the obj cache
     {
         OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
         *cache_out = cache;
         return 0;
     }
+    
+    OS_RWLOCK_RDLOCK(&ct->metadata_cache_lock);
+    cache = avl_find(&ct->metadata_cache, (avl_find_fn_t)compare_cache2, &vbn, &where);
+    if (NULL != cache) // block already in the container cache
+    {
+        OS_RWLOCK_RDUNLOCK(&ct->metadata_cache_lock);
+        avl_add(&obj_info->caches, cache); // add to object
+        OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
+        *cache_out = cache;
+        return 0;
+    }
+    OS_RWLOCK_RDUNLOCK(&ct->metadata_cache_lock);
 
     cache = alloc_obj_cache(obj_info, vbn, blk_id);
     if (NULL == cache)
