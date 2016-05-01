@@ -158,6 +158,58 @@ int32_t alloc_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt, 
     return (uint32_t)(end - start_blk);
 }
 
+#if 0
+int32_t free_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt)
+{
+    uint64_t addr;
+    uint32_t len;
+    uint64_t end;
+    uint64_t end_blk;
+    uint8_t addr_str[U64_MAX_SIZE];
+    uint8_t len_str[U64_MAX_SIZE];
+    uint16_t addr_size;
+    uint16_t len_size;
+    int32_t ret;
+
+    addr_size = os_u64_to_bstr(start_blk, addr_str);
+    len_size = os_u64_to_bstr(blk_cnt, len_str);
+
+    ret = index_search_key_nolock(obj, addr_str, addr_size, len_str, len_size);
+    if (ret < 0)
+    {
+        if (ret != -INDEX_ERR_KEY_NOT_FOUND)
+        {
+            LOG_ERROR("Search key failed. objid(0x%llx) ret(%d)\n", obj->obj_info->objid, ret);
+            return ret;
+        }
+
+        if (obj->ie->flags & INDEX_ENTRY_END) // no key here
+        {
+            ret = walk_tree(obj, INDEX_GET_FIRST); // get first key
+            if (ret != 0)
+            { // no any key
+                if (ret != -INDEX_ERR_ROOT)
+                {
+                    LOG_ERROR("walk tree failed. objid(0x%llx) ret(%d)\n", obj->obj_info->objid, ret);
+                    return ret;
+                }
+                
+                return -INDEX_ERR_NO_FREE_BLOCKS; // no free space
+            }
+        }
+
+        // no overlap
+        addr = os_bstr_to_u64(GET_IE_KEY(obj->ie), obj->ie->key_len);
+        start_blk = addr; //  reset the start block
+    }
+    else
+    {
+        addr = os_bstr_to_u64(GET_IE_KEY(obj->ie), obj->ie->key_len);
+    }
+
+    return index_insert_key_nolock(obj, addr_str, addr_size, len_str, len_size);
+}
+#else
 int32_t free_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt)
 {
     uint8_t addr_str[U64_MAX_SIZE];
@@ -170,6 +222,7 @@ int32_t free_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt)
 
     return index_insert_key_nolock(obj, addr_str, addr_size, len_str, len_size);
 }
+#endif
 
 void ofs_init_sm(space_manager_t *sm, object_handle_t *obj, uint64_t first_free_block,
     uint64_t total_free_blocks)
@@ -342,6 +395,8 @@ int32_t ofs_alloc_space(container_handle_t *ct, uint64_t objid, uint32_t blk_cnt
 
 int32_t ofs_free_space(container_handle_t *ct, uint64_t objid, uint64_t start_blk, uint32_t blk_cnt)
 {
+    int32_t ret;
+
     if (objid == ct->bsm.space_obj->obj_info->objid)
     {
         ASSERT(ct->base_blk == 0);
@@ -354,6 +409,13 @@ int32_t ofs_free_space(container_handle_t *ct, uint64_t objid, uint64_t start_bl
     if (objid == ct->sm.space_obj->obj_info->objid)
     {
         return sm_free_space(&ct->bsm, start_blk, blk_cnt);
+    }
+
+    ret = reserve_base_space(ct);
+    if (ret < 0)
+    {
+        LOG_ERROR("reserve base space failed. ret(%d)\n", ret);
+        return ret;
     }
 
     return sm_free_space(&ct->sm, start_blk, blk_cnt);

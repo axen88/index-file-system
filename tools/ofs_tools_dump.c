@@ -61,8 +61,8 @@ static int32_t dump_callback(object_handle_t *tree, dump_para_t *para)
          //   tree->depth, tree->cache->vbn);
     }
 
-    OS_PRINT(para->net, "%-7d(%d, %d) ", ++para->no,
-        tree->ie->prev_len, tree->ie->len);
+    OS_PRINT(para->net, "%-7d", ++para->no);
+   // OS_PRINT(para->net, "%(%d, %d) ", tree->ie->prev_len, tree->ie->len);
 
     uc = GET_IE_KEY(tree->ie);
     switch (tree->obj_info->attr_record->flags & CR_MASK)
@@ -75,7 +75,7 @@ static int32_t dump_callback(object_handle_t *tree, dump_para_t *para)
             break;
         case CR_U64:
         case CR_EXTENT:
-            OS_PRINT(para->net, "%8lld", os_bstr_to_u64(uc, tree->ie->key_len));
+            OS_PRINT(para->net, "%lld", os_bstr_to_u64(uc, tree->ie->key_len));
             break;
         default:
             for (i = 0; i < tree->ie->key_len; i++)
@@ -99,7 +99,7 @@ static int32_t dump_callback(object_handle_t *tree, dump_para_t *para)
             break;
         case CR_U64:
         case CR_EXTENT:
-            OS_PRINT(para->net, "%8lld", os_bstr_to_u64(uc, tree->ie->value_len));
+            OS_PRINT(para->net, "%lld", os_bstr_to_u64(uc, tree->ie->value_len));
             break;
         default:
             for (i = 0; i < tree->ie->value_len; i++)

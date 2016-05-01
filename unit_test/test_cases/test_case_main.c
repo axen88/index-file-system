@@ -42,7 +42,8 @@ History:
 #include "os_adapter.h"
 
 int add_index_test_case(void);
-int add_kv_test_case(void);
+int add_kv_test_case1(void);
+int add_kv_test_case2(void);
 int add_collate_test_case(void);
 int add_space_manager_test_case(void);
 
@@ -72,7 +73,13 @@ int main(void)
         return CU_get_error();
     }
 
-    ret = add_kv_test_case();
+    ret = add_kv_test_case1();
+    if (ret != 0) {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+
+    ret = add_kv_test_case2();
     if (ret != 0) {
         CU_cleanup_registry();
         return CU_get_error();

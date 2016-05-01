@@ -522,11 +522,11 @@ void test_kv_1(void)
     CU_ASSERT(0 == ofs_close_container(ct));
 }
 
-int add_kv_test_case(void)
+int add_kv_test_case1(void)
 {
     CU_pSuite pSuite = NULL;
 
-    pSuite = CU_add_suite("test_kv_suit", init_suite, clean_suite);
+    pSuite = CU_add_suite("test_kv_suit1", init_suite, clean_suite);
     if (NULL == pSuite) {
        return -1;
     }

@@ -384,6 +384,10 @@
 				RelativePath=".\test_cases\test_tree.c"
 				>
 			</File>
+			<File
+				RelativePath=".\test_cases\test_tree2.c"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
