@@ -132,11 +132,11 @@ void test_block_rw(void)
 }
 
 
-int add_index_test_case(void)
+int add_container_test_case(void)
 {
     CU_pSuite pSuite = NULL;
 
-    pSuite = CU_add_suite("test_index_suit", init_suite, clean_suite);
+    pSuite = CU_add_suite("test_container_suit", init_suite, clean_suite);
     if (NULL == pSuite) {
        return -1;
     }

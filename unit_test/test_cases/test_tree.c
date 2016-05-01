@@ -495,10 +495,10 @@ void test_kv_1(void)
     }
     
     CU_ASSERT(0 == ofs_close_object(obj));
-    CU_ASSERT(0 == ofs_close_container(ct));
+   // CU_ASSERT(0 == ofs_close_container(ct));
 
     // open ct and object, remove key
-    CU_ASSERT(0 == ofs_open_container("kv", &ct));
+    //CU_ASSERT(0 == ofs_open_container("kv", &ct));
     CU_ASSERT(0 == ofs_open_object(ct, 500, &obj));
 
     for (i = 0; i < ArraySize(test_kv_pairs1); i++)
