@@ -137,7 +137,7 @@ void free_obj_cache(object_info_t *obj_info, ofs_block_cache_t *cache)
 
 }
 
-int32_t alloc_obj_cache_and_block(object_info_t *obj_info, ofs_block_cache_t **cache, uint32_t blk_id)
+int32_t alloc_obj_block_and_cache(object_info_t *obj_info, ofs_block_cache_t **cache, uint32_t blk_id)
 {
     ofs_block_cache_t *tmp_cache = NULL;
     int32_t ret = 0;
@@ -197,6 +197,137 @@ int32_t release_obj_all_cache(object_info_t *obj_info)
 }
 
 
+void free_container_cache(container_handle_t *ct, ofs_block_cache_t *cache)
+{
+    ASSERT(ct != NULL);
+    ASSERT(cache != NULL);
+    
+    if (CACHE_DIRTY(cache))
+    {
+        LOG_ERROR("YOU ARE FREE DIRTY CACHE. ct(%s) vbn(%lld) size(%d)\n", ct->name, cache->vbn, cache->ib->alloc_size);
+    }
+
+    avl_remove(&ct->metadata_cache, cache);
+    
+    if (NULL != cache->ib)
+    {
+        OS_FREE(cache->ib);
+        cache->ib = NULL;
+    }
+    
+    OS_FREE(cache);
+
+}
+
+int32_t flush_container_dirty_cache(container_handle_t *ct, ofs_block_cache_t *cache)
+{
+    int32_t ret = 0;
+
+    ASSERT(ct != NULL);
+    ASSERT(cache != NULL);
+
+    if (!CACHE_DIRTY(cache))
+    {
+        return 0;
+    }
+
+    ret = ofs_update_block_fixup(ct, cache->ib, cache->vbn);
+    if (ret != (int32_t)cache->ib->alloc_size)
+    {
+        LOG_ERROR("Update ct block failed. ct(%s) vbn(%lld) size(%d) ret(%d)\n",
+            ct->name, cache->vbn, cache->ib->alloc_size, ret);
+        return -INDEX_ERR_UPDATE;
+    }
+
+    LOG_DEBUG("Update ct block success. ct(%s) vbn(%lld) size(%d)\n",
+            ct->name, cache->vbn, cache->ib->alloc_size);
+
+    if (CACHE_FLUSH(cache))  // the object had been released
+    {
+        SET_CACHE_CLEAN(cache);
+        free_container_cache(ct, cache);
+        return 0;
+    }
+    
+    SET_CACHE_CLEAN(cache);
+
+    return 0;
+}
+
+int32_t flush_container_cache(container_handle_t *ct)
+{
+    int32_t ret = 0;
+    
+    ASSERT(ct != NULL);
+
+    OS_RWLOCK_WRLOCK(&ct->metadata_cache_lock);
+    avl_walk_all(&ct->metadata_cache, (avl_walk_cb_t)flush_container_dirty_cache, ct);
+    OS_RWLOCK_WRUNLOCK(&ct->metadata_cache_lock);
+
+    if (ct->flags & FLAG_DIRTY)
+    {
+        ct->sb.free_blocks = ct->sm.total_free_blocks;
+        ct->sb.first_free_block = ct->sm.first_free_block;
+        
+        ct->sb.base_free_blocks = ct->bsm.total_free_blocks;
+        ct->sb.base_first_free_block = ct->bsm.first_free_block;
+        
+        ct->sb.base_blk = ct->base_blk;
+
+        ret = ofs_update_super_block(ct);
+        if (ret < 0)
+        {
+            LOG_ERROR("Update super block failed. ct(%p) ret(%d)\n", ct, ret);
+        }
+
+        ct->flags &= ~FLAG_DIRTY;
+    }
+
+	return 0;
+}
+
+int32_t clean_obj_root_cache(container_handle_t *ct, object_info_t *obj_info)
+{
+    ASSERT(ct != NULL);
+    ASSERT(obj_info != NULL);
+
+    if (CACHE_DIRTY(&obj_info->root_cache))
+    {
+        SET_CACHE_DIRTY(&obj_info->root_cache);
+    }
+    
+    return 0;
+}
+
+int32_t clean_all_obj_root_cache(container_handle_t *ct)
+{
+    ASSERT(ct != NULL);
+
+    OS_RWLOCK_WRLOCK(&ct->ct_lock);
+    avl_walk_all(&ct->obj_info_list, (avl_walk_cb_t)clean_obj_root_cache, ct);
+    OS_RWLOCK_WRUNLOCK(&ct->ct_lock);
+
+    return 0;
+}
+
+int32_t commit_container_modification(container_handle_t *ct)
+{
+    flush_container_cache(ct);
+    clean_all_obj_root_cache(ct);
+
+	return 0;
+}
+
+int32_t release_container_all_cache(container_handle_t *ct)
+{
+    ASSERT(ct != NULL);
+
+    OS_RWLOCK_WRLOCK(&ct->metadata_cache_lock);
+    avl_walk_all(&ct->metadata_cache, (avl_walk_cb_t)free_container_cache, ct);
+    OS_RWLOCK_WRUNLOCK(&ct->metadata_cache_lock);
+
+    return 0;
+}
 
 int32_t index_block_read2(object_info_t *obj_info, uint64_t vbn, uint32_t blk_id,
     ofs_block_cache_t **cache_out)
@@ -265,121 +396,5 @@ int32_t index_block_read(object_handle_t *obj, uint64_t vbn, uint32_t blk_id)
 
     return 0;
 }
-
-void free_fs_cache(container_handle_t *ct, ofs_block_cache_t *cache)
-{
-    ASSERT(ct != NULL);
-    ASSERT(cache != NULL);
-    
-    avl_remove(&ct->metadata_cache, cache);
-    
-    if (NULL != cache->ib)
-    {
-        OS_FREE(cache->ib);
-        cache->ib = NULL;
-    }
-    
-    OS_FREE(cache);
-
-}
-
-int32_t flush_fs_dirty_cache(container_handle_t *ct, ofs_block_cache_t *cache)
-{
-    int32_t ret = 0;
-
-    ASSERT(ct != NULL);
-    ASSERT(cache != NULL);
-
-    if (!CACHE_DIRTY(cache))
-    {
-        return 0;
-    }
-
-    ret = ofs_update_block_fixup(ct, cache->ib, cache->vbn);
-    if (ret != (int32_t)cache->ib->alloc_size)
-    {
-        LOG_ERROR("Update ct block failed. ct(%s) vbn(%lld) size(%d) ret(%d)\n",
-            ct->name, cache->vbn, cache->ib->alloc_size, ret);
-        return -INDEX_ERR_UPDATE;
-    }
-
-    LOG_DEBUG("Update ct block success. ct(%s) vbn(%lld) size(%d)\n",
-            ct->name, cache->vbn, cache->ib->alloc_size);
-
-    if (CACHE_FLUSH(cache))  // the object had been released
-    {
-        free_fs_cache(ct, cache);
-        return 0;
-    }
-    
-    SET_CACHE_CLEAN(cache);
-
-    return 0;
-}
-
-
-int32_t flush_fs_cache(container_handle_t *ct)
-{
-    int32_t ret = 0;
-    
-    ASSERT(ct != NULL);
-
-    OS_RWLOCK_WRLOCK(&ct->metadata_cache_lock);
-    avl_walk_all(&ct->metadata_cache, (avl_walk_cb_t)flush_fs_dirty_cache, ct);
-    OS_RWLOCK_WRUNLOCK(&ct->metadata_cache_lock);
-
-    if (ct->flags & FLAG_DIRTY)
-    {
-        ct->sb.free_blocks = ct->sm.total_free_blocks;
-        ct->sb.first_free_block = ct->sm.first_free_block;
-        
-        ct->sb.base_free_blocks = ct->bsm.total_free_blocks;
-        ct->sb.base_first_free_block = ct->bsm.first_free_block;
-        
-        ct->sb.base_blk = ct->base_blk;
-
-        ret = ofs_update_super_block(ct);
-        if (ret < 0)
-        {
-            LOG_ERROR("Update super block failed. ct(%p) ret(%d)\n", ct, ret);
-        }
-
-        ct->flags &= ~FLAG_DIRTY;
-    }
-
-	return 0;
-}
-
-int32_t release_fs_cache(container_handle_t *ct, ofs_block_cache_t *cache)
-{
-    int32_t ret = 0;
-
-    ASSERT(ct != NULL);
-    ASSERT(cache != NULL);
-
-    if (CACHE_DIRTY(cache))
-    {
-        LOG_ERROR("YOU ARE RELEASE DIRTY CACHE. ct(%s) vbn(%lld) size(%d) ret(%d)\n",
-            ct->name, cache->vbn, cache->ib->alloc_size, ret);
-    }
-
-    free_fs_cache(ct, cache);
-
-    return 0;
-}
-
-int32_t release_fs_all_cache(container_handle_t *ct)
-{
-    int32_t ret = 0;
-    
-    ASSERT(ct != NULL);
-
-    OS_RWLOCK_WRLOCK(&ct->metadata_cache_lock);
-    avl_walk_all(&ct->metadata_cache, (avl_walk_cb_t)release_fs_cache, ct);
-    OS_RWLOCK_WRUNLOCK(&ct->metadata_cache_lock);
-
-    return 0;
-}
-
 
 

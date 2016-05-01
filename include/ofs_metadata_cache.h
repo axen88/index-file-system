@@ -75,7 +75,7 @@ struct ofs_block_cache
 
 int32_t index_block_read(object_handle_t *obj, uint64_t vbn, uint32_t blk_id);
 
-int32_t alloc_obj_cache_and_block(object_info_t *obj_info, ofs_block_cache_t **cache, uint32_t blk_id);
+int32_t alloc_obj_block_and_cache(object_info_t *obj_info, ofs_block_cache_t **cache, uint32_t blk_id);
 
 int32_t release_obj_all_cache(object_info_t *obj_info);
 
@@ -85,9 +85,13 @@ int32_t index_block_read2(object_info_t *obj_info, uint64_t vbn, uint32_t blk_id
 
 ofs_block_cache_t *alloc_obj_cache(object_info_t *obj_info, uint64_t vbn, uint32_t blk_id);
 
-int32_t release_fs_all_cache(container_handle_t *ct);
+int32_t release_container_all_cache(container_handle_t *ct);
 
-int32_t flush_fs_cache(container_handle_t *ct);
+int32_t flush_container_cache(container_handle_t *ct);
+
+int32_t commit_container_modification(container_handle_t *ct);
+
+void free_obj_cache(object_info_t *obj_info, ofs_block_cache_t *cache);
 
 
 #ifdef	__cplusplus

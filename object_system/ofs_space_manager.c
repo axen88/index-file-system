@@ -302,6 +302,9 @@ int32_t sm_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *real_sta
     
     OS_RWLOCK_WRUNLOCK(&sm->lock);
 
+    LOG_DEBUG("alloc space, obj_id: %lld, start_blk: %lld, blk_cnt: %d\n",
+        sm->space_obj->obj_info->objid, *real_start_blk, blk_cnt);
+
     return ret;
 }
 
@@ -316,6 +319,9 @@ int32_t sm_free_space(space_manager_t *sm, uint64_t start_blk, uint32_t blk_cnt)
         sm->total_free_blocks += blk_cnt;
     }
     OS_RWLOCK_WRUNLOCK(&sm->lock);
+
+    LOG_DEBUG("free space, obj_id: %lld, start_blk: %lld, blk_cnt: %d\n",
+        sm->space_obj->obj_info->objid, start_blk, blk_cnt);
 
     return ret;
 }
@@ -375,6 +381,8 @@ int32_t ofs_alloc_space(container_handle_t *ct, uint64_t objid, uint32_t blk_cnt
         
         *real_start_blk = ct->base_blk;
         ct->base_blk = 0;
+        LOG_DEBUG("alloc space, obj_id: xxx, start_blk: %lld, blk_cnt: %d\n", *real_start_blk, blk_cnt);
+
         return blk_cnt;
     }
 
@@ -403,6 +411,8 @@ int32_t ofs_free_space(container_handle_t *ct, uint64_t objid, uint64_t start_bl
         ASSERT(blk_cnt == 1);
         
         ct->base_blk = start_blk;
+        LOG_DEBUG("free space, obj_id: xxx, start_blk: %lld, blk_cnt: %d\n", start_blk, blk_cnt);
+
         return 0;
     }
     

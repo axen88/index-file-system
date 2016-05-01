@@ -563,9 +563,9 @@ void close_container(container_handle_t *ct)
     ofs_destroy_sm(&ct->sm);
     ofs_destroy_sm(&ct->bsm);
 
-    flush_fs_cache(ct);
+    commit_container_modification(ct);
     
-    release_fs_all_cache(ct);
+    release_container_all_cache(ct);
     
     if (ct->disk_hnd != NULL)
     {

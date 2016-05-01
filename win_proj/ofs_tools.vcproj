@@ -115,7 +115,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../../include,.."
+				AdditionalIncludeDirectories="../include;../public"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;__EN_FILE_IF__;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
