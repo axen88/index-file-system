@@ -458,68 +458,68 @@ void test_kv_1(void)
     int32_t i;
     
     // create ct and object, insert key
-    CU_ASSERT(0 == ofs_create_container("kv", 1000, &ct));
-    CU_ASSERT(0 == ofs_create_object(ct, 500, FLAG_TABLE | CR_ANSI_STRING | (CR_ANSI_STRING << 4), &obj));
+    CU_ASSERT(ofs_create_container("kv", 1000, &ct) == 0);
+    CU_ASSERT(ofs_create_object(ct, 500, FLAG_TABLE | CR_ANSI_STRING | (CR_ANSI_STRING << 4), &obj) == 0);
 
     for (i = 0; i < ArraySize(test_kv_pairs1); i++)
     {
         if (test_kv_pairs1[i].value != NULL)
         {
-            CU_ASSERT(0 == index_insert_key(obj, test_kv_pairs1[i].key, strlen(test_kv_pairs1[i].key),
-                test_kv_pairs1[i].value, strlen(test_kv_pairs1[i].value)));
+            CU_ASSERT(index_insert_key(obj, test_kv_pairs1[i].key, strlen(test_kv_pairs1[i].key),
+                test_kv_pairs1[i].value, strlen(test_kv_pairs1[i].value)) == 0);
         }
         else
         {
-            CU_ASSERT(0 == index_insert_key(obj, test_kv_pairs1[i].key, strlen(test_kv_pairs1[i].key), NULL, 0));
+            CU_ASSERT(index_insert_key(obj, test_kv_pairs1[i].key, strlen(test_kv_pairs1[i].key), NULL, 0) == 0);
         }
     }
 
-    CU_ASSERT(0 == ofs_close_object(obj));
-    CU_ASSERT(0 == ofs_close_container(ct));
+    CU_ASSERT(ofs_close_object(obj) == 0);
+    CU_ASSERT(ofs_close_container(ct) == 0);
 
     // open ct and object, insert key
-    CU_ASSERT(0 == ofs_open_container("kv", &ct));
-    CU_ASSERT(0 == ofs_open_object(ct, 500, &obj));
+    CU_ASSERT(ofs_open_container("kv", &ct) == 0);
+    CU_ASSERT(ofs_open_object(ct, 500, &obj) == 0);
 
     for (i = 0; i < ArraySize(test_kv_pairs2); i++)
     {
         if (test_kv_pairs2[i].value != NULL)
         {
-            CU_ASSERT(0 == index_insert_key(obj, test_kv_pairs2[i].key, strlen(test_kv_pairs2[i].key),
-                test_kv_pairs2[i].value, strlen(test_kv_pairs2[i].value)));
+            CU_ASSERT(index_insert_key(obj, test_kv_pairs2[i].key, strlen(test_kv_pairs2[i].key),
+                test_kv_pairs2[i].value, strlen(test_kv_pairs2[i].value)) == 0);
         }
         else
         {
-            CU_ASSERT(0 == index_insert_key(obj, test_kv_pairs2[i].key, strlen(test_kv_pairs2[i].key), NULL, 0));
+            CU_ASSERT(index_insert_key(obj, test_kv_pairs2[i].key, strlen(test_kv_pairs2[i].key), NULL, 0) ==0);
         }
     }
     
-    CU_ASSERT(0 == ofs_close_object(obj));
-   // CU_ASSERT(0 == ofs_close_container(ct));
+    CU_ASSERT(ofs_close_object(obj) == 0);
+   // CU_ASSERT(ofs_close_container(ct) == 0);
 
     // open ct and object, remove key
-    //CU_ASSERT(0 == ofs_open_container("kv", &ct));
-    CU_ASSERT(0 == ofs_open_object(ct, 500, &obj));
+    //CU_ASSERT(ofs_open_container("kv", &ct) == 0);
+    CU_ASSERT(ofs_open_object(ct, 500, &obj) == 0);
 
     for (i = 0; i < ArraySize(test_kv_pairs1); i++)
     {
-        CU_ASSERT(0 == index_remove_key(obj, test_kv_pairs1[i].key, strlen(test_kv_pairs1[i].key)));
+        CU_ASSERT(index_remove_key(obj, test_kv_pairs1[i].key, strlen(test_kv_pairs1[i].key)) == 0);
     }
     
-    CU_ASSERT(0 == ofs_close_object(obj));
-    CU_ASSERT(0 == ofs_close_container(ct));
+    CU_ASSERT(ofs_close_object(obj) == 0);
+    CU_ASSERT(ofs_close_container(ct) == 0);
     
     // open ct and object, remove key
-    CU_ASSERT(0 == ofs_open_container("kv", &ct));
-    CU_ASSERT(0 == ofs_open_object(ct, 500, &obj));
+    CU_ASSERT(ofs_open_container("kv", &ct) == 0);
+    CU_ASSERT(ofs_open_object(ct, 500, &obj) == 0);
 
     for (i = 0; i < ArraySize(test_kv_pairs2); i++)
     {
-        CU_ASSERT(0 == index_remove_key(obj, test_kv_pairs2[i].key, strlen(test_kv_pairs2[i].key)));
+        CU_ASSERT(index_remove_key(obj, test_kv_pairs2[i].key, strlen(test_kv_pairs2[i].key)) == 0);
     }
     
-    CU_ASSERT(0 == ofs_close_object(obj));
-    CU_ASSERT(0 == ofs_close_container(ct));
+    CU_ASSERT(ofs_close_object(obj) == 0);
+    CU_ASSERT(ofs_close_container(ct) == 0);
 }
 
 int add_kv_test_case1(void)

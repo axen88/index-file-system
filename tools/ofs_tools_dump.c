@@ -146,7 +146,7 @@ void dump_cmd(ifs_tools_para_t *para)
     
     ASSERT (NULL != para);
 
-    if (0 == strlen(para->ct_name))
+    if (strlen(para->ct_name) == 0)
     {
         OS_PRINT(para->net, "invalid ct name.\n");
         return;

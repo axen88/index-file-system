@@ -259,7 +259,7 @@ int32_t os_parse_para(int argc, char *argv[], char *para,
 
     for (i = 0; i < argc; i++)
     {
-        if (0 == strcmp(para, argv[i]))
+        if (strcmp(para, argv[i]) == 0)
         {
             break;
         }
@@ -272,7 +272,7 @@ int32_t os_parse_para(int argc, char *argv[], char *para,
 
     if (i == (argc - 1))
     {
-        if (NULL == content)
+        if (content == NULL)
         {
             return 0;
         }
@@ -301,7 +301,7 @@ int32_t parse_and_exec_cmd(char *cmd, os_cmd_list_t cmd_list[], net_para_t *net)
     }
 
     tmp_argc = parse_cmd(cmd, tmp_argv, CMD_MAX_ARGS);
-    if (0 == tmp_argc)
+    if (tmp_argc == 0)
     {
         OS_FREE(tmp_argv);
         return CMD_OTHER;

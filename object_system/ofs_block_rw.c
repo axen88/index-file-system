@@ -203,7 +203,7 @@ int32_t ofs_update_block_pingpong_init(container_handle_t *ct, block_head_t *blk
     block_size = ct->sb.block_size;
 
     buf = OS_MALLOC(block_size);
-    if (NULL == buf)
+    if (buf == NULL)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", block_size);
         return -BLOCK_ERR_ALLOCATE_MEMORY;
@@ -290,7 +290,7 @@ block_head_t *get_last_correct_block(uint8_t *buf, uint32_t blk_id, uint32_t all
     {
         blk = (block_head_t *)(buf + alloc_size * i);
 
-        if (0 == blk->blk_id)
+        if (blk->blk_id == 0)
         { // not written yet
             break;
         }
@@ -308,7 +308,7 @@ block_head_t *get_last_correct_block(uint8_t *buf, uint32_t blk_id, uint32_t all
     {
         blk = (block_head_t *)(buf + alloc_size * prev_i);
 
-        if (0 == blk->blk_id)
+        if (blk->blk_id == 0)
         { // not written yet
             break;
         }
@@ -322,7 +322,7 @@ block_head_t *get_last_correct_block(uint8_t *buf, uint32_t blk_id, uint32_t all
         else
         {
             ret = fixup_block(blk);
-            if (0 <= ret)
+            if (ret >= 0)
             {
                 return blk;
             }
@@ -330,7 +330,7 @@ block_head_t *get_last_correct_block(uint8_t *buf, uint32_t blk_id, uint32_t all
             LOG_ERROR("Fixup object failed. blk(%p) ret(%d)\n", blk, ret);
         }
 
-        if (0 == prev_i)
+        if (prev_i == 0)
         {
             prev_i = cnt;
         }
@@ -351,7 +351,7 @@ int32_t ofs_read_block_pingpong(container_handle_t *ct, block_head_t *blk, uint6
     uint8_t *buf = NULL;
     block_head_t * tmp_obj = NULL;
 
-    if ((ct == NULL) || (blk == NULL) || (0 == alloc_size))
+    if ((ct == NULL) || (blk == NULL) || (alloc_size == 0))
     {
         LOG_ERROR("Invalid parameter. ct(%p) blk(%p) alloc_size(%d)\n", ct, blk, alloc_size);
         return -BLOCK_ERR_PARAMETER;
@@ -366,7 +366,7 @@ int32_t ofs_read_block_pingpong(container_handle_t *ct, block_head_t *blk, uint6
     }
 
     buf = OS_MALLOC(block_size);
-    if (NULL == buf)
+    if (buf == NULL)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", block_size);
         return -BLOCK_ERR_ALLOCATE_MEMORY;

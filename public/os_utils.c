@@ -159,7 +159,7 @@ int32_t os_str_to_hex(char *str, uint8_t *hex, uint32_t hex_len)
     char c = 0;
 
     str_len = (uint32_t)strlen(str);
-    if (0 == str_len)
+    if (str_len == 0)
     {
         return 0;
     }

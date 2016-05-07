@@ -67,7 +67,7 @@ int32_t file_open_or_create(void **hnd, const char *name, uint32_t flags)
     }
 
     tmp_hnd = OS_MALLOC(sizeof(file_handle_t));
-    if (NULL == tmp_hnd)
+    if (tmp_hnd == NULL)
     {
         return -FILE_IO_ERR_MALLOC;
     }
@@ -101,7 +101,7 @@ int32_t os_file_seek(void *hnd, uint64_t offset)
 {
     file_handle_t *tmp_hnd = hnd;
     
-    if (NULL == tmp_hnd)
+    if (tmp_hnd == NULL)
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
@@ -120,7 +120,7 @@ int32_t os_file_pwrite(void *hnd, void *buf,
     mm_segment_t oldFs;
     int32_t ret = 0;
 
-    if ((NULL == tmp_hnd) || (NULL == buf) || (0 == size))
+    if ((tmp_hnd == NULL) || (buf == NULL) || (size == 0))
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
@@ -145,7 +145,7 @@ int32_t os_file_pread(void *hnd, void *buf,
     mm_segment_t oldFs;
     int32_t ret = 0;
 
-    if ((NULL == tmp_hnd) || (NULL == buf) || (0 == size))
+    if ((tmp_hnd == NULL) || (buf == NULL) || (size == 0))
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
@@ -169,7 +169,7 @@ int32_t os_file_write(void *hnd, void *buf, uint32_t size)
     mm_segment_t oldFs;
     int32_t ret = 0;
 
-    if ((NULL == tmp_hnd) || (NULL == buf) || (0 == size))
+    if ((tmp_hnd == NULL) || (buf == NULL) || (size == 0))
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
@@ -193,7 +193,7 @@ int32_t os_file_read(void *hnd, void *buf, uint32_t size)
     int32_t ret = 0;
     loff_t offset = 0;
 
-    if ((NULL == tmp_hnd) || (NULL == buf) || (0 == size))
+    if ((tmp_hnd == NULL) || (buf == NULL) || (size == 0))
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
@@ -214,7 +214,7 @@ int32_t os_file_close(void *hnd)
 {
     file_handle_t *tmp_hnd = hnd;
 
-    if (NULL == tmp_hnd)
+    if (tmp_hnd == NULL)
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
@@ -236,7 +236,7 @@ void os_file_printf(void *hnd, const char *format, ...)
     file_handle_t *tmp_hnd = hnd;
     va_list ap;
 
-    if (NULL == tmp_hnd)
+    if (tmp_hnd == NULL)
     {
         return;
     }
@@ -292,7 +292,7 @@ int32_t file_open_or_create(void **hnd, const char *name, char *v_pcMethod)
     }
 
     tmp_hnd = OS_MALLOC(sizeof(file_handle_t));
-    if (NULL == tmp_hnd)
+    if (tmp_hnd == NULL)
     {
         return FILE_IO_ERR_MALLOC;
     }
@@ -300,7 +300,7 @@ int32_t file_open_or_create(void **hnd, const char *name, char *v_pcMethod)
     memset(tmp_hnd, 0, sizeof(file_handle_t));
     
     tmp_hnd->disk_hnd = fopen(name, v_pcMethod);
-    if (NULL == tmp_hnd->disk_hnd)
+    if (tmp_hnd->disk_hnd == NULL)
     {
         OS_FREE(tmp_hnd);
     	return -FILE_IO_ERR_OPEN;
@@ -352,7 +352,7 @@ int32_t os_file_pwrite(void *hnd, void *buf, uint32_t size,
     int32_t ret = 0;
     file_handle_t *tmp_hnd = hnd;
 
-    if ((NULL == tmp_hnd) || (NULL == buf) || (0 == size))
+    if ((tmp_hnd == NULL) || (buf == NULL) || (size == 0))
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
@@ -377,7 +377,7 @@ int32_t os_file_pread(void *hnd, void *buf, uint32_t size,
     int32_t ret = 0;
     file_handle_t *tmp_hnd = hnd;
 
-    if ((NULL == tmp_hnd) || (NULL == buf) || (0 == size))
+    if ((tmp_hnd == NULL) || (buf == NULL) || (size == 0))
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
@@ -400,7 +400,7 @@ int32_t os_file_write(void *hnd, void *buf, uint32_t size)
 {
     file_handle_t *tmp_hnd = hnd;
 
-    if ((NULL == tmp_hnd) || (NULL == buf) || (0 == size))
+    if ((tmp_hnd == NULL) || (buf == NULL) || (size == 0))
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
@@ -413,7 +413,7 @@ int32_t os_file_read(void *hnd, void *buf, uint32_t size)
 {
     file_handle_t *tmp_hnd = hnd;
 
-    if ((NULL == tmp_hnd) || (NULL == buf) || (0 == size))
+    if ((tmp_hnd == NULL) || (buf == NULL) || (size == 0))
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
@@ -425,7 +425,7 @@ int32_t os_file_close(void *hnd)
 {
     file_handle_t *tmp_hnd = hnd;
 
-    if (NULL == tmp_hnd)
+    if (tmp_hnd == NULL)
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
@@ -447,7 +447,7 @@ int32_t os_file_resize(void *hnd, uint64_t new_size)
 	int32_t fd = 0;
     file_handle_t *tmp_hnd = hnd;
 
-    if (NULL == tmp_hnd)
+    if (tmp_hnd == NULL)
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
@@ -466,7 +466,7 @@ int64_t os_file_get_size(void *hnd)
     int64_t offset = 0;
     file_handle_t *tmp_hnd = hnd;
 
-    if (NULL == tmp_hnd)
+    if (tmp_hnd == NULL)
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
@@ -500,7 +500,7 @@ void os_file_set_buf(void *hnd, void *buf, uint32_t size)
 {
     file_handle_t *tmp_hnd = hnd;
 
-    if (NULL == tmp_hnd)
+    if (tmp_hnd == NULL)
     {
         return;
     }
@@ -531,7 +531,7 @@ void os_file_printf(void *hnd, const char *format, ...)
     file_handle_t *tmp_hnd = hnd;
     va_list ap;
 
-    if (NULL == tmp_hnd)
+    if (tmp_hnd == NULL)
     {
         return;
     }

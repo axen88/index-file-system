@@ -44,15 +44,15 @@ static int32_t cmd_insert_key(ifs_tools_para_t *para)
 
     ASSERT(NULL != para);
 
-    if ((0 == strlen(para->ct_name)) || OBJID_IS_INVALID(para->objid))
+    if ((strlen(para->ct_name) == 0) || OBJID_IS_INVALID(para->objid))
     {
         OS_PRINT(para->net, "invalid ct name(%s) or objid(%lld).\n",
             para->ct_name, para->objid);
         return -1;
     }
 
-    if ((0 == strlen(para->key))
-        || (0 == strlen(para->value)))
+    if ((strlen(para->key) == 0)
+        || (strlen(para->value) == 0))
     {
         OS_PRINT(para->net, "invalid key(%s) or value(%s).\n",
             para->key, para->value);
@@ -97,14 +97,14 @@ static int32_t cmd_remove_key(ifs_tools_para_t *para)
 
     ASSERT(NULL != para);
 
-    if ((0 == strlen(para->ct_name)) || OBJID_IS_INVALID(para->objid))
+    if ((strlen(para->ct_name) == 0) || OBJID_IS_INVALID(para->objid))
     {
         OS_PRINT(para->net, "invalid ct name(%s) or objid(%lld).\n",
             para->ct_name, para->objid);
         return -1;
     }
     
-    if (0 == strlen(para->key))
+    if (strlen(para->key) == 0)
     {
         OS_PRINT(para->net, "invalid key.\n");
         return -1;

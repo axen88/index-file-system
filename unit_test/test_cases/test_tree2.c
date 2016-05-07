@@ -68,56 +68,56 @@ void test_kv_2(void)
     uint64_t i;
     
     // create ct and object, insert key
-    CU_ASSERT(0 == ofs_create_container("kv", 100000, &ct));
-    CU_ASSERT(0 == ofs_create_object(ct, 500, FLAG_TABLE | CR_BINARY | (CR_ANSI_STRING << 4), &obj));
+    CU_ASSERT(ofs_create_container("kv", 100000, &ct) == 0);
+    CU_ASSERT(ofs_create_object(ct, 500, FLAG_TABLE | CR_BINARY | (CR_ANSI_STRING << 4), &obj) == 0);
 
     key = TEST_KEY_BEGIN;
     for (i = 0; i < TEST_KEY_NUM; i++, key++)
     {
-        CU_ASSERT(0 == index_insert_key(obj, &key, U64_MAX_SIZE, TEST_V1, strlen(TEST_V1)));
+        CU_ASSERT(index_insert_key(obj, &key, U64_MAX_SIZE, TEST_V1, strlen(TEST_V1)) == 0);
     }
 
-    CU_ASSERT(0 == ofs_close_object(obj));
-    CU_ASSERT(0 == ofs_close_container(ct));
+    CU_ASSERT(ofs_close_object(obj) == 0);
+    CU_ASSERT(ofs_close_container(ct) == 0);
     
     // open ct and object, remove key
-    CU_ASSERT(0 == ofs_open_container("kv", &ct));
-    CU_ASSERT(0 == ofs_open_object(ct, 500, &obj));
+    CU_ASSERT(ofs_open_container("kv", &ct) == 0);
+    CU_ASSERT(ofs_open_object(ct, 500, &obj) == 0);
 
     key = TEST_KEY_BEGIN;
     for (i = 0; i < TEST_KEY_NUM; i++, key++)
     {
-        CU_ASSERT(0 == index_remove_key(obj, &key, U64_MAX_SIZE));
+        CU_ASSERT(index_remove_key(obj, &key, U64_MAX_SIZE) == 0);
     }
     
-    CU_ASSERT(0 == ofs_close_object(obj));
-    CU_ASSERT(0 == ofs_close_container(ct));
+    CU_ASSERT(ofs_close_object(obj) == 0);
+    CU_ASSERT(ofs_close_container(ct) == 0);
 
     // open ct and object, insert key
-    CU_ASSERT(0 == ofs_open_container("kv", &ct));
-    CU_ASSERT(0 == ofs_open_object(ct, 500, &obj));
+    CU_ASSERT(ofs_open_container("kv", &ct) == 0);
+    CU_ASSERT(ofs_open_object(ct, 500, &obj) == 0);
 
     key = TEST_KEY_BEGIN;
     for (i = 0; i < TEST_KEY_NUM; i++, key++)
     {
-        CU_ASSERT(0 == index_insert_key(obj, &key, U64_MAX_SIZE, TEST_V2, strlen(TEST_V2)));
+        CU_ASSERT(index_insert_key(obj, &key, U64_MAX_SIZE, TEST_V2, strlen(TEST_V2)) == 0);
     }
 
-    CU_ASSERT(0 == ofs_close_object(obj));
-    CU_ASSERT(0 == ofs_close_container(ct));
+    CU_ASSERT(ofs_close_object(obj) == 0);
+    CU_ASSERT(ofs_close_container(ct) == 0);
 
     // open ct and object, remove key
-    CU_ASSERT(0 == ofs_open_container("kv", &ct));
-    CU_ASSERT(0 == ofs_open_object(ct, 500, &obj));
+    CU_ASSERT(ofs_open_container("kv", &ct) == 0);
+    CU_ASSERT(ofs_open_object(ct, 500, &obj) == 0);
 
     key = TEST_KEY_BEGIN;
     for (i = 0; i < TEST_KEY_NUM; i++, key++)
     {
-        CU_ASSERT(0 == index_remove_key(obj, &key, U64_MAX_SIZE));
+        CU_ASSERT(index_remove_key(obj, &key, U64_MAX_SIZE) == 0);
     }
 
-    CU_ASSERT(0 == ofs_close_object(obj));
-    CU_ASSERT(0 == ofs_close_container(ct));
+    CU_ASSERT(ofs_close_object(obj) == 0);
+    CU_ASSERT(ofs_close_container(ct) == 0);
 }
 
 void test_kv_3(void)
@@ -134,56 +134,56 @@ void test_kv_3(void)
     uint64_t i;
     
     // create ct and object, insert key
-    CU_ASSERT(0 == ofs_create_container("kv", 100000, &ct));
-    CU_ASSERT(0 == ofs_create_object(ct, 500, FLAG_TABLE | CR_BINARY | (CR_ANSI_STRING << 4), &obj));
+    CU_ASSERT(ofs_create_container("kv", 100000, &ct) == 0);
+    CU_ASSERT(ofs_create_object(ct, 500, FLAG_TABLE | CR_BINARY | (CR_ANSI_STRING << 4), &obj) == 0);
 
     key = TEST_KEY_BEGIN1;
     for (i = 0; i < TEST_KEY_NUM1; i++, key++)
     {
-        CU_ASSERT(0 == index_insert_key(obj, &key, U64_MAX_SIZE, TEST_V1, strlen(TEST_V1)));
+        CU_ASSERT(index_insert_key(obj, &key, U64_MAX_SIZE, TEST_V1, strlen(TEST_V1)) == 0);
     }
 
-    CU_ASSERT(0 == ofs_close_object(obj));
-    CU_ASSERT(0 == ofs_close_container(ct));
+    CU_ASSERT(ofs_close_object(obj) == 0);
+    CU_ASSERT(ofs_close_container(ct) == 0);
 
     // open ct and object, insert key
-    CU_ASSERT(0 == ofs_open_container("kv", &ct));
-    CU_ASSERT(0 == ofs_open_object(ct, 500, &obj));
+    CU_ASSERT(ofs_open_container("kv", &ct) == 0);
+    CU_ASSERT(ofs_open_object(ct, 500, &obj) == 0);
 
     key = TEST_KEY_BEGIN2;
     for (i = 0; i < TEST_KEY_NUM2; i++, key++)
     {
-        CU_ASSERT(0 == index_insert_key(obj, &key, U64_MAX_SIZE, TEST_V2, strlen(TEST_V2)));
+        CU_ASSERT(index_insert_key(obj, &key, U64_MAX_SIZE, TEST_V2, strlen(TEST_V2)) == 0);
     }
     
-    CU_ASSERT(0 == ofs_close_object(obj));
-    CU_ASSERT(0 == ofs_close_container(ct));
+    CU_ASSERT(ofs_close_object(obj) == 0);
+    CU_ASSERT(ofs_close_container(ct) == 0);
 
     // open ct and object, remove key
-    CU_ASSERT(0 == ofs_open_container("kv", &ct));
-    CU_ASSERT(0 == ofs_open_object(ct, 500, &obj));
+    CU_ASSERT(ofs_open_container("kv", &ct) == 0);
+    CU_ASSERT(ofs_open_object(ct, 500, &obj) == 0);
 
     key = TEST_KEY_BEGIN1;
     for (i = 0; i < TEST_KEY_NUM1; i++, key++)
     {
-        CU_ASSERT(0 == index_remove_key(obj, &key, U64_MAX_SIZE));
+        CU_ASSERT(index_remove_key(obj, &key, U64_MAX_SIZE) == 0);
     }
     
-    CU_ASSERT(0 == ofs_close_object(obj));
-    CU_ASSERT(0 == ofs_close_container(ct));
+    CU_ASSERT(ofs_close_object(obj) == 0);
+    CU_ASSERT(ofs_close_container(ct) == 0);
     
     // open ct and object, remove key
-    CU_ASSERT(0 == ofs_open_container("kv", &ct));
-    CU_ASSERT(0 == ofs_open_object(ct, 500, &obj));
+    CU_ASSERT(ofs_open_container("kv", &ct) == 0);
+    CU_ASSERT(ofs_open_object(ct, 500, &obj) == 0);
 
     key = TEST_KEY_BEGIN2;
     for (i = 0; i < TEST_KEY_NUM2; i++, key++)
     {
-        CU_ASSERT(0 == index_remove_key(obj, &key, U64_MAX_SIZE));
+        CU_ASSERT(index_remove_key(obj, &key, U64_MAX_SIZE) == 0);
     }
     
-    CU_ASSERT(0 == ofs_close_object(obj));
-    CU_ASSERT(0 == ofs_close_container(ct));
+    CU_ASSERT(ofs_close_object(obj) == 0);
+    CU_ASSERT(ofs_close_container(ct) == 0);
 }
 
 int add_kv_test_case2(void)

@@ -122,7 +122,7 @@ static int32_t backup_log(log_t *log)
 {
     int32_t ret = 0;
 
-    if (0 == (log->mode & LOG_TO_FILE))
+    if ((log->mode & LOG_TO_FILE) == 0)
     {
         return 0;
     }
@@ -151,7 +151,7 @@ static int32_t backup_log(log_t *log)
     time_t t = 0;    
     struct tm *ts = NULL;
 
-    if (0 == (log->mode & LOG_TO_FILE))
+    if ((log->mode & LOG_TO_FILE) == 0)
     {
         return 0;
     }
@@ -292,9 +292,9 @@ void log_trace(void *log, uint32_t pid, uint32_t level, const char *format, ...)
     log_t *tmp_log = (log_t *)log;
     va_list ap;
 
-    if ((NULL == tmp_log) || (pid >= PIDS_NUM) || (level > tmp_log->levels[pid])
-        || (0 == (tmp_log->mode & LOG_TO_SCNFILE))
-        || ((0 == (tmp_log->mode & LOG_TO_SCREEN)) && (NULL == tmp_log->disk_hnd)))
+    if ((tmp_log == NULL) || (pid >= PIDS_NUM) || (level > tmp_log->levels[pid])
+        || ((tmp_log->mode & LOG_TO_SCNFILE) == 0)
+        || (((tmp_log->mode & LOG_TO_SCREEN) == 0) && (tmp_log->disk_hnd == NULL)))
     {
         return;
     }

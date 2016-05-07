@@ -210,7 +210,7 @@ static int32_t get_prev_ie(object_handle_t *tree)
         return -INDEX_ERR_FORMAT;
     }
 
-    if (0 == tree->ie->prev_len)
+    if (tree->ie->prev_len == 0)
     {
         if (tree->ie->flags & INDEX_ENTRY_BEGIN)
         {
@@ -230,7 +230,7 @@ static int32_t pop_cache_stack(object_handle_t *tree, uint8_t flags)
 {
     ASSERT(tree != NULL);
     
-    if (0 == tree->depth)
+    if (tree->depth == 0)
     {   /* Get to root */
         LOG_DEBUG("Depth get to root. depth(%d)\n", tree->depth);
         return -INDEX_ERR_ROOT;
@@ -338,7 +338,7 @@ static int32_t get_next_ie(object_handle_t *tree)
     
     tree->position += tree->ie->len;
     tree->ie = GET_NEXT_IE(tree->ie);
-    if (((uint8_t *) tree->ie >= GET_END_IE(tree->cache->ib)) || (0 == tree->ie->len))
+    if (((uint8_t *)tree->ie >= GET_END_IE(tree->cache->ib)) || (tree->ie->len == 0))
     {   /* Check valid */
         LOG_ERROR("The ie is invalid. len(%d) ib real_size(%d)\n", tree->ie->len, tree->cache->ib->real_size);
         return -INDEX_ERR_FORMAT;
@@ -413,7 +413,7 @@ static int32_t get_current_ie(object_handle_t *tree, uint8_t flags)
                 LOG_ERROR("Get prev entry failed. ret(%d)\n", ret);
                 return ret;
             }
-            else if (0 == ret)
+            else if (ret == 0)
             {
                 break;
             }
@@ -484,7 +484,7 @@ int32_t search_key_internal(object_handle_t *tree, const void *key,
 
     for (;;)
     {
-        while (0 == (tree->ie->flags & INDEX_ENTRY_END))
+        while ((tree->ie->flags & INDEX_ENTRY_END) == 0)
         {       /* It is not the Index END */
             uint16_t cr = tree->obj_info->attr_record->flags & CR_MASK;
             
@@ -633,7 +633,7 @@ uint32_t get_entries_length(index_entry_t *ie)
             return (len + ie->len);
         }
 
-        if (0 == ie->len)
+        if (ie->len == 0)
         {
             LOG_ERROR("The ie len is 0.\n");
             break;
@@ -949,7 +949,7 @@ static int32_t tree_insert_ie(object_handle_t *tree, index_entry_t **new_ie)
             return set_ib_dirty(tree);
         }
 
-        if (0 == tree->depth)
+        if (tree->depth == 0)
         {       /* Current the $INDEX_ROOT opened */
             if (reparent_root(tree) < 0)
             {
@@ -977,12 +977,12 @@ int32_t check_removed_ib(object_handle_t * tree)
     int32_t ret = 0;
     index_entry_t *ie = GET_FIRST_IE(tree->cache->ib);
     
-    if (0 == (ie->flags & INDEX_ENTRY_END))
+    if ((ie->flags & INDEX_ENTRY_END) == 0)
     {
         return 0;
     }
 
-    if (0 == tree->depth)
+    if (tree->depth == 0)
     { // root node
         return 0;
     }
@@ -1016,7 +1016,7 @@ int32_t check_removed_ib(object_handle_t * tree)
         }
 
         // there are no entries in this node
-        if (0 == tree->depth)
+        if (tree->depth == 0)
         {   /* root node */
             make_ib_small(IB(tree->cache->ib));
             return set_ib_dirty(tree);
@@ -1351,12 +1351,12 @@ int64_t index_get_total_key(object_handle_t *tree)
         return -INDEX_ERR_PARAMETER;
     }
 
-    if (0 == walk_tree(tree, INDEX_GET_FIRST))
+    if (walk_tree(tree, INDEX_GET_FIRST) == 0)
     {
 	    do
 	    {
 	    	cnt++;
-	    } while (0 == walk_tree(tree, 0));
+	    } while (walk_tree(tree, 0) == 0);
     }
     
     return cnt;
@@ -1366,22 +1366,22 @@ int64_t index_get_target_key(object_handle_t *tree, uint64_t target)
 {
 	int64_t cnt = 0;
 	
-    if (NULL == tree)
+    if (tree == NULL)
     {
         LOG_ERROR("Invalid parameter. tree(%p)\n", tree);
         return -INDEX_ERR_PARAMETER;
     }
 
-    if (0 == walk_tree(tree, INDEX_GET_FIRST))
+    if (walk_tree(tree, INDEX_GET_FIRST) == 0)
     {
 	    do
 	    {
 	    	cnt++;
-	    	if (0 == --target)
+	    	if (--target == 0)
 	    	{
 	    		break;
 	    	}
-	    } while (0 == walk_tree(tree, 0));
+	    } while (walk_tree(tree, 0) == 0);
     }
     
     return cnt;

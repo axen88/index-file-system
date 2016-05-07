@@ -105,17 +105,17 @@ void parse_all_para(int argc, char *argv[], ifs_tools_para_t *para)
         para->keys_num = OS_STR2ULL(para->tmp, NULL, 0);
     }
 
-    if (0 == os_parse_para(argc, argv, "-r", NULL, 0))
+    if (os_parse_para(argc, argv, "-r", NULL, 0) == 0)
     {
         para->flags |= TOOLS_FLAGS_REVERSE;
     }
 
-    if (0 == os_parse_para(argc, argv, "-h", NULL, 0))
+    if (os_parse_para(argc, argv, "-h", NULL, 0) == 0)
     {
         para->flags |= TOOLS_FLAGS_HIDE;
     }
 
-    if (0 == os_parse_para(argc, argv, "-sb", NULL, 0))
+    if (os_parse_para(argc, argv, "-sb", NULL, 0) == 0)
     {
         para->flags |= TOOLS_FLAGS_SB;
     }

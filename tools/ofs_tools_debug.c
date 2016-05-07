@@ -45,7 +45,7 @@ static int32_t cmd_create(ifs_tools_para_t *para)
 
     ASSERT(NULL != para);
 
-    if (0 == strlen(para->ct_name))
+    if (strlen(para->ct_name) == 0)
     {
         OS_PRINT(para->net, "ct name not specified.\n");
         return -1;
@@ -95,7 +95,7 @@ static int32_t cmd_open(ifs_tools_para_t *para)
 
     ASSERT(NULL != para);
 
-    if (0 == strlen(para->ct_name))
+    if (strlen(para->ct_name) == 0)
     {
         OS_PRINT(para->net, "ct name not specified.\n");
         return -1;
@@ -144,7 +144,7 @@ static int32_t cmd_close(ifs_tools_para_t *para)
 
     ASSERT(NULL != para);
 
-    if (0 == strlen(para->ct_name))
+    if (strlen(para->ct_name) == 0)
     {
         OS_PRINT(para->net, "ct name not specified.\n");
         return -1;
@@ -200,7 +200,7 @@ static int32_t cmd_delete(ifs_tools_para_t *para)
     OS_PRINT(para->net, "comming soon.\n");
     return 0;
 
-    if ((0 == strlen(para->ct_name))
+    if ((strlen(para->ct_name) == 0)
         || OBJID_IS_INVALID(para->objid))
     {
         OS_PRINT(para->net, "invalid ct name(%s) or objid(%lld).\n",

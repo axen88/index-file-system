@@ -588,7 +588,7 @@ int32_t ofs_close_nolock(container_handle_t *ct)
 
     LOG_INFO("Close the ct. ct(%p) ref_cnt(%d) name(%s)\n", ct, ct->ref_cnt, ct->name);
     
-    if (0 == ct->ref_cnt)
+    if (ct->ref_cnt == 0)
     {
         LOG_ERROR("The ref_cnt is 0. ct(%p) ref_cnt(%d) name(%s)\n", ct, ct->ref_cnt, ct->name);
         return 0;

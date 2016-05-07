@@ -158,13 +158,10 @@ int32_t alloc_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt, 
     return (uint32_t)(end - start_blk);
 }
 
-#if 0
 int32_t free_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt)
 {
     uint64_t addr;
     uint32_t len;
-    uint64_t end;
-    uint64_t end_blk;
     uint8_t addr_str[U64_MAX_SIZE];
     uint8_t len_str[U64_MAX_SIZE];
     uint16_t addr_size;
@@ -175,54 +172,67 @@ int32_t free_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt)
     len_size = os_u64_to_bstr(blk_cnt, len_str);
 
     ret = index_search_key_nolock(obj, addr_str, addr_size, len_str, len_size);
-    if (ret < 0)
+    if (ret != -INDEX_ERR_KEY_NOT_FOUND) // there is error if found
     {
-        if (ret != -INDEX_ERR_KEY_NOT_FOUND)
-        {
-            LOG_ERROR("Search key failed. objid(0x%llx) ret(%d)\n", obj->obj_info->objid, ret);
-            return ret;
-        }
+        LOG_ERROR("Search key failed. objid(0x%llx) ret(%d)\n", obj->obj_info->objid, ret);
+        return ret;
+    }
 
-        if (obj->ie->flags & INDEX_ENTRY_END) // no key here
+    if ((obj->ie->flags & INDEX_ENTRY_END) == 0) // it is not the last key
+    { // check the current key
+        addr = os_bstr_to_u64(GET_IE_KEY(obj->ie), obj->ie->key_len);
+        len = (uint32_t)os_bstr_to_u64(GET_IE_VALUE(obj->ie), obj->ie->value_len);
+
+        if (addr < (start_blk + blk_cnt))
         {
-            ret = walk_tree(obj, INDEX_GET_FIRST); // get first key
-            if (ret != 0)
-            { // no any key
-                if (ret != -INDEX_ERR_ROOT)
-                {
-                    LOG_ERROR("walk tree failed. objid(0x%llx) ret(%d)\n", obj->obj_info->objid, ret);
-                    return ret;
-                }
-                
-                return -INDEX_ERR_NO_FREE_BLOCKS; // no free space
+            LOG_ERROR("the tree chaos. objid(0x%llx)\n", obj->obj_info->objid);
+            return -INDEX_ERR_CHAOS;
+        }
+        
+        if (addr == (start_blk + blk_cnt))
+        {
+            ret = tree_remove_ie(obj);
+            if (ret < 0)
+            {
+                LOG_ERROR("remove entry failed. objid(0x%llx) ret(%d)\n", obj->obj_info->objid, ret);
+                return ret;
             }
+            
+            blk_cnt += len;
         }
-
-        // no overlap
-        addr = os_bstr_to_u64(GET_IE_KEY(obj->ie), obj->ie->key_len);
-        start_blk = addr; //  reset the start block
-    }
-    else
-    {
-        addr = os_bstr_to_u64(GET_IE_KEY(obj->ie), obj->ie->key_len);
     }
 
-    return index_insert_key_nolock(obj, addr_str, addr_size, len_str, len_size);
-}
-#else
-int32_t free_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt)
-{
-    uint8_t addr_str[U64_MAX_SIZE];
-    uint8_t len_str[U64_MAX_SIZE];
-    uint16_t addr_size;
-    uint16_t len_size;
+    ret = walk_tree(obj, INDEX_GET_PREV); // get prev key
+    if (ret == 0)
+    { // prev key got
+        addr = os_bstr_to_u64(GET_IE_KEY(obj->ie), obj->ie->key_len);
+        len = (uint32_t)os_bstr_to_u64(GET_IE_VALUE(obj->ie), obj->ie->value_len);
+        
+        if ((addr + len) > start_blk)
+        {
+            LOG_ERROR("the tree chaos. objid(0x%llx)\n", obj->obj_info->objid);
+            return -INDEX_ERR_CHAOS;
+        }
+        
+        if ((addr + len) == start_blk)
+        {
+            ret = tree_remove_ie(obj);
+            if (ret < 0)
+            {
+                LOG_ERROR("remove entry failed. objid(0x%llx) ret(%d)\n", obj->obj_info->objid, ret);
+                return ret;
+            }
+        
+            start_blk = addr;
+            blk_cnt += len;
+        }
+    }
 
     addr_size = os_u64_to_bstr(start_blk, addr_str);
     len_size = os_u64_to_bstr(blk_cnt, len_str);
 
     return index_insert_key_nolock(obj, addr_str, addr_size, len_str, len_size);
 }
-#endif
 
 void ofs_init_sm(space_manager_t *sm, object_handle_t *obj, uint64_t first_free_block,
     uint64_t total_free_blocks)
@@ -267,7 +277,7 @@ int32_t sm_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *real_sta
     int32_t ret;
 
     OS_RWLOCK_WRLOCK(&sm->lock);
-    if (0 == sm->total_free_blocks)
+    if (sm->total_free_blocks == 0)
     {
         OS_RWLOCK_WRUNLOCK(&sm->lock);
         return -INDEX_ERR_NO_FREE_BLOCKS;

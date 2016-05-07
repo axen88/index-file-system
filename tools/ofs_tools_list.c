@@ -166,7 +166,7 @@ int32_t cmd_list(char *ct_name, uint64_t objid, net_para_t *net)
     
     ASSERT(ct_name != NULL);
     
-    if (0 == strlen(ct_name))
+    if (strlen(ct_name) == 0)
     {
         ret = ofs_walk_all_opened_container((int32_t (*)(void *, container_handle_t *))print_one_fs_info, net);
         if (ret < 0)

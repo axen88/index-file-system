@@ -72,14 +72,14 @@ int32_t os_collate_binary(const uint8_t *b1, uint32_t b1_size, const uint8_t *b2
     ASSERT(b2_size > 0);
 
     /* discard the beginning 0 */
-	while ((0 == *b1) && (b1_size > 0))
+	while ((*b1 == 0) && (b1_size > 0))
 	{
 		b1++;
 		b1_size--;
 	}
 	
     /* discard the beginning 0 */
-	while ((0 == *b2) && (b2_size > 0))
+	while ((*b2 == 0) && (b2_size > 0))
 	{
 		b2++;
 		b2_size--;

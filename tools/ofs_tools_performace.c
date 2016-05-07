@@ -222,14 +222,14 @@ int do_performance_cmd(int argc, char *argv[], net_para_t *net)
     parse_all_para(argc, argv, para);
     para->net = net;
 
-    if ((0 == strlen(para->ct_name)) || OBJID_IS_INVALID(para->objid))
+    if ((strlen(para->ct_name) == 0) || OBJID_IS_INVALID(para->objid))
     {
         OS_PRINT(net, "invalid ct name(%s) or objid(%lld).\n", para->ct_name, para->objid);
         OS_FREE(para);
         return -2;
     }
     
-    if (0 == para->threads_num)
+    if (para->threads_num == 0)
     {
         para->threads_num = 1;
     }

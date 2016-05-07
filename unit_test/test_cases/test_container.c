@@ -60,34 +60,34 @@ void test_create_container(void)
 {
     container_handle_t *ct[5];
     
-    CU_ASSERT(0 == ofs_create_container("ct0", 1000, &ct[0]));
-    CU_ASSERT(0 == ofs_create_container("ct1", 1000, &ct[1]));
-    CU_ASSERT(0 == ofs_create_container("ct2", 1000, &ct[2]));
-    CU_ASSERT(0 == ofs_create_container("ct3", 1000, &ct[3]));
-    CU_ASSERT(0 == ofs_create_container("ct4", 1000, &ct[4]));
+    CU_ASSERT(ofs_create_container("ct0", 1000, &ct[0]) == 0);
+    CU_ASSERT(ofs_create_container("ct1", 1000, &ct[1]) == 0);
+    CU_ASSERT(ofs_create_container("ct2", 1000, &ct[2]) == 0);
+    CU_ASSERT(ofs_create_container("ct3", 1000, &ct[3]) == 0);
+    CU_ASSERT(ofs_create_container("ct4", 1000, &ct[4]) == 0);
     
-    CU_ASSERT(0 == ofs_close_container(ct[0]));
-    CU_ASSERT(0 == ofs_close_container(ct[1]));
-    CU_ASSERT(0 == ofs_close_container(ct[2]));
-    CU_ASSERT(0 == ofs_close_container(ct[3]));
-    CU_ASSERT(0 == ofs_close_container(ct[4]));
+    CU_ASSERT(ofs_close_container(ct[0]) == 0);
+    CU_ASSERT(ofs_close_container(ct[1]) == 0);
+    CU_ASSERT(ofs_close_container(ct[2]) == 0);
+    CU_ASSERT(ofs_close_container(ct[3]) == 0);
+    CU_ASSERT(ofs_close_container(ct[4]) == 0);
 }
 
 void test_open_container(void)
 {
     container_handle_t *ct[5];
     
-    CU_ASSERT(0 == ofs_open_container("ct0", &ct[0]));
-    CU_ASSERT(0 == ofs_open_container("ct1", &ct[1]));
-    CU_ASSERT(0 == ofs_open_container("ct2", &ct[2]));
-    CU_ASSERT(0 == ofs_open_container("ct3", &ct[3]));
-    CU_ASSERT(0 == ofs_open_container("ct4", &ct[4]));
+    CU_ASSERT(ofs_open_container("ct0", &ct[0]) == 0);
+    CU_ASSERT(ofs_open_container("ct1", &ct[1]) == 0);
+    CU_ASSERT(ofs_open_container("ct2", &ct[2]) == 0);
+    CU_ASSERT(ofs_open_container("ct3", &ct[3]) == 0);
+    CU_ASSERT(ofs_open_container("ct4", &ct[4]) == 0);
     
-    CU_ASSERT(0 == ofs_close_container(ct[0]));
-    CU_ASSERT(0 == ofs_close_container(ct[1]));
-    CU_ASSERT(0 == ofs_close_container(ct[2]));
-    CU_ASSERT(0 == ofs_close_container(ct[3]));
-    CU_ASSERT(0 == ofs_close_container(ct[4]));
+    CU_ASSERT(ofs_close_container(ct[0]) == 0);
+    CU_ASSERT(ofs_close_container(ct[1]) == 0);
+    CU_ASSERT(ofs_close_container(ct[2]) == 0);
+    CU_ASSERT(ofs_close_container(ct[3]) == 0);
+    CU_ASSERT(ofs_close_container(ct[4]) == 0);
 }
 
 #define TEST_BLOCK_FILE "blk_dat"
@@ -113,7 +113,7 @@ void test_block_rw(void)
     
     srand((unsigned)time(NULL));
     
-    CU_ASSERT(0 == ofs_create_container(TEST_BLOCK_FILE, 10000, &hnd));
+    CU_ASSERT(ofs_create_container(TEST_BLOCK_FILE, 10000, &hnd) == 0);
     
     while (blkNum--)
     {
