@@ -244,6 +244,8 @@ void test_space_manager_4(void)
     CU_ASSERT(start_blk == 80);
     CU_ASSERT(ret == 100);
     
+    CU_ASSERT(ofs_close_object(obj) == 0);
+    CU_ASSERT(ofs_close_container(ct) == 0);
 }
 
 #define TEST_NUM     5
