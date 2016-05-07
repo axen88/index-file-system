@@ -95,7 +95,7 @@ int32_t os_collate_binary(const uint8_t *b1, uint32_t b1_size, const uint8_t *b2
 		return -1;
 	}
     
-	while (0 != b1_size)
+	while (b1_size)
 	{
 		if (*b1 > *b2)
 		{
@@ -129,7 +129,7 @@ int32_t os_collate_unicode_string(const unicode_char_t *s1, uint32_t s1_size, co
     ASSERT(s1_size > 0);
     ASSERT(s2_size > 0);
 
-	while ((0 != s1_size) && (0 != s2_size))
+	while (s1_size && s2_size)
 	{
 		c1 = os_to_wupper(*s1);
 		c2 = os_to_wupper(*s2);
@@ -175,7 +175,7 @@ int32_t os_collate_ansi_string(const char *s1, uint32_t s1_size, const char *s2,
     ASSERT(s1_size > 0);
     ASSERT(s2_size > 0);
 
-	while ((0 != s1_size) && (0 != s2_size))
+	while (s1_size && s2_size)
 	{
 		c1 = os_to_upper(*s1);
 		c2 = os_to_upper(*s2);
@@ -214,7 +214,7 @@ uint64_t os_bstr_to_u64(const uint8_t *b, uint32_t b_size)
     uint64_t u64 = 0;
     uint8_t *uc = (uint8_t *)&u64;
 
-    ASSERT(0 != b_size);
+    ASSERT(b_size);
     ASSERT(sizeof(uint64_t) >= b_size);
 
     while (b_size--)

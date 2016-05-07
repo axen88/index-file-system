@@ -98,14 +98,14 @@ ofs_block_cache_t *alloc_obj_cache(object_info_t *obj_info, uint64_t vbn, uint32
     ASSERT(obj_info != NULL);
     
     cache = OS_MALLOC(sizeof(ofs_block_cache_t));
-    if (NULL == cache)
+    if (!cache)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(ofs_block_cache_t));
         return NULL;
     }
 
     cache->ib = OS_MALLOC(obj_info->ct->sb.block_size);
-    if (NULL == cache)
+    if (!cache)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", obj_info->ct->sb.block_size);
         OS_FREE(cache);
@@ -127,7 +127,7 @@ void free_obj_cache(object_info_t *obj_info, ofs_block_cache_t *cache)
     
     remove_obj_cache(obj_info, cache);
     
-    if (NULL != cache->ib)
+    if (cache->ib)
     {
         OS_FREE(cache->ib);
         cache->ib = NULL;
@@ -154,7 +154,7 @@ int32_t alloc_obj_block_and_cache(object_info_t *obj_info, ofs_block_cache_t **c
 
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
     tmp_cache = alloc_obj_cache(obj_info, vbn, blk_id);
-    if (NULL == tmp_cache)
+    if (!tmp_cache)
     {
         OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
         LOG_ERROR("Allocate cache failed.\n");
@@ -209,7 +209,7 @@ void free_container_cache(container_handle_t *ct, ofs_block_cache_t *cache)
 
     avl_remove(&ct->metadata_cache, cache);
     
-    if (NULL != cache->ib)
+    if (cache->ib)
     {
         OS_FREE(cache->ib);
         cache->ib = NULL;
@@ -343,7 +343,7 @@ int32_t index_block_read2(object_info_t *obj_info, uint64_t vbn, uint32_t blk_id
     
     OS_RWLOCK_WRLOCK(&obj_info->caches_lock);
     cache = avl_find(&obj_info->caches, (avl_find_fn_t)compare_cache2, &vbn, &where);
-    if (NULL != cache) // block already in the obj cache
+    if (cache) // block already in the obj cache
     {
         OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
         *cache_out = cache;
@@ -352,7 +352,7 @@ int32_t index_block_read2(object_info_t *obj_info, uint64_t vbn, uint32_t blk_id
     
     OS_RWLOCK_RDLOCK(&ct->metadata_cache_lock);
     cache = avl_find(&ct->metadata_cache, (avl_find_fn_t)compare_cache2, &vbn, &where);
-    if (NULL != cache) // block already in the container cache
+    if (cache) // block already in the container cache
     {
         OS_RWLOCK_RDUNLOCK(&ct->metadata_cache_lock);
         avl_add(&obj_info->caches, cache); // add to object
@@ -363,7 +363,7 @@ int32_t index_block_read2(object_info_t *obj_info, uint64_t vbn, uint32_t blk_id
     OS_RWLOCK_RDUNLOCK(&ct->metadata_cache_lock);
 
     cache = alloc_obj_cache(obj_info, vbn, blk_id);
-    if (NULL == cache)
+    if (!cache)
     {
         OS_RWLOCK_WRUNLOCK(&obj_info->caches_lock);
         LOG_ERROR("Allocate cache failed.\n");
@@ -395,7 +395,7 @@ int32_t index_block_read(object_handle_t *obj, uint64_t vbn, uint32_t blk_id)
 {
     int32_t ret = 0;
 
-    ASSERT(NULL != obj);
+    ASSERT(obj);
     
     if (obj->cache->vbn == vbn)
     {

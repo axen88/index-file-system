@@ -70,8 +70,8 @@ int32_t print_super_block(char *ct_name, net_para_t *net)
     container_handle_t *ct = NULL;
     int32_t ret = 0;
     
-    ASSERT (NULL != ct_name);
-    ASSERT (0 != strlen(ct_name));
+    ASSERT(ct_name != NULL);
+    ASSERT(strlen(ct_name));
 
     ret = ofs_open_container(ct_name, &ct);
     if (ret < 0)
@@ -217,7 +217,7 @@ int do_list_cmd(int argc, char *argv[], net_para_t *net)
     parse_all_para(argc, argv, para);
     para->net = net;
     
-    if (0 != (para->flags & TOOLS_FLAGS_SB))
+    if (para->flags & TOOLS_FLAGS_SB)
     {
         (void)print_super_block(para->ct_name, net);
         OS_FREE(para);

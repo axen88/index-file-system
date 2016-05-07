@@ -335,36 +335,36 @@ int add_collate_test_case(void)
     CU_pSuite pSuite = NULL;
 
     pSuite = CU_add_suite("test_collate_suit", init_suite, clean_suite);
-    if (NULL == pSuite) {
+    if (!pSuite) {
        return -1;
     }
     
-    if (NULL == CU_add_test(pSuite, "test collate u64 1", test_cr_u64_1))
+    if (!CU_add_test(pSuite, "test collate u64 1", test_cr_u64_1))
     {
        return -2;
     }
 
-    if (NULL == CU_add_test(pSuite, "test collate u64 2", test_cr_u64_2))
+    if (!CU_add_test(pSuite, "test collate u64 2", test_cr_u64_2))
     {
        return -3;
     }
 
-    if (NULL == CU_add_test(pSuite, "test collate u64 3", test_cr_u64_3))
+    if (!CU_add_test(pSuite, "test collate u64 3", test_cr_u64_3))
     {
        return -4;
     }
 
-    if (NULL == CU_add_test(pSuite, "test collate extent 1", test_cr_extent_1))
+    if (!CU_add_test(pSuite, "test collate extent 1", test_cr_extent_1))
     {
        return -5;
     }
 
-    if (NULL == CU_add_test(pSuite, "test collate extent 2", test_cr_extent_2))
+    if (!CU_add_test(pSuite, "test collate extent 2", test_cr_extent_2))
     {
        return -6;
     }
 
-    if (NULL == CU_add_test(pSuite, "test collate extent 3", test_cr_extent_3))
+    if (!CU_add_test(pSuite, "test collate extent 3", test_cr_extent_3))
     {
        return -7;
     }

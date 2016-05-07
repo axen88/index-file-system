@@ -527,11 +527,11 @@ int add_kv_test_case1(void)
     CU_pSuite pSuite = NULL;
 
     pSuite = CU_add_suite("test_kv_suit1", init_suite, clean_suite);
-    if (NULL == pSuite) {
+    if (!pSuite) {
        return -1;
     }
     
-    if (NULL == CU_add_test(pSuite, "test kv 1", test_kv_1))
+    if (!CU_add_test(pSuite, "test kv 1", test_kv_1))
     {
        return -2;
     }

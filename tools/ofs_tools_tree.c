@@ -42,7 +42,7 @@ static int32_t cmd_insert_key(ifs_tools_para_t *para)
     container_handle_t *ct = NULL;
     object_handle_t *obj = NULL;
 
-    ASSERT(NULL != para);
+    ASSERT(para);
 
     if ((strlen(para->ct_name) == 0) || OBJID_IS_INVALID(para->objid))
     {
@@ -95,7 +95,7 @@ static int32_t cmd_remove_key(ifs_tools_para_t *para)
     container_handle_t *ct = NULL;
     object_handle_t *obj = NULL;
 
-    ASSERT(NULL != para);
+    ASSERT(para);
 
     if ((strlen(para->ct_name) == 0) || OBJID_IS_INVALID(para->objid))
     {

@@ -43,7 +43,7 @@ static int32_t cmd_create(ifs_tools_para_t *para)
     object_handle_t *obj = NULL;
     object_handle_t *attr = NULL;
 
-    ASSERT(NULL != para);
+    ASSERT(para);
 
     if (strlen(para->ct_name) == 0)
     {
@@ -93,7 +93,7 @@ static int32_t cmd_open(ifs_tools_para_t *para)
     container_handle_t *ct = NULL;
     object_handle_t *obj = NULL;
 
-    ASSERT(NULL != para);
+    ASSERT(para);
 
     if (strlen(para->ct_name) == 0)
     {
@@ -142,7 +142,7 @@ static int32_t cmd_close(ifs_tools_para_t *para)
     container_handle_t *ct = NULL;
     object_handle_t *obj = NULL;
 
-    ASSERT(NULL != para);
+    ASSERT(para);
 
     if (strlen(para->ct_name) == 0)
     {
@@ -195,7 +195,7 @@ static int32_t cmd_delete(ifs_tools_para_t *para)
     int32_t ret = 0;
     container_handle_t *ct = NULL;
 
-    ASSERT(NULL != para);
+    ASSERT(para);
 
     OS_PRINT(para->net, "comming soon.\n");
     return 0;

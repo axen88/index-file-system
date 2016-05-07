@@ -43,7 +43,7 @@ static void assemble_block(block_head_t *blk)
 {
     uint16_t *foot = NULL; // the last 2 bytes
 
-    ASSERT(NULL != blk);
+    ASSERT(blk);
     ASSERT(blk->alloc_size >= blk->real_size);
 
     foot = (uint16_t *)((uint8_t *)blk + blk->alloc_size - sizeof(uint16_t));
@@ -58,7 +58,7 @@ static int32_t fixup_block(block_head_t *blk)
 {
     uint16_t *foot = NULL; // the last 2 bytes
 
-    ASSERT(NULL != blk);
+    ASSERT(blk);
     ASSERT(blk->alloc_size >= blk->real_size);
 
     foot = (uint16_t *)((uint8_t *)blk + blk->alloc_size - sizeof(uint16_t));
@@ -80,21 +80,19 @@ static int32_t fixup_block(block_head_t *blk)
 
 static int32_t verify_block(block_head_t *blk, uint32_t blk_id, uint32_t alloc_size)
 {
-    ASSERT(NULL != blk);
-    ASSERT(0 != blk_id);
-    ASSERT(0 != alloc_size);
+    ASSERT(blk != NULL);
+    ASSERT(blk_id != 0);
+    ASSERT(alloc_size != 0);
 
     if (blk->blk_id != blk_id)
     {
-        LOG_ERROR("Object id not match. blk(%p) blk_id(%x) expect(%x)",
-            blk, blk->blk_id, blk_id);
+        LOG_ERROR("Object id not match. blk(%p) blk_id(%x) expect(%x)", blk, blk->blk_id, blk_id);
         return -FILE_BLOCK_ERR_INVALID_OBJECT;
     }
 
     if (blk->alloc_size != alloc_size)
     {
-        LOG_ERROR("alloc_size not match. blk(%p) alloc_size(%d) expect(%d)",
-            blk, blk->alloc_size, alloc_size);
+        LOG_ERROR("alloc_size not match. blk(%p) alloc_size(%d) expect(%d)", blk, blk->alloc_size, alloc_size);
         return -FILE_BLOCK_ERR_INVALID_OBJECT;
     }
 
@@ -283,8 +281,8 @@ block_head_t *get_last_correct_block(uint8_t *buf, uint32_t blk_id, uint32_t all
     int32_t ret = 0;
     block_head_t *blk = NULL;
 
-    ASSERT(NULL != buf);
-    ASSERT(0 != alloc_size);
+    ASSERT(buf != NULL);
+    ASSERT(alloc_size != 0);
 
     for (i = 0; i < cnt; i++)
     {
@@ -295,7 +293,7 @@ block_head_t *get_last_correct_block(uint8_t *buf, uint32_t blk_id, uint32_t all
             break;
         }
 
-        if ((0 != i) && ((prev_seq_no + 1) != blk->seq_no))
+        if ((i != 0) && ((prev_seq_no + 1) != blk->seq_no))
         { // current and next data is not the newest
             break;
         }
@@ -380,7 +378,7 @@ int32_t ofs_read_block_pingpong(container_handle_t *ct, block_head_t *blk, uint6
     }
 
     tmp_obj = get_last_correct_block(buf, blk_id, alloc_size, block_size / alloc_size);
-    if (NULL == tmp_obj)
+    if (!tmp_obj)
     {
         LOG_ERROR("Get invalid object. ct(%p) blk(%p) vbn(%lld)\n", ct, tmp_obj, vbn);
         OS_FREE(buf);

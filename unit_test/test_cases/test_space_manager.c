@@ -282,31 +282,31 @@ int add_space_manager_test_case(void)
     CU_pSuite pSuite = NULL;
 
     pSuite = CU_add_suite("test_space_manager_suit", init_suite, clean_suite);
-    if (NULL == pSuite) {
+    if (!pSuite) {
        return -1;
     }
     
-    if (NULL == CU_add_test(pSuite, "test space manager 1", test_space_manager_1))
+    if (!CU_add_test(pSuite, "test space manager 1", test_space_manager_1))
     {
        return -2;
     }
 
-    if (NULL == CU_add_test(pSuite, "test space manager 2", test_space_manager_2))
+    if (!CU_add_test(pSuite, "test space manager 2", test_space_manager_2))
     {
        return -3;
     }
 
-    if (NULL == CU_add_test(pSuite, "test space manager 3", test_space_manager_3))
+    if (!CU_add_test(pSuite, "test space manager 3", test_space_manager_3))
     {
        return -3;
     }
 
-    if (NULL == CU_add_test(pSuite, "test space manager 4", test_space_manager_4))
+    if (!CU_add_test(pSuite, "test space manager 4", test_space_manager_4))
     {
        return -3;
     }
 
-    if (NULL == CU_add_test(pSuite, "test space manager 5", test_space_manager_5))
+    if (!CU_add_test(pSuite, "test space manager 5", test_space_manager_5))
     {
        return -3;
     }

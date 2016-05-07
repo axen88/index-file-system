@@ -329,9 +329,9 @@ static void make_ib_small(index_block_t *ib)
 // get the next entry
 static int32_t get_next_ie(object_handle_t *tree)
 {
-    ASSERT(NULL != tree);
+    ASSERT(tree);
 
-    if (0 != (tree->ie->flags & INDEX_ENTRY_END))
+    if (tree->ie->flags & INDEX_ENTRY_END)
     { // the last entry
         return -INDEX_ERR_NEXT_ENTRY;
     }
@@ -351,7 +351,7 @@ static int32_t add_or_remove_ib(object_handle_t *tree, uint8_t flags)
 {
     int32_t ret = 0;
 
-    ASSERT(NULL != tree);
+    ASSERT(tree);
         
     if (flags & INDEX_REMOVE_BLOCK)
     {
@@ -402,7 +402,7 @@ static int32_t get_current_ie(object_handle_t *tree, uint8_t flags)
 
         if (flags & (INDEX_GET_LAST | INDEX_GET_PREV))
         {
-            if (0 != (flags & INDEX_GET_LAST_ENTRY))
+            if (flags & INDEX_GET_LAST_ENTRY)
             {
                 break;
             }
@@ -708,7 +708,7 @@ static index_entry_t *dump_ie_add_vbn(index_entry_t *ie, uint64_t vbn)
     }
 
     new_ie = (index_entry_t *)OS_MALLOC(size);
-    if (NULL == new_ie)
+    if (!new_ie)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", size);
         return NULL;
@@ -737,7 +737,7 @@ static index_entry_t *dump_ie_del_vbn(index_entry_t *ie)
     }
 
     new_ie = (index_entry_t *)OS_MALLOC(size);
-    if (NULL == new_ie)
+    if (!new_ie)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", size);
         return NULL;
@@ -1345,7 +1345,7 @@ int64_t index_get_total_key(object_handle_t *tree)
 {
     int64_t cnt = 0;
     
-    if (NULL == tree)
+    if (!tree)
     {
         LOG_ERROR("Invalid parameter. tree(%p)\n", tree);
         return -INDEX_ERR_PARAMETER;
@@ -1394,7 +1394,7 @@ int32_t index_walk_all(object_handle_t *tree, bool_t reverse, uint8_t flags,
     uint8_t if_flag = (FALSE == reverse) ? INDEX_GET_FIRST : INDEX_GET_LAST;
     uint8_t while_flag = (FALSE == reverse) ? 0 : INDEX_GET_PREV;
 
-    if ((NULL == tree) || (NULL == cb))
+    if ((!tree) || (!cb))
     {
         LOG_ERROR("Invalid parameter. tree(%p) cb(%p)\n",
             tree, cb);

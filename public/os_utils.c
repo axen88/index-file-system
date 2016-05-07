@@ -124,7 +124,7 @@ int32_t os_str_to_u64(const char *str, uint64_t *value, uint32_t base)
     /*
     * do QQ, Q8, 0xQQ, 0xABQQ, 0xQQAB etc.
     */
-    if ((0 != *end) && ('\n' != *end))
+    if ((*end != 0) && ('\n' != *end))
     {
         return -3;
     }
@@ -164,7 +164,7 @@ int32_t os_str_to_hex(char *str, uint8_t *hex, uint32_t hex_len)
         return 0;
     }
 
-    if (0 != (str_len & 1))
+    if (str_len & 1)
     {
         c = os_char_to_hex(*str++);
         if (0 > c)
@@ -228,7 +228,7 @@ int32_t os_get_date_time_string(char *str, int32_t str_size)
 {
     struct timeval tm;
 
-    if (NULL == str)
+    if (!str)
     {
         return -1;
     }
@@ -248,7 +248,7 @@ int32_t os_get_date_time_string(char *str, int32_t str_size)
     time_t curr_time = 0;
     struct tm *pt = NULL;
 
-    if (NULL == str)
+    if (!str)
     {
         return -1;
     }
@@ -257,7 +257,7 @@ int32_t os_get_date_time_string(char *str, int32_t str_size)
     
     curr_time = time(NULL);
     pt = localtime(&curr_time);
-    if (NULL == pt)
+    if (!pt)
     {
         return -2;
     }

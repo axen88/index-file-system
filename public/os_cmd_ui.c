@@ -45,7 +45,7 @@ History:
 
 void format_cmd(char *cmd)
 {
-    while (0 != *cmd)
+    while (*cmd)
     {
         if ('\n' == *cmd)
         {
@@ -129,7 +129,7 @@ void show_sub_cmd_list(os_cmd_list_t *cmd_list[], uint32_t cmd_num, net_para_t *
 	{
         for (j = 0; j < MAX_CMD_LEVEL; j++)
         {
-            if (NULL == cmd_list[i]->level[j])
+            if (!cmd_list[i]->level[j])
             {
                 break;
             }
@@ -143,13 +143,13 @@ void show_sub_cmd_list(os_cmd_list_t *cmd_list[], uint32_t cmd_num, net_para_t *
 
 void show_cmd_list(os_cmd_list_t *cmd_list, net_para_t *net)
 {
-    while (NULL != cmd_list->level[0])
+    while (cmd_list->level[0])
 	{
         uint32_t j;
         
         for (j = 0; j < MAX_CMD_LEVEL; j++)
         {
-            if (NULL == cmd_list->level[j])
+            if (!cmd_list->level[j])
             {
                 break;
             }
@@ -185,7 +185,7 @@ int32_t execute_cmd(int32_t argc, char *argv[], os_cmd_list_t *cmd_list, net_par
         return CMD_QUIT;
     }
     
-    while (NULL != cmd->level[0])
+    while (cmd->level[0])
     {
         for (level = 0; level < MAX_CMD_LEVEL; level++)
         {
@@ -194,12 +194,12 @@ int32_t execute_cmd(int32_t argc, char *argv[], os_cmd_list_t *cmd_list, net_par
                 break;
             }
             
-            if (NULL == cmd->level[level])
+            if (cmd->level[level] == NULL)
             {
                 break;
             }
             
-            if (0 != strcmp(cmd->level[level], argv[level]))
+            if (strcmp(cmd->level[level], argv[level]))
             {
                 break;
             }
@@ -212,7 +212,7 @@ int32_t execute_cmd(int32_t argc, char *argv[], os_cmd_list_t *cmd_list, net_par
             break;
         }
 
-        if (NULL == cmd->level[level])
+        if (!cmd->level[level])
         {
             if (level == argc)
             {
@@ -235,13 +235,13 @@ int32_t execute_cmd(int32_t argc, char *argv[], os_cmd_list_t *cmd_list, net_par
         cmd++;
     }
 
-    if (NULL != tmp_cmd)
+    if (tmp_cmd)
     {
         (void)tmp_cmd->func(argc - (tmp_num - 1), argv + (tmp_num - 1), net);
         return CMD_OTHER;
     }
 
-    if (0 != sub_cmd_num)
+    if (sub_cmd_num)
     {
         show_sub_cmd_list(sub_cmd, sub_cmd_num, net);
         return CMD_OTHER;
@@ -293,7 +293,7 @@ int32_t parse_and_exec_cmd(char *cmd, os_cmd_list_t cmd_list[], net_para_t *net)
     char **tmp_argv = NULL;
 
     tmp_argv = (char **)OS_MALLOC(CMD_MAX_ARGS * sizeof(char *));
-    if (NULL == tmp_argv)
+    if (!tmp_argv)
     {
         OS_PRINT(net, "Allocate memory failed. size(%d)\n",
             CMD_MAX_ARGS * (uint32_t)sizeof(char *));
@@ -323,7 +323,7 @@ void os_cmd_ui(os_cmd_list_t cmd_list[], net_para_t *net)
     char *cmd = NULL;
 
     cmd = OS_MALLOC(CMD_MAX_SIZE);
-    if (NULL == cmd)
+    if (!cmd)
     {
         OS_PRINT(net, "Allocate memory failed. size(%d)\n", CMD_MAX_SIZE);
         return;

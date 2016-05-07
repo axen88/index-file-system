@@ -61,7 +61,7 @@ int32_t file_open_or_create(void **hnd, const char *name, uint32_t flags)
 {
     file_handle_t *tmp_hnd = NULL;
 
-    if ((NULL == hnd) || (NULL == name))
+    if ((!hnd) || (!name))
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
@@ -286,7 +286,7 @@ int32_t file_open_or_create(void **hnd, const char *name, char *v_pcMethod)
 {
     file_handle_t *tmp_hnd = NULL;
 
-    if ((NULL == hnd) || (NULL == name) || (NULL == v_pcMethod))
+    if ((!hnd) || (!name) || (!v_pcMethod))
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
@@ -334,7 +334,7 @@ int32_t os_file_seek(void *hnd, uint64_t offset)
 {
     file_handle_t *tmp_hnd = hnd;
 
-    if (NULL == hnd)
+    if (!hnd)
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }
@@ -514,7 +514,7 @@ void os_file_set_buf(void *hnd, void *buf, uint32_t size)
 
 int32_t os_file_exist(const char *name)
 {
-    if (NULL == name)
+    if (!name)
     {
         return -FILE_IO_ERR_INVALID_PARA;
     }

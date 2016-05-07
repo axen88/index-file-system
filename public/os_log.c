@@ -100,7 +100,7 @@ static void *open_log(log_t *log)
     char name[LOG_NAME_LEN];
     int32_t ret = 0;
 
-    ASSERT(NULL != log);
+    ASSERT(log);
     
     OS_SNPRINTF(name, LOG_NAME_LEN, "%s/%s.log",
         log->dir, log->name);
@@ -129,7 +129,7 @@ static int32_t backup_log(log_t *log)
     
     OS_RWLOCK_WRLOCK(&log->rwlock);
     
-    if (NULL == open_log(log))
+    if (!open_log(log))
     {
         ret = -1;
     }
@@ -162,7 +162,7 @@ static int32_t backup_log(log_t *log)
     
     t = time(NULL);
     ts = localtime(&t);
-    if (NULL == ts)
+    if (!ts)
     {
         OS_SNPRINTF(bakName, LOG_NAME_LEN, "%s/%s.log.bak",
             log->dir, log->name);
@@ -177,7 +177,7 @@ static int32_t backup_log(log_t *log)
     OS_SNPRINTF(name, LOG_NAME_LEN, "%s/%s.log",
         log->dir, log->name);
 
-    if (NULL != log->disk_hnd)
+    if (log->disk_hnd)
     {
         os_file_close(log->disk_hnd);
         log->disk_hnd = NULL;
@@ -186,7 +186,7 @@ static int32_t backup_log(log_t *log)
     unlink(bakName);
     rename(name, bakName);
 
-    if (NULL == open_log(log))
+    if (!open_log(log))
     {
         ret = -1;
     }
@@ -202,7 +202,7 @@ static int32_t backup_log(log_t *log)
 
 void log_set_level(void *log, uint32_t pid, uint32_t level)
 {
-    if ((NULL == log) || (pid >= PIDS_NUM))
+    if ((!log) || (pid >= PIDS_NUM))
     {
         return;
     }
@@ -214,7 +214,7 @@ void log_set_level(void *log, uint32_t pid, uint32_t level)
 
 int32_t log_get_level(void *log, uint32_t pid)
 {
-    if ((NULL == log) || (pid >= PIDS_NUM))
+    if ((!log) || (pid >= PIDS_NUM))
     {
         return -1;
     }
@@ -227,13 +227,13 @@ void *log_open(const char *file_name, const char *version, const char *dir, uint
     log_t *log = NULL;
     uint32_t i = 0;
 
-    if ((NULL == file_name) || (NULL == version) || (NULL == dir))
+    if ((!file_name) || (!version) || (!dir))
     {
         return NULL;
     }
     
     log = (log_t *)OS_MALLOC(sizeof(log_t));
-    if (NULL == log)
+    if (!log)
     {
         return NULL;
     }
@@ -268,12 +268,12 @@ void log_close(void *log)
 {
     log_t *tmp_log = (log_t *)log;
     
-    if (NULL == tmp_log)
+    if (!tmp_log)
     {
         return;
     }
 
-    if (NULL != tmp_log->disk_hnd)
+    if (tmp_log->disk_hnd)
     {
         char date_time[DATA_TIME_STR_LEN];
         
@@ -307,12 +307,12 @@ void log_trace(void *log, uint32_t pid, uint32_t level, const char *format, ...)
     OS_VSNPRINTF(tmp_log->buf, BUF_LEN, format, ap);
     va_end(ap);
 
-    if (0 != (tmp_log->mode & LOG_TO_SCREEN))
+    if (tmp_log->mode & LOG_TO_SCREEN)
     {
         //OS_PRINT("%s %s", tmp_log->date_time, tmp_log->buf);
     }
     
-    if (NULL != tmp_log->disk_hnd)
+    if (tmp_log->disk_hnd)
     {
         os_file_printf(tmp_log->disk_hnd, "%s %s", tmp_log->date_time, tmp_log->buf);
         tmp_log->total_lines++;

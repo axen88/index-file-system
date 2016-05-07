@@ -188,7 +188,7 @@ int32_t test_performance(ifs_tools_para_t *para, bool_t insert)
         OS_PRINT(para->net, "Create thread %d success.\n", i);
     }
 
-    while (0 != para->threads_cnt)
+    while (para->threads_cnt)
     {
         OS_SLEEP_SECOND(1);
     }

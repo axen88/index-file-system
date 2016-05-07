@@ -38,12 +38,12 @@ History:
 
 void parse_container_para(int argc, char *argv[], ifs_tools_para_t *para)
 {
-    if (0 != os_parse_para(argc, argv, "-ct", para->ct_name, OFS_NAME_SIZE))
+    if (os_parse_para(argc, argv, "-ct", para->ct_name, OFS_NAME_SIZE))
     {
         para->ct_name[0] = 0;
     }
 
-    if (0 != os_parse_para(argc, argv, "-s", para->tmp, TMP_BUF_SIZE))
+    if (os_parse_para(argc, argv, "-s", para->tmp, TMP_BUF_SIZE))
     {
         para->total_sectors = 1000;
     }
@@ -57,7 +57,7 @@ void parse_container_para(int argc, char *argv[], ifs_tools_para_t *para)
 
 void parse_object_para(int argc, char *argv[], ifs_tools_para_t *para)
 {
-    if (0 != os_parse_para(argc, argv, "-o", para->tmp, TMP_BUF_SIZE))
+    if (os_parse_para(argc, argv, "-o", para->tmp, TMP_BUF_SIZE))
     {
         para->objid = INVALID_OBJID;
     }
@@ -87,7 +87,7 @@ void parse_all_para(int argc, char *argv[], ifs_tools_para_t *para)
     parse_container_para(argc, argv, para);
     parse_object_para(argc, argv, para);
 
-    if (0 != os_parse_para(argc, argv, "-n", para->tmp, TMP_BUF_SIZE))
+    if (os_parse_para(argc, argv, "-n", para->tmp, TMP_BUF_SIZE))
     {
         para->threads_num = 0;
     }
@@ -96,7 +96,7 @@ void parse_all_para(int argc, char *argv[], ifs_tools_para_t *para)
         para->threads_num = OS_STR2ULL(para->tmp, NULL, 0);
     }
 
-    if (0 != os_parse_para(argc, argv, "-kn", para->tmp, TMP_BUF_SIZE))
+    if (os_parse_para(argc, argv, "-kn", para->tmp, TMP_BUF_SIZE))
     {
         para->keys_num = 10;
     }

@@ -137,21 +137,21 @@ int add_container_test_case(void)
     CU_pSuite pSuite = NULL;
 
     pSuite = CU_add_suite("test_container_suit", init_suite, clean_suite);
-    if (NULL == pSuite) {
+    if (!pSuite) {
        return -1;
     }
     
-    if (NULL == CU_add_test(pSuite, "test create container", test_create_container))
+    if (!CU_add_test(pSuite, "test create container", test_create_container))
     {
        return -2;
     }
 
-    if (NULL == CU_add_test(pSuite, "test open container", test_open_container))
+    if (!CU_add_test(pSuite, "test open container", test_open_container))
     {
        return -3;
     }
 
-    if (NULL == CU_add_test(pSuite, "test block rw", test_block_rw))
+    if (!CU_add_test(pSuite, "test block rw", test_block_rw))
     {
        return -3;
     }

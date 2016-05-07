@@ -73,14 +73,14 @@ int32_t compare_object1(const object_info_t *obj_info, const object_info_t *targ
 
 int32_t ofs_init_system(void)
 {
-    if (NULL != g_container_list)
+    if (g_container_list)
     {
         LOG_ERROR("Init ct system many times. g_container_list(%p)\n", g_container_list);
         return 0;
     }
 
     g_container_list = OS_MALLOC(sizeof(avl_tree_t));
-    if (NULL == g_container_list)
+    if (!g_container_list)
     {
         LOG_ERROR("Malloc failed. size(%d)\n", (uint32_t)sizeof(avl_tree_t));
         return -INDEX_ERR_ALLOCATE_MEMORY;
@@ -117,7 +117,7 @@ int32_t close_one_object(void *para, object_info_t *obj_info)
 
 void ofs_exit_system(void)
 {
-    if (NULL == g_container_list)
+    if (!g_container_list)
     {
         LOG_ERROR("Exit ct system many times. g_container_list(%p)\n", g_container_list);
         return;
@@ -154,7 +154,7 @@ int32_t init_container_resource(container_handle_t **ct, const char *ct_name)
     ASSERT(ct_name != NULL);
 
     tmp_ct = (container_handle_t *)OS_MALLOC(sizeof(container_handle_t));
-    if (NULL == tmp_ct)
+    if (!tmp_ct)
     {
         LOG_ERROR("Allocate memory failed. size(%d)\n", (uint32_t)sizeof(container_handle_t));
         return -INDEX_ERR_ALLOCATE_MEMORY;
@@ -378,7 +378,7 @@ int32_t ofs_create_container_nolock(const char *ct_name, uint64_t total_sectors,
 
     /* already opened */
     tmp_ct = avl_find(g_container_list, (avl_find_fn_t)compare_container2, ct_name, &where);
-    if (NULL != tmp_ct)
+    if (tmp_ct)
     {
         *ct = tmp_ct;
         LOG_WARN("The ct is opened already. ct_name(%s) start_lba(%lld)\n", ct_name);
@@ -475,7 +475,7 @@ int32_t ofs_open_nolock(const char *ct_name, container_handle_t **ct)
     LOG_INFO("Open the ct. ct_name(%s)\n", ct_name);
 
     tmp_ct = avl_find(g_container_list, (avl_find_fn_t)compare_container2, ct_name, &where);
-    if (NULL != tmp_ct)
+    if (tmp_ct)
     {
         tmp_ct->ref_cnt++;
         *ct = tmp_ct;

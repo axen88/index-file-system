@@ -49,8 +49,8 @@ static int32_t dump_callback(object_handle_t *tree, dump_para_t *para)
     uint32_t i = 0;
     uint8_t *uc = NULL;
 
-    ASSERT(NULL != tree);
-    ASSERT(NULL != para);
+    ASSERT(tree);
+    ASSERT(para);
 
     if ((para->depth != tree->depth)
         || (para->vbn != tree->cache->vbn))
@@ -120,7 +120,7 @@ static int32_t dump_key(object_handle_t *tree, const bool_t reverse, net_para_t 
     dump_para_t para;
     object_info_t *obj_info;
 
-    ASSERT(NULL != tree);
+    ASSERT(tree);
 
 	memset(&para, 0, sizeof(dump_para_t));
 
@@ -144,7 +144,7 @@ void dump_cmd(ifs_tools_para_t *para)
     object_handle_t *obj = NULL;
     int32_t ret = 0;
     
-    ASSERT (NULL != para);
+    ASSERT (para);
 
     if (strlen(para->ct_name) == 0)
     {

@@ -464,20 +464,20 @@ int32_t ofs_create_object_nolock(container_handle_t *ct, uint64_t objid, uint16_
     LOG_INFO("Create the obj start. objid(%lld)\n", objid);
 
     obj_info = avl_find(&ct->obj_info_list, (avl_find_fn_t)compare_object2, &objid, &where);
-    if (NULL != obj_info)
+    if (obj_info)
     {
         LOG_ERROR("The obj already exist. obj(%p) objid(%lld) ret(%d)\n", obj, objid, ret);
         return -INDEX_ERR_OBJ_EXIST;
     }
 
     ret = search_key_internal(ct->id_obj, &objid, sizeof(uint64_t), NULL, 0);
-    if (0 <= ret)
+    if (ret >= 0)
     {
         LOG_ERROR("The obj already exist. obj(%p) objid(%lld) ret(%d)\n", obj, objid, ret);
         return -INDEX_ERR_OBJ_EXIST;
     }
 
-    if (-INDEX_ERR_KEY_NOT_FOUND != ret)
+    if (ret != -INDEX_ERR_KEY_NOT_FOUND)
     {
         LOG_ERROR("Search key failed. objid(%lld) ret(%d)\n", objid, ret);
         return ret;
@@ -539,7 +539,7 @@ int32_t ofs_open_object_nolock(container_handle_t *ct, uint64_t objid, uint32_t 
     LOG_INFO("Open the obj. objid(%lld)\n", objid);
 
     obj_info = avl_find(&ct->obj_info_list, (avl_find_fn_t)compare_object2, &objid, &where);
-    if (NULL != obj_info)
+    if (obj_info)
     {
         ret = get_object_handle(obj_info, &obj);
         if (ret < 0)
