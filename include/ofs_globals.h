@@ -81,6 +81,7 @@ enum
     PID_CLIENT = 17,
     PID_TOOLS = 18,
     PID_UTILS = 19,
+    PID_EXTENT_MAP = 20,
 
     PID_BUTT
 };

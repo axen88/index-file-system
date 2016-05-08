@@ -61,6 +61,7 @@ enum
     CR_UNICODE_STRING,
     CR_U64,
     CR_EXTENT,
+    CR_EXTENT_MAP,
     
     CR_BUTT
 } collate_rule_t;

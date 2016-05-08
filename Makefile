@@ -12,7 +12,7 @@ FS_DIR := file_system
 CFLAGS = -Iinclude -Ipublic -Wall -g -Wno-unused  -D__EN_FILE_IF__
 
 LIB_OBJS = $(OS_DIR)/ofs_block_rw.o $(OS_DIR)/ofs_btree.o $(OS_DIR)/ofs_container_manager.o \
-	    $(OS_DIR)/ofs_metadata_cache.o $(OS_DIR)/ofs_collate.o \
+	    $(OS_DIR)/ofs_metadata_cache.o $(OS_DIR)/ofs_collate.o $(OS_DIR)/ofs_extent_map.o \
 	    $(OS_DIR)/ofs_object_manager.o $(OS_DIR)/ofs_log.o $(OS_DIR)/ofs_space_manager.o \
 		$(FS_DIR)/ofs_file.o $(FS_DIR)/ofs_dir.o $(FS_DIR)/ofs_xattr.o \
 	    $(PUBLIC_DIR)/avl.o $(PUBLIC_DIR)/os_cmd_ui.o \

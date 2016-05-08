@@ -409,6 +409,10 @@ int32_t collate_key(uint16_t cr, index_entry_t *ie,
             return os_collate_extent((uint8_t *)GET_IE_KEY(ie), ie->key_len, (uint8_t *)GET_IE_VALUE(ie), ie->value_len,
                 (uint8_t *)key, key_len, (uint8_t *)value, value_len);
             
+        case CR_EXTENT_MAP:
+            return os_collate_extent((uint8_t *)GET_IE_KEY(ie), ie->key_len, (uint8_t *)GET_IE_VALUE(ie), ie->value_len,
+                (uint8_t *)key, key_len, (uint8_t *)value, value_len);
+            
         default:
             break;
     }

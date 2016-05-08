@@ -316,6 +316,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\object_system\ofs_extent_map.c"
+				>
+			</File>
+			<File
 				RelativePath="..\object_system\ofs_log.c"
 				>
 			</File>
@@ -325,10 +329,6 @@
 			</File>
 			<File
 				RelativePath="..\object_system\ofs_object_manager.c"
-				>
-			</File>
-			<File
-				RelativePath="..\object_system\ofs_object_map.c"
 				>
 			</File>
 			<File
