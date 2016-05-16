@@ -299,47 +299,32 @@ int32_t os_collate_u64(const uint8_t *b1, uint32_t b1_size, const uint8_t *b2, u
 	return 0;
 }
 
-uint32_t os_extent_to_extent_pair(const index_extent_t *ext, uint8_t *ext_pair)
+uint32_t os_extent_to_extent_pair(uint64_t pa, uint64_t len, uint8_t *ext_pair)
 {
-    uint8_t addr_size;
-
-    if (ext->len == 0) // invalid extent
-    {
-        return 0;
-    }
-    
-    addr_size = os_u64_to_bstr(ext->addr, ext_pair + EXT_PAIR_HEADER_SIZE);
-    ext_pair[0] = addr_size;
-    
-    return (EXT_PAIR_HEADER_SIZE + addr_size + os_u64_to_bstr(ext->len, ext_pair + EXT_PAIR_HEADER_SIZE + addr_size));
-}
-
-uint32_t os_extent_to_extent_pair2(uint64_t addr, uint64_t len, uint8_t *ext_pair)
-{
-    uint8_t addr_size;
+    uint8_t pa_size;
 
     if (len == 0) // invalid extent
     {
         return 0;
     }
     
-    addr_size = os_u64_to_bstr(addr, ext_pair + EXT_PAIR_HEADER_SIZE);
-    ext_pair[0] = addr_size;
+    pa_size = os_u64_to_bstr(pa, ext_pair + EXT_PAIR_HEADER_SIZE);
+    ext_pair[0] = pa_size;
     
-    return (EXT_PAIR_HEADER_SIZE + addr_size + os_u64_to_bstr(len, ext_pair + EXT_PAIR_HEADER_SIZE + addr_size));
+    return (EXT_PAIR_HEADER_SIZE + pa_size + os_u64_to_bstr(len, ext_pair + EXT_PAIR_HEADER_SIZE + pa_size));
 }
 
-uint64_t os_extent_pair_to_extent(const uint8_t *ext_pair, uint32_t ext_pair_size, uint64_t *addr)
+uint64_t os_extent_pair_to_extent(const uint8_t *ext_pair, uint32_t ext_pair_size, uint64_t *pa)
 {
-    uint8_t addr_size = *ext_pair;
+    uint8_t pa_size = *ext_pair;
 
-    if (ext_pair_size <= addr_size + EXT_PAIR_HEADER_SIZE) // invalid extent pair
+    if (ext_pair_size <= pa_size + EXT_PAIR_HEADER_SIZE) // invalid extent pair
     {
         return 0;
     }
 
-    *addr = os_bstr_to_u64(ext_pair + EXT_PAIR_HEADER_SIZE, addr_size);
-    return os_bstr_to_u64(ext_pair + EXT_PAIR_HEADER_SIZE + addr_size, ext_pair_size - addr_size - EXT_PAIR_HEADER_SIZE);
+    *pa = os_bstr_to_u64(ext_pair + EXT_PAIR_HEADER_SIZE, pa_size);
+    return os_bstr_to_u64(ext_pair + EXT_PAIR_HEADER_SIZE + pa_size, ext_pair_size - pa_size - EXT_PAIR_HEADER_SIZE);
 }
 
 /*
@@ -377,6 +362,51 @@ int32_t os_collate_extent(const uint8_t *k1, uint32_t k1_size, const uint8_t *v1
 	return 0; // overlap
 }
 
+/*
+return value:
+    <0: k1 < k2
+    =0: overlap
+    >0: k1 > k2
+*/
+int32_t os_collate_extent_map(const uint8_t *k1, uint32_t k1_size, const uint8_t *v1, uint32_t v1_size,
+    const uint8_t *k2, uint32_t k2_size, const uint8_t *v2, uint32_t v2_size)
+{
+    uint64_t va1, va2;   // virtual address
+    uint64_t pa1, pa2;   // physical address
+    uint64_t len1, len2;
+
+    if ((v2_size == 0) || (v1_size == 0))
+    {
+        return os_collate_u64(k1, k1_size, k2, k2_size);
+    }
+    
+    va1 = os_bstr_to_u64(k1, k1_size);
+    va2 = os_bstr_to_u64(k2, k2_size);
+    len1 = os_extent_pair_to_extent(v1, v1_size, &pa1);
+    len2 = os_extent_pair_to_extent(v2, v2_size, &pa2);
+	
+    if (va1 >= (va2 + len2)) // virtual address are not overlap
+	{
+		return 1;
+	}
+
+	if ((va1 + len1) <= va2) // virtual address are not overlap
+	{
+		return -1;
+	}
+
+    if (pa1 >= (pa2 + len2)) // physical address are not overlap
+	{
+		return 1;
+	}
+
+	if ((pa1 + len1) <= pa2) // physical address are not overlap
+	{
+		return -1;
+	}
+
+	return 0; // overlap
+}
 
 // collate key
 int32_t collate_key(uint16_t cr, index_entry_t *ie,
@@ -410,7 +440,7 @@ int32_t collate_key(uint16_t cr, index_entry_t *ie,
                 (uint8_t *)key, key_len, (uint8_t *)value, value_len);
             
         case CR_EXTENT_MAP:
-            return os_collate_extent((uint8_t *)GET_IE_KEY(ie), ie->key_len, (uint8_t *)GET_IE_VALUE(ie), ie->value_len,
+            return os_collate_extent_map((uint8_t *)GET_IE_KEY(ie), ie->key_len, (uint8_t *)GET_IE_VALUE(ie), ie->value_len,
                 (uint8_t *)key, key_len, (uint8_t *)value, value_len);
             
         default:

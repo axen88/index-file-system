@@ -41,24 +41,31 @@ History:
 MODULE(PID_EXTENT_MAP);
 #include "os_log.h"
 
-int32_t alloc_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt, uint64_t *real_start_blk)
+#if 0
+
+int32_t insert_extent(object_handle_t *obj, uint64_t vbn, uint64_t lbn, uint32_t blk_cnt)
 {
+    uint64_t start_blk;
     uint64_t addr;
     uint32_t len;
     uint64_t end;
     uint64_t end_blk;
-    uint8_t addr_str[U64_MAX_SIZE];
-    uint8_t len_str[U64_MAX_SIZE];
-    uint16_t addr_size;
+    uint8_t vbn_str[U64_MAX_SIZE];
+    uint8_t ext_pair[EXT_PAIR_MAX_SIZE];
+    uint64_t ext_vbn;
+    uint64_t ext_lbn;
+    uint64_t ext_len;
+    uint16_t vbn_size;
     uint16_t len_size;
+    uint32_t ext_pair_size;
     int32_t ret;
 
     ASSERT(blk_cnt != 0);
 
-    addr_size = os_u64_to_bstr(start_blk, addr_str);
-    len_size = os_u64_to_bstr(blk_cnt, len_str);
+    vbn_size = os_u64_to_bstr(vbn, vbn_str);
+    ext_pair_size = os_extent_to_extent_pair(lbn, blk_cnt, ext_pair);
     
-    ret = index_search_key_nolock(obj, addr_str, addr_size, len_str, len_size);
+    ret = index_search_key_nolock(obj, vbn_str, vbn_size, ext_pair, ext_pair_size);
     if (ret < 0)
     {
         if (ret != -INDEX_ERR_KEY_NOT_FOUND)
@@ -84,7 +91,6 @@ int32_t alloc_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt, 
 
         // no overlap
         addr = os_bstr_to_u64(GET_IE_KEY(obj->ie), obj->ie->key_len);
-        start_blk = addr; //  reset the start block
     }
     else
     {
@@ -108,8 +114,6 @@ int32_t alloc_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt, 
         start_blk = addr;  // allocate from addr
         end_blk = start_blk + blk_cnt;
         
-        *real_start_blk = addr;
-        
         if (end_blk < end)
         {
             addr_size = os_u64_to_bstr(end_blk, addr_str);
@@ -131,7 +135,6 @@ int32_t alloc_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt, 
     
     end_blk = start_blk + blk_cnt;
     ASSERT(start_blk < end);
-    *real_start_blk = start_blk;
     
     addr_size = os_u64_to_bstr(addr, addr_str);
     len_size = os_u64_to_bstr(start_blk - addr, len_str);
@@ -159,8 +162,9 @@ int32_t alloc_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt, 
     return (uint32_t)(end - start_blk);
 }
 
-int32_t free_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt)
+int32_t remove_extent(object_handle_t *obj, uint64_t vbn, uint64_t lbn, uint32_t blk_cnt)
 {
+    uint64_t start_blk;
     uint64_t addr;
     uint32_t len;
     uint8_t addr_str[U64_MAX_SIZE];
@@ -234,4 +238,6 @@ int32_t free_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt)
 
     return index_insert_key_nolock(obj, addr_str, addr_size, len_str, len_size);
 }
+
+#endif
 

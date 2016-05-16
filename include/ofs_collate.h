@@ -44,12 +44,11 @@ extern "C"
 
 typedef uint16_t unicode_char_t;
 
-#define EXTENT_PAIR_MAX_SIZE  17
 #define U64_MAX_SIZE          sizeof(uint64_t)
 
 typedef struct index_extent
 {
-    uint64_t addr;  // start address
+    uint64_t pa;         // physical address
     uint64_t len;         // length
 } index_extent_t;
 
@@ -69,6 +68,7 @@ enum
 #define CR_MASK               0x000F
 
 #define EXT_PAIR_HEADER_SIZE    sizeof(uint8_t)  // ext_pair: header, addr, len
+#define EXT_PAIR_MAX_SIZE       (U64_MAX_SIZE + U64_MAX_SIZE + EXT_PAIR_HEADER_SIZE)
 
 int32_t os_collate_binary(const uint8_t *b1, uint32_t b1_size, const uint8_t *b2, uint32_t b2_size);
 int32_t os_collate_unicode_string(const unicode_char_t *s1, uint32_t s1_size, const unicode_char_t *s2, uint32_t s2_size);
@@ -77,9 +77,8 @@ uint32_t os_u64_to_bstr(uint64_t u64, uint8_t *b);
 uint64_t os_bstr_to_u64(const uint8_t *b, uint32_t b_size);
 int32_t os_collate_u64(const uint8_t *b1, uint32_t b1_size, const uint8_t *b2, uint32_t b2_size);
 uint32_t os_u64_size(uint64_t u64);
-uint32_t os_extent_to_extent_pair(const index_extent_t *ext, uint8_t *ext_pair);
-uint64_t os_extent_pair_to_extent(const uint8_t *ext_pair, uint32_t ext_pair_size, uint64_t *addr);
-uint32_t os_extent_to_extent_pair2(uint64_t addr, uint64_t len, uint8_t *ext_pair);
+uint64_t os_extent_pair_to_extent(const uint8_t *ext_pair, uint32_t ext_pair_size, uint64_t *pa);
+uint32_t os_extent_to_extent_pair(uint64_t pa, uint64_t len, uint8_t *ext_pair);
 int32_t os_collate_extent(const uint8_t *k1, uint32_t k1_size, const uint8_t *v1, uint32_t v1_size,
     const uint8_t *k2, uint32_t k2_size, const uint8_t *v2, uint32_t v2_size);
 

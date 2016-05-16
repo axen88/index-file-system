@@ -46,6 +46,8 @@ typedef struct ofs_extent_map_entry
     uint32_t len;
 } ofs_extent_map_entry_t;
 
+int32_t insert_extent(object_handle_t *obj, uint64_t vbn, uint64_t lbn, uint32_t blk_cnt);
+int32_t remove_extent(object_handle_t *obj, uint64_t vbn, uint64_t lbn, uint32_t blk_cnt);
 
 #endif
 

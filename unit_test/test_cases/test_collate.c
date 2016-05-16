@@ -139,34 +139,25 @@ void test_cr_u64_3(void)
 
 void test_cr_extent_1(void)
 {
-    index_extent_t ext;
     uint8_t ext_pair[32];
     uint32_t ext_pair_size;
 
-    ext.addr = 0;
-    ext.len = 0;
-    ext_pair_size = os_extent_to_extent_pair(&ext, ext_pair);
+    ext_pair_size = os_extent_to_extent_pair(0, 0, ext_pair);
     CU_ASSERT(ext_pair_size == 0);
     
-    ext.addr = 0;
-    ext.len = 1;
-    ext_pair_size = os_extent_to_extent_pair(&ext, ext_pair);
+    ext_pair_size = os_extent_to_extent_pair(0, 1, ext_pair);
     CU_ASSERT(ext_pair_size == 3);
     CU_ASSERT(ext_pair[0] == 1);
     CU_ASSERT(ext_pair[1] == 0);
     CU_ASSERT(ext_pair[2] == 1);
     
-    ext.addr = 0x55;
-    ext.len = 0xAA;
-    ext_pair_size = os_extent_to_extent_pair(&ext, ext_pair);
+    ext_pair_size = os_extent_to_extent_pair(0x55, 0xAA, ext_pair);
     CU_ASSERT(ext_pair_size == 3);
     CU_ASSERT(ext_pair[0] == 1);
     CU_ASSERT(ext_pair[1] == 0x55);
     CU_ASSERT(ext_pair[2] == 0xAA);
     
-    ext.addr = 0x6655;
-    ext.len = 0x8877;
-    ext_pair_size = os_extent_to_extent_pair(&ext, ext_pair);
+    ext_pair_size = os_extent_to_extent_pair(0x6655, 0x8877, ext_pair);
     CU_ASSERT(ext_pair_size == 5);
     CU_ASSERT(ext_pair[0] == 2);
     CU_ASSERT(ext_pair[1] == 0x55);
@@ -174,9 +165,7 @@ void test_cr_extent_1(void)
     CU_ASSERT(ext_pair[3] == 0x77);
     CU_ASSERT(ext_pair[4] == 0x88);
     
-    ext.addr = 0x221100;
-    ext.len = 0xffeeddccbbaa99;
-    ext_pair_size = os_extent_to_extent_pair(&ext, ext_pair);
+    ext_pair_size = os_extent_to_extent_pair(0x221100, 0xffeeddccbbaa99, ext_pair);
     CU_ASSERT(ext_pair_size == 11);
     CU_ASSERT(ext_pair[0] == 3);
     CU_ASSERT(ext_pair[1] == 0x00);
@@ -190,10 +179,7 @@ void test_cr_extent_1(void)
     CU_ASSERT(ext_pair[9] == 0xee);
     CU_ASSERT(ext_pair[10] == 0xff);
 
-
-    ext.addr = 0x7766554433221100;
-    ext.len = 0xffeeddccbbaa9988;
-    ext_pair_size = os_extent_to_extent_pair(&ext, ext_pair);
+    ext_pair_size = os_extent_to_extent_pair(0x7766554433221100, 0xffeeddccbbaa9988, ext_pair);
     CU_ASSERT(ext_pair_size == 17);
     CU_ASSERT(ext_pair[0] == 8);
     CU_ASSERT(ext_pair[1] == 0x00);
@@ -223,17 +209,17 @@ void test_cr_extent_2(void)
     ext_pair[0] = 1;
     ext_pair[1] = 0;
     ext_pair[2] = 1;
-    ext.len = os_extent_pair_to_extent(ext_pair, 2, &ext.addr); // invalid extent pair
+    ext.len = os_extent_pair_to_extent(ext_pair, 2, &ext.pa); // invalid extent pair
     CU_ASSERT(ext.len == 0);
-    ext.len = os_extent_pair_to_extent(ext_pair, 3, &ext.addr);
-    CU_ASSERT(ext.addr == 0);
+    ext.len = os_extent_pair_to_extent(ext_pair, 3, &ext.pa);
+    CU_ASSERT(ext.pa == 0);
     CU_ASSERT(ext.len == 1);
     
     ext_pair[0] = 1;
     ext_pair[1] = 0x55;
     ext_pair[2] = 0xAA;
-    ext.len = os_extent_pair_to_extent(ext_pair, 3, &ext.addr);
-    CU_ASSERT(ext.addr == 0x55);
+    ext.len = os_extent_pair_to_extent(ext_pair, 3, &ext.pa);
+    CU_ASSERT(ext.pa == 0x55);
     CU_ASSERT(ext.len == 0xAA);
     
     ext_pair[0] = 2;
@@ -241,8 +227,8 @@ void test_cr_extent_2(void)
     ext_pair[2] = 0x66;
     ext_pair[3] = 0x77;
     ext_pair[4] = 0x88;
-    ext.len = os_extent_pair_to_extent(ext_pair, 5, &ext.addr);
-    CU_ASSERT(ext.addr == 0x6655);
+    ext.len = os_extent_pair_to_extent(ext_pair, 5, &ext.pa);
+    CU_ASSERT(ext.pa == 0x6655);
     CU_ASSERT(ext.len == 0x8877);
     
     ext_pair[0] = 3;
@@ -256,8 +242,8 @@ void test_cr_extent_2(void)
     ext_pair[8] = 0xdd;
     ext_pair[9] = 0xee;
     ext_pair[10] = 0xff;
-    ext.len = os_extent_pair_to_extent(ext_pair, 11, &ext.addr);
-    CU_ASSERT(ext.addr == 0x221100);
+    ext.len = os_extent_pair_to_extent(ext_pair, 11, &ext.pa);
+    CU_ASSERT(ext.pa == 0x221100);
     CU_ASSERT(ext.len == 0xffeeddccbbaa99);
 
     ext_pair[0] = 8;
@@ -277,8 +263,8 @@ void test_cr_extent_2(void)
     ext_pair[14] = 0xdd;
     ext_pair[15] = 0xee;
     ext_pair[16] = 0xff;
-    ext.len = os_extent_pair_to_extent(ext_pair, 17, &ext.addr);
-    CU_ASSERT(ext.addr == 0x7766554433221100);
+    ext.len = os_extent_pair_to_extent(ext_pair, 17, &ext.pa);
+    CU_ASSERT(ext.pa == 0x7766554433221100);
     CU_ASSERT(ext.len == 0xffeeddccbbaa9988);
 }
 
