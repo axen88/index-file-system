@@ -199,33 +199,50 @@ int32_t free_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt)
             }
             
             blk_cnt += len;
+            
+            /*ret = walk_tree(obj, INDEX_GET_CURRENT);
+            if (ret < 0)
+            {
+                LOG_ERROR("walk entry failed. objid(0x%llx) ret(%d)\n", obj->obj_info->objid, ret);
+                return ret;
+            }*/
         }
     }
 
-    ret = walk_tree(obj, INDEX_GET_PREV); // get prev key
-    if (ret == 0)
-    { // prev key got
-        addr = os_bstr_to_u64(GET_IE_KEY(obj->ie), obj->ie->key_len);
-        len = (uint32_t)os_bstr_to_u64(GET_IE_VALUE(obj->ie), obj->ie->value_len);
-        
-        if ((addr + len) > start_blk)
-        {
-            LOG_ERROR("the tree chaos. objid(0x%llx)\n", obj->obj_info->objid);
-            return -INDEX_ERR_CHAOS;
-        }
-        
-        if ((addr + len) == start_blk)
-        {
-            ret = tree_remove_ie(obj);
-            if (ret < 0)
+    while (1) // temp code, marked by axen.hook
+    {
+        ret = walk_tree(obj, INDEX_GET_PREV); // get prev key
+        if (ret == 0)
+        { // prev key got
+            addr = os_bstr_to_u64(GET_IE_KEY(obj->ie), obj->ie->key_len);
+            len = (uint32_t)os_bstr_to_u64(GET_IE_VALUE(obj->ie), obj->ie->value_len);
+            
+            if ((addr + len) > start_blk)
             {
-                LOG_ERROR("remove entry failed. objid(0x%llx) ret(%d)\n", obj->obj_info->objid, ret);
-                return ret;
+                if (addr > start_blk)
+                {
+                    continue;
+                }
+                
+                LOG_ERROR("the tree chaos. objid(0x%llx)\n", obj->obj_info->objid);
+                return -INDEX_ERR_CHAOS;
             }
-        
-            start_blk = addr;
-            blk_cnt += len;
+            
+            if ((addr + len) == start_blk)
+            {
+                ret = tree_remove_ie(obj);
+                if (ret < 0)
+                {
+                    LOG_ERROR("remove entry failed. objid(0x%llx) ret(%d)\n", obj->obj_info->objid, ret);
+                    return ret;
+                }
+            
+                start_blk = addr;
+                blk_cnt += len;
+            }
         }
+
+        break;
     }
 
     addr_size = os_u64_to_bstr(start_blk, addr_str);
