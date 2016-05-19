@@ -62,7 +62,7 @@ int32_t main(int32_t argc, char *argv[])
     int32_t ret = 0;
     net_para_t net;
     
-    LOG_SYSTEM_INIT();
+    LOG_SYSTEM_INIT("./log", "log");
     ret = ofs_init_system();
     if (ret < 0)
     {

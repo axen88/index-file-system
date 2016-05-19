@@ -44,7 +44,7 @@ History:
 
 static int init_suite(void)
 {
-    LOG_SYSTEM_INIT();
+    LOG_SYSTEM_INIT("./log", "log");
     return ofs_init_system();
 }
 

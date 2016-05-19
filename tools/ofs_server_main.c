@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
     listen_event = event_new(base, listener, EV_READ|EV_PERSIST, do_accept, (void*)base);
     event_add(listen_event, NULL);
     
-    LOG_SYSTEM_INIT();
+    LOG_SYSTEM_INIT("./log", "log");
     ret = ofs_init_system();
     if (ret < 0)
     {

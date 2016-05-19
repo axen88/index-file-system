@@ -57,7 +57,7 @@ extern void log_trace(void *log, uint32_t pid, uint32_t level, const char *forma
 
 extern void *g_log_hnd;
 
-#define LOG_SYSTEM_INIT()          g_log_hnd = log_open("LOG", "V100R001C01", "./log", LOG_TO_FILE)
+#define LOG_SYSTEM_INIT(dir, name)          g_log_hnd = log_open(name, "V100R001C01", dir, LOG_TO_FILE)
 #define LOG_SYSTEM_EXIT()          log_close(g_log_hnd);
 #define LOG_SET_LEVEL(pid, level)  log_set_level(g_log_hnd, pid, level)
 #define LOG_GET_LEVEL(pid)         log_get_level(g_log_hnd, pid)

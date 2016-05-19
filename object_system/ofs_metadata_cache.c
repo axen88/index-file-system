@@ -293,7 +293,7 @@ int32_t clean_obj_root_cache(container_handle_t *ct, object_info_t *obj_info)
 
     if (CACHE_DIRTY(&obj_info->root_cache))
     {
-        SET_CACHE_DIRTY(&obj_info->root_cache);
+        SET_CACHE_CLEAN(&obj_info->root_cache);
     }
     
     return 0;
@@ -310,8 +310,49 @@ int32_t clean_all_obj_root_cache(container_handle_t *ct)
     return 0;
 }
 
+void validate_obj_inode(object_info_t *obj_info);
+
+int32_t validate_one_user_object(void *para, object_info_t *obj_info)
+{
+    ASSERT(obj_info != NULL);
+
+    if (obj_info->objid < RESERVED_OBJ_ID) // ignore the system object
+    {
+        return 0;
+    }
+
+    validate_obj_inode(obj_info);
+    return 0;
+}
+
+
+int32_t validate_one_system_object(void *para, object_info_t *obj_info)
+{
+    ASSERT(obj_info != NULL);
+
+    if (obj_info->objid >= RESERVED_OBJ_ID)  // ignore the user object
+    {
+        return -1; // break;
+    }
+
+    validate_obj_inode(obj_info);
+    return 0;
+}
+
+int32_t validate_all_objects(container_handle_t *ct)
+{
+    ASSERT(ct != NULL);
+    
+    // validate all object
+    avl_walk_all(&ct->obj_info_list, (avl_walk_cb_t)validate_one_user_object, NULL);
+    avl_walk_all(&ct->obj_info_list, (avl_walk_cb_t)validate_one_system_object, NULL);
+
+    return 0;
+}
+
 int32_t commit_container_modification(container_handle_t *ct)
 {
+    validate_all_objects(ct);
     flush_container_cache(ct);
     clean_all_obj_root_cache(ct);
 

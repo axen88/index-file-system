@@ -42,7 +42,7 @@ History:
 
 static int init_suite(void)
 {
-    LOG_SYSTEM_INIT();
+    LOG_SYSTEM_INIT("./log", "log");
     return ofs_init_system();
 }
 
@@ -60,7 +60,7 @@ static int clean_suite(void)
 void test_kv_2(void)
 {
 #define TEST_KEY_BEGIN   0
-#define TEST_KEY_NUM     100000
+#define TEST_KEY_NUM     20000
 
     container_handle_t *ct;
     object_handle_t *obj;
@@ -186,6 +186,72 @@ void test_kv_3(void)
     CU_ASSERT(ofs_close_container(ct) == 0);
 }
 
+void test_kv_4(void)
+{
+#define TEST_KEY_BEGIN   0
+#undef TEST_KEY_NUM
+#define TEST_KEY_NUM     50000
+
+    container_handle_t *ct;
+    object_handle_t *obj;
+    uint64_t key;
+    uint64_t i;
+    
+    // create ct and object, insert and remove key
+    CU_ASSERT(ofs_create_container("kv", 100000, &ct) == 0);
+    CU_ASSERT(ofs_create_object(ct, 500, FLAG_TABLE | CR_BINARY | (CR_ANSI_STRING << 4), &obj) == 0);
+    CU_ASSERT(commit_container_modification(ct) == 0);
+
+    key = TEST_KEY_BEGIN;
+    for (i = 0; i < TEST_KEY_NUM; i++, key++)
+    {
+        CU_ASSERT(index_insert_key(obj, &key, U64_MAX_SIZE, TEST_V1, strlen(TEST_V1)) == 0);
+        CU_ASSERT(commit_container_modification(ct) == 0);
+    }
+
+    ofs_init_system(); // emulate power down on exception
+    
+    // open ct and object, insert key
+    CU_ASSERT(ofs_open_container("kv", &ct) == 0);
+    CU_ASSERT(ofs_open_object(ct, 500, &obj) == 0);
+
+	key = TEST_KEY_BEGIN;
+    for (i = 0; i < TEST_KEY_NUM; i++, key++)
+    {
+        CU_ASSERT(index_remove_key(obj, &key, U64_MAX_SIZE) == 0);
+        CU_ASSERT(commit_container_modification(ct) == 0);
+    }
+    
+    ofs_init_system(); // emulate power down on exception
+
+    // open ct and object, inser and remove key
+    CU_ASSERT(ofs_open_container("kv", &ct) == 0);
+    CU_ASSERT(ofs_open_object(ct, 500, &obj) == 0);
+
+    key = TEST_KEY_BEGIN;
+    for (i = 0; i < TEST_KEY_NUM; i++, key++)
+    {
+        CU_ASSERT(index_insert_key(obj, &key, U64_MAX_SIZE, TEST_V2, strlen(TEST_V2)) == 0);
+        CU_ASSERT(commit_container_modification(ct) == 0);
+    }
+
+    ofs_init_system(); // emulate power down on exception
+    
+    // open ct and object, insert key
+    CU_ASSERT(ofs_open_container("kv", &ct) == 0);
+    CU_ASSERT(ofs_open_object(ct, 500, &obj) == 0);
+
+    key = TEST_KEY_BEGIN;
+    for (i = 0; i < TEST_KEY_NUM; i++, key++)
+    {
+        CU_ASSERT(index_remove_key(obj, &key, U64_MAX_SIZE) == 0);
+        CU_ASSERT(commit_container_modification(ct) == 0);
+    }
+
+    CU_ASSERT(ofs_close_object(obj) == 0);
+    CU_ASSERT(ofs_close_container(ct) == 0);
+}
+
 int add_kv_test_case2(void)
 {
     CU_pSuite pSuite = NULL;
@@ -201,6 +267,11 @@ int add_kv_test_case2(void)
     }
 
     if (!CU_add_test(pSuite, "test kv 3", test_kv_3))
+    {
+       return -2;
+    }
+
+    if (!CU_add_test(pSuite, "test kv 4", test_kv_4))
     {
        return -2;
     }
