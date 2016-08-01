@@ -5,16 +5,14 @@ AR = ar
 LD = ld
 
 PUBLIC_DIR := public
-TOOLS_DIR := tools
-OS_DIR := object_system
-FS_DIR := file_system
+TOOLS_DIR  := tools
+OBS_DIR    := object_system
 
 CFLAGS = -Iinclude -Ipublic -Wall -g -Wno-unused  -D__EN_FILE_IF__
 
-LIB_OBJS = $(OS_DIR)/ofs_block_rw.o $(OS_DIR)/ofs_btree.o $(OS_DIR)/ofs_container_manager.o \
-	    $(OS_DIR)/ofs_metadata_cache.o $(OS_DIR)/ofs_collate.o $(OS_DIR)/ofs_extent_map.o \
-	    $(OS_DIR)/ofs_object_manager.o $(OS_DIR)/ofs_log.o $(OS_DIR)/ofs_space_manager.o \
-		$(FS_DIR)/ofs_file.o $(FS_DIR)/ofs_dir.o $(FS_DIR)/ofs_xattr.o \
+LIB_OBJS = $(OBS_DIR)/ofs_block_rw.o $(OBS_DIR)/ofs_btree.o $(OBS_DIR)/ofs_container_manager.o \
+	    $(OBS_DIR)/ofs_metadata_cache.o $(OBS_DIR)/ofs_collate.o $(OBS_DIR)/ofs_extent_map.o \
+	    $(OBS_DIR)/ofs_object_manager.o $(OBS_DIR)/ofs_log.o $(OBS_DIR)/ofs_space_manager.o \
 	    $(PUBLIC_DIR)/avl.o $(PUBLIC_DIR)/os_cmd_ui.o \
 	    $(PUBLIC_DIR)/os_log.o  $(PUBLIC_DIR)/os_utils.o $(PUBLIC_DIR)/os_file_if.o \
 
