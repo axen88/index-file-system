@@ -16,20 +16,20 @@ LIB_OBJS = $(OBS_DIR)/ofs_block_rw.o $(OBS_DIR)/ofs_btree.o $(OBS_DIR)/ofs_conta
 	    $(PUBLIC_DIR)/avl.o $(PUBLIC_DIR)/os_cmd_ui.o \
 	    $(PUBLIC_DIR)/os_log.o  $(PUBLIC_DIR)/os_utils.o $(PUBLIC_DIR)/os_file_if.o \
 
-PUBLIC_OBJS = $(TOOLS_DIR)/ofs_tools_dump.o $(TOOLS_DIR)/ofs_tools_debug.o \
+TOOLS_OBJS = $(TOOLS_DIR)/ofs_tools_dump.o $(TOOLS_DIR)/ofs_tools_debug.o \
 	    $(TOOLS_DIR)/ofs_tools_list.o  $(TOOLS_DIR)/ofs_tools_if.o \
 	    $(TOOLS_DIR)/ofs_tools_tree.o  $(TOOLS_DIR)/ofs_tools_performace.o 
 	    
 SERVER_OBJS = $(TOOLS_DIR)/ofs_server_main.o  
 CLIENT_OBJS = $(TOOLS_DIR)/ofs_client_main.o
-TOOLS_OBJS = $(TOOLS_DIR)/ofs_tools_main.o
+UI_OBJS     = $(TOOLS_DIR)/ofs_tools_main.o
 
 OFS_LIB = libofs.a
 OFS_SERVER = ofs_server
 OFS_CLIENT = ofs_client
-OFS_TOOLS = ofs_tools
+OFS_UI     = ofs_ui
 
-TARGET_ALL = $(OFS_LIB) $(OFS_SERVER) $(OFS_CLIENT) $(OFS_TOOLS)
+TARGET_ALL = $(OFS_LIB) $(OFS_SERVER) $(OFS_CLIENT) $(OFS_UI)
 
 all: $(TARGET_ALL)
 
@@ -42,14 +42,14 @@ all: $(TARGET_ALL)
 $(OFS_LIB): $(LIB_OBJS)
 	$(AR) rcs $@ $^
 
-$(OFS_SERVER): $(LIB_OBJS) $(SERVER_OBJS) $(PUBLIC_OBJS)
+$(OFS_SERVER): $(LIB_OBJS) $(SERVER_OBJS) $(TOOLS_OBJS)
 	$(CC) -o $@ $^ -lpthread -levent
 	
 $(OFS_CLIENT): $(CLIENT_OBJS)
 	$(CC) -o $@ $^ -levent
 
-$(OFS_TOOLS): $(LIB_OBJS) $(TOOLS_OBJS) $(PUBLIC_OBJS)
+$(OFS_UI): $(LIB_OBJS) $(UI_OBJS) $(TOOLS_OBJS)
 	$(CC) -o $@ $^ -lpthread
 	
 clean:
-	rm -f $(LIB_OBJS) $(SERVER_OBJS) $(CLIENT_OBJS) $(TOOLS_OBJS) $(PUBLIC_OBJS) $(OFS_TOOLS) $(TARGET_ALL)
+	rm -f $(LIB_OBJS) $(SERVER_OBJS) $(CLIENT_OBJS) $(UI_OBJS) $(TOOLS_OBJS) $(TARGET_ALL)
