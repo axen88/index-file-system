@@ -177,18 +177,6 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<File
-				RelativePath="..\file_system\ofs_dir.c"
-				>
-			</File>
-			<File
-				RelativePath="..\file_system\ofs_file.c"
-				>
-			</File>
-			<File
-				RelativePath="..\file_system\ofs_xattr.c"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="include"

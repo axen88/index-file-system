@@ -671,7 +671,8 @@ static void remove_ie(index_block_t *ib, index_entry_t *ie)
     ib->head.real_size -= ie->len;
     next_ie = GET_NEXT_IE(ie);
     next_ie->prev_len = ie->prev_len;
-    memcpy(ie, next_ie, get_entries_length(next_ie));
+    //memcpy(ie, next_ie, get_entries_length(next_ie));
+    memmove(ie, next_ie, get_entries_length(next_ie));
 
     return;
 }
