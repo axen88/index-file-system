@@ -336,6 +336,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\public\hashtab.c"
+				>
+			</File>
+			<File
 				RelativePath="..\public\os_cmd_ui.c"
 				>
 			</File>
