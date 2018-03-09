@@ -29,7 +29,8 @@ OFS_SERVER = ofs_server
 OFS_CLIENT = ofs_client
 OFS_UI     = ofs_ui
 
-TARGET_ALL = $(OFS_LIB) $(OFS_SERVER) $(OFS_CLIENT) $(OFS_UI)
+#TARGET_ALL = $(OFS_LIB) $(OFS_SERVER) $(OFS_CLIENT) $(OFS_UI)
+TARGET_ALL = $(OFS_LIB) $(OFS_UI)
 
 all: $(TARGET_ALL)
 
