@@ -8,8 +8,8 @@ PUBLIC_DIR := .
 
 CFLAGS = -I. -Wall -g -Wno-unused  -D__EN_FILE_IF__
 
-LIB_OBJS = $(PUBLIC_DIR)/avl.o $(PUBLIC_DIR)/os_cmd_ui.o \
-	    $(PUBLIC_DIR)/os_log.o  $(PUBLIC_DIR)/os_utils.o $(PUBLIC_DIR)/os_file_if.o \
+LIB_OBJS = $(PUBLIC_DIR)/avl.o $(PUBLIC_DIR)/cmd_ui.o \
+	    $(PUBLIC_DIR)/log.o  $(PUBLIC_DIR)/utils.o $(PUBLIC_DIR)/file_if.o \
 	    
 	    
 
