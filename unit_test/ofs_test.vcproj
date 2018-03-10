@@ -336,23 +336,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\public\cmd_ui.c"
+				>
+			</File>
+			<File
+				RelativePath="..\public\file_if.c"
+				>
+			</File>
+			<File
 				RelativePath="..\public\hashtab.c"
 				>
 			</File>
 			<File
-				RelativePath="..\public\os_cmd_ui.c"
+				RelativePath="..\public\log.c"
 				>
 			</File>
 			<File
-				RelativePath="..\public\os_file_if.c"
-				>
-			</File>
-			<File
-				RelativePath="..\public\os_log.c"
-				>
-			</File>
-			<File
-				RelativePath="..\public\os_utils.c"
+				RelativePath="..\public\utils.c"
 				>
 			</File>
 		</Filter>

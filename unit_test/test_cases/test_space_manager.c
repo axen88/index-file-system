@@ -36,7 +36,7 @@ History:
     1. Primary version
 *******************************************************************************/
 #include "ofs_if.h"
-#include "os_log.h"
+#include "log.h"
 
 #include "Basic.h"
 
