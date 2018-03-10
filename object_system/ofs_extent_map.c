@@ -39,7 +39,7 @@ History:
 #include "ofs_if.h"
  
 MODULE(PID_EXTENT_MAP);
-#include "os_log.h"
+#include "log.h"
 
 #if 0
 

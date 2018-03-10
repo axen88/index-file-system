@@ -37,7 +37,7 @@ History:
 #include "ofs_if.h"
 
 MODULE(PID_CONTAINER);
-#include "os_log.h"
+#include "log.h"
 
 avl_tree_t *g_container_list = NULL;
 os_rwlock g_container_list_rwlock;

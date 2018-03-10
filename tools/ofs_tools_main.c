@@ -38,7 +38,7 @@ History:
 #include "ofs_if.h"
 
 MODULE(PID_TOOLS);
-#include "os_log.h"
+#include "log.h"
 
 extern os_cmd_list_t ifs_cmd_list[];
 

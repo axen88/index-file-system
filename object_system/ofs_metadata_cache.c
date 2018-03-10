@@ -39,7 +39,7 @@ History:
 #include "ofs_if.h"
 
 MODULE(PID_CACHE);
-#include "os_log.h"
+#include "log.h"
 
 
 int32_t compare_cache2(const uint64_t *vbn, ofs_block_cache_t *cache_node)

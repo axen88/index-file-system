@@ -10,11 +10,13 @@ OBS_DIR    := object_system
 
 CFLAGS = -Iinclude -Ipublic -Wall -g -Wno-unused  -D__EN_FILE_IF__
 
+PUBLIC_OBJS = $(PUBLIC_DIR)/avl.o $(PUBLIC_DIR)/cmd_ui.o \
+	    $(PUBLIC_DIR)/log.o  $(PUBLIC_DIR)/utils.o $(PUBLIC_DIR)/file_if.o
+
 LIB_OBJS = $(OBS_DIR)/ofs_block_rw.o $(OBS_DIR)/ofs_btree.o $(OBS_DIR)/ofs_container_manager.o \
 	    $(OBS_DIR)/ofs_metadata_cache.o $(OBS_DIR)/ofs_collate.o $(OBS_DIR)/ofs_extent_map.o \
 	    $(OBS_DIR)/ofs_object_manager.o $(OBS_DIR)/ofs_log.o $(OBS_DIR)/ofs_space_manager.o \
-	    $(PUBLIC_DIR)/avl.o $(PUBLIC_DIR)/os_cmd_ui.o \
-	    $(PUBLIC_DIR)/os_log.o  $(PUBLIC_DIR)/os_utils.o $(PUBLIC_DIR)/os_file_if.o \
+		$(PUBLIC_OBJS)
 
 TOOLS_OBJS = $(TOOLS_DIR)/ofs_tools_dump.o $(TOOLS_DIR)/ofs_tools_debug.o \
 	    $(TOOLS_DIR)/ofs_tools_list.o  $(TOOLS_DIR)/ofs_tools_if.o \

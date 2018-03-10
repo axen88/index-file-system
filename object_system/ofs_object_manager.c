@@ -37,7 +37,7 @@ History:
 #include "ofs_if.h"
 
 MODULE(PID_OBJECT);
-#include "os_log.h"
+#include "log.h"
 
 int32_t compare_object2(const void *objid, object_info_t *obj_info)
 {
