@@ -148,8 +148,70 @@ extern "C" {
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
+
+
+typedef struct 
+{
+    os_thread_t *tid;
+    int expect_num;
+    int real_num;
+} threads_group_t;
+
+static inline threads_group_t *create_threads_group(int tid_num,
+    void *(*func)(void *), void *para, char *name)
+{
+    int i;
+
+    threads_group_t *threads_group = (threads_group_t *)OS_MALLOC(sizeof(threads_group_t));
+    if (NULL == threads_group)
+    {
+        return NULL;
+    }
+
+    os_thread_t *tid = (os_thread_t *)OS_MALLOC(sizeof(os_thread_t) * tid_num);
+    if (NULL == tid)
+    {
+        OS_FREE(threads_group);
+        return NULL;
+    }
+
+    for (i = 0; i < tid_num; i++)
+    {
+        tid[i] = INVALID_TID;
+    }
+
+    threads_group->expect_num = tid_num;
+    threads_group->tid = tid;
     
+    for (i = 0; i < tid_num; i++)
+    {
+        tid[i] = thread_create(func, para, name);
+    }
+
+    return threads_group;
+}
+
+static inline void destroy_threads_group(threads_group_t *threads_group, bool_t force)
+{
+    int i;
+
+    ASSERT(threads_group);
     
+    for (i = 0; i < threads_group->expect_num; i++)
+    {
+        if (threads_group->tid[i] != INVALID_TID)
+        {
+            thread_destroy(threads_group->tid[i], force);
+        }
+    }
+
+    OS_FREE(threads_group->tid);
+    threads_group->tid = NULL;
+
+    OS_FREE(threads_group);
+}
+    
+
 #ifndef NULL
 #define NULL ((void *)0)
 #endif
