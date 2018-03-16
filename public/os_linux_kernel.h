@@ -89,7 +89,7 @@ typedef struct task_struct *        os_thread_t;
 #define OS_RWLOCK_WRUNLOCK(v_pMutex)  write_unlock(v_pMutex)
 #define OS_RWLOCK_DESTROY(v_pMutex)
 
-#define ASSERT(x)
+#define ASSERT(x) assert(x)
 
 static inline os_thread_t thread_create(void *(*func)(void *), void *para, char *thread_name)
 {

@@ -45,6 +45,7 @@ History:
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <assert.h>
 
 #ifdef	__cplusplus
 extern "C" {
@@ -85,7 +86,7 @@ typedef pthread_t                   os_thread_t;
 
 #define OS_SNPRINTF    (void)snprintf
 
-#define ASSERT(x)
+#define ASSERT(x) assert(x)
 #define EXPORT_SYMBOL(x)
 #define module_init(x)
 #define module_exit(x)
