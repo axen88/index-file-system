@@ -51,8 +51,8 @@ History:
 extern "C" {
 #endif
 
-#define OS_MALLOC   malloc
-#define OS_FREE     free
+#define OS_MALLOC(size)   malloc(size)
+#define OS_FREE(mem)     free(mem)
 #define OS_PRINT(n, fmt, ...)   (n)->print((n)->net, fmt, ##__VA_ARGS__)
 #define OS_VSNPRINTF             vsnprintf
     
@@ -60,7 +60,7 @@ extern "C" {
 
 #define OS_STR2ULL(pcBuf, end, base)   strtoull(pcBuf, end, base)
 #define OS_SLEEP_SECOND(x)               sleep(x)
-#define OS_SLEEP_MS(x)                  
+#define OS_SLEEP_MS(x)                   usleep(x * 1000)
 #define OS_THREAD_EXIT()                  pthread_exit(NULL)
 
 typedef pthread_mutex_t             os_mutex_t;
@@ -91,6 +91,16 @@ typedef pthread_t                   os_thread_t;
 #define module_init(x)
 #define module_exit(x)
 
+typedef uint32_t atomic_t;
+
+#define atomic_inc(x) __sync_fetch_and_add(x, 1)
+#define atomic_dec(x) __sync_fetch_and_sub(x, 1)
+
+#define atomic_add(x, n) __sync_fetch_and_add(x, n)
+#define atomic_sub(x, n) __sync_fetch_and_sub(x, n)
+
+#define atomic_set(x, n)  (*(x)) = n
+#define atomic_read(x)    (*(x))
 
 static inline os_thread_t thread_create(void *(*func)(void *), void *para, char *thread_name)
 {

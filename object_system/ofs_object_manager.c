@@ -91,7 +91,7 @@ int32_t get_object_info(container_handle_t *ct, uint64_t objid, object_info_t **
     obj_info->ct = ct;
     obj_info->objid = objid;
     
-    dlist_init_head(&obj_info->obj_hnd_list);
+    list_init_head(&obj_info->obj_hnd_list);
     OS_RWLOCK_INIT(&obj_info->obj_hnd_lock);
     
     OS_RWLOCK_INIT(&obj_info->attr_lock);
@@ -144,7 +144,7 @@ int32_t get_object_handle(object_info_t *obj_info, object_handle_t **obj_out)
     obj->obj_info = obj_info;
     obj->ct = obj_info->ct;
 
-    dlist_add_tail(&obj_info->obj_hnd_list, &obj->entry);
+    list_add_tail(&obj_info->obj_hnd_list, &obj->entry);
     obj_info->ref_cnt++;
     
     *obj_out = obj;
@@ -155,7 +155,7 @@ int32_t get_object_handle(object_info_t *obj_info, object_handle_t **obj_out)
 void put_object_handle(object_handle_t *obj)
 {
     obj->obj_info->ref_cnt--;
-    dlist_remove_entry(&obj->obj_info->obj_hnd_list, &obj->entry);
+    list_del(&obj->entry);
     OS_FREE(obj);
 
     return;
@@ -247,7 +247,7 @@ void put_all_object_handle(object_info_t *obj_info)
     
     while (obj_info->ref_cnt != 0)
     {
-        obj = OS_CONTAINER(obj_info->obj_hnd_list.head.next, object_handle_t, entry);
+        obj = OS_CONTAINER(obj_info->obj_hnd_list.next, object_handle_t, entry);
         put_object_handle(obj);
     }
 }
@@ -283,7 +283,7 @@ void init_inode(inode_record_t *inode, uint64_t objid, uint64_t inode_no, uint16
     inode->atime = 0;
     inode->mtime = 0;
     
-    snprintf(inode->name, OBJ_NAME_MAX_SIZE, "OBJ%lld", objid);
+    snprintf(inode->name, OBJ_NAME_MAX_SIZE, "OBJ%llu", (unsigned long long)objid);
     inode->name_size = strlen(inode->name);
 
     /* init attr */
@@ -628,7 +628,7 @@ object_handle_t *ofs_get_object_handle(container_handle_t *ct, uint64_t objid)
         return NULL;
     }
 
-    return OS_CONTAINER(obj_info->obj_hnd_list.head.next, object_handle_t, entry);
+    return OS_CONTAINER(obj_info->obj_hnd_list.next, object_handle_t, entry);
 }
 
 int32_t ofs_close_object_nolock(object_handle_t *obj)

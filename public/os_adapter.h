@@ -134,6 +134,8 @@ extern "C" {
     
 #define ArraySize(a)           (sizeof(a) / sizeof(a[0])) // Get array size
 
+#define DESC(x) 1
+
 #define OS_OFFSET(type, member) \
     (((ptr_t)(&(((type *)0x1234)->member))) - 0x1234)
     
@@ -149,6 +151,7 @@ extern "C" {
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
+#define to_str(x)  (#x)
 
 typedef struct 
 {

@@ -65,7 +65,7 @@ extern "C" {
 
 #define OS_STR2ULL(pcBuf, end, base)   strtoul(pcBuf, end, base)
 #define OS_SLEEP_SECOND(x)               Sleep(x)
-#define OS_SLEEP_MS(x)                  
+#define OS_SLEEP_MS(x)                   Sleep(x/1000)
 #define OS_THREAD_EXIT()                  ExitThread(0)
 
 typedef CRITICAL_SECTION            os_mutex_t;
@@ -106,7 +106,14 @@ do { \
 #define module_init(x)
 #define module_exit(x)
 
+#define atomic_set(x, n)  (*(x)) = n
+#define atomic_read(x, n)  (*(x))
 
+#define atomic_inc(x)  InterlockedIncrement(x)
+#define atomic_dec(x)  InterlockedDecrement(x)
+
+#define atomic_add(x, n)  InterlockedExchangeAdd(x, n)
+#define atomic_sub(x, n)  InterlockedExchangeAdd(x, -(n))
 
 static inline os_thread_t thread_create(void *(*func)(void *), void *para, char *thread_name)
 {

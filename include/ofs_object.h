@@ -69,7 +69,7 @@ struct object_info
     attr_record_t *attr_record;           // attr record
     os_rwlock attr_lock;               // lock  tree handle
 
-    dlist_head_t obj_hnd_list;        // all object handle
+    list_head_t obj_hnd_list;        // all object handle
     os_rwlock    obj_hnd_lock;        // lock the obj_hnd_list operation
 
     ofs_block_cache_t root_cache;
@@ -96,7 +96,7 @@ struct object_handle
     uint64_t position;
     index_entry_t *ie;        
 
-    dlist_entry_t entry;
+    list_head_t entry;
 };
 
 /* for internal only */
