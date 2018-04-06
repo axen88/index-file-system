@@ -83,6 +83,23 @@ uint64_t os_get_ms_count(void)
 #endif
 }
 
+uint64_t os_get_us_count(void)
+{
+#ifdef WIN32
+    return -1;
+#else
+    struct timeval tv;
+
+    #ifdef __KERNEL__
+    do_gettimeofday(&tv);
+    #else
+    gettimeofday(&tv, NULL);
+    #endif
+    
+    return ((((uint64_t)tv.tv_sec) * 1000 * 1000) + (((uint64_t)tv.tv_usec)));
+#endif
+}
+
 uint64_t os_get_second_count(void)
 {
 #ifdef __KERNEL__

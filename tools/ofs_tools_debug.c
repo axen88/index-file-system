@@ -47,7 +47,7 @@ static int32_t cmd_create(ifs_tools_para_t *para)
 
     if (strlen(para->ct_name) == 0)
     {
-        OS_PRINT(para->net, "ct name not specified.\n");
+        NET_PRINT(para->net, "ct name not specified.\n");
         return -1;
     }
     
@@ -56,12 +56,12 @@ static int32_t cmd_create(ifs_tools_para_t *para)
         ret = ofs_create_container(para->ct_name, para->total_sectors, &ct);
         if (ret < 0)
         {
-            OS_PRINT(para->net, "Create ct failed. ct(%s) total_sectors(%lld) ret(%d)\n",
+            NET_PRINT(para->net, "Create ct failed. ct(%s) total_sectors(%lld) ret(%d)\n",
                 para->ct_name, para->total_sectors, ret);
             return ret;
         }
         
-        OS_PRINT(para->net, "Create ct success. ct(%s) total_sectors(%lld) ct(%p)\n",
+        NET_PRINT(para->net, "Create ct success. ct(%s) total_sectors(%lld) ct(%p)\n",
             para->ct_name, para->total_sectors, ct);
         return 0;
     }
@@ -70,7 +70,7 @@ static int32_t cmd_create(ifs_tools_para_t *para)
     ct = ofs_get_container_handle(para->ct_name);
     if (ct == NULL)
     {
-        OS_PRINT(para->net, "The ct(%s) is not opened.\n", para->ct_name);
+        NET_PRINT(para->net, "The ct(%s) is not opened.\n", para->ct_name);
         return -2;
     }
 
@@ -78,11 +78,11 @@ static int32_t cmd_create(ifs_tools_para_t *para)
     ret = ofs_create_object(ct, para->objid, FLAG_TABLE | CR_ANSI_STRING | (CR_ANSI_STRING << 4), &obj);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Create obj failed. objid(%lld) ret(%d)\n", para->objid, ret);
+        NET_PRINT(para->net, "Create obj failed. objid(%lld) ret(%d)\n", para->objid, ret);
         return ret;
     }
 
-    OS_PRINT(para->net, "Create obj success. objid(%lld) obj(%p)\n", para->objid, obj);
+    NET_PRINT(para->net, "Create obj success. objid(%lld) obj(%p)\n", para->objid, obj);
     
     return 0;
 }
@@ -97,7 +97,7 @@ static int32_t cmd_open(ifs_tools_para_t *para)
 
     if (strlen(para->ct_name) == 0)
     {
-        OS_PRINT(para->net, "ct name not specified.\n");
+        NET_PRINT(para->net, "ct name not specified.\n");
         return -1;
     }
 
@@ -106,12 +106,12 @@ static int32_t cmd_open(ifs_tools_para_t *para)
         ret = ofs_open_container(para->ct_name, &ct);
         if (ret < 0)
         {
-            OS_PRINT(para->net, "Open ct failed. ct(%s) ret(%d)\n",
+            NET_PRINT(para->net, "Open ct failed. ct(%s) ret(%d)\n",
                 para->ct_name, ret);
             return ret;
         }
         
-        OS_PRINT(para->net, "Open ct success. ct(%s) ct(%p), ref_cnt(%d)\n",
+        NET_PRINT(para->net, "Open ct success. ct(%s) ct(%p), ref_cnt(%d)\n",
             para->ct_name, ct, ct->ref_cnt);
         return 0;
     }
@@ -119,18 +119,18 @@ static int32_t cmd_open(ifs_tools_para_t *para)
     ct = ofs_get_container_handle(para->ct_name);
     if (ct == NULL)
     {
-        OS_PRINT(para->net, "The ct is not opened. ct(%s)\n", para->ct_name);
+        NET_PRINT(para->net, "The ct is not opened. ct(%s)\n", para->ct_name);
         return -2;
     }
 
     ret = ofs_open_object(ct, para->objid, &obj);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Open obj failed. objid(%lld) ret(%d)\n", para->objid, ret);
+        NET_PRINT(para->net, "Open obj failed. objid(%lld) ret(%d)\n", para->objid, ret);
         return ret;
     }
 
-    OS_PRINT(para->net, "Open obj success. objid(%lld) obj(%p) ref_cnt(%d)\n",
+    NET_PRINT(para->net, "Open obj success. objid(%lld) obj(%p) ref_cnt(%d)\n",
         para->objid, obj, obj->obj_info->ref_cnt);
  
     return 0;
@@ -146,14 +146,14 @@ static int32_t cmd_close(ifs_tools_para_t *para)
 
     if (strlen(para->ct_name) == 0)
     {
-        OS_PRINT(para->net, "ct name not specified.\n");
+        NET_PRINT(para->net, "ct name not specified.\n");
         return -1;
     }
 
     ct = ofs_get_container_handle(para->ct_name);
     if (ct == NULL)
     {
-        OS_PRINT(para->net, "The ct is not opened. ct(%s)\n", para->ct_name);
+        NET_PRINT(para->net, "The ct is not opened. ct(%s)\n", para->ct_name);
         return -2;
     }
     
@@ -162,30 +162,30 @@ static int32_t cmd_close(ifs_tools_para_t *para)
         ret = ofs_close_container(ct);
         if (ret < 0)
         {
-            OS_PRINT(para->net, "Close ct failed. ct(%s) ret(%d)\n", para->ct_name, ret);
+            NET_PRINT(para->net, "Close ct failed. ct(%s) ret(%d)\n", para->ct_name, ret);
             return ret;
         }
         
-        OS_PRINT(para->net, "Close ct success. ct(%s)\n", para->ct_name);
+        NET_PRINT(para->net, "Close ct success. ct(%s)\n", para->ct_name);
         return 0;
     }
 
     obj = ofs_get_object_handle(ct, para->objid);
     if (obj == NULL)
     {
-        OS_PRINT(para->net, "The object is not opened. objid(%lld)\n", para->objid);
+        NET_PRINT(para->net, "The object is not opened. objid(%lld)\n", para->objid);
         return -2;
     }
     
     ret = ofs_close_object(obj);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Close obj failed. ct(%p) objid(%lld) ret(%d)\n",
+        NET_PRINT(para->net, "Close obj failed. ct(%p) objid(%lld) ret(%d)\n",
             ct, para->objid, ret);
         return ret;
     }
 
-    OS_PRINT(para->net, "Close obj success. ct(%p) objid(%lld)\n", ct, para->objid);
+    NET_PRINT(para->net, "Close obj success. ct(%p) objid(%lld)\n", ct, para->objid);
     
     return 0;
 }
@@ -197,13 +197,13 @@ static int32_t cmd_delete(ifs_tools_para_t *para)
 
     ASSERT(para);
 
-    OS_PRINT(para->net, "comming soon.\n");
+    NET_PRINT(para->net, "comming soon.\n");
     return 0;
 
     if ((strlen(para->ct_name) == 0)
         || OBJID_IS_INVALID(para->objid))
     {
-        OS_PRINT(para->net, "invalid ct name(%s) or objid(%lld).\n",
+        NET_PRINT(para->net, "invalid ct name(%s) or objid(%lld).\n",
             para->ct_name, para->objid);
         return -1;
     }
@@ -211,7 +211,7 @@ static int32_t cmd_delete(ifs_tools_para_t *para)
     ret = ofs_open_container(para->ct_name, &ct);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Open ct failed. ct(%s) ret(%d)\n",
+        NET_PRINT(para->net, "Open ct failed. ct(%s) ret(%d)\n",
             para->ct_name, ret);
         return ret;
     }
@@ -219,13 +219,13 @@ static int32_t cmd_delete(ifs_tools_para_t *para)
     ret = ofs_delete_object(ct, para->objid);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Delete obj failed. objid(%lld) ret(%d)\n",
+        NET_PRINT(para->net, "Delete obj failed. objid(%lld) ret(%d)\n",
             para->objid, ret);
         (void)ofs_close_container(ct);
         return ret;
     }
 
-    OS_PRINT(para->net, "Delete obj success. objid(%lld)\n", para->objid);
+    NET_PRINT(para->net, "Delete obj success. objid(%lld)\n", para->objid);
 
     (void)ofs_close_container(ct);
     
@@ -239,7 +239,7 @@ int do_create_cmd(int argc, char *argv[], net_para_t *net)
     para = OS_MALLOC(sizeof(ifs_tools_para_t));
     if (para == NULL)
     {
-        OS_PRINT(net, "Allocate memory failed. size(%d)\n",
+        NET_PRINT(net, "Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(ifs_tools_para_t));
         return -1;
     }
@@ -260,7 +260,7 @@ int do_open_cmd(int argc, char *argv[], net_para_t *net)
     para = OS_MALLOC(sizeof(ifs_tools_para_t));
     if (para == NULL)
     {
-        OS_PRINT(net, "Allocate memory failed. size(%d)\n",
+        NET_PRINT(net, "Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(ifs_tools_para_t));
         return -1;
     }
@@ -281,7 +281,7 @@ int do_close_cmd(int argc, char *argv[], net_para_t *net)
     para = OS_MALLOC(sizeof(ifs_tools_para_t));
     if (para == NULL)
     {
-        OS_PRINT(net, "Allocate memory failed. size(%d)\n",
+        NET_PRINT(net, "Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(ifs_tools_para_t));
         return -1;
     }
@@ -302,7 +302,7 @@ int do_delete_cmd(int argc, char *argv[], net_para_t *net)
     para = OS_MALLOC(sizeof(ifs_tools_para_t));
     if (para == NULL)
     {
-        OS_PRINT(net, "Allocate memory failed. size(%d)\n",
+        NET_PRINT(net, "Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(ifs_tools_para_t));
         return -1;
     }

@@ -44,6 +44,7 @@ extern "C" {
 
 extern uint64_t os_get_cycle_count(void);
 extern uint64_t os_get_ms_count(void);
+extern uint64_t os_get_us_count(void);
 extern uint64_t os_get_second_count(void);
 extern int32_t os_str_to_u64(const char *str, uint64_t *value, uint32_t base);
 extern char os_char_to_hex(char c);

@@ -57,12 +57,12 @@ static int32_t dump_callback(object_handle_t *tree, dump_para_t *para)
     {
         para->depth = tree->depth;
         para->vbn = tree->cache->vbn;
-        //OS_PRINT(para->net, "-------------depth: %d, vbn: %lld-------------\n",
+        //NET_PRINT(para->net, "-------------depth: %d, vbn: %lld-------------\n",
          //   tree->depth, tree->cache->vbn);
     }
 
-    OS_PRINT(para->net, "%-7d", ++para->no);
-   // OS_PRINT(para->net, "%(%d, %d) ", tree->ie->prev_len, tree->ie->len);
+    NET_PRINT(para->net, "%-7d", ++para->no);
+   // NET_PRINT(para->net, "%(%d, %d) ", tree->ie->prev_len, tree->ie->len);
 
     uc = GET_IE_KEY(tree->ie);
     switch (tree->obj_info->attr_record->flags & CR_MASK)
@@ -70,23 +70,23 @@ static int32_t dump_callback(object_handle_t *tree, dump_para_t *para)
         case CR_ANSI_STRING:
             for (i = 0; i < tree->ie->key_len; i++)
             {
-                OS_PRINT(para->net, "%c", uc[i]);
+                NET_PRINT(para->net, "%c", uc[i]);
             }
             break;
         case CR_U64:
         case CR_EXTENT:
-            OS_PRINT(para->net, "%lld", os_bstr_to_u64(uc, tree->ie->key_len));
+            NET_PRINT(para->net, "%lld", os_bstr_to_u64(uc, tree->ie->key_len));
             break;
         default:
             for (i = 0; i < tree->ie->key_len; i++)
             {
-                OS_PRINT(para->net, "%02X", uc[i]);
+                NET_PRINT(para->net, "%02X", uc[i]);
             }
             break;
     }
     
 
-    OS_PRINT(para->net, "%s", " : ");
+    NET_PRINT(para->net, "%s", " : ");
 
     uc = GET_IE_VALUE(tree->ie);
     switch ((tree->obj_info->attr_record->flags >> 4) & CR_MASK)
@@ -94,22 +94,22 @@ static int32_t dump_callback(object_handle_t *tree, dump_para_t *para)
         case CR_ANSI_STRING:
             for (i = 0; i < tree->ie->value_len; i++)
             {
-                OS_PRINT(para->net, "%c", uc[i]);
+                NET_PRINT(para->net, "%c", uc[i]);
             }
             break;
         case CR_U64:
         case CR_EXTENT:
-            OS_PRINT(para->net, "%lld", os_bstr_to_u64(uc, tree->ie->value_len));
+            NET_PRINT(para->net, "%lld", os_bstr_to_u64(uc, tree->ie->value_len));
             break;
         default:
             for (i = 0; i < tree->ie->value_len; i++)
             {
-                OS_PRINT(para->net, "%02X", uc[i]);
+                NET_PRINT(para->net, "%02X", uc[i]);
             }
             break;
     }
 
-    OS_PRINT(para->net, "%s", "\n");
+    NET_PRINT(para->net, "%s", "\n");
 
     return 0;
 }
@@ -126,13 +126,13 @@ static int32_t dump_key(object_handle_t *tree, const bool_t reverse, net_para_t 
 
     obj_info = tree->obj_info;
     
-    OS_PRINT(net, "objid: %lld, inode_no: %lld, name: %s\n", obj_info->objid, obj_info->inode_no, obj_info->name);
+    NET_PRINT(net, "objid: %lld, inode_no: %lld, name: %s\n", obj_info->objid, obj_info->inode_no, obj_info->name);
 
     para.net = net;
     ret = index_walk_all(tree, reverse, 0, &para, (tree_walk_cb_t)dump_callback);
     if (ret < 0)
     {
-        OS_PRINT(net, "Walk tree failed. objid(%lld) ret(%d)\n", tree->obj_info->objid, ret);
+        NET_PRINT(net, "Walk tree failed. objid(%lld) ret(%d)\n", tree->obj_info->objid, ret);
     }
     
 	return ret;
@@ -148,14 +148,14 @@ void dump_cmd(ifs_tools_para_t *para)
 
     if (strlen(para->ct_name) == 0)
     {
-        OS_PRINT(para->net, "invalid ct name.\n");
+        NET_PRINT(para->net, "invalid ct name.\n");
         return;
     }
     
     ret = ofs_open_container(para->ct_name, &ct);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Open ct failed. ct_name(%s) ret(%d)\n",
+        NET_PRINT(para->net, "Open ct failed. ct_name(%s) ret(%d)\n",
             para->ct_name, ret);
         return;
     }
@@ -168,7 +168,7 @@ void dump_cmd(ifs_tools_para_t *para)
     ret = ofs_open_object(ct, para->objid, &obj);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Open obj failed. ct_name(%s) objid(%lld) ret(%d)\n", para->ct_name, para->objid, ret);
+        NET_PRINT(para->net, "Open obj failed. ct_name(%s) objid(%lld) ret(%d)\n", para->ct_name, para->objid, ret);
         (void)ofs_close_container(ct);
 		return;
     }
@@ -189,7 +189,7 @@ int do_dump_cmd(int argc, char *argv[], net_para_t *net)
     para = OS_MALLOC(sizeof(ifs_tools_para_t));
     if (para == NULL)
     {
-        OS_PRINT(net, "Allocate memory failed. size(%d)\n",
+        NET_PRINT(net, "Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(ifs_tools_para_t));
         return -1;
     }

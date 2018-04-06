@@ -61,7 +61,9 @@ extern "C" {
 
 #define OS_MALLOC   malloc
 #define OS_FREE     free
-#define OS_PRINT(n, fmt, ...)   (n)->print((n)->net, fmt, ##__VA_ARGS__)
+
+#define OS_PRINT(fmt, ...)   printf("[%s][%s][%d]"fmt, __FILE__, __FUNC__, __LINE__, ##__VA_ARGS__)
+#define NET_PRINT(n, fmt, ...)   (n)->print((n)->net, fmt, ##__VA_ARGS__)
 
 #define OS_STR2ULL(pcBuf, end, base)   strtoul(pcBuf, end, base)
 #define OS_SLEEP_SECOND(x)               Sleep(x)
@@ -107,7 +109,7 @@ do { \
 #define module_exit(x)
 
 #define atomic_set(x, n)  (*(x)) = n
-#define atomic_read(x, n)  (*(x))
+#define atomic_read(x)  (*(x))
 
 #define atomic_inc(x)  InterlockedIncrement(x)
 #define atomic_dec(x)  InterlockedDecrement(x)

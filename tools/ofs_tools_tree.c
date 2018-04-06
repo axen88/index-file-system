@@ -46,7 +46,7 @@ static int32_t cmd_insert_key(ifs_tools_para_t *para)
 
     if ((strlen(para->ct_name) == 0) || OBJID_IS_INVALID(para->objid))
     {
-        OS_PRINT(para->net, "invalid ct name(%s) or objid(%lld).\n",
+        NET_PRINT(para->net, "invalid ct name(%s) or objid(%lld).\n",
             para->ct_name, para->objid);
         return -1;
     }
@@ -54,7 +54,7 @@ static int32_t cmd_insert_key(ifs_tools_para_t *para)
     if ((strlen(para->key) == 0)
         || (strlen(para->value) == 0))
     {
-        OS_PRINT(para->net, "invalid key(%s) or value(%s).\n",
+        NET_PRINT(para->net, "invalid key(%s) or value(%s).\n",
             para->key, para->value);
         return -1;
     }
@@ -62,14 +62,14 @@ static int32_t cmd_insert_key(ifs_tools_para_t *para)
     ret = ofs_open_container(para->ct_name, &ct);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Open ct failed. ct(%s) ret(%d)\n", para->ct_name, ret);
+        NET_PRINT(para->net, "Open ct failed. ct(%s) ret(%d)\n", para->ct_name, ret);
         return ret;
     }
 
     ret = ofs_open_object(ct, para->objid, &obj);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Create obj failed. objid(%lld) ret(%d)\n",
+        NET_PRINT(para->net, "Create obj failed. objid(%lld) ret(%d)\n",
             para->objid, ret);
         (void)ofs_close_container(ct);
         return ret;
@@ -79,7 +79,7 @@ static int32_t cmd_insert_key(ifs_tools_para_t *para)
         para->value, strlen(para->value));
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Insert key failed. key(%s) value(%s) ret(%d)\n",
+        NET_PRINT(para->net, "Insert key failed. key(%s) value(%s) ret(%d)\n",
             para->key, para->value, ret);
     }
 
@@ -99,28 +99,28 @@ static int32_t cmd_remove_key(ifs_tools_para_t *para)
 
     if ((strlen(para->ct_name) == 0) || OBJID_IS_INVALID(para->objid))
     {
-        OS_PRINT(para->net, "invalid ct name(%s) or objid(%lld).\n",
+        NET_PRINT(para->net, "invalid ct name(%s) or objid(%lld).\n",
             para->ct_name, para->objid);
         return -1;
     }
     
     if (strlen(para->key) == 0)
     {
-        OS_PRINT(para->net, "invalid key.\n");
+        NET_PRINT(para->net, "invalid key.\n");
         return -1;
     }
 
     ret = ofs_open_container(para->ct_name, &ct);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Open ct failed. ct(%s) ret(%d)\n", para->ct_name, ret);
+        NET_PRINT(para->net, "Open ct failed. ct(%s) ret(%d)\n", para->ct_name, ret);
         return ret;
     }
 
     ret = ofs_open_object(ct, para->objid, &obj);
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Open tree failed. objid(%lld) ret(%d)\n",
+        NET_PRINT(para->net, "Open tree failed. objid(%lld) ret(%d)\n",
             para->objid, ret);
         (void)ofs_close_container(ct);
         return ret;
@@ -129,7 +129,7 @@ static int32_t cmd_remove_key(ifs_tools_para_t *para)
     ret = index_remove_key(obj, para->key, strlen(para->key));
     if (ret < 0)
     {
-        OS_PRINT(para->net, "Remove key failed. key(%s) ret(%d)\n",
+        NET_PRINT(para->net, "Remove key failed. key(%s) ret(%d)\n",
             para->key, ret);
     }
 
@@ -147,7 +147,7 @@ int do_insert_key_cmd(int argc, char *argv[], net_para_t *net)
     para = OS_MALLOC(sizeof(ifs_tools_para_t));
     if (para == NULL)
     {
-        OS_PRINT(net, "Allocate memory failed. size(%d)\n",
+        NET_PRINT(net, "Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(ifs_tools_para_t));
         return -1;
     }
@@ -168,7 +168,7 @@ int do_remove_key_cmd(int argc, char *argv[], net_para_t *net)
     para = OS_MALLOC(sizeof(ifs_tools_para_t));
     if (para == NULL)
     {
-        OS_PRINT(net, "Allocate memory failed. size(%d)\n",
+        NET_PRINT(net, "Allocate memory failed. size(%d)\n",
             (uint32_t)sizeof(ifs_tools_para_t));
         return -1;
     }

@@ -134,10 +134,10 @@ void show_sub_cmd_list(os_cmd_list_t *cmd_list[], uint32_t cmd_num, net_para_t *
                 break;
             }
             
-            OS_PRINT(net, "%s ", cmd_list[i]->level[j]);
+            NET_PRINT(net, "%s ", cmd_list[i]->level[j]);
         }
         
-		OS_PRINT(net, "%s\n", cmd_list[i]->comment);
+		NET_PRINT(net, "%s\n", cmd_list[i]->comment);
 	}
 }
 
@@ -154,16 +154,16 @@ void show_cmd_list(os_cmd_list_t *cmd_list, net_para_t *net)
                 break;
             }
             
-            OS_PRINT(net, "%s ", cmd_list->level[j]);
+            NET_PRINT(net, "%s ", cmd_list->level[j]);
         }
         
-		OS_PRINT(net, ": %s\n", cmd_list->comment);
+		NET_PRINT(net, ": %s\n", cmd_list->comment);
 
         cmd_list++;
 	}
     
-	OS_PRINT(net, "help : show this information\n");
-	OS_PRINT(net, "quit : quit the system\n");
+	NET_PRINT(net, "help : show this information\n");
+	NET_PRINT(net, "quit : quit the system\n");
 }
 
 int32_t execute_cmd(int32_t argc, char *argv[], os_cmd_list_t *cmd_list, net_para_t *net)
@@ -295,7 +295,7 @@ int32_t parse_and_exec_cmd(char *cmd, os_cmd_list_t cmd_list[], net_para_t *net)
     tmp_argv = (char **)OS_MALLOC(CMD_MAX_ARGS * sizeof(char *));
     if (!tmp_argv)
     {
-        OS_PRINT(net, "Allocate memory failed. size(%d)\n",
+        NET_PRINT(net, "Allocate memory failed. size(%d)\n",
             CMD_MAX_ARGS * (uint32_t)sizeof(char *));
         return CMD_OTHER;
     }
@@ -325,7 +325,7 @@ void os_cmd_ui(os_cmd_list_t cmd_list[], net_para_t *net)
     cmd = OS_MALLOC(CMD_MAX_SIZE);
     if (!cmd)
     {
-        OS_PRINT(net, "Allocate memory failed. size(%d)\n", CMD_MAX_SIZE);
+        NET_PRINT(net, "Allocate memory failed. size(%d)\n", CMD_MAX_SIZE);
         return;
     }
 

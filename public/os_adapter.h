@@ -153,6 +153,8 @@ extern "C" {
 
 #define to_str(x)  (#x)
 
+#define SUCCESS 0
+
 typedef struct 
 {
     os_thread_t *tid;

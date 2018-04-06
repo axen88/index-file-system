@@ -53,8 +53,11 @@ extern "C" {
 
 #define OS_MALLOC(size)   malloc(size)
 #define OS_FREE(mem)     free(mem)
-#define OS_PRINT(n, fmt, ...)   (n)->print((n)->net, fmt, ##__VA_ARGS__)
+
 #define OS_VSNPRINTF             vsnprintf
+
+#define OS_PRINT(fmt, ...)   printf("[%s][%d]"fmt, __FILE__, __LINE__, ##__VA_ARGS__)
+#define NET_PRINT(n, fmt, ...)   (n)->print((n)->net, fmt, ##__VA_ARGS__)
     
 #define _CrtDumpMemoryLeaks()
 
@@ -91,15 +94,19 @@ typedef pthread_t                   os_thread_t;
 #define module_init(x)
 #define module_exit(x)
 
-typedef uint32_t atomic_t;
+typedef volatile uint32_t atomic_t;
 
 #define atomic_inc(x) __sync_fetch_and_add(x, 1)
 #define atomic_dec(x) __sync_fetch_and_sub(x, 1)
 
-#define atomic_add(x, n) __sync_fetch_and_add(x, n)
-#define atomic_sub(x, n) __sync_fetch_and_sub(x, n)
+#define atomic_inc_return(x) __sync_add_and_fetch(x, 1) 
+#define atomic_dec_return(x) __sync_sub_and_fetch(x, 1) 
 
-#define atomic_set(x, n)  (*(x)) = n
+
+#define atomic_add(v, x) __sync_fetch_and_add(x, v)
+#define atomic_sub(v, x) __sync_fetch_and_sub(x, v)
+
+#define atomic_set(x, v)  (*(x)) = v
 #define atomic_read(x)    (*(x))
 
 static inline os_thread_t thread_create(void *(*func)(void *), void *para, char *thread_name)

@@ -51,21 +51,21 @@ int32_t test_insert_key_performance(char *ct_name, uint64_t objid, uint64_t keys
     ret = ofs_open_container(ct_name, &ct);
     if (ret < 0)
     {
-        OS_PRINT(net, "Open ct failed. name(%s) ret(%d)\n", ct_name, ret);
+        NET_PRINT(net, "Open ct failed. name(%s) ret(%d)\n", ct_name, ret);
         return ret;
     }
 
     ret = ofs_create_object(ct, objid, FLAG_TABLE | CR_BINARY | (CR_ANSI_STRING << 4), &obj);
     if (ret < 0)
     {
-        OS_PRINT(net, "Create obj failed. objid(%lld) ret(%d)\n", objid, ret);
+        NET_PRINT(net, "Create obj failed. objid(%lld) ret(%d)\n", objid, ret);
         (void)ofs_close_container(ct);
         return ret;
     }
 
     memset(value, 0x88, sizeof(value));
 
-    OS_PRINT(net, "Start insert key. objid(%lld) total(%lld)\n", objid, keys_num);
+    NET_PRINT(net, "Start insert key. objid(%lld) total(%lld)\n", objid, keys_num);
     time = os_get_ms_count();
 
     for (key = 0; key < keys_num; key++)
@@ -73,12 +73,12 @@ int32_t test_insert_key_performance(char *ct_name, uint64_t objid, uint64_t keys
         ret = index_insert_key(obj, &key, TEST_KEY_LEN, value, TEST_VALUE_LEN);
         if (ret < 0)
         {
-            OS_PRINT(net, "Insert key failed. objid(%lld) key(%lld) ret(%d)\n", objid, key, ret);
+            NET_PRINT(net, "Insert key failed. objid(%lld) key(%lld) ret(%d)\n", objid, key, ret);
             break;
         }
     }
 
-    OS_PRINT(net, "Finished insert key. objid(%lld) total(%lld) time(%lld ms)\n",
+    NET_PRINT(net, "Finished insert key. objid(%lld) total(%lld) time(%lld ms)\n",
         objid, keys_num, os_get_ms_count() - time);
 
     (void)ofs_close_object(obj);
@@ -98,19 +98,19 @@ int32_t test_remove_key_performance(char *ct_name, uint64_t objid, uint64_t keys
     ret = ofs_open_container(ct_name, &ct);
     if (ret < 0)
     {
-        OS_PRINT(net, "Open ct failed. name(%s) ret(%d)\n", ct_name, ret);
+        NET_PRINT(net, "Open ct failed. name(%s) ret(%d)\n", ct_name, ret);
         return ret;
     }
 
     ret = ofs_open_object(ct, objid, &obj);
     if (ret < 0)
     {
-        OS_PRINT(net, "Open tree failed. objid(%lld) ret(%d)\n", objid, ret);
+        NET_PRINT(net, "Open tree failed. objid(%lld) ret(%d)\n", objid, ret);
         (void)ofs_close_container(ct);
         return ret;
     }
 
-    OS_PRINT(net, "Start remove key. objid(%lld) total(%lld)\n", objid, keys_num);
+    NET_PRINT(net, "Start remove key. objid(%lld) total(%lld)\n", objid, keys_num);
     time = os_get_ms_count();
 
     for (key = 0; key < keys_num; key++)
@@ -118,12 +118,12 @@ int32_t test_remove_key_performance(char *ct_name, uint64_t objid, uint64_t keys
         ret = index_remove_key(obj, &key, TEST_KEY_LEN);
         if (ret < 0)
         {
-            OS_PRINT(net, "Remove key failed. objid(%lld) key(%lld) ret(%d)\n", objid, key, ret);
+            NET_PRINT(net, "Remove key failed. objid(%lld) key(%lld) ret(%d)\n", objid, key, ret);
             break;
         }
     }
 
-    OS_PRINT(net, "Finished remove key. objid(%lld) total(%lld) time(%lld ms)\n",
+    NET_PRINT(net, "Finished remove key. objid(%lld) total(%lld) time(%lld ms)\n",
         objid, keys_num, os_get_ms_count() - time);
 
     (void)ofs_close_object(obj);
@@ -177,7 +177,7 @@ int32_t test_performance(ifs_tools_para_t *para, bool_t insert)
         tid[i] = thread_create(test_performance_thread, para, "perf");
         if (tid[i] == INVALID_TID)
         {
-            OS_PRINT(para->net, "Create thread %d failed.\n", i);
+            NET_PRINT(para->net, "Create thread %d failed.\n", i);
             break;
         }
 
@@ -185,7 +185,7 @@ int32_t test_performance(ifs_tools_para_t *para, bool_t insert)
         para->threads_cnt++;
         OS_RWLOCK_WRUNLOCK(&para->rwlock);
         
-        OS_PRINT(para->net, "Create thread %d success.\n", i);
+        NET_PRINT(para->net, "Create thread %d success.\n", i);
     }
 
     while (para->threads_cnt)
@@ -198,7 +198,7 @@ int32_t test_performance(ifs_tools_para_t *para, bool_t insert)
         if (tid[i] != INVALID_TID)
         {
             thread_destroy(tid[i], TRUE);
-            OS_PRINT(para->net, "Destroy thread %d finished.\n", i);
+            NET_PRINT(para->net, "Destroy thread %d finished.\n", i);
         }
     }
 
@@ -214,7 +214,7 @@ int do_performance_cmd(int argc, char *argv[], net_para_t *net)
     para = OS_MALLOC(sizeof(ifs_tools_para_t));
     if (para == NULL)
     {
-        OS_PRINT(net, "Allocate memory failed. size(%d)\n",
+        NET_PRINT(net, "Allocate memory failed. size(%d)\n",
             sizeof(ifs_tools_para_t));
         return -1;
     }
@@ -224,7 +224,7 @@ int do_performance_cmd(int argc, char *argv[], net_para_t *net)
 
     if ((strlen(para->ct_name) == 0) || OBJID_IS_INVALID(para->objid))
     {
-        OS_PRINT(net, "invalid ct name(%s) or objid(%lld).\n", para->ct_name, para->objid);
+        NET_PRINT(net, "invalid ct name(%s) or objid(%lld).\n", para->ct_name, para->objid);
         OS_FREE(para);
         return -2;
     }
