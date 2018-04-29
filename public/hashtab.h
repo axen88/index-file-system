@@ -44,5 +44,18 @@ struct hashtab {
 };
 
 
+hashtab_t *hashtab_create(uint32_t (*hash_value)(hashtab_t *h, void *key),
+                               int (*keycmp)(hashtab_t *h, void *key1, void *key2),
+                               uint32_t bucket_size, uint32_t max_num);
+
+int hashtab_insert(hashtab_t *h, void *key, void *dat);
+
+void *hashtab_delete(hashtab_t *h, void *key);  
+
+void *hashtab_search(hashtab_t *h, void *key);
+
+void hashtab_destroy(hashtab_t *h);
+
+
 #endif
 

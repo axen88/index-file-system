@@ -140,6 +140,10 @@ typedef enum error_code
     INDEX_ERR_NOT_OPENED,
     INDEX_ERR_OBJ_ID_INVALID,
 
+    ERR_PUT_BUF,
+
+    ERR_FILE_READ,
+
     
     INDEX_ERR_BUTT
 } error_code_t;

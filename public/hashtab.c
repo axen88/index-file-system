@@ -69,6 +69,58 @@ int hashtab_insert(hashtab_t *h, void *key, void *dat)
     return 0;
 }
 
+void *hashtab_delete(hashtab_t *h, void *key)  
+{  
+    unsigned long hvalue;  
+    void *d;  
+    hashtab_node_t *prev;  
+    hashtab_node_t *cur;  
+    
+    if(!h)  
+        return NULL;  
+    
+    hvalue = h->hash_value(h, key);  
+    cur = h->htable[hvalue];  
+    
+    /* if need to rem first node */  
+    if (cur != NULL && h->keycmp(h, key, cur->key) == 0)
+    {  
+        h->htable[hvalue] = cur->next;  
+        cur->next = 0;  
+        d = cur->dat;  
+        OS_FREE(cur);  
+        h->num--;  
+        return d;  
+    }  
+    
+    /* some node after first node */  
+    /* trying to avoid SEGFAULT : Gokul */  
+    if (cur != NULL)
+    {  
+        prev = cur;  
+        cur = cur->next;  
+        while(cur != NULL)
+        {  
+            if(h->keycmp(h, key, cur->key) == 0)
+            {  
+                prev->next = cur->next;  
+                cur->next = NULL;  
+                d = cur->dat;  
+                h->num--;  
+                return d;  
+                break;  
+            }
+            else
+            {  
+                prev = cur;  
+                cur = cur->next;  
+            }  
+        } // end while  
+    }
+    
+    return NULL;  
+}  
+
 void *hashtab_search(hashtab_t *h, void *key)
 {
     uint32_t hvalue;

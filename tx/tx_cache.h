@@ -18,12 +18,20 @@ History:
 #ifndef __TX_CACHE_H__
 #define __TX_CACHE_H__
 
+#include "dlist.h"
+#include "hashtab.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef enum
 {
-    BUF_TYPE_READ,
-    BUF_TYPE_WRITE,
+    READ_BUF,
+    CHECKPOINT_BUF,
+    WRITE_BUF,
     
-    
+    BUF_TYPE_NUM
 } BUF_TYPE_E;
 
 // 数据块cache结构
@@ -34,11 +42,10 @@ typedef struct cache_node
     
     list_head_t node;   // 在read cache、checkin cache、write cache中登记
     
-    struct cache_node *base;
-    
-    struct cache_node *left;
-    struct cache_node *right;
-    
+    struct cache_node *read_node;  // 对应READ_BUF
+    struct cache_node *side_node[2];
+
+    char dat[0];  // buffer
     
 } cache_node_t;
 
@@ -58,9 +65,13 @@ typedef struct
 {
     uint64_t tx_id;   // 事务id
 
+    void *bd_hnd;  // block device handle
+
     uint32_t block_size;
 
-    hashtab hcache;    // 所有的数据块缓存在这都能快速找到
+    uint8_t  writing_side;   //  0 or 1, 
+
+    hashtab_t hcache;    // 所有的数据块缓存在这都能快速找到
 
     // write_cache -> checkpoint_cache -> read_cache
     list_head_t read_cache;        // 只读cache，从盘上读到的未经修改过的数据
@@ -70,6 +81,10 @@ typedef struct
     space_ops_t space_ops;
     
 } cache_mgr_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 
