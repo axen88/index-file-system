@@ -6,13 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define CHILD_NUM 256
-
-typedef struct _RADIX_NODE
-{
-    struct _RADIX_NODE *childs[CHILD_NUM];
-    char *str;
-} RADIX_NODE;
+#include "radix_tree.h"
 
 int RadixInsert(RADIX_NODE *node, char *str)
 {
@@ -94,22 +88,4 @@ void RadixRelease(RADIX_NODE *node, int (*callback)(char *))
     
     return;
 }
-
-
-/* 下面是测试代码 */
-int WalkCallBack(char *str)
-{
-    if (NULL != str)
-    {
-        printf("%s\n", str);
-    }
-    
-    return 0;
-}
-
-int ReleaseCallBack(char *str)
-{
-    return 0;
-}
-
 
