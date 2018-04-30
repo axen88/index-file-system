@@ -55,14 +55,14 @@ enum ofs_block_error_code
     FILE_BLOCK_ERR_BUTT
 };
 
-int32_t ofs_update_block_fixup(container_handle_t *ct, block_head_t *blk, uint64_t vbn);
-int32_t ofs_read_block_fixup(container_handle_t *ct, block_head_t *blk, uint64_t vbn, uint32_t objid, uint32_t alloc_size);
+int32_t ofs_update_block_fixup(container_handle_t *ct, block_head_t *blk, u64_t vbn);
+int32_t ofs_read_block_fixup(container_handle_t *ct, block_head_t *blk, u64_t vbn, uint32_t objid, uint32_t alloc_size);
 
-int32_t ofs_update_block_pingpong_init(container_handle_t *ct, block_head_t *blk, uint64_t vbn);
-int32_t ofs_update_block_pingpong(container_handle_t *ct, block_head_t *blk, uint64_t vbn);
-int32_t ofs_read_block_pingpong(container_handle_t *ct, block_head_t *blk, uint64_t vbn, uint32_t objid, uint32_t alloc_size);
+int32_t ofs_update_block_pingpong_init(container_handle_t *ct, block_head_t *blk, u64_t vbn);
+int32_t ofs_update_block_pingpong(container_handle_t *ct, block_head_t *blk, u64_t vbn);
+int32_t ofs_read_block_pingpong(container_handle_t *ct, block_head_t *blk, u64_t vbn, uint32_t objid, uint32_t alloc_size);
 
-static inline int32_t ofs_update_block(container_handle_t *ct, void *buf, uint32_t size, uint32_t start_lba, uint64_t vbn)
+static inline int32_t ofs_update_block(container_handle_t *ct, void *buf, uint32_t size, uint32_t start_lba, u64_t vbn)
 {
     ASSERT(ct != NULL);
     ASSERT(buf != NULL);
@@ -71,7 +71,7 @@ static inline int32_t ofs_update_block(container_handle_t *ct, void *buf, uint32
     return os_disk_pwrite(ct->disk_hnd, buf, size, start_lba + vbn * ct->sb.sectors_per_block);
 }
 
-static inline int32_t ofs_read_block(container_handle_t *ct, void *buf, uint32_t size, uint32_t start_lba, uint64_t vbn)
+static inline int32_t ofs_read_block(container_handle_t *ct, void *buf, uint32_t size, uint32_t start_lba, u64_t vbn)
 {
     ASSERT(ct != NULL);
     ASSERT(buf != NULL);
@@ -97,7 +97,7 @@ static inline int32_t ofs_init_super_block(container_handle_t *ct)
 
 
 
-static inline int32_t ofs_update_sectors(container_handle_t *ct, void *buf, uint32_t size, uint64_t start_lba)
+static inline int32_t ofs_update_sectors(container_handle_t *ct, void *buf, uint32_t size, u64_t start_lba)
 {
     ASSERT(ct != NULL);
     ASSERT(buf != NULL);
@@ -106,7 +106,7 @@ static inline int32_t ofs_update_sectors(container_handle_t *ct, void *buf, uint
     return os_disk_pwrite(ct->disk_hnd, buf, size, start_lba);
 }
 
-static inline int32_t ofs_read_sectors(container_handle_t *ct, void *buf, uint32_t size, uint64_t start_lba)
+static inline int32_t ofs_read_sectors(container_handle_t *ct, void *buf, uint32_t size, u64_t start_lba)
 {
     ASSERT(ct != NULL);
     ASSERT(buf != NULL);

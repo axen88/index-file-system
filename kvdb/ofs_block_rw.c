@@ -106,7 +106,7 @@ static int32_t verify_block(block_head_t *blk, uint32_t blk_id, uint32_t alloc_s
     return 0;
 }
 
-int32_t ofs_update_block_fixup(container_handle_t *ct, block_head_t *blk, uint64_t vbn)
+int32_t ofs_update_block_fixup(container_handle_t *ct, block_head_t *blk, u64_t vbn)
 {
     int32_t ret = 0;
     int32_t ret2 = 0;
@@ -136,7 +136,7 @@ int32_t ofs_update_block_fixup(container_handle_t *ct, block_head_t *blk, uint64
     return ret;
 }
 
-int32_t ofs_read_block_fixup(container_handle_t *ct, block_head_t *blk, uint64_t vbn, uint32_t blk_id, uint32_t alloc_size)
+int32_t ofs_read_block_fixup(container_handle_t *ct, block_head_t *blk, u64_t vbn, uint32_t blk_id, uint32_t alloc_size)
 {
     int32_t ret = 0;
 
@@ -184,7 +184,7 @@ static inline int32_t check_block(container_handle_t *ct, block_head_t *blk)
     return 0;
 }
 
-int32_t ofs_update_block_pingpong_init(container_handle_t *ct, block_head_t *blk, uint64_t vbn)
+int32_t ofs_update_block_pingpong_init(container_handle_t *ct, block_head_t *blk, u64_t vbn)
 {
     int32_t ret = 0;
     int32_t ret2 = 0;
@@ -234,7 +234,7 @@ int32_t ofs_update_block_pingpong_init(container_handle_t *ct, block_head_t *blk
     return 0;
 }
 
-int32_t ofs_update_block_pingpong(container_handle_t *ct, block_head_t *blk, uint64_t vbn)
+int32_t ofs_update_block_pingpong(container_handle_t *ct, block_head_t *blk, u64_t vbn)
 {
     int32_t ret = 0;
     int32_t ret2 = 0;
@@ -342,7 +342,7 @@ block_head_t *get_last_correct_block(uint8_t *buf, uint32_t blk_id, uint32_t all
     return NULL;
 }
 
-int32_t ofs_read_block_pingpong(container_handle_t *ct, block_head_t *blk, uint64_t vbn, uint32_t blk_id, uint32_t alloc_size)
+int32_t ofs_read_block_pingpong(container_handle_t *ct, block_head_t *blk, u64_t vbn, uint32_t blk_id, uint32_t alloc_size)
 {
     int32_t ret = 0;
     uint32_t block_size = 0;

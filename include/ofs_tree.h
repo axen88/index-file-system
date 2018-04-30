@@ -72,13 +72,13 @@ extern "C" {
 #define INDEX_BLOCK_SMALL         0x00  // The block has no child block
 #define INDEX_BLOCK_LARGE         0x01  // The block has child block
 
-#define VBN_SIZE                  sizeof(uint64_t)
+#define VBN_SIZE                  sizeof(u64_t)
 
 #define GET_FIRST_IE(ib)     ((index_entry_t *)((uint8_t*)(ib) + ((index_block_t *)(ib))->first_entry_off))
 #define GET_END_IE(ib)       ((uint8_t *)(ib) + ((index_block_t *)(ib))->head.real_size)
 #define GET_NEXT_IE(ie)      ((index_entry_t *)((uint8_t*)(ie) + ((index_entry_t *)(ie))->len))
 #define GET_PREV_IE(ie)      ((index_entry_t *)((uint8_t*)(ie) - ((index_entry_t *)(ie))->prev_len))
-#define GET_IE_VBN(ie)       (*(uint64_t*)((uint8_t *)(ie)+ (((index_entry_t *)(ie))->len - VBN_SIZE)))
+#define GET_IE_VBN(ie)       (*(u64_t*)((uint8_t *)(ie)+ (((index_entry_t *)(ie))->len - VBN_SIZE)))
 #define SET_IE_VBN(ie, vbn)  (GET_IE_VBN(ie) = vbn)
 #define GET_IE_KEY(ie)       ((uint8_t*)(ie) + sizeof(index_entry_t))
 #define GET_IE_VALUE(ie)     ((uint8_t*)(ie) + sizeof(index_entry_t) + (((index_entry_t *)(ie))->key_len))
@@ -96,7 +96,7 @@ extern int32_t index_remove_key_nolock(object_handle_t * obj, const void * key, 
 
 extern int32_t walk_tree(object_handle_t *obj, uint8_t flags);
 extern int64_t index_get_total_key(object_handle_t *obj);
-extern int64_t index_get_target_key(object_handle_t *obj, uint64_t target);
+extern int64_t index_get_target_key(object_handle_t *obj, u64_t target);
 
 
 typedef struct tree_walk_para

@@ -20,7 +20,7 @@ History:
 
 typedef struct
 {
-    uint64_t commit_id;   // 
+    u64_t commit_id;   // 
     
 } log_record_t;
 

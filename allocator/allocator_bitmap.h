@@ -48,25 +48,25 @@ typedef struct _BITMAP_HANDLE
     uint32_t cache_size_by_bytes;   /* 缓存的大小，以字节为单位 */
     uint32_t cache_size_by_sectors; /* 缓存的大小，以sector为单位 */
     uint32_t dat_size;           /* 被缓存数据的大小 */
-    uint64_t dat_addr;           /* 内存中的数据位置，从0开始、按cache大小编号 */
+    u64_t dat_addr;           /* 内存中的数据位置，从0开始、按cache大小编号 */
     uint8_t status;        /* cache的状态 */
     bool_t pre_flush;         /* 是否需要做预刷盘动作 */
 
     void *file_hnd;               /* bitmap所在的文件操作句柄 */
-    uint64_t start_lba;           /* bitmap区域在文件中的起始位置 */
+    u64_t start_lba;           /* bitmap区域在文件中的起始位置 */
     uint32_t total_sectors;       /* bitmap区域的大小 */
 
-    uint64_t total_bits;          /* bitmap区域管理的总块数 */
+    u64_t total_bits;          /* bitmap区域管理的总块数 */
 } BITMAP_HANDLE;
 
-extern int32_t bitmap_init(BITMAP_HANDLE ** hnd, void * file_hnd, uint64_t start_lba, uint32_t total_sectors, uint64_t total_bits);
+extern int32_t bitmap_init(BITMAP_HANDLE ** hnd, void * file_hnd, u64_t start_lba, uint32_t total_sectors, u64_t total_bits);
 extern int32_t bitmap_destroy(BITMAP_HANDLE * hnd);
-extern int32_t bitmap_set_nbits(BITMAP_HANDLE * hnd, uint64_t start_position,
+extern int32_t bitmap_set_nbits(BITMAP_HANDLE * hnd, u64_t start_position,
     uint32_t nbits, bool_t is_used);
-extern int32_t bitmap_get_free_bits(BITMAP_HANDLE * hnd, uint64_t start_position,
-    uint32_t required_bits, uint64_t * real_start_position);
+extern int32_t bitmap_get_free_bits(BITMAP_HANDLE * hnd, u64_t start_position,
+    uint32_t required_bits, u64_t * real_start_position);
 extern int32_t bitmap_clean(BITMAP_HANDLE * hnd);
-extern int32_t bitmap_check_bit(BITMAP_HANDLE * hnd, uint64_t position);
+extern int32_t bitmap_check_bit(BITMAP_HANDLE * hnd, u64_t position);
 
 #ifdef  __cplusplus
 }

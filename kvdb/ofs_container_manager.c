@@ -289,10 +289,10 @@ int32_t open_system_objects(container_handle_t *ct)
     return 0;
 }
 
-int32_t init_super_block(ofs_super_block_t *sb, uint64_t total_sectors, uint32_t block_size_shift)
+int32_t init_super_block(ofs_super_block_t *sb, u64_t total_sectors, uint32_t block_size_shift)
 {
     int32_t ret = 0;
-    uint64_t total_blocks = 0;
+    u64_t total_blocks = 0;
 
     if (block_size_shift != BYTES_PER_BLOCK_SHIFT)
     {
@@ -356,7 +356,7 @@ int32_t check_super_block(ofs_super_block_t *sb)
     return 0;
 }
 
-int32_t ofs_create_container_nolock(const char *ct_name, uint64_t total_sectors, container_handle_t **ct)
+int32_t ofs_create_container_nolock(const char *ct_name, u64_t total_sectors, container_handle_t **ct)
 {
     container_handle_t *tmp_ct = NULL;
     int32_t ret = 0;
@@ -441,7 +441,7 @@ int32_t ofs_create_container_nolock(const char *ct_name, uint64_t total_sectors,
     return 0;
 }     
 
-int32_t ofs_create_container(const char *ct_name, uint64_t total_sectors, container_handle_t **ct)
+int32_t ofs_create_container(const char *ct_name, u64_t total_sectors, container_handle_t **ct)
 {
     int32_t ret = 0;
     

@@ -104,24 +104,24 @@ typedef struct ifs_super_block
     uint32_t block_size;                /* by bytes */
     uint32_t sectors_per_block;         /* by sectors */
 
-    uint64_t total_blocks;              /* total blocks = reserved blocks + bitmap blocks + data blocks */
+    u64_t total_blocks;              /* total blocks = reserved blocks + bitmap blocks + data blocks */
 
-    uint64_t objid_id;
-    uint64_t objid_inode_no;
+    u64_t objid_id;
+    u64_t objid_inode_no;
 
-    uint64_t space_id;
-    uint64_t space_inode_no;
-    uint64_t free_blocks;               /* total free blocks */
-    uint64_t first_free_block;          /* first possible free block */
+    u64_t space_id;
+    u64_t space_inode_no;
+    u64_t free_blocks;               /* total free blocks */
+    u64_t first_free_block;          /* first possible free block */
 
-    uint64_t base_id;
-    uint64_t base_inode_no;
-    uint64_t base_free_blocks;               /* total free blocks */
-    uint64_t base_first_free_block;          /* first possible free block */
+    u64_t base_id;
+    u64_t base_inode_no;
+    u64_t base_free_blocks;               /* total free blocks */
+    u64_t base_first_free_block;          /* first possible free block */
     
-    uint64_t base_blk;
+    u64_t base_blk;
     
-    uint64_t snapshot_no;
+    u64_t snapshot_no;
     uint8_t aucReserved2[PRV_AREA_SIZE - 64 + 20];    // Reserved bytes
     uint8_t aucReserved[160];            
     uint32_t flags;                     /* flags */
@@ -141,7 +141,7 @@ typedef struct index_entry
     
     //uint8_t key[];            // The key
     //uint8_t value[];          // The value
-    //uint64_t vbn;             // Virtual ct number of child ct block
+    //u64_t vbn;             // Virtual ct number of child ct block
 } index_entry_t;
 
 typedef struct index_block
@@ -163,7 +163,7 @@ typedef struct attr_record
     uint16_t record_size; // record size, include this head
     uint16_t flags;        // table/stream, resident/non-resident
     //uint8_t  cr;          // collate rule, high 4bits: value cr, low 4bits: key cr
-    uint64_t attr_size;   // attr size
+    u64_t attr_size;   // attr size
 
     uint8_t content[ATTR_RECORD_MAX_SIZE];  // the attr record content
 } attr_record_t;
@@ -178,21 +178,21 @@ typedef struct inode_record
     uint8_t  paddings[6];
 
     /* 24 */
-    uint64_t objid;              // object id
-    uint64_t base_objid;         // base object id
+    u64_t objid;              // object id
+    u64_t base_objid;         // base object id
 
     /* 40 */
-    uint64_t mode;
+    u64_t mode;
     uint32_t uid;
     uint32_t gid;
-    uint64_t size;
-    uint64_t links;
-    uint64_t ctime;
-    uint64_t atime;
-    uint64_t mtime;
+    u64_t size;
+    u64_t links;
+    u64_t ctime;
+    u64_t atime;
+    u64_t mtime;
 
     /* 96 */
-    uint64_t snapshot_no;
+    u64_t snapshot_no;
 
     /* 104 */
     uint16_t name_size;

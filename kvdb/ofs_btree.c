@@ -45,11 +45,11 @@ MODULE(PID_BTREE);
 // set the block from current block to root block as dirty
 static int32_t set_ib_dirty(object_handle_t *tree)
 {
-    uint64_t new_vbn = 0;
+    u64_t new_vbn = 0;
     int32_t ret = 0;
     index_entry_t *ie = NULL;
-    uint64_t old_vbn = 0;
-    uint64_t vbn = 0;
+    u64_t old_vbn = 0;
+    u64_t vbn = 0;
     uint8_t depth = tree->depth;
 
     ASSERT(tree != NULL);
@@ -148,7 +148,7 @@ static void reset_cache_stack(object_handle_t *tree, uint8_t flags)
 // go to next level depth
 static int32_t push_cache_stack(object_handle_t *tree, uint8_t flags)
 {
-    uint64_t vbn = 0;
+    u64_t vbn = 0;
     int32_t ret = 0;
 
     ASSERT(tree != NULL);
@@ -695,7 +695,7 @@ void insert_ie(index_block_t *ib, index_entry_t *ie, index_entry_t *pos)
 }
 
 // add vbn to an entry
-static index_entry_t *dump_ie_add_vbn(index_entry_t *ie, uint64_t vbn)
+static index_entry_t *dump_ie_add_vbn(index_entry_t *ie, u64_t vbn)
 {
     index_entry_t *new_ie = NULL;
     uint16_t size = 0;
@@ -1106,7 +1106,7 @@ int32_t remove_node(object_handle_t *tree)
     index_entry_t *succ_ie = NULL;        /* The successor entry */
     uint16_t len = 0;
     uint8_t depth = 0;
-    uint64_t vbn = 0;
+    u64_t vbn = 0;
     int32_t ret = 0;
 
     ASSERT(tree != NULL);
@@ -1363,7 +1363,7 @@ int64_t index_get_total_key(object_handle_t *tree)
     return cnt;
 }
 
-int64_t index_get_target_key(object_handle_t *tree, uint64_t target)
+int64_t index_get_target_key(object_handle_t *tree, u64_t target)
 {
 	int64_t cnt = 0;
 	

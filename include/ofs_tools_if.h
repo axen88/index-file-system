@@ -57,10 +57,10 @@ typedef struct ifs_tools_para
 
     net_para_t *net;
 
-    uint64_t objid;
-    uint64_t total_sectors;
+    u64_t objid;
+    u64_t total_sectors;
     uint32_t threads_num;
-    uint64_t keys_num;
+    u64_t keys_num;
     
     uint32_t flags;
     uint32_t no;

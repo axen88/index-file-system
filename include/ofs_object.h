@@ -41,7 +41,7 @@ History:
 extern "C" {
 #endif
 
-#define INVALID_OBJID                 ((uint64_t)(-1))
+#define INVALID_OBJID                 ((u64_t)(-1))
 #define OBJID_IS_INVALID(id)          ((id) == INVALID_OBJID)
 
 #define SET_INODE_CLEAN(obj_info)      SET_CACHE_CLEAN((obj_info)->inode_cache)
@@ -59,8 +59,8 @@ struct object_info
     
     uint32_t obj_state;                // state
 
-    uint64_t objid;                    // object id
-    uint64_t inode_no;                 // inode no, also the position stored on disk
+    u64_t objid;                    // object id
+    u64_t inode_no;                 // inode no, also the position stored on disk
 
     char name[OBJ_NAME_MAX_SIZE];
     
@@ -91,29 +91,29 @@ struct object_handle
     uint8_t max_depth;
     uint8_t depth;             // Number of the parent nodes
     ofs_block_cache_t *cache_stack[TREE_MAX_DEPTH];
-    uint64_t position_stack[TREE_MAX_DEPTH];
+    u64_t position_stack[TREE_MAX_DEPTH];
     ofs_block_cache_t *cache;
-    uint64_t position;
+    u64_t position;
     index_entry_t *ie;        
 
     list_head_t entry;
 };
 
 /* for internal only */
-int32_t create_object(container_handle_t *ct, uint64_t objid, uint16_t flags, object_handle_t **obj);
-int32_t open_object(container_handle_t *ct, uint64_t objid, uint64_t inode_no, object_handle_t **obj);
+int32_t create_object(container_handle_t *ct, u64_t objid, uint16_t flags, object_handle_t **obj);
+int32_t open_object(container_handle_t *ct, u64_t objid, u64_t inode_no, object_handle_t **obj);
 extern void close_object(object_info_t *obj_info);
-int32_t create_object_at_inode(container_handle_t *ct, uint64_t objid, uint64_t inode_no,
+int32_t create_object_at_inode(container_handle_t *ct, u64_t objid, u64_t inode_no,
     uint16_t flags, object_handle_t **obj_out);
-object_info_t *ofs_get_object_info(container_handle_t *ct, uint64_t objid);
-object_handle_t *ofs_get_object_handle(container_handle_t *ct, uint64_t objid);
+object_info_t *ofs_get_object_info(container_handle_t *ct, u64_t objid);
+object_handle_t *ofs_get_object_handle(container_handle_t *ct, u64_t objid);
 
 
 // object API
-int32_t ofs_open_object(container_handle_t *ct, uint64_t objid, object_handle_t **obj);
-int32_t ofs_create_object(container_handle_t *ct, uint64_t objid, uint16_t flags, object_handle_t **obj);
+int32_t ofs_open_object(container_handle_t *ct, u64_t objid, object_handle_t **obj);
+int32_t ofs_create_object(container_handle_t *ct, u64_t objid, uint16_t flags, object_handle_t **obj);
 int32_t ofs_close_object(object_handle_t *obj);
-int32_t ofs_delete_object(container_handle_t *ct, uint64_t objid);
+int32_t ofs_delete_object(container_handle_t *ct, u64_t objid);
 int32_t ofs_rename_object(object_handle_t *obj, const char *new_obj_name);
 int32_t ofs_set_object_name(object_handle_t *obj, char *name);
 

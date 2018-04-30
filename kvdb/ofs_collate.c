@@ -209,13 +209,13 @@ int32_t os_collate_ansi_string(const char *s1, uint32_t s1_size, const char *s2,
 } 
 
 // little endian u64
-uint64_t os_bstr_to_u64(const uint8_t *b, uint32_t b_size)
+u64_t os_bstr_to_u64(const uint8_t *b, uint32_t b_size)
 {
-    uint64_t u64 = 0;
+    u64_t u64 = 0;
     uint8_t *uc = (uint8_t *)&u64;
 
     ASSERT(b_size);
-    ASSERT(sizeof(uint64_t) >= b_size);
+    ASSERT(sizeof(u64_t) >= b_size);
 
     while (b_size--)
     {
@@ -228,11 +228,11 @@ uint64_t os_bstr_to_u64(const uint8_t *b, uint32_t b_size)
 }
 
 // little endian u64
-uint32_t os_u64_size(uint64_t u64)
+uint32_t os_u64_size(u64_t u64)
 {
     uint8_t *uc = (uint8_t *)&u64;
-    uint32_t b_size = sizeof(uint64_t);
-    uint32_t pos = sizeof(uint64_t) - 1;
+    uint32_t b_size = sizeof(u64_t);
+    uint32_t pos = sizeof(u64_t) - 1;
 
     while (pos > 0)
     {
@@ -254,11 +254,11 @@ uint32_t os_u64_size(uint64_t u64)
 }
 
 // little endian u64
-uint32_t os_u64_to_bstr(uint64_t u64, uint8_t *b)
+uint32_t os_u64_to_bstr(u64_t u64, uint8_t *b)
 {
     uint8_t *uc = (uint8_t *)&u64;
     uint32_t b_size;
-    uint32_t pos = sizeof(uint64_t) - 1;
+    uint32_t pos = sizeof(u64_t) - 1;
 
     b_size = os_u64_size(u64);
 
@@ -283,8 +283,8 @@ return value:
 */
 int32_t os_collate_u64(const uint8_t *b1, uint32_t b1_size, const uint8_t *b2, uint32_t b2_size)
 {
-    uint64_t u64_1 = os_bstr_to_u64(b1, b1_size);
-    uint64_t u64_2 = os_bstr_to_u64(b2, b2_size);
+    u64_t u64_1 = os_bstr_to_u64(b1, b1_size);
+    u64_t u64_2 = os_bstr_to_u64(b2, b2_size);
 	
     if (u64_1 > u64_2)
 	{
@@ -299,7 +299,7 @@ int32_t os_collate_u64(const uint8_t *b1, uint32_t b1_size, const uint8_t *b2, u
 	return 0;
 }
 
-uint32_t os_extent_to_extent_pair(uint64_t pa, uint64_t len, uint8_t *ext_pair)
+uint32_t os_extent_to_extent_pair(u64_t pa, u64_t len, uint8_t *ext_pair)
 {
     uint8_t pa_size;
 
@@ -314,7 +314,7 @@ uint32_t os_extent_to_extent_pair(uint64_t pa, uint64_t len, uint8_t *ext_pair)
     return (EXT_PAIR_HEADER_SIZE + pa_size + os_u64_to_bstr(len, ext_pair + EXT_PAIR_HEADER_SIZE + pa_size));
 }
 
-uint64_t os_extent_pair_to_extent(const uint8_t *ext_pair, uint32_t ext_pair_size, uint64_t *pa)
+u64_t os_extent_pair_to_extent(const uint8_t *ext_pair, uint32_t ext_pair_size, u64_t *pa)
 {
     uint8_t pa_size = *ext_pair;
 
@@ -336,8 +336,8 @@ return value:
 int32_t os_collate_extent(const uint8_t *k1, uint32_t k1_size, const uint8_t *v1, uint32_t v1_size,
     const uint8_t *k2, uint32_t k2_size, const uint8_t *v2, uint32_t v2_size)
 {
-    uint64_t addr1, addr2;
-    uint64_t len1, len2;
+    u64_t addr1, addr2;
+    u64_t len1, len2;
 
     if ((v2_size == 0) || (v1_size == 0))
     {
@@ -371,9 +371,9 @@ return value:
 int32_t os_collate_extent_map(const uint8_t *k1, uint32_t k1_size, const uint8_t *v1, uint32_t v1_size,
     const uint8_t *k2, uint32_t k2_size, const uint8_t *v2, uint32_t v2_size)
 {
-    uint64_t va1, va2;   // virtual address
-    uint64_t pa1, pa2;   // physical address
-    uint64_t len1, len2;
+    u64_t va1, va2;   // virtual address
+    u64_t pa1, pa2;   // physical address
+    u64_t len1, len2;
 
     if ((v2_size == 0) || (v1_size == 0))
     {

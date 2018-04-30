@@ -48,26 +48,26 @@ struct space_manager
 {
     object_handle_t *space_obj;
 
-    uint64_t first_free_block;
-    uint64_t total_free_blocks;
+    u64_t first_free_block;
+    u64_t total_free_blocks;
 
     os_rwlock lock;
 };
 
-int32_t alloc_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt, uint64_t *real_start_blk);
-int32_t free_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt);
+int32_t alloc_space(object_handle_t *obj, u64_t start_blk, uint32_t blk_cnt, u64_t *real_start_blk);
+int32_t free_space(object_handle_t *obj, u64_t start_blk, uint32_t blk_cnt);
 
 #define OFS_ALLOC_BLOCK(ct, objid, vbn) ofs_alloc_space(ct, objid, 1, vbn)
 #define OFS_FREE_BLOCK(ct, objid, vbn)  ofs_free_space(ct, objid, vbn, 1)
 
-int32_t ofs_alloc_space(container_handle_t *ct, uint64_t objid, uint32_t blk_cnt, uint64_t *real_start_blk);
-int32_t ofs_free_space(container_handle_t *ct, uint64_t objid, uint64_t start_blk, uint32_t blk_cnt);
+int32_t ofs_alloc_space(container_handle_t *ct, u64_t objid, uint32_t blk_cnt, u64_t *real_start_blk);
+int32_t ofs_free_space(container_handle_t *ct, u64_t objid, u64_t start_blk, uint32_t blk_cnt);
 
 // space manager API
-void ofs_init_sm(space_manager_t *sm, object_handle_t *obj, uint64_t first_free_block, uint64_t total_free_blocks);
-int32_t ofs_init_free_space(space_manager_t *sm, uint64_t start_blk, uint64_t blk_cnt);
-int32_t sm_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *real_start_blk);
-int32_t sm_free_space(space_manager_t *sm, uint64_t start_blk, uint32_t blk_cnt);
+void ofs_init_sm(space_manager_t *sm, object_handle_t *obj, u64_t first_free_block, u64_t total_free_blocks);
+int32_t ofs_init_free_space(space_manager_t *sm, u64_t start_blk, u64_t blk_cnt);
+int32_t sm_alloc_space(space_manager_t *sm, uint32_t blk_cnt, u64_t *real_start_blk);
+int32_t sm_free_space(space_manager_t *sm, u64_t start_blk, uint32_t blk_cnt);
 void ofs_destroy_sm(space_manager_t *sm);
 
 

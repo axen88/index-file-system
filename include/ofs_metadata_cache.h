@@ -66,24 +66,24 @@ typedef enum cache_status
 
 struct ofs_block_cache
 {
-	uint64_t vbn;
+	u64_t vbn;
 	uint32_t state;
 	block_head_t *ib;
 	avl_node_t obj_entry; // recorded in object info
 	avl_node_t fs_entry;  // recorded in container handle
 };
 
-int32_t index_block_read(object_handle_t *obj, uint64_t vbn, uint32_t blk_id);
+int32_t index_block_read(object_handle_t *obj, u64_t vbn, uint32_t blk_id);
 
 int32_t alloc_obj_block_and_cache(object_info_t *obj_info, ofs_block_cache_t **cache, uint32_t blk_id);
 
 int32_t release_obj_all_cache(object_info_t *obj_info);
 
-void change_obj_cache_vbn(object_info_t *obj_info, ofs_block_cache_t *cache, uint64_t new_vbn);
+void change_obj_cache_vbn(object_info_t *obj_info, ofs_block_cache_t *cache, u64_t new_vbn);
 
-int32_t index_block_read2(object_info_t *obj_info, uint64_t vbn, uint32_t blk_id, ofs_block_cache_t **cache_out);
+int32_t index_block_read2(object_info_t *obj_info, u64_t vbn, uint32_t blk_id, ofs_block_cache_t **cache_out);
 
-ofs_block_cache_t *alloc_obj_cache(object_info_t *obj_info, uint64_t vbn, uint32_t blk_id);
+ofs_block_cache_t *alloc_obj_cache(object_info_t *obj_info, u64_t vbn, uint32_t blk_id);
 
 int32_t release_container_all_cache(container_handle_t *ct);
 

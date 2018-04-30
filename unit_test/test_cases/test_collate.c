@@ -90,7 +90,7 @@ void test_cr_u64_1(void)
 
 void test_cr_u64_2(void)
 {
-    uint64_t u64;
+    u64_t u64;
     uint8_t  *b = (uint8_t *)&u64;
 
     u64 = 0;
@@ -109,7 +109,7 @@ void test_cr_u64_2(void)
 
 void test_cr_u64_3(void)
 {
-    uint64_t u64;
+    u64_t u64;
     uint8_t  *b = (uint8_t *)&u64;
 
     u64 = 0;

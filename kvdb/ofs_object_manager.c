@@ -41,11 +41,11 @@ MODULE(PID_OBJECT);
 
 int32_t compare_object2(const void *objid, object_info_t *obj_info)
 {
-    if ((*(uint64_t *)objid) > obj_info->objid)
+    if ((*(u64_t *)objid) > obj_info->objid)
     {
         return 1;
     }
-    else if ((*(uint64_t *)objid) == obj_info->objid)
+    else if ((*(u64_t *)objid) == obj_info->objid)
     {
         return 0;
     }
@@ -68,14 +68,14 @@ int32_t compare_cache1(const ofs_block_cache_t *cache, const ofs_block_cache_t *
     return 0;
 }
 
-void init_attr(object_info_t *obj_info, uint64_t inode_no)
+void init_attr(object_info_t *obj_info, u64_t inode_no)
 {
     obj_info->attr_record = INODE_GET_ATTR_RECORD(obj_info->inode);
     obj_info->root_cache.vbn = inode_no;
     obj_info->root_cache.ib = (block_head_t *)obj_info->attr_record->content;
 }
 
-int32_t get_object_info(container_handle_t *ct, uint64_t objid, object_info_t **obj_info_out)
+int32_t get_object_info(container_handle_t *ct, u64_t objid, object_info_t **obj_info_out)
 {
     object_info_t *obj_info = NULL;
     
@@ -161,7 +161,7 @@ void put_object_handle(object_handle_t *obj)
     return;
 }
 
-int32_t recover_obj_inode(object_info_t *obj_info, uint64_t inode_no)
+int32_t recover_obj_inode(object_info_t *obj_info, u64_t inode_no)
 {
     int32_t ret;
     ofs_block_cache_t *cache;
@@ -185,7 +185,7 @@ int32_t recover_obj_inode(object_info_t *obj_info, uint64_t inode_no)
 
 void validate_obj_inode(object_info_t *obj_info)
 {
-    uint64_t new_vbn;
+    u64_t new_vbn;
     ofs_super_block_t *sb;
     
     ASSERT(obj_info != NULL);
@@ -259,7 +259,7 @@ void close_object(object_info_t *obj_info)
     put_object_info(obj_info);
 }
 
-void init_inode(inode_record_t *inode, uint64_t objid, uint64_t inode_no, uint16_t flags)
+void init_inode(inode_record_t *inode, u64_t objid, u64_t inode_no, uint16_t flags)
 {
     attr_record_t *attr_record = NULL;
 
@@ -300,7 +300,7 @@ void init_inode(inode_record_t *inode, uint64_t objid, uint64_t inode_no, uint16
     }
 }
 
-int32_t create_object_at_inode(container_handle_t *ct, uint64_t objid, uint64_t inode_no, uint16_t flags, object_handle_t **obj_out)
+int32_t create_object_at_inode(container_handle_t *ct, u64_t objid, u64_t inode_no, uint16_t flags, object_handle_t **obj_out)
 {
     int32_t ret;
     object_handle_t *obj;
@@ -351,10 +351,10 @@ int32_t create_object_at_inode(container_handle_t *ct, uint64_t objid, uint64_t 
     return 0;
 }
 
-int32_t create_object(container_handle_t *ct, uint64_t objid, uint16_t flags, object_handle_t **obj_out)
+int32_t create_object(container_handle_t *ct, u64_t objid, uint16_t flags, object_handle_t **obj_out)
 {
      int32_t ret;
-     uint64_t inode_no = 0;
+     u64_t inode_no = 0;
 
     ASSERT(ct != NULL);
     ASSERT(obj_out != NULL);
@@ -379,7 +379,7 @@ int32_t create_object(container_handle_t *ct, uint64_t objid, uint16_t flags, ob
     return 0;
 }
 
-int32_t open_object(container_handle_t *ct, uint64_t objid, uint64_t inode_no, object_handle_t **obj_out)
+int32_t open_object(container_handle_t *ct, u64_t objid, u64_t inode_no, object_handle_t **obj_out)
 {
     int32_t ret = 0;
     object_info_t *obj_info = NULL;
@@ -416,7 +416,7 @@ int32_t open_object(container_handle_t *ct, uint64_t objid, uint64_t inode_no, o
     return 0;
 }
 
-uint64_t get_objid(container_handle_t *ct)
+u64_t get_objid(container_handle_t *ct)
 {
     return 1;
 }
@@ -443,7 +443,7 @@ int32_t ofs_set_object_name(object_handle_t *obj, char *name)
     return 0;
 }
 
-int32_t ofs_create_object_nolock(container_handle_t *ct, uint64_t objid, uint16_t flags, object_handle_t **obj_out)
+int32_t ofs_create_object_nolock(container_handle_t *ct, u64_t objid, uint16_t flags, object_handle_t **obj_out)
 {
     int32_t ret = 0;
     object_handle_t *obj = NULL;
@@ -470,7 +470,7 @@ int32_t ofs_create_object_nolock(container_handle_t *ct, uint64_t objid, uint16_
         return -INDEX_ERR_OBJ_EXIST;
     }
 
-    ret = search_key_internal(ct->id_obj, &objid, sizeof(uint64_t), NULL, 0);
+    ret = search_key_internal(ct->id_obj, &objid, sizeof(u64_t), NULL, 0);
     if (ret >= 0)
     {
         LOG_ERROR("The obj already exist. obj(%p) objid(%lld) ret(%d)\n", obj, objid, ret);
@@ -507,7 +507,7 @@ int32_t ofs_create_object_nolock(container_handle_t *ct, uint64_t objid, uint16_
     return 0;
 }    
 
-int32_t ofs_create_object(container_handle_t *ct, uint64_t objid, uint16_t flags, object_handle_t **obj)
+int32_t ofs_create_object(container_handle_t *ct, u64_t objid, uint16_t flags, object_handle_t **obj)
 {
     int32_t ret = 0;
 
@@ -524,11 +524,11 @@ int32_t ofs_create_object(container_handle_t *ct, uint64_t objid, uint16_t flags
     return ret;
 }    
 
-int32_t ofs_open_object_nolock(container_handle_t *ct, uint64_t objid, uint32_t open_flags, object_handle_t **obj_out)
+int32_t ofs_open_object_nolock(container_handle_t *ct, u64_t objid, uint32_t open_flags, object_handle_t **obj_out)
 {
     int32_t ret = 0;
     object_handle_t *obj = NULL;
-    uint64_t inode_no = 0;
+    u64_t inode_no = 0;
     avl_index_t where = 0;
     object_handle_t *id_obj;
     object_info_t *obj_info = NULL;
@@ -555,7 +555,7 @@ int32_t ofs_open_object_nolock(container_handle_t *ct, uint64_t objid, uint32_t 
 
     id_obj = ct->id_obj;
     
-    ret = search_key_internal(id_obj, &objid, sizeof(uint64_t), NULL, 0);
+    ret = search_key_internal(id_obj, &objid, sizeof(u64_t), NULL, 0);
     if (ret < 0)
     {
         LOG_DEBUG("Search for obj failed. obj(%p) objid(%lld) ret(%d)\n", obj, objid, ret);
@@ -578,7 +578,7 @@ int32_t ofs_open_object_nolock(container_handle_t *ct, uint64_t objid, uint32_t 
     return 0;
 }      
 
-int32_t ofs_open_object(container_handle_t *ct, uint64_t objid, object_handle_t **obj)
+int32_t ofs_open_object(container_handle_t *ct, u64_t objid, object_handle_t **obj)
 {
     int32_t ret = 0;
 
@@ -595,7 +595,7 @@ int32_t ofs_open_object(container_handle_t *ct, uint64_t objid, object_handle_t 
     return ret;
 }      
 
-object_info_t *ofs_get_object_info(container_handle_t *ct, uint64_t objid)
+object_info_t *ofs_get_object_info(container_handle_t *ct, u64_t objid)
 {
     object_info_t *obj_info = NULL;
     avl_index_t where = 0;
@@ -610,7 +610,7 @@ object_info_t *ofs_get_object_info(container_handle_t *ct, uint64_t objid)
     return obj_info;
 }
 
-object_handle_t *ofs_get_object_handle(container_handle_t *ct, uint64_t objid)
+object_handle_t *ofs_get_object_handle(container_handle_t *ct, u64_t objid)
 {
     object_info_t *obj_info = NULL;
 
@@ -691,7 +691,7 @@ int32_t ofs_close_object(object_handle_t *obj)
     return ret;
 }     
 
-int32_t ofs_delete_object(container_handle_t *ct, uint64_t objid)
+int32_t ofs_delete_object(container_handle_t *ct, u64_t objid)
 {
     return 0;
 }

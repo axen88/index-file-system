@@ -177,7 +177,7 @@ void hashtab_destroy(hashtab_t *h)
 }
 
 // 对hash表中的所有node运行apply函数
-int hashtab_map(hashtab_t *h, int (*apply)(void *k, void *d, void *args), void *args)  
+int hashtab_map(hashtab_t *h, int (*apply)(void *k, void *d, void *args), void *arg)  
 {  
     unsigned long i;  
     int ret;  
@@ -192,7 +192,7 @@ int hashtab_map(hashtab_t *h, int (*apply)(void *k, void *d, void *args), void *
         
         while (cur != NULL)
         {  
-            ret = apply(cur->key, cur->dat, args);  
+            ret = apply(cur->key, cur->dat, arg);  
             if (ret)  
                 return ret;  
             

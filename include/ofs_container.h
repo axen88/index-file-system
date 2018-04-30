@@ -60,7 +60,7 @@ struct container_handle
     
     space_manager_t sm;       // space manager
     space_manager_t bsm;      // base space manager
-    uint64_t        base_blk; // base block for bsm object
+    u64_t        base_blk; // base block for bsm object
     
     avl_tree_t obj_info_list;              // all opened object info
 
@@ -82,7 +82,7 @@ int32_t ofs_walk_all_opened_container(container_cb_t cb, void *para);
 
 // container API
 int32_t ofs_open_container(const char *ct_name, container_handle_t **ct);
-int32_t ofs_create_container(const char *ct_name, uint64_t total_sectors, container_handle_t **ct);
+int32_t ofs_create_container(const char *ct_name, u64_t total_sectors, container_handle_t **ct);
 int32_t ofs_close_container(container_handle_t *ct);
 container_handle_t *ofs_get_container_handle(const char *ct_name);
 

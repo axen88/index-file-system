@@ -39,14 +39,14 @@ History:
 #define TEST_KEY_LEN   8
 #define TEST_VALUE_LEN 20
 
-int32_t test_insert_key_performance(char *ct_name, uint64_t objid, uint64_t keys_num, net_para_t *net)
+int32_t test_insert_key_performance(char *ct_name, u64_t objid, u64_t keys_num, net_para_t *net)
 {
     int32_t ret;
     container_handle_t *ct;
     object_handle_t *obj;
-    uint64_t key;
+    u64_t key;
     uint8_t value[TEST_VALUE_LEN];
-    uint64_t time;
+    u64_t time;
 
     ret = ofs_open_container(ct_name, &ct);
     if (ret < 0)
@@ -87,13 +87,13 @@ int32_t test_insert_key_performance(char *ct_name, uint64_t objid, uint64_t keys
     return 0;
 }
 
-int32_t test_remove_key_performance(char *ct_name, uint64_t objid, uint64_t keys_num, net_para_t *net)
+int32_t test_remove_key_performance(char *ct_name, u64_t objid, u64_t keys_num, net_para_t *net)
 {
     int32_t ret = 0;
     container_handle_t *ct = NULL;
     object_handle_t *obj = NULL;
-    uint64_t key = 0;
-    uint64_t time = 0;
+    u64_t key = 0;
+    u64_t time = 0;
 
     ret = ofs_open_container(ct_name, &ct);
     if (ret < 0)

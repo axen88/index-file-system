@@ -43,18 +43,18 @@ MODULE(PID_EXTENT_MAP);
 
 #if 0
 
-int32_t insert_extent(object_handle_t *obj, uint64_t vbn, uint64_t lbn, uint32_t blk_cnt)
+int32_t insert_extent(object_handle_t *obj, u64_t vbn, u64_t lbn, uint32_t blk_cnt)
 {
-    uint64_t start_blk;
-    uint64_t addr;
+    u64_t start_blk;
+    u64_t addr;
     uint32_t len;
-    uint64_t end;
-    uint64_t end_blk;
+    u64_t end;
+    u64_t end_blk;
     uint8_t vbn_str[U64_MAX_SIZE];
     uint8_t ext_pair[EXT_PAIR_MAX_SIZE];
-    uint64_t ext_vbn;
-    uint64_t ext_lbn;
-    uint64_t ext_len;
+    u64_t ext_vbn;
+    u64_t ext_lbn;
+    u64_t ext_len;
     uint16_t vbn_size;
     uint16_t len_size;
     uint32_t ext_pair_size;
@@ -162,10 +162,10 @@ int32_t insert_extent(object_handle_t *obj, uint64_t vbn, uint64_t lbn, uint32_t
     return (uint32_t)(end - start_blk);
 }
 
-int32_t remove_extent(object_handle_t *obj, uint64_t vbn, uint64_t lbn, uint32_t blk_cnt)
+int32_t remove_extent(object_handle_t *obj, u64_t vbn, u64_t lbn, uint32_t blk_cnt)
 {
-    uint64_t start_blk;
-    uint64_t addr;
+    u64_t start_blk;
+    u64_t addr;
     uint32_t len;
     uint8_t addr_str[U64_MAX_SIZE];
     uint8_t len_str[U64_MAX_SIZE];

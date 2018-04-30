@@ -145,6 +145,10 @@ typedef enum error_code
     ERR_FILE_READ,
     ERR_FILE_WRITE,
 
+    ERR_NO_MEMORY,
+    
+    ERR_NEW_TX_BLOCKED,
+
     
     INDEX_ERR_BUTT
 } error_code_t;

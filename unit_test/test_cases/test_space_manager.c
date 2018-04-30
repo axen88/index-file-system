@@ -63,7 +63,7 @@ void test_space_manager_1(void)
 {
     container_handle_t *ct;
     object_handle_t *obj;
-    uint64_t start_blk;
+    u64_t start_blk;
     
     CU_ASSERT(ofs_create_container("sm", 1000, &ct) == 0);
     CU_ASSERT(ofs_create_object(ct, TEST_OBJID, FLAG_TABLE | CR_EXTENT | (CR_EXTENT << 4), &obj) == 0);
@@ -82,7 +82,7 @@ void test_space_manager_2(void)
 {
     container_handle_t *ct;
     object_handle_t *obj;
-    uint64_t start_blk;
+    u64_t start_blk;
     int32_t ret;
     
     CU_ASSERT(ofs_create_container("sm", 1000, &ct) == 0);
@@ -165,7 +165,7 @@ void test_space_manager_3(void)
 {
     container_handle_t *ct;
     object_handle_t *obj;
-    uint64_t start_blk;
+    u64_t start_blk;
     int32_t ret;
     
     CU_ASSERT(ofs_create_container("sm", 1000, &ct) == 0);
@@ -206,7 +206,7 @@ void test_space_manager_4(void)
 {
     container_handle_t *ct;
     object_handle_t *obj;
-    uint64_t start_blk;
+    u64_t start_blk;
     int32_t ret;
     
     CU_ASSERT(ofs_create_container("sm", 1000, &ct) == 0);
@@ -253,7 +253,7 @@ void test_space_manager_4(void)
 void test_space_manager_5(void)
 {
     container_handle_t *ct;
-    uint64_t start_blk[TEST_NUM];
+    u64_t start_blk[TEST_NUM];
     int32_t ret[TEST_NUM];
     int32_t i = 0;
     uint32_t blk_cnt[TEST_NUM] = {1, 20, 100, 500, 2000};

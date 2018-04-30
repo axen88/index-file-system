@@ -158,7 +158,7 @@ void print_obj_info(net_para_t *net, object_info_t *obj_info)
     avl_walk_all(&obj_info->caches, (avl_walk_cb_t)print_one_cache_info, net);
 }
 
-int32_t cmd_list(char *ct_name, uint64_t objid, net_para_t *net)
+int32_t cmd_list(char *ct_name, u64_t objid, net_para_t *net)
 {
     int32_t ret = 0;
     container_handle_t *ct = NULL;

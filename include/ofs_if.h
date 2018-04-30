@@ -64,21 +64,21 @@ typedef struct container_handle container_handle_t;
 
 // container API
 int32_t ofs_open_container(const char *ct_name, container_handle_t **ct);
-int32_t ofs_create_container(const char *ct_name, uint64_t total_sectors, container_handle_t **ct);
+int32_t ofs_create_container(const char *ct_name, u64_t total_sectors, container_handle_t **ct);
 int32_t ofs_close_container(container_handle_t *ct);
 
 // space manager API
-void ofs_init_sm(space_manager_t *sm, object_handle_t *obj, uint64_t first_free_block, uint64_t total_free_blocks);
-int32_t ofs_init_free_space(space_manager_t *sm, uint64_t start_blk, uint64_t blk_cnt);
-int32_t sm_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *real_start_blk);
-int32_t sm_free_space(space_manager_t *sm, uint64_t start_blk, uint32_t blk_cnt);
+void ofs_init_sm(space_manager_t *sm, object_handle_t *obj, u64_t first_free_block, u64_t total_free_blocks);
+int32_t ofs_init_free_space(space_manager_t *sm, u64_t start_blk, u64_t blk_cnt);
+int32_t sm_alloc_space(space_manager_t *sm, uint32_t blk_cnt, u64_t *real_start_blk);
+int32_t sm_free_space(space_manager_t *sm, u64_t start_blk, uint32_t blk_cnt);
 void ofs_destroy_sm(space_manager_t *sm);
 
 // object API
-int32_t ofs_open_object(container_handle_t *ct, uint64_t objid, object_handle_t **obj);
-int32_t ofs_create_object(container_handle_t *ct, uint64_t objid, uint16_t flags, object_handle_t **obj);
+int32_t ofs_open_object(container_handle_t *ct, u64_t objid, object_handle_t **obj);
+int32_t ofs_create_object(container_handle_t *ct, u64_t objid, uint16_t flags, object_handle_t **obj);
 int32_t ofs_close_object(object_handle_t *obj);
-int32_t ofs_delete_object(container_handle_t *ct, uint64_t objid);
+int32_t ofs_delete_object(container_handle_t *ct, u64_t objid);
 int32_t ofs_rename_object(object_handle_t *obj, const char *new_obj_name);
 int32_t ofs_set_object_name(object_handle_t *obj, char *name);
 

@@ -88,7 +88,7 @@ typedef struct journal_superblock_s
 
     uint8_t     uuid[16];        /* 128-bit uuid for journal */
     
-    uint64_t objid;
+    u64_t objid;
 
     uint32_t    users_num;        /* Nr of filesystems sharing log */
 

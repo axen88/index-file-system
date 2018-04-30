@@ -64,8 +64,8 @@ void test_kv_2(void)
 
     container_handle_t *ct;
     object_handle_t *obj;
-    uint64_t key;
-    uint64_t i;
+    u64_t key;
+    u64_t i;
     
     // create ct and object, insert key
     CU_ASSERT(ofs_create_container("kv", 100000, &ct) == 0);
@@ -130,8 +130,8 @@ void test_kv_3(void)
 
     container_handle_t *ct;
     object_handle_t *obj;
-    uint64_t key;
-    uint64_t i;
+    u64_t key;
+    u64_t i;
     
     // create ct and object, insert key
     CU_ASSERT(ofs_create_container("kv", 100000, &ct) == 0);
@@ -194,8 +194,8 @@ void test_kv_4(void)
 
     container_handle_t *ct;
     object_handle_t *obj;
-    uint64_t key;
-    uint64_t i;
+    u64_t key;
+    u64_t i;
     
     // create ct and object, insert and remove key
     CU_ASSERT(ofs_create_container("kv", 100000, &ct) == 0);

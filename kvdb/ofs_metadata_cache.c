@@ -42,7 +42,7 @@ MODULE(PID_CACHE);
 #include "log.h"
 
 
-int32_t compare_cache2(const uint64_t *vbn, ofs_block_cache_t *cache_node)
+int32_t compare_cache2(const u64_t *vbn, ofs_block_cache_t *cache_node)
 {
     if (*vbn > cache_node->vbn)
     {
@@ -82,7 +82,7 @@ void remove_obj_cache(object_info_t *obj_info, ofs_block_cache_t *cache)
 }
 
 
-void change_obj_cache_vbn(object_info_t *obj_info, ofs_block_cache_t *cache, uint64_t new_vbn)
+void change_obj_cache_vbn(object_info_t *obj_info, ofs_block_cache_t *cache, u64_t new_vbn)
 {
     remove_obj_cache(obj_info, cache);
     cache->vbn = new_vbn;
@@ -91,7 +91,7 @@ void change_obj_cache_vbn(object_info_t *obj_info, ofs_block_cache_t *cache, uin
 
 
 
-ofs_block_cache_t *alloc_obj_cache(object_info_t *obj_info, uint64_t vbn, uint32_t blk_id)
+ofs_block_cache_t *alloc_obj_cache(object_info_t *obj_info, u64_t vbn, uint32_t blk_id)
 {
     ofs_block_cache_t *cache = NULL;
 
@@ -141,7 +141,7 @@ int32_t alloc_obj_block_and_cache(object_info_t *obj_info, ofs_block_cache_t **c
 {
     ofs_block_cache_t *tmp_cache = NULL;
     int32_t ret = 0;
-    uint64_t vbn = 0;
+    u64_t vbn = 0;
 
     ASSERT(obj_info != NULL);
     
@@ -370,7 +370,7 @@ int32_t release_container_all_cache(container_handle_t *ct)
     return 0;
 }
 
-int32_t index_block_read2(object_info_t *obj_info, uint64_t vbn, uint32_t blk_id,
+int32_t index_block_read2(object_info_t *obj_info, u64_t vbn, uint32_t blk_id,
     ofs_block_cache_t **cache_out)
 {
     int32_t ret = 0;
@@ -432,7 +432,7 @@ int32_t index_block_read2(object_info_t *obj_info, uint64_t vbn, uint32_t blk_id
     return 0;
 }
 
-int32_t index_block_read(object_handle_t *obj, uint64_t vbn, uint32_t blk_id)
+int32_t index_block_read(object_handle_t *obj, u64_t vbn, uint32_t blk_id)
 {
     int32_t ret = 0;
 

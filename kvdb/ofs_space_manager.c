@@ -40,12 +40,12 @@
 MODULE(PID_SPACE_MANAGER);
 #include "log.h"
 
-int32_t alloc_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt, uint64_t *real_start_blk)
+int32_t alloc_space(object_handle_t *obj, u64_t start_blk, uint32_t blk_cnt, u64_t *real_start_blk)
 {
-    uint64_t addr;
+    u64_t addr;
     uint32_t len;
-    uint64_t end;
-    uint64_t end_blk;
+    u64_t end;
+    u64_t end_blk;
     uint8_t addr_str[U64_MAX_SIZE];
     uint8_t len_str[U64_MAX_SIZE];
     uint16_t addr_size;
@@ -158,9 +158,9 @@ int32_t alloc_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt, 
     return (uint32_t)(end - start_blk);
 }
 
-int32_t free_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt)
+int32_t free_space(object_handle_t *obj, u64_t start_blk, uint32_t blk_cnt)
 {
-    uint64_t addr;
+    u64_t addr;
     uint32_t len;
     uint8_t addr_str[U64_MAX_SIZE];
     uint8_t len_str[U64_MAX_SIZE];
@@ -251,8 +251,8 @@ int32_t free_space(object_handle_t *obj, uint64_t start_blk, uint32_t blk_cnt)
     return index_insert_key_nolock(obj, addr_str, addr_size, len_str, len_size);
 }
 
-void ofs_init_sm(space_manager_t *sm, object_handle_t *obj, uint64_t first_free_block,
-    uint64_t total_free_blocks)
+void ofs_init_sm(space_manager_t *sm, object_handle_t *obj, u64_t first_free_block,
+    u64_t total_free_blocks)
 {
     sm->space_obj = obj;
     sm->first_free_block = first_free_block;
@@ -260,7 +260,7 @@ void ofs_init_sm(space_manager_t *sm, object_handle_t *obj, uint64_t first_free_
     OS_RWLOCK_INIT(&sm->lock);
 }
 
-int32_t ofs_init_free_space(space_manager_t *sm, uint64_t start_blk, uint64_t blk_cnt)
+int32_t ofs_init_free_space(space_manager_t *sm, u64_t start_blk, u64_t blk_cnt)
 {
     uint8_t addr_str[U64_MAX_SIZE];
     uint8_t len_str[U64_MAX_SIZE];
@@ -289,7 +289,7 @@ void ofs_destroy_sm(space_manager_t *sm)
 // >  0: real blk cnt
 // == 0: no free blk
 // <  0: error code
-int32_t sm_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *real_start_blk)
+int32_t sm_alloc_space(space_manager_t *sm, uint32_t blk_cnt, u64_t *real_start_blk)
 {
     int32_t ret;
 
@@ -318,7 +318,7 @@ int32_t sm_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *real_sta
 
 
     sm->first_free_block = *real_start_blk + ret;
-    if (sm->total_free_blocks < (uint64_t)ret)
+    if (sm->total_free_blocks < (u64_t)ret)
     {
         LOG_ERROR("the sm system chaos. objid(0x%llx) ret(%d)\n", sm->space_obj->obj_info->objid, ret);
     }
@@ -335,7 +335,7 @@ int32_t sm_alloc_space(space_manager_t *sm, uint32_t blk_cnt, uint64_t *real_sta
     return ret;
 }
 
-int32_t sm_free_space(space_manager_t *sm, uint64_t start_blk, uint32_t blk_cnt)
+int32_t sm_free_space(space_manager_t *sm, u64_t start_blk, uint32_t blk_cnt)
 {
     int32_t ret;
     
@@ -357,7 +357,7 @@ int32_t reserve_base_space(container_handle_t *ct)
 {
     uint32_t blk_cnt;
     int32_t ret;
-    uint64_t real_start_blk;
+    u64_t real_start_blk;
 
     if (ct->base_blk == 0)
     {
@@ -397,7 +397,7 @@ int32_t reserve_base_space(container_handle_t *ct)
 // >  0: real blk cnt
 // == 0: no free blk
 // <  0: error code
-int32_t ofs_alloc_space(container_handle_t *ct, uint64_t objid, uint32_t blk_cnt, uint64_t *real_start_blk)
+int32_t ofs_alloc_space(container_handle_t *ct, u64_t objid, uint32_t blk_cnt, u64_t *real_start_blk)
 {
     int32_t ret;
     
@@ -428,7 +428,7 @@ int32_t ofs_alloc_space(container_handle_t *ct, uint64_t objid, uint32_t blk_cnt
     return sm_alloc_space(&ct->sm, blk_cnt, real_start_blk);
 }
 
-int32_t ofs_free_space(container_handle_t *ct, uint64_t objid, uint64_t start_blk, uint32_t blk_cnt)
+int32_t ofs_free_space(container_handle_t *ct, u64_t objid, u64_t start_blk, uint32_t blk_cnt)
 {
     int32_t ret;
 

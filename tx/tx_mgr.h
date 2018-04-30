@@ -30,9 +30,9 @@ struct tx_handle
     uint8_t max_depth;
     uint8_t depth;             // Number of the parent nodes
     ofs_block_cache_t *cache_stack[TREE_MAX_DEPTH];
-    uint64_t position_stack[TREE_MAX_DEPTH];
+    u64_t position_stack[TREE_MAX_DEPTH];
     ofs_block_cache_t *cache;
-    uint64_t position;
+    u64_t position;
     index_entry_t *ie;        
 
     list_head_t entry;
@@ -42,7 +42,7 @@ struct tx_handle
 
 typedef struct
 {
-    uint64_t tx_id;   // 
+    u64_t tx_id;   // 
     
 } tx_mgr_t;
 

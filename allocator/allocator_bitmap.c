@@ -144,7 +144,7 @@ int32_t pre_flush(BITMAP_HANDLE * hnd)
     < 0: 错误代码
 说    明: 无
 *******************************************************************************/
-int32_t get_buf(BITMAP_HANDLE * hnd, uint64_t dat_addr)
+int32_t get_buf(BITMAP_HANDLE * hnd, u64_t dat_addr)
 {
     /* 检查输入参数 */
     ASSERT(NULL != hnd);
@@ -272,7 +272,7 @@ void os_set_nbits(uint8_t * buf, uint32_t position, uint32_t num, bool_t is_used
 说    明: 无
 *******************************************************************************/
 int32_t init_bitmap_blocks(void * file_hnd, uint32_t block_size,
-    uint64_t bitmap_start_lba, uint32_t bitmap_blocks)
+    u64_t bitmap_start_lba, uint32_t bitmap_blocks)
 {
     uint8_t *dat = NULL;
     uint32_t sectors_per_block = block_size / BYTES_PER_SECTOR;
@@ -352,7 +352,7 @@ int32_t bitmap_clean(BITMAP_HANDLE * hnd)
     < 0: 错误代码
 说    明: 无
 *******************************************************************************/
-int32_t bitmap_init(BITMAP_HANDLE ** hnd, void * file_hnd, uint64_t start_lba, uint32_t total_sectors, uint64_t total_bits)
+int32_t bitmap_init(BITMAP_HANDLE ** hnd, void * file_hnd, u64_t start_lba, uint32_t total_sectors, u64_t total_bits)
 {
     BITMAP_HANDLE *tmp_hnd = NULL;
 
@@ -437,7 +437,7 @@ int32_t bitmap_destroy(BITMAP_HANDLE * hnd)
     < 0: 错误代码
 说    明: 无
 *******************************************************************************/
-int32_t bitmap_check_bit(BITMAP_HANDLE * hnd, uint64_t position)
+int32_t bitmap_check_bit(BITMAP_HANDLE * hnd, u64_t position)
 {
     int32_t ret = 0;
 
@@ -472,7 +472,7 @@ int32_t bitmap_check_bit(BITMAP_HANDLE * hnd, uint64_t position)
     < 0: 错误代码
 说    明: 无
 *******************************************************************************/
-int32_t bitmap_set_nbits(BITMAP_HANDLE * hnd, uint64_t start_position, uint32_t nbits,
+int32_t bitmap_set_nbits(BITMAP_HANDLE * hnd, u64_t start_position, uint32_t nbits,
     bool_t is_used)
 {
     int32_t ret = 0;
@@ -529,11 +529,11 @@ int32_t bitmap_set_nbits(BITMAP_HANDLE * hnd, uint64_t start_position, uint32_t 
     < 0: 错误代码
 说    明: 无
 *******************************************************************************/
-int32_t bitmap_get_free_bits(BITMAP_HANDLE * hnd, uint64_t start_position,
-    uint32_t required_bits, uint64_t * real_start_position)
+int32_t bitmap_get_free_bits(BITMAP_HANDLE * hnd, u64_t start_position,
+    uint32_t required_bits, u64_t * real_start_position)
 {
     int32_t ret = 0;
-    uint64_t total_bits = hnd->total_bits;
+    u64_t total_bits = hnd->total_bits;
     int32_t real_bits = 0;
 
     /* 检查输入参数 */

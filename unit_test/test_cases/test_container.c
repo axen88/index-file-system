@@ -107,7 +107,7 @@ void test_block_rw(void)
 {
     container_handle_t *hnd;
     int64_t vbn = 10;
-    uint64_t blkNum = 100;
+    u64_t blkNum = 100;
     uint8_t wrBuf[TEST_BLOCK_SIZE];
     uint8_t rdBuf[TEST_BLOCK_SIZE];
     

@@ -66,7 +66,7 @@ struct hashtab_info {
 typedef struct hashtab_info hashtab_info_t;
 
 int hashtab_map(struct hashtab *h,  
-                int (*apply)(void *k, void *d, void *args),  
+                int (*apply)(void *k, void *d, void *arg),  
                 void *args);  
 
 void hashtab_stat(struct hashtab *h, struct hashtab_info *info);  

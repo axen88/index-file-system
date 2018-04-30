@@ -39,7 +39,7 @@ History:
 typedef struct dump_para
 {
     uint8_t depth; 
-    uint64_t vbn;  
+    u64_t vbn;  
     uint32_t no;  
     net_para_t *net;
 } dump_para_t;
