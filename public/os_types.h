@@ -66,9 +66,11 @@ typedef int                  int32_t;  // signed 32-bit
 typedef char                 int8_t;   // signed 8-bit
 typedef unsigned long long       ptr_t;  // pointer
 typedef long long            int64_t;  // signed 64-bit
-typedef unsigned long long   uint64_t;  // unsigned 64-bit
+typedef unsigned long long   u64_t;  // unsigned 64-bit
 #else
 typedef unsigned long            ptr_t;  // pointer
+typedef unsigned long long   u64_t;  // unsigned 64-bit
+
 #endif
 
 #ifndef FALSE

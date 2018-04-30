@@ -22,7 +22,7 @@
 
             Copyright(C), 2016~2019, axen.hook@foxmail.com
 ********************************************************************************
-File Name: OS_DISK_IF.H
+File Name: DISK_IF.H
 Author   : axen.hook
 Version  : 1.00
 Date     : 02/Mar/2016
@@ -36,17 +36,17 @@ History:
 *******************************************************************************/
 
 
-#ifndef __OS_DISK_IF_H__
-#define __OS_DISK_IF_H__
+#ifndef __DISK_IF_H__
+#define __DISK_IF_H__
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
 #ifdef __EN_FILE_IF__
 
 #include "file_if.h"
 
-#ifdef	__cplusplus
-extern "C" {
-#endif
 
 #define os_disk_open(hnd, path)    os_file_open(hnd, path)
 #define os_disk_create(hnd, path)  os_file_create(hnd, path)
@@ -58,13 +58,13 @@ extern "C" {
 #define os_disk_pread(hnd, buf, size, start_lba) \
     os_file_pread(hnd, buf, size, (start_lba) << BYTES_PER_SECTOR_SHIFT)
 
-#ifdef	__cplusplus
-}
-#endif
 
 #else
 
 #endif
 
+#ifdef	__cplusplus
+}
+#endif
 
 #endif

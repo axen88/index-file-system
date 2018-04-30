@@ -42,7 +42,7 @@ typedef struct cache_node
     
     list_head_t node;   // 在read cache、checkin cache、write cache中登记
     
-    struct cache_node *read_node;  // 对应READ_BUF
+    struct cache_node *read_node;  // 如果本node是读cache，则为空；否则为读cache
     struct cache_node *side_node[2];
 
     char dat[0];  // buffer
@@ -69,18 +69,39 @@ typedef struct
 
     uint32_t block_size;
 
+    uint32_t onfly_tx_num; // 正在进行的事务数目
+
     uint8_t  writing_side;   //  0 or 1, 
 
-    hashtab_t hcache;    // 所有的数据块缓存在这都能快速找到
+    hashtab_t *hcache;    // 所有的数据块缓存在这都能快速找到
 
     // write_cache -> checkpoint_cache -> read_cache
-    list_head_t read_cache;        // 只读cache，从盘上读到的未经修改过的数据
-    list_head_t checkin_cache;  // 正在下盘的cache
-    list_head_t write_cache;       // 正在修改的cache
+    //list_head_t read_cache;        // 只读cache，从盘上读到的未经修改过的数据
+    //list_head_t checkin_cache;  // 正在下盘的cache
 
     space_ops_t space_ops;
     
 } cache_mgr_t;
+
+// 事务
+typedef struct
+{
+    cache_mgr_t *mgr;
+    
+    list_head_t write_cache;       // 本事务修改过或正在修改的cache
+
+    
+} tx_t;
+
+tx_t *start_tx(cache_mgr_t *mgr);
+int commit_tx(tx_t *tx);
+void cancel_tx(tx_t *tx);
+
+void *get_buffer(cache_mgr_t *mgr, uint64_t block_id, BUF_TYPE_E buf_type);
+int put_buffer(cache_mgr_t *mgr, void *buf);
+int commit_cache(cache_mgr_t *mgr, cache_node_t *cache);
+cache_mgr_t *tx_cache_init_system(char *bd_name, uint32_t bd_block_size);
+void tx_cache_exit_system(cache_mgr_t *mgr);
 
 #ifdef __cplusplus
 }

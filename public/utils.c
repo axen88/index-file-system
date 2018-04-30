@@ -55,9 +55,9 @@ History:
 #include "os_adapter.h"
 #include "utils.h"
 
-uint64_t os_get_cycle_count(void)
+u64_t os_get_cycle_count(void)
 {
-    uint64_t cycle = 0;
+    u64_t cycle = 0;
     
 #ifndef WIN32
     rdtscll(cycle);
@@ -66,7 +66,7 @@ uint64_t os_get_cycle_count(void)
     return cycle;
 }
 
-uint64_t os_get_ms_count(void)
+u64_t os_get_ms_count(void)
 {
 #ifdef WIN32
     return GetTickCount();
@@ -79,11 +79,11 @@ uint64_t os_get_ms_count(void)
     gettimeofday(&tv, NULL);
     #endif
     
-    return ((((uint64_t)tv.tv_sec) * 1000) + (((uint64_t)tv.tv_usec) / 1000));
+    return ((((u64_t)tv.tv_sec) * 1000) + (((u64_t)tv.tv_usec) / 1000));
 #endif
 }
 
-uint64_t os_get_us_count(void)
+u64_t os_get_us_count(void)
 {
 #ifdef WIN32
     return -1;
@@ -96,23 +96,23 @@ uint64_t os_get_us_count(void)
     gettimeofday(&tv, NULL);
     #endif
     
-    return ((((uint64_t)tv.tv_sec) * 1000 * 1000) + (((uint64_t)tv.tv_usec)));
+    return ((((u64_t)tv.tv_sec) * 1000 * 1000) + (((u64_t)tv.tv_usec)));
 #endif
 }
 
-uint64_t os_get_second_count(void)
+u64_t os_get_second_count(void)
 {
 #ifdef __KERNEL__
     struct timeval tv;
     do_gettimeofday(&tv);
-    return ((uint64_t)tv.tv_sec);
+    return ((u64_t)tv.tv_sec);
 #else
     return (time(NULL));
 #endif
 }
 
 
-int32_t os_str_to_u64(const char *str, uint64_t *value, uint32_t base)
+int32_t os_str_to_u64(const char *str, u64_t *value, uint32_t base)
 {
     char *end = NULL;
 
@@ -223,13 +223,13 @@ int32_t os_str_to_hex(char *str, uint8_t *hex, uint32_t hex_len)
     return i;
 }
 
-uint64_t os_convert_u64(const uint64_t src)
+u64_t os_convert_u64(const u64_t src)
 {
-    uint64_t dst = 0;
+    u64_t dst = 0;
     uint8_t *src_char = (uint8_t *)&src;
     uint8_t *dst_char = (uint8_t *)&dst;
     uint32_t i = 0;
-    uint32_t j = sizeof(uint64_t);
+    uint32_t j = sizeof(u64_t);
     
     while (j--)
     {

@@ -205,6 +205,12 @@ static inline bool_t list_is_empty(list_head_t *head)
     return (head->next == head) ? TRUE : FALSE;
 }
 
+#define list_for_each(pos, head) \
+	for (pos = (head)->next; pos != (head); pos = pos->next)
+
+#define list_for_each_safe(pos, n, head) \
+        for (pos = (head)->next, n = pos->next; pos != (head); \
+            pos = n, n = pos->next)
 
 #ifdef __cplusplus
 }

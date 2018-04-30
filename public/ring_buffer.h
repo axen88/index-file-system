@@ -56,7 +56,7 @@ typedef enum tagQUEUE_ERROR_CODE_E
 
 typedef struct ring_buffer
 {
-    uint64_t *member;
+    u64_t *member;
     uint32_t head;  
     uint32_t tail;
     uint32_t num; 
@@ -79,7 +79,7 @@ static inline ring_buffer_t *ring_buffer_create(int32_t max_num)
         return NULL;
     }
 
-    q->member = OS_MALLOC(sizeof(uint64_t) * (uint32_t)max_num);
+    q->member = OS_MALLOC(sizeof(u64_t) * (uint32_t)max_num);
     if (q->member == NULL)
     {
         OS_FREE(q);
@@ -94,7 +94,7 @@ static inline ring_buffer_t *ring_buffer_create(int32_t max_num)
     return q;
 }
 
-static inline int32_t ring_buffer_push(ring_buffer_t *q, uint64_t member)
+static inline int32_t ring_buffer_push(ring_buffer_t *q, u64_t member)
 {
     ASSERT(q != NULL);
 
@@ -117,7 +117,7 @@ static inline int32_t ring_buffer_push(ring_buffer_t *q, uint64_t member)
     return 0;
 }
 
-static inline int32_t ring_buffer_pop(ring_buffer_t *q, uint64_t *member)
+static inline int32_t ring_buffer_pop(ring_buffer_t *q, u64_t *member)
 {
     ASSERT(q != NULL);
     ASSERT(member != NULL);
@@ -141,12 +141,12 @@ static inline int32_t ring_buffer_pop(ring_buffer_t *q, uint64_t *member)
     return 0;
 }
 
-static inline int32_t ring_buffer_walk_all(ring_buffer_t *q, int32_t (*func)(uint64_t, void *), void *para)
+static inline int32_t ring_buffer_walk_all(ring_buffer_t *q, int32_t (*func)(u64_t, void *), void *para)
 {
     int32_t ret = 0;
     uint32_t head = 0;
     uint32_t num = 0;
-    uint64_t member = 0;
+    u64_t member = 0;
     
     ASSERT(q != NULL);
 

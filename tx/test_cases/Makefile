@@ -3,7 +3,7 @@ CXX = g++
 AR = ar
 LD = ld
 
-CFLAGS = -g -Wall -I./ -I../../public
+CFLAGS = -g -Wall -I./ -I../../public -I../../include -D__EN_FILE_IF__
 
 POBJS = 
 
@@ -11,8 +11,8 @@ TEST_SUITE_MAIN = test_suite_main
 
 PUBLIC_DIR = ../../public
 
-PUBLIC_SRC = $(PUBLIC_DIR)/log.c $(PUBLIC_DIR)/file_if.c $(PUBLIC_DIR)/utils.c
-TX_CACHE_SRC = test_tx_cache.c $(PUBLIC_SRC)
+PUBLIC_SRC = $(PUBLIC_DIR)/log.c $(PUBLIC_DIR)/file_if.c $(PUBLIC_DIR)/utils.c $(PUBLIC_DIR)/hashtab.c
+TX_CACHE_SRC = test_tx_cache.c ../tx_cache.c $(PUBLIC_SRC)
 
 TARGET_ALL = $(TEST_SUITE_MAIN)
 

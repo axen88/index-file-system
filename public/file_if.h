@@ -59,11 +59,11 @@ enum file_io_error_code
 
 extern int32_t os_file_exist(const char *path);
 extern int32_t os_file_open_or_create(void **hnd, const char *path);
-extern int32_t os_file_resize(void *f, uint64_t newSize);
+extern int32_t os_file_resize(void *f, u64_t newSize);
 extern int64_t os_file_get_size(void *f);
 extern void os_file_set_buf(void *f, void *buf, uint32_t size);
 
-extern int32_t os_file_seek(void *f, uint64_t offset);
+extern int32_t os_file_seek(void *f, u64_t offset);
 extern int32_t os_file_read(void *f, void *buf, uint32_t size);
 extern int32_t os_file_write(void *f, void *buf, uint32_t size);
 
@@ -71,9 +71,9 @@ extern int32_t os_file_open(void **hnd, const char *name);
 extern int32_t os_file_create(void **hnd, const char *name);
 extern int32_t os_file_close(void *f);
 extern int32_t os_file_pwrite(void *hnd, void *buf,
-    uint32_t size, uint64_t offset);
+    uint32_t size, u64_t offset);
 extern int32_t os_file_pread(void *hnd, void *buf,
-    uint32_t size, uint64_t offset);
+    uint32_t size, u64_t offset);
 extern void os_file_printf(void *hnd, const char *format, ...);
 
 #ifdef  __cplusplus

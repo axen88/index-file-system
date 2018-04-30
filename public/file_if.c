@@ -97,7 +97,7 @@ int32_t os_file_create(void **hnd, const char *name)
     return file_open_or_create(hnd, name, O_RDWR | O_LARGEFILE | O_CREAT | O_TRUNC);
 }
 
-int32_t os_file_seek(void *hnd, uint64_t offset)
+int32_t os_file_seek(void *hnd, u64_t offset)
 {
     file_handle_t *tmp_hnd = hnd;
     
@@ -114,7 +114,7 @@ int32_t os_file_seek(void *hnd, uint64_t offset)
 }
 
 int32_t os_file_pwrite(void *hnd, void *buf,
-    uint32_t size, uint64_t offset)
+    uint32_t size, u64_t offset)
 {
     file_handle_t *tmp_hnd = hnd;
     mm_segment_t oldFs;
@@ -139,7 +139,7 @@ int32_t os_file_pwrite(void *hnd, void *buf,
 }
 
 int32_t os_file_pread(void *hnd, void *buf,
-    uint32_t size, uint64_t offset)
+    uint32_t size, u64_t offset)
 {
     file_handle_t *tmp_hnd = hnd;
     mm_segment_t oldFs;
@@ -330,7 +330,7 @@ int32_t os_file_open_or_create(void **hnd, const char *name)
         (os_file_exist(name) == 0) ? "rb+" : "wb+");
 }
 
-int32_t os_file_seek(void *hnd, uint64_t offset)
+int32_t os_file_seek(void *hnd, u64_t offset)
 {
     file_handle_t *tmp_hnd = hnd;
 
@@ -347,7 +347,7 @@ int32_t os_file_seek(void *hnd, uint64_t offset)
 }
 
 int32_t os_file_pwrite(void *hnd, void *buf, uint32_t size,
-    uint64_t offset)
+    u64_t offset)
 {
     int32_t ret = 0;
     file_handle_t *tmp_hnd = hnd;
@@ -372,7 +372,7 @@ int32_t os_file_pwrite(void *hnd, void *buf, uint32_t size,
 }
 
 int32_t os_file_pread(void *hnd, void *buf, uint32_t size,
-    uint64_t offset)
+    u64_t offset)
 {
     int32_t ret = 0;
     file_handle_t *tmp_hnd = hnd;
@@ -442,7 +442,7 @@ int32_t os_file_close(void *hnd)
     return 0;
 }
 
-int32_t os_file_resize(void *hnd, uint64_t new_size)
+int32_t os_file_resize(void *hnd, u64_t new_size)
 {
 	int32_t fd = 0;
     file_handle_t *tmp_hnd = hnd;

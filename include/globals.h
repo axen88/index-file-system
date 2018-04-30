@@ -22,7 +22,7 @@
 
             Copyright(C), 2016~2019, axen.hook@foxmail.com
 ********************************************************************************
-File Name: OFS_GLOBALS.H
+File Name: GLOBALS.H
 Author   : axen.hook
 Version  : 1.00
 Date     : 02/Mar/2016
@@ -35,8 +35,8 @@ History:
     1. Primary version
 *******************************************************************************/
 
-#ifndef __OFS_GLOBALS_H__
-#define __OFS_GLOBALS_H__
+#ifndef __GLOBALS_H__
+#define __GLOBALS_H__
 
 #ifdef	__cplusplus
 extern "C" {
@@ -143,6 +143,7 @@ typedef enum error_code
     ERR_PUT_BUF,
 
     ERR_FILE_READ,
+    ERR_FILE_WRITE,
 
     
     INDEX_ERR_BUTT

@@ -64,27 +64,27 @@ extern void *g_log_hnd;
 
 #define LOG_DEBUG(fmt, ...)    \
     log_trace(g_log_hnd, g_pid, 4, "[DEBUG][%lld][%s:%s:%d]: "fmt, \
-        (uint64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+        (u64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
 #define LOG_INFO(fmt, ...)       \
     log_trace(g_log_hnd, g_pid, 3, "[INFO ][%lld][%s:%s:%d]: "fmt, \
-        (uint64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+        (u64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
    
 #define LOG_WARN(fmt, ...)         \
     log_trace(g_log_hnd, g_pid, 2, "[WARN ][%lld][%s:%s:%d]: "fmt, \
-        (uint64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+        (u64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
    
 #define LOG_ERROR(fmt, ...)        \
     log_trace(g_log_hnd, g_pid, 1, "[ERROR][%lld][%s:%s:%d]: "fmt, \
-        (uint64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+        (u64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
    
 #define LOG_EMERG(fmt, ...)        \
     log_trace(g_log_hnd, g_pid, 0, "[EMERG][%lld][%s:%s:%d]: "fmt, \
-        (uint64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+        (u64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
 #define LOG_EVENT(fmt, ...)        \
     log_trace(g_log_hnd, g_pid, 0, "[EVENT][%lld][%s:%s:%d]: "fmt, \
-        (uint64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
+        (u64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
        
 #ifdef __cplusplus
 }

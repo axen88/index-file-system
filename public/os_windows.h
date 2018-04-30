@@ -72,7 +72,7 @@ extern "C" {
 
 typedef CRITICAL_SECTION            os_mutex_t;
 typedef CRITICAL_SECTION            os_rwlock;
-typedef uint64_t                     os_thread_id_t;
+typedef u64_t                     os_thread_id_t;
 typedef HANDLE                      os_thread_t;
 
 #define INVALID_TID                 NULL
