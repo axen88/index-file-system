@@ -29,7 +29,7 @@ typedef struct hashtab_node hashtab_node_t;
 struct hashtab_node
 {
     void *key;
-    void *dat;
+    void *value;
     hashtab_node_t *next;
 };
 
@@ -37,41 +37,50 @@ typedef struct hashtab hashtab_t;
 
 struct hashtab
 {
-    hashtab_node_t **htable;                               /* hash table */
-    uint32_t slot_num;                                         /* number of slots in hash table */
-    uint32_t num;                                         /* number of elements in hash table */
-    uint32_t max_num;
-    uint32_t (*hash_value)(hashtab_t *h, void *key);            /* hash function */
+    hashtab_node_t **htable;           /* hash table */
+    uint32_t slots_num;                                         /* number of slots in hash table */
+    uint32_t key_num;                                         /* number of elements in hash table */
+    uint32_t max_key_num;
+    uint32_t (*keyhash)(hashtab_t *h, void *key);            /* hash function */
     int (*keycmp)(hashtab_t *h, void *key1, void *key2);   /* key comparison function */
 };
 
 
-hashtab_t *hashtab_create(uint32_t (*hash_value)(hashtab_t *h, void *key),
-                               int (*keycmp)(hashtab_t *h, void *key1, void *key2),
-                               uint32_t slot_num, uint32_t max_num);
+// 创建hash表
+hashtab_t *hashtab_create(uint32_t (*keyhash)(hashtab_t *h, void *key),
+                          int (*keycmp)(hashtab_t *h, void *key1, void *key2),
+                          uint32_t slots_num, uint32_t max_key_num);
 
-int hashtab_insert(hashtab_t *h, void *key, void *dat);
+// 往hash表中插入key,value
+int hashtab_insert(hashtab_t *h, void *key, void *value);
 
+// 从hash表中删除指定key
 void *hashtab_delete(hashtab_t *h, void *key);  
 
+// 查找key，返回value
 void *hashtab_search(hashtab_t *h, void *key);
 
+// 销毁hash表
 void hashtab_destroy(hashtab_t *h);
 
-struct hashtab_info {  
-  unsigned long slots_used;  
-  unsigned long max_chain_len;  
-};  
 
-typedef struct hashtab_info hashtab_info_t;
+// 对hash表中的所有key,value运行apply函数
+int hashtab_map(hashtab_t *h, int (*apply)(void *key, void *value, void *arg), void *args);  
 
-int hashtab_map(struct hashtab *h,  
-                int (*apply)(void *k, void *d, void *arg),  
-                void *args);  
+// hash表统计信息
+typedef struct hashtab_info {  
+    unsigned long slots_used;  
+    unsigned long max_chain_len;  
+} hashtab_info_t;  
 
-void hashtab_stat(struct hashtab *h, struct hashtab_info *info);  
+// 统计hash表中使用了多少个slot和slot中最大链表长度
+void hashtab_stat(hashtab_t *h, hashtab_info_t *info);  
 
-void hashtab_print(struct hashtab *h, void (*print)(void *key, void *data));  
+// 打印hash表的slot和key,value信息
+void hashtab_print(hashtab_t *h, void (*print)(void *key, void *value));  
+
+// 从hash表中摘除第一个key，并返回这个key的dat
+void *hashtab_pop_first(hashtab_t *h);
 
 #endif
 

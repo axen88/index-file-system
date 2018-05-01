@@ -11,6 +11,8 @@
 
 // 测试用例集合
 extern CU_TestInfo test_tx_cache_cases[];
+int test_tx_cache_init(void);
+int test_tx_cache_clean(void);
 
   
 // suite初始化过程 
@@ -29,7 +31,7 @@ int suite_success_clean(void)
 // 定义suite数组，包括多个suite，每个suite又会包括若干个测试方法。  
 CU_SuiteInfo suites[]
 = {  
-    {"test_tx_cache_suite", suite_success_init, suite_success_clean, test_tx_cache_cases},  
+    {"test_tx_cache_suite", test_tx_cache_init, test_tx_cache_clean, test_tx_cache_cases},  
     CU_SUITE_INFO_NULL  
 };  
   
