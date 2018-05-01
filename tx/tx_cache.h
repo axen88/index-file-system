@@ -25,38 +25,40 @@ History:
 extern "C" {
 #endif
 
+// 对同一个block id可以获取不同的buf
 typedef enum
 {
-    FOR_READ,
-    CHECKPOINT_BUF,
-    FOR_WRITE,
+    FOR_READ,        // 这种buf不可以修改
+    CHECKPOINT_BUF,  // 这种buf不可以修改
+    FOR_WRITE,       // 可以修改
     
     BUF_TYPE_NUM
 } BUF_TYPE_E;
 
+// buf的状态
 typedef enum
 {
-    EMPTY,
-    CLEAN,
-    DIRTY
+    EMPTY,   // 表明buf中无内容
+    CLEAN,   // 表明buf有内容，并且未修改过
+    DIRTY    // 表明buf中的内容修改过
 } BUF_STATE_E;
 
 // 数据块cache结构
 typedef struct cache_node
 {
-    u64_t block_id;    // 缓存的数据块
+    u64_t block_id;       // 缓存的数据块
     uint32_t ref_cnt;     // 引用计数
     
-    BUF_STATE_E state;  // TODO
+    BUF_STATE_E state;    // TODO
 
-    u64_t owner_tx_id;  // 写cache时，只有一个事务能拥有
+    u64_t owner_tx_id;    // 写cache时，只有一个事务能拥有
     
-    list_head_t node;   // 在tx的write cache链表中登记
+    list_head_t node;     // 在tx的write cache链表中登记
     
-    struct cache_node *read_cache;  // 如果本cache是读cache，则为空；否则为读cache
+    struct cache_node *read_cache;     // 如果本cache是读cache，则为空；否则为读cache
     struct cache_node *side_cache[2];  // 记录checkpoint cache和write cache，采用pingping的方式进行切换
 
-    char dat[0];  // buffer
+    char buf[0];          // buffer
     
 } cache_node_t;
 
@@ -130,8 +132,8 @@ typedef struct
 
 
 
-// 开始一个新的事务
-int tx_new(cache_mgr_t *mgr, tx_t **new_tx);
+// 分配一个新的事务
+int tx_alloc(cache_mgr_t *mgr, tx_t **new_tx);
 
 // 带事务修改时，调用这个接口，调用后不用put，在tx_commit/tx_cancel时，会自动put
 void *tx_get_write_buffer(tx_t *tx, u64_t block_id);
@@ -152,9 +154,13 @@ void *get_buffer(cache_mgr_t *mgr, u64_t block_id, BUF_TYPE_E buf_type);
 // 必须和get_buffer成对使用
 void put_buffer(cache_mgr_t *mgr, void *buf);
 
+// 标记buffer dirty
+void mark_buffer_dirty(cache_mgr_t *mgr, void *write_buf);
 
+// 切换cache，也就是将write cache和checkpoint cache交换
+void pingpong_cache(cache_mgr_t *mgr);
 
-
+// 将当前mgr中所有的checkpoint cache的内容下盘
 int commit_all_checkpoint_cache(cache_mgr_t *mgr);
 
 // 后台任务，所有的脏数据下盘

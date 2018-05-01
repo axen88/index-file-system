@@ -84,11 +84,11 @@ cache_node_t *get_write_cache_node(cache_mgr_t *mgr, cache_node_t *read_cache)
         cache_node_t *checkpoint_cache = read_cache->side_cache[checkpoint_side];
         if (checkpoint_cache != NULL)
         { // 优先从checkpoint cache中拷贝数据，因为这里的数据更新
-            memcpy(cache->dat, checkpoint_cache->dat, mgr->block_size);
+            memcpy(cache->buf, checkpoint_cache->buf, mgr->block_size);
         }
         else
         {
-            memcpy(cache->dat, read_cache->dat, mgr->block_size);
+            memcpy(cache->buf, read_cache->buf, mgr->block_size);
         }
 
         cache->state = CLEAN;
@@ -130,7 +130,7 @@ cache_node_t *get_checkpoint_cache_node(cache_mgr_t *mgr, cache_node_t *read_cac
     if (cache->state == EMPTY)
     {
         ASSERT(read_cache->state == CLEAN);
-        memcpy(cache->dat, read_cache->dat, mgr->block_size);
+        memcpy(cache->buf, read_cache->buf, mgr->block_size);
         cache->state = CLEAN;
     }
 
@@ -175,7 +175,7 @@ cache_node_t *get_cache_node(cache_mgr_t *mgr, u64_t block_id, BUF_TYPE_E buf_ty
     if (read_cache->state == EMPTY)
     {
         // 读盘, 此时read_cache肯定已经记录在hash表中了
-        ret = mgr->bd_ops->read(mgr->bd_hnd, read_cache->dat, mgr->block_size, read_cache->block_id);
+        ret = mgr->bd_ops->read(mgr->bd_hnd, read_cache->buf, mgr->block_size, read_cache->block_id);
         if (ret <= 0)
         {
             LOG_ERROR("read block failed. bd_hnd(%p) size(%d) block_id(%lld) ret(%d)\n",
@@ -205,17 +205,37 @@ void *get_buffer(cache_mgr_t *mgr, u64_t block_id, BUF_TYPE_E buf_type)
 
     cache->ref_cnt++;
 
-    return cache->dat;
+    return cache->buf;
 }
 
 // 必须和get_buffer成对使用
 void put_buffer(cache_mgr_t *mgr, void *buf)
 {
-    cache_node_t *cache = list_entry(buf, cache_node_t, dat);
+    cache_node_t *cache = list_entry(buf, cache_node_t, buf);
 
     ASSERT(cache->ref_cnt != 0);
 
     cache->ref_cnt--;
+
+    return;
+}
+
+// 标记buffer dirty
+void mark_buffer_dirty(cache_mgr_t *mgr, void *write_buf)
+{
+    cache_node_t *write_cache = list_entry(write_buf, cache_node_t, buf);
+
+    ASSERT(write_cache->ref_cnt != 0);
+    ASSERT(write_cache->read_cache != NULL);
+
+    // 确保操作一定是write buf
+    ASSERT(write_cache->read_cache->side_cache[mgr->write_side] == write_cache);
+
+    if (write_cache->state != DIRTY)
+    {
+        write_cache->state = DIRTY;
+        mgr->modified_block_num++;
+    }
 
     return;
 }
@@ -242,7 +262,7 @@ int commit_checkpoint_cache(cache_mgr_t *mgr, cache_node_t *read_cache)
     ASSERT(mgr->checkpoint_block_num != 0);
 
     // 数据下盘
-    ret = mgr->bd_ops->write(mgr->bd_hnd, checkpoint_cache->dat, mgr->block_size, checkpoint_cache->block_id);
+    ret = mgr->bd_ops->write(mgr->bd_hnd, checkpoint_cache->buf, mgr->block_size, checkpoint_cache->block_id);
     if (ret <= 0)
     {
         LOG_ERROR("write block failed. bd_hnd(%p) size(%d) block_id(%lld) ret(%d)\n",
@@ -251,7 +271,7 @@ int commit_checkpoint_cache(cache_mgr_t *mgr, cache_node_t *read_cache)
     }
 
     // 修改read cache中的内容
-    memcpy(read_cache->dat, checkpoint_cache->dat, mgr->block_size);
+    memcpy(read_cache->buf, checkpoint_cache->buf, mgr->block_size);
 
     mgr->checkpoint_block_num--;
     checkpoint_cache->state = CLEAN;
@@ -260,9 +280,9 @@ int commit_checkpoint_cache(cache_mgr_t *mgr, cache_node_t *read_cache)
 }
 
 // 将指定checkpoint cache的内容写到盘上，方便hash表遍历执行
-int commit_one_checkpoint_cache(void *key, void *dat, void *arg)
+int commit_one_checkpoint_cache(void *key, void *buf, void *arg)
 {
-    cache_node_t *read_cache = dat;
+    cache_node_t *read_cache = buf;
 
     ASSERT(read_cache->block_id == (u64_t)key);
 
@@ -299,8 +319,28 @@ void *commit_disk(void *arg)
     return NULL;
 }
 
-// 开始一个新的事务
-int tx_new(cache_mgr_t *mgr, tx_t **new_tx)
+// 切换cache，也就是将write cache和checkpoint cache交换
+void pingpong_cache(cache_mgr_t *mgr)
+{
+    ASSERT(mgr->onfly_tx_num == 0);  // writing cache这边事务在进行
+    ASSERT(mgr->checkpoint_block_num == 0); // checkpoint cache这边全部下盘完成
+
+    // 切换cache
+    mgr->write_side = (mgr->write_side + 1) & 0x1;
+    mgr->checkpoint_block_num = mgr->modified_block_num;
+
+    // 清除切换cache计数
+    mgr->modified_block_num = 0;
+    mgr->modified_data_bytes = 0;
+    mgr->first_modified_time = 0;
+
+    mgr->allow_new_tx = TRUE; // 允许申请新事务
+
+    return;
+}
+
+// 分配一个新的事务
+int tx_alloc(cache_mgr_t *mgr, tx_t **new_tx)
 {
     if (!mgr->allow_new_tx)
     {
@@ -365,7 +405,7 @@ void *tx_get_write_buffer(tx_t *tx, u64_t block_id)
     cache->state = DIRTY;
     cache->ref_cnt++;
 
-    return cache->dat;
+    return cache->buf;
 }
 
 // 释放对write cache的占用
@@ -410,26 +450,6 @@ int cancel_write_cache(tx_t *tx)
 
     return 0;
 
-}
-
-// 切换cache，也就是将write cache和checkpoint cache交换
-void pingpong_cache(cache_mgr_t *mgr)
-{
-    ASSERT(mgr->onfly_tx_num == 0);  // writing cache这边事务在进行
-    ASSERT(mgr->checkpoint_block_num == 0); // checkpoint cache这边全部下盘完成
-
-    // 切换cache
-    mgr->write_side = (mgr->write_side + 1) & 0x1;
-    mgr->checkpoint_block_num = mgr->modified_block_num;
-
-    // 清除切换cache计数
-    mgr->modified_block_num = 0;
-    mgr->modified_data_bytes = 0;
-    mgr->first_modified_time = 0;
-
-    mgr->allow_new_tx = TRUE; // 允许申请新事务
-
-    return;
 }
 
 // 检查是否达到切换cache的条件，如果达到就切换
@@ -623,7 +643,7 @@ cache_mgr_t *tx_cache_init_system(char *bd_name, uint32_t block_size, space_ops_
 
 int bd_open(void **hnd, char *bd_name)
 {
-    return os_disk_create(hnd, bd_name);
+    return os_disk_open(hnd, bd_name);
 }
 
 int bd_read(void *hnd, void *buf, int size, u64_t offset)
