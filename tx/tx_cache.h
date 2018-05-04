@@ -140,6 +140,9 @@ int tx_alloc(cache_mgr_t *mgr, tx_t **new_tx);
 // 带事务修改时，调用这个接口，调用后不用put，在tx_commit/tx_cancel时，会自动put
 void *tx_get_write_buffer(tx_t *tx, u64_t block_id);
 
+// 带事务修改时，调用这个接口
+void tx_put_write_buffer(tx_t *tx, void *write_buf);
+
 // 提交修改的数据到日志，此时写cache中的数据还未下盘
 int tx_commit(tx_t *tx);
 

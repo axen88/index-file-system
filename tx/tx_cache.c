@@ -23,7 +23,6 @@ cache_node_t *alloc_cache_node(uint32_t block_size)
 
     memset(cache, 0, cache_size);
     list_init_head(&cache->node);
-    cache->owner_tx_id = 0;
     cache->state = EMPTY;
 
     return cache;
@@ -228,13 +227,20 @@ void mark_buffer_dirty(cache_mgr_t *mgr, void *write_buf)
     ASSERT(write_cache->ref_cnt != 0);
     ASSERT(write_cache->read_cache != NULL);
 
-    // 确保操作一定是write buf
+    // 确保操作的一定是write buf
     ASSERT(write_cache->read_cache->side_cache[mgr->write_side] == write_cache);
 
     if (write_cache->state != DIRTY)
     {
         write_cache->state = DIRTY;
+
+        if (mgr->modified_block_num == 0)
+        { // 记录第一个块修改的时间
+            mgr->first_modified_time = os_get_ms_count();
+        }
+
         mgr->modified_block_num++;
+        mgr->modified_data_bytes += mgr->block_size;
     }
 
     return;
@@ -372,37 +378,42 @@ void *tx_get_write_buffer(tx_t *tx, u64_t block_id)
     if (cache == NULL)
         return NULL;
 
-    // 这个buffer还没有事务拥有所有权
-    if (cache->owner_tx_id == 0)
+    // 第一次使用，这个buffer还不属于任何事物
+    if (cache->ref_cnt == 0)
     {
         cache->owner_tx_id = tx->tx_id;
+        
+        list_add_tail(&tx->write_cache, &cache->node);
     }
-
-    // 不允许多个事务修改同一个buffer
-    if (cache->owner_tx_id != tx->tx_id)
-    {
+    else if (cache->owner_tx_id != tx->tx_id)
+    { // 不允许多个事务修改同一个buffer
         LOG_ERROR("tx(%llu) get write buffer conflict(%llu).\n", tx->tx_id, cache->owner_tx_id);
         return NULL;
     }
 
-    // 第一次使用
-    if (cache->ref_cnt == 0)
-    {
-        list_add_tail(&tx->write_cache, &cache->node);
-
-        if (tx->mgr->modified_block_num == 0)
-        { // 记录第一个块修改的时间
-            tx->mgr->first_modified_time = os_get_ms_count();
-        }
-
-        tx->mgr->modified_block_num++;
-        tx->mgr->modified_data_bytes += tx->mgr->block_size;
-    }
-
-    cache->state = DIRTY;
     cache->ref_cnt++;
 
     return cache->buf;
+}
+
+// 带事务修改时，调用这个接口
+void tx_put_write_buffer(tx_t *tx, void *write_buf)
+{
+    cache_node_t *write_cache = list_entry(write_buf, cache_node_t, buf);
+
+    ASSERT(write_cache->ref_cnt != 0);
+    ASSERT(write_cache->read_cache != NULL);
+
+    // 确保操作的一定是write buf
+    ASSERT(write_cache->read_cache->side_cache[tx->mgr->write_side] == write_cache);
+
+    if (write_cache->state != DIRTY) // 未修改过
+    {
+        write_cache->ref_cnt--;
+        list_del(&write_cache->node);
+    }
+
+    return;
 }
 
 // 释放对write cache的占用

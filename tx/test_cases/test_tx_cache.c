@@ -581,6 +581,8 @@ void test_tx_case0(void)
     write_buf[0] = 0x1122334455667788;  // 修改内容
     write_buf[1] = 0x55AA55AA55AA55AA;  // 修改内容
     write_buf[2] = 0xAA55AA55AA55AA55;  // 修改内容
+
+    mark_buffer_dirty(mgr, write_buf);
     
     write_cache = list_entry(write_buf, cache_node_t, buf);
     CU_ASSERT(write_cache->ref_cnt == 1);
