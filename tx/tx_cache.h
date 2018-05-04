@@ -54,6 +54,8 @@ typedef struct cache_node
     u64_t owner_tx_id;    // 写cache时，只有一个事务能拥有
     
     list_head_t node;     // 在tx的write cache链表中登记
+
+    hashtab_node_t hnode; // 在hashtab中登记
     
     struct cache_node *read_cache;     // 如果本cache是读cache，则为空；否则为读cache
     struct cache_node *side_cache[2];  // 记录checkpoint cache和write cache，采用pingping的方式进行切换

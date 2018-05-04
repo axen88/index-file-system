@@ -18,18 +18,14 @@ History:
 #ifndef __HASHTAB_H__
 #define __HASHTAB_H__
 
-
-
-#define HASHTAB_ERROR_OVER_MAX_NUM   -1
-#define HASHTAB_ERROR_EXIST          -2
-#define HASHTAB_ERROR_NO_MEMORY      -3
+#define HASHTAB_ERROR_EXIST          2
 
 typedef struct hashtab_node hashtab_node_t;
 
 struct hashtab_node
 {
-    void *key;
-    void *value;
+    //void *key;
+    //void *value;
     hashtab_node_t *next;
 };
 
@@ -40,16 +36,16 @@ struct hashtab
     hashtab_node_t **htable;           /* hash table */
     uint32_t slots_num;                                         /* number of slots in hash table */
     uint32_t key_num;                                         /* number of elements in hash table */
-    uint32_t max_key_num;
+    uint32_t offset; //  hash node在用户结构体中的偏移
     uint32_t (*keyhash)(hashtab_t *h, void *key);            /* hash function */
-    int (*keycmp)(hashtab_t *h, void *key1, void *key2);   /* key comparison function */
+    int (*keycmp)(hashtab_t *h, void *key, void *value);   /* key comparison function */
 };
 
 
 // 创建hash表
 hashtab_t *hashtab_create(uint32_t (*keyhash)(hashtab_t *h, void *key),
-                          int (*keycmp)(hashtab_t *h, void *key1, void *key2),
-                          uint32_t slots_num, uint32_t max_key_num);
+                          int (*keycmp)(hashtab_t *h, void *key, void *value),
+                          uint32_t slots_num, uint32_t offset);
 
 // 往hash表中插入key,value
 int hashtab_insert(hashtab_t *h, void *key, void *value);
@@ -65,7 +61,7 @@ void hashtab_destroy(hashtab_t *h);
 
 
 // 对hash表中的所有key,value运行apply函数
-int hashtab_map(hashtab_t *h, int (*apply)(void *key, void *value, void *arg), void *args);  
+int hashtab_map(hashtab_t *h, int (*apply)(void *value, void *arg), void *args);  
 
 // hash表统计信息
 typedef struct hashtab_info {  
@@ -77,7 +73,7 @@ typedef struct hashtab_info {
 void hashtab_stat(hashtab_t *h, hashtab_info_t *info);  
 
 // 打印hash表的slot和key,value信息
-void hashtab_print(hashtab_t *h, void (*print)(void *key, void *value));  
+void hashtab_print(hashtab_t *h, void (*print)(void *value));  
 
 // 从hash表中摘除第一个key，并返回这个key的dat
 void *hashtab_pop_first(hashtab_t *h);

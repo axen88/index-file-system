@@ -569,9 +569,7 @@ void test_tx_case0(void)
     cache_mgr_t *mgr = tx_cache_init_system(BD_NAME, BD_BLOCK_SIZE, &test_bd_ops);
     cache_node_t *write_cache;
     u64_t *write_buf;
-    cache_node_t *read_cache;
     u64_t *read_buf;
-    uint8_t  checkpoint_side = (mgr->write_side + 1) & 0x1;
     tx_t *tx;
         
     CU_ASSERT(tx_alloc(mgr, &tx) == 0);
@@ -583,39 +581,23 @@ void test_tx_case0(void)
     write_buf[0] = 0x1122334455667788;  // 修改内容
     write_buf[1] = 0x55AA55AA55AA55AA;  // 修改内容
     write_buf[2] = 0xAA55AA55AA55AA55;  // 修改内容
+    
     write_cache = list_entry(write_buf, cache_node_t, buf);
-    CU_ASSERT(write_cache->block_id == BLOCK_ID1);
-    CU_ASSERT(write_cache->state == DIRTY);
     CU_ASSERT(write_cache->ref_cnt == 1);
-    
-    read_buf = get_buffer(mgr, BLOCK_ID1, FOR_READ);
-    CU_ASSERT(read_buf != NULL);
-    read_cache = list_entry(read_buf, cache_node_t, buf);
-    CU_ASSERT(read_cache->state == CLEAN);
-    CU_ASSERT(read_cache->block_id == BLOCK_ID1);
-    CU_ASSERT(read_cache->ref_cnt == 1);
-    CU_ASSERT(read_buf[0] == 0);
-    CU_ASSERT(read_buf[1] == 0);
-    put_buffer(mgr, read_buf);
-    CU_ASSERT(read_cache->ref_cnt == 0);
-
-    CU_ASSERT(write_buf != read_buf);
-    CU_ASSERT(read_cache->side_cache[mgr->write_side] == write_cache);
-    CU_ASSERT(read_cache->side_cache[checkpoint_side] == NULL);
-
-    CU_ASSERT(mgr->onfly_tx_num == 1);
-
-    // 提交修改的数据到日志
+    CU_ASSERT(write_cache->state == DIRTY);
     CU_ASSERT(mgr->write_side == 0);
-    tx_commit(tx);
-    CU_ASSERT(mgr->write_side == 1);
+    CU_ASSERT(mgr->onfly_tx_num == 1);
     
-    CU_ASSERT(mgr->onfly_tx_num == 0);
+    // 提交修改的数据到日志
+    tx_commit(tx);
+    
     CU_ASSERT(write_cache->ref_cnt == 0);
+    CU_ASSERT(write_cache->state == DIRTY);
+    CU_ASSERT(mgr->write_side == 1);
+    CU_ASSERT(mgr->onfly_tx_num == 0);
     
     read_buf = get_buffer(mgr, BLOCK_ID1, FOR_READ);
     CU_ASSERT(read_buf != NULL);
-    read_cache = list_entry(read_buf, cache_node_t, buf);
     CU_ASSERT(read_buf[0] == 0);
     CU_ASSERT(read_buf[1] == 0);
     put_buffer(mgr, read_buf);
@@ -623,12 +605,13 @@ void test_tx_case0(void)
     // 真正下盘
     commit_disk(mgr);
     CU_ASSERT(mgr->checkpoint_sn == 1);
+    CU_ASSERT(write_cache->state == CLEAN);
     
     read_buf = get_buffer(mgr, BLOCK_ID1, FOR_READ);
     CU_ASSERT(read_buf != NULL);
-    CU_ASSERT(read_buf[0] == 0x1122334455667788);
-    CU_ASSERT(read_buf[1] == 0x55AA55AA55AA55AA);
-    CU_ASSERT(read_buf[2] == 0xAA55AA55AA55AA55);
+    CU_ASSERT(read_buf[0] == write_buf[0]);
+    CU_ASSERT(read_buf[1] == write_buf[1]);
+    CU_ASSERT(read_buf[2] == write_buf[2]);
     put_buffer(mgr, read_buf);
 
     tx_cache_exit_system(mgr);

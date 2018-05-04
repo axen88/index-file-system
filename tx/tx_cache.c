@@ -280,19 +280,16 @@ int commit_checkpoint_cache(cache_mgr_t *mgr, cache_node_t *read_cache)
 }
 
 // 将指定checkpoint cache的内容写到盘上，方便hash表遍历执行
-int commit_one_checkpoint_cache(void *key, void *buf, void *arg)
+int commit_one_checkpoint_cache(void *cache, void *arg)
 {
-    cache_node_t *read_cache = buf;
-
-    ASSERT(read_cache->block_id == (u64_t)key);
-
-    return commit_checkpoint_cache(arg, read_cache);
+    return commit_checkpoint_cache(arg, cache);
 }
 
 // 将当前mgr中所有的checkpoint cache的内容下盘
 int commit_all_checkpoint_cache(cache_mgr_t *mgr)
 {
     return hashtab_map(mgr->hcache, commit_one_checkpoint_cache, mgr);
+    //return hashtab_map(mgr->hcache, commit_checkpoint_cache, mgr);
 }
 
 // 后台任务，所有的脏数据下盘
@@ -577,10 +574,10 @@ uint32_t hash_key(hashtab_t *h, void *key)
 }
 
 // hash表的key比较函数
-int compare_key(hashtab_t *h, void *key1, void *key2)
+int compare_key(hashtab_t *h, void *key, void *value)
 {
-    u64_t block_id1 = (u64_t)key1;
-    u64_t block_id2 = (u64_t)key2;
+    u64_t block_id1 = (u64_t)key;
+    u64_t block_id2 = ((cache_node_t *)value)->block_id;
 
     if (block_id1 > block_id2)
         return 1;
@@ -614,7 +611,7 @@ cache_mgr_t *tx_cache_init_system(char *bd_name, uint32_t block_size, space_ops_
         return NULL;
     }
 
-    mgr->hcache = hashtab_create(hash_key, compare_key, 1000, 10000);
+    mgr->hcache = hashtab_create(hash_key, compare_key, 1000, offsetof(cache_node_t, hnode));
     if (mgr->hcache == NULL)
     {
         tx_cache_exit_system(mgr);

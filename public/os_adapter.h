@@ -152,6 +152,7 @@ extern "C" {
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
 #define to_str(x)  (#x)
+#define offsetof(TYPE, MEMBER)	((size_t)&((TYPE *)0)->MEMBER)
 
 #define SUCCESS 0
 
