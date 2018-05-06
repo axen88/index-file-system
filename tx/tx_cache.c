@@ -607,7 +607,7 @@ void pingpong_cache_if_possible(cache_mgr_t *mgr)
 }
 
 // 提交修改的数据到日志，tx buf中的数据生效到write buf
-int tx_commit(tx_t *tx)
+void tx_commit(tx_t *tx)
 {
 
     // 1. 将write_cache中的内容写日志
@@ -621,7 +621,7 @@ int tx_commit(tx_t *tx)
     // 3. 检查是否达到切换cache的条件
     pingpong_cache_if_possible(tx->mgr);
 
-    return 0;
+    return;
 }
 
 // 放弃这个事务的所有修改，

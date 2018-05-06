@@ -161,7 +161,7 @@ void tx_mark_buffer_dirty(tx_t *tx, void *tx_buf);
 void tx_put_buffer(tx_t *tx, void *tx_buf);
 
 // 提交修改的数据到日志，此时写cache中的数据还未下盘
-int tx_commit(tx_t *tx);
+void tx_commit(tx_t *tx);
 
 // 放弃这个事务的所有修改
 void tx_cancel(tx_t *tx);

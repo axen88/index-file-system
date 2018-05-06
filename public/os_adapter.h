@@ -154,6 +154,10 @@ extern "C" {
 #define to_str(x)  (#x)
 #define offsetof(TYPE, MEMBER)	((size_t)&((TYPE *)0)->MEMBER)
 
+#define roundup(x, size)   (((x) + (size) - 1) / (size))
+#define rounddown(x, size) ((x) / (size))
+
+
 #define SUCCESS 0
 
 typedef struct 
@@ -218,6 +222,9 @@ static inline void destroy_threads_group(threads_group_t *threads_group, bool_t 
 }
     
 
+#define INVALID_U32  (0xFFFFFFFF)
+#define INVALID_U64  (0xFFFFFFFFFFFFFFFF)
+
 #ifndef NULL
 #define NULL ((void *)0)
 #endif
@@ -225,6 +232,7 @@ static inline void destroy_threads_group(threads_group_t *threads_group, bool_t 
 #ifndef BITS_PER_BYTE_SHIFT
 #define BITS_PER_BYTE_SHIFT 3
 #endif
+
 
 
 #ifndef BITS_PER_BYTE

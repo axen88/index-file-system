@@ -82,6 +82,7 @@ enum
     PID_TOOLS = 18,
     PID_UTILS = 19,
     PID_EXTENT_MAP = 20,
+    PID_BITMAP = 21,
 
     PID_BUTT
 };
@@ -149,6 +150,7 @@ typedef enum error_code
     
     ERR_NEW_TX_BLOCKED,
 
+    ERR_INIT_CACHE,
     
     INDEX_ERR_BUTT
 } error_code_t;
