@@ -205,6 +205,21 @@ static inline bool_t list_is_empty(list_head_t *head)
     return (head->next == head) ? TRUE : FALSE;
 }
 
+static inline list_head_t *list_pop_first(list_head_t *head)
+{
+    list_head_t *next = NULL;
+
+    ASSERT(head);
+    
+    if (head->next == head) 
+        return NULL;
+
+    next = head->next;
+    list_del(next);
+
+    return next;
+}
+
 #define list_for_each(pos, head) \
 	for (pos = (head)->next; pos != (head); pos = pos->next)
 

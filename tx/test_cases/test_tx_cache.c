@@ -54,9 +54,9 @@ void test_cache_case0(void)
     u64_t *write_buf;
     cache_node_t *read_cache;
     u64_t *read_buf;
-    cache_node_t *checkpoint_cache;
-    u64_t *checkpoint_buf;
-    uint8_t  checkpoint_side = (mgr->write_side + 1) & 0x1;
+    cache_node_t *flush_cache;
+    u64_t *flush_buf;
+    uint8_t  flush_side = (mgr->write_side + 1) & 0x1;
     uint8_t  write_side = mgr->write_side;
 
     // mgr内容确认
@@ -74,30 +74,30 @@ void test_cache_case0(void)
     CU_ASSERT(read_cache->ref_cnt == 1);
     CU_ASSERT(read_cache->read_cache == NULL);
     CU_ASSERT(read_cache->side_cache[write_side] == NULL);
-    CU_ASSERT(read_cache->side_cache[checkpoint_side] == NULL);
+    CU_ASSERT(read_cache->side_cache[flush_side] == NULL);
     put_buffer(mgr, read_buf);
     CU_ASSERT(read_cache->ref_cnt == 0);
     read_buf[0] = 0x1122334455667788;  // 修改内容
     read_buf[1] = 0x55AA55AA55AA55AA;  // 修改内容
     read_buf[2] = 0xAA55AA55AA55AA55;  // 修改内容
 
-    // 获取checkpoint buf
-    checkpoint_buf = get_buffer(mgr, BLOCK_ID1, CHECKPOINT_BUF);
-    CU_ASSERT(checkpoint_buf != NULL);
-    checkpoint_cache = list_entry(checkpoint_buf, cache_node_t, buf);
-    CU_ASSERT(checkpoint_cache->state == CLEAN);
-    CU_ASSERT(checkpoint_cache->block_id == BLOCK_ID1);
-    CU_ASSERT(checkpoint_cache->ref_cnt == 1);
-    CU_ASSERT(checkpoint_cache->read_cache == read_cache);
-    CU_ASSERT(checkpoint_cache->side_cache[0] == NULL);
-    CU_ASSERT(checkpoint_cache->side_cache[1] == NULL);
+    // 获取flush buf
+    flush_buf = get_buffer(mgr, BLOCK_ID1, FOR_FLUSH);
+    CU_ASSERT(flush_buf != NULL);
+    flush_cache = list_entry(flush_buf, cache_node_t, buf);
+    CU_ASSERT(flush_cache->state == CLEAN);
+    CU_ASSERT(flush_cache->block_id == BLOCK_ID1);
+    CU_ASSERT(flush_cache->ref_cnt == 1);
+    CU_ASSERT(flush_cache->read_cache == read_cache);
+    CU_ASSERT(flush_cache->side_cache[0] == NULL);
+    CU_ASSERT(flush_cache->side_cache[1] == NULL);
     CU_ASSERT(read_cache->side_cache[write_side] == NULL);
-    CU_ASSERT(read_cache->side_cache[checkpoint_side] == checkpoint_cache);
-    put_buffer(mgr, checkpoint_buf);
-    CU_ASSERT(checkpoint_buf[0] == read_buf[0]);
-    CU_ASSERT(checkpoint_buf[1] == read_buf[1]);
-    CU_ASSERT(checkpoint_buf[2] == read_buf[2]);
-    checkpoint_buf[1] = 0x2233445566778899;  // 修改内容
+    CU_ASSERT(read_cache->side_cache[flush_side] == flush_cache);
+    put_buffer(mgr, flush_buf);
+    CU_ASSERT(flush_buf[0] == read_buf[0]);
+    CU_ASSERT(flush_buf[1] == read_buf[1]);
+    CU_ASSERT(flush_buf[2] == read_buf[2]);
+    flush_buf[1] = 0x2233445566778899;  // 修改内容
     
     // 获取write buf
     write_buf = get_buffer(mgr, BLOCK_ID1, FOR_WRITE);
@@ -110,29 +110,29 @@ void test_cache_case0(void)
     CU_ASSERT(write_cache->side_cache[0] == NULL);
     CU_ASSERT(write_cache->side_cache[1] == NULL);
     CU_ASSERT(read_cache->side_cache[write_side] == write_cache);
-    CU_ASSERT(read_cache->side_cache[checkpoint_side] == checkpoint_cache);
+    CU_ASSERT(read_cache->side_cache[flush_side] == flush_cache);
     put_buffer(mgr, write_buf);
     CU_ASSERT(write_cache->ref_cnt == 0);
-    CU_ASSERT(checkpoint_buf[0] == write_buf[0]);
-    CU_ASSERT(checkpoint_buf[1] == write_buf[1]);
-    CU_ASSERT(checkpoint_buf[2] == write_buf[2]);
+    CU_ASSERT(flush_buf[0] == write_buf[0]);
+    CU_ASSERT(flush_buf[1] == write_buf[1]);
+    CU_ASSERT(flush_buf[2] == write_buf[2]);
 
     // 最后再确认一下各buffer的关系正确
     CU_ASSERT(read_cache->read_cache == NULL);
     CU_ASSERT(read_cache->side_cache[write_side] == write_cache);
-    CU_ASSERT(read_cache->side_cache[checkpoint_side] == checkpoint_cache);
+    CU_ASSERT(read_cache->side_cache[flush_side] == flush_cache);
     CU_ASSERT(write_cache->read_cache == read_cache);
     CU_ASSERT(write_cache->side_cache[0] == NULL);
     CU_ASSERT(write_cache->side_cache[1] == NULL);
-    CU_ASSERT(checkpoint_cache->read_cache == read_cache);
-    CU_ASSERT(checkpoint_cache->side_cache[0] == NULL);
-    CU_ASSERT(checkpoint_cache->side_cache[1] == NULL);
-    CU_ASSERT(checkpoint_buf[0] == write_buf[0]);
-    CU_ASSERT(checkpoint_buf[1] == write_buf[1]);
-    CU_ASSERT(checkpoint_buf[2] == write_buf[2]);
-    CU_ASSERT(checkpoint_buf[0] == read_buf[0]);
-    CU_ASSERT(checkpoint_buf[1] != read_buf[1]);
-    CU_ASSERT(checkpoint_buf[2] == read_buf[2]);
+    CU_ASSERT(flush_cache->read_cache == read_cache);
+    CU_ASSERT(flush_cache->side_cache[0] == NULL);
+    CU_ASSERT(flush_cache->side_cache[1] == NULL);
+    CU_ASSERT(flush_buf[0] == write_buf[0]);
+    CU_ASSERT(flush_buf[1] == write_buf[1]);
+    CU_ASSERT(flush_buf[2] == write_buf[2]);
+    CU_ASSERT(flush_buf[0] == read_buf[0]);
+    CU_ASSERT(flush_buf[1] != read_buf[1]);
+    CU_ASSERT(flush_buf[2] == read_buf[2]);
 
     tx_cache_exit_system(mgr);
 }
@@ -145,9 +145,9 @@ void test_cache_case1(void)
     u64_t *write_buf;
     cache_node_t *read_cache;
     u64_t *read_buf;
-    cache_node_t *checkpoint_cache;
-    u64_t *checkpoint_buf;
-    uint8_t  checkpoint_side = (mgr->write_side + 1) & 0x1;
+    cache_node_t *flush_cache;
+    u64_t *flush_buf;
+    uint8_t  flush_side = (mgr->write_side + 1) & 0x1;
     uint8_t  write_side = mgr->write_side;
 
     // mgr内容确认
@@ -165,7 +165,7 @@ void test_cache_case1(void)
     CU_ASSERT(read_cache->ref_cnt == 1);
     CU_ASSERT(read_cache->read_cache == NULL);
     CU_ASSERT(read_cache->side_cache[write_side] == NULL);
-    CU_ASSERT(read_cache->side_cache[checkpoint_side] == NULL);
+    CU_ASSERT(read_cache->side_cache[flush_side] == NULL);
     put_buffer(mgr, read_buf);
     CU_ASSERT(read_cache->ref_cnt == 0);
     read_buf[0] = 0x1122334455667788;  // 修改内容
@@ -183,7 +183,7 @@ void test_cache_case1(void)
     CU_ASSERT(write_cache->side_cache[0] == NULL);
     CU_ASSERT(write_cache->side_cache[1] == NULL);
     CU_ASSERT(read_cache->side_cache[write_side] == write_cache);
-    CU_ASSERT(read_cache->side_cache[checkpoint_side] == NULL);
+    CU_ASSERT(read_cache->side_cache[flush_side] == NULL);
     put_buffer(mgr, write_buf);
     CU_ASSERT(write_cache->ref_cnt == 0);
     CU_ASSERT(read_buf[0] == write_buf[0]);
@@ -191,39 +191,39 @@ void test_cache_case1(void)
     CU_ASSERT(read_buf[2] == write_buf[2]);
     write_buf[1] = 0x2233445566778899;  // 修改内容
     
-    // 获取checkpoint buf
-    checkpoint_buf = get_buffer(mgr, BLOCK_ID1, CHECKPOINT_BUF);
-    CU_ASSERT(checkpoint_buf != NULL);
-    checkpoint_cache = list_entry(checkpoint_buf, cache_node_t, buf);
-    CU_ASSERT(checkpoint_cache->state == CLEAN);
-    CU_ASSERT(checkpoint_cache->block_id == BLOCK_ID1);
-    CU_ASSERT(checkpoint_cache->ref_cnt == 1);
-    CU_ASSERT(checkpoint_cache->read_cache == read_cache);
-    CU_ASSERT(checkpoint_cache->side_cache[0] == NULL);
-    CU_ASSERT(checkpoint_cache->side_cache[1] == NULL);
+    // 获取flush buf
+    flush_buf = get_buffer(mgr, BLOCK_ID1, FOR_FLUSH);
+    CU_ASSERT(flush_buf != NULL);
+    flush_cache = list_entry(flush_buf, cache_node_t, buf);
+    CU_ASSERT(flush_cache->state == CLEAN);
+    CU_ASSERT(flush_cache->block_id == BLOCK_ID1);
+    CU_ASSERT(flush_cache->ref_cnt == 1);
+    CU_ASSERT(flush_cache->read_cache == read_cache);
+    CU_ASSERT(flush_cache->side_cache[0] == NULL);
+    CU_ASSERT(flush_cache->side_cache[1] == NULL);
     CU_ASSERT(read_cache->side_cache[write_side] == write_cache);
-    CU_ASSERT(read_cache->side_cache[checkpoint_side] == checkpoint_cache);
-    put_buffer(mgr, checkpoint_buf);
-    CU_ASSERT(checkpoint_buf[0] == read_buf[0]);
-    CU_ASSERT(checkpoint_buf[1] == read_buf[1]);
-    CU_ASSERT(checkpoint_buf[2] == read_buf[2]);
+    CU_ASSERT(read_cache->side_cache[flush_side] == flush_cache);
+    put_buffer(mgr, flush_buf);
+    CU_ASSERT(flush_buf[0] == read_buf[0]);
+    CU_ASSERT(flush_buf[1] == read_buf[1]);
+    CU_ASSERT(flush_buf[2] == read_buf[2]);
 
     // 最后再确认一下各buffer的关系正确
     CU_ASSERT(read_cache->read_cache == NULL);
     CU_ASSERT(read_cache->side_cache[write_side] == write_cache);
-    CU_ASSERT(read_cache->side_cache[checkpoint_side] == checkpoint_cache);
+    CU_ASSERT(read_cache->side_cache[flush_side] == flush_cache);
     CU_ASSERT(write_cache->read_cache == read_cache);
     CU_ASSERT(write_cache->side_cache[0] == NULL);
     CU_ASSERT(write_cache->side_cache[1] == NULL);
-    CU_ASSERT(checkpoint_cache->read_cache == read_cache);
-    CU_ASSERT(checkpoint_cache->side_cache[0] == NULL);
-    CU_ASSERT(checkpoint_cache->side_cache[1] == NULL);
-    CU_ASSERT(checkpoint_buf[0] == write_buf[0]);
-    CU_ASSERT(checkpoint_buf[1] != write_buf[1]);
-    CU_ASSERT(checkpoint_buf[2] == write_buf[2]);
-    CU_ASSERT(checkpoint_buf[0] == read_buf[0]);
-    CU_ASSERT(checkpoint_buf[1] == read_buf[1]);
-    CU_ASSERT(checkpoint_buf[2] == read_buf[2]);
+    CU_ASSERT(flush_cache->read_cache == read_cache);
+    CU_ASSERT(flush_cache->side_cache[0] == NULL);
+    CU_ASSERT(flush_cache->side_cache[1] == NULL);
+    CU_ASSERT(flush_buf[0] == write_buf[0]);
+    CU_ASSERT(flush_buf[1] != write_buf[1]);
+    CU_ASSERT(flush_buf[2] == write_buf[2]);
+    CU_ASSERT(flush_buf[0] == read_buf[0]);
+    CU_ASSERT(flush_buf[1] == read_buf[1]);
+    CU_ASSERT(flush_buf[2] == read_buf[2]);
 
     tx_cache_exit_system(mgr);
 }
@@ -236,9 +236,9 @@ void test_cache_case2(void)
     u64_t *write_buf;
     cache_node_t *read_cache;
     u64_t *read_buf;
-    cache_node_t *checkpoint_cache;
-    u64_t *checkpoint_buf;
-    uint8_t  checkpoint_side = (mgr->write_side + 1) & 0x1;
+    cache_node_t *flush_cache;
+    u64_t *flush_buf;
+    uint8_t  flush_side = (mgr->write_side + 1) & 0x1;
     uint8_t  write_side = mgr->write_side;
 
     // mgr内容确认
@@ -272,7 +272,7 @@ void test_cache_case2(void)
     CU_ASSERT(read_cache->ref_cnt == 1);
     CU_ASSERT(read_cache->read_cache == NULL);
     CU_ASSERT(read_cache->side_cache[write_side] == write_cache);
-    CU_ASSERT(read_cache->side_cache[checkpoint_side] == NULL);
+    CU_ASSERT(read_cache->side_cache[flush_side] == NULL);
     put_buffer(mgr, read_buf);
     CU_ASSERT(read_cache->ref_cnt == 0);
     CU_ASSERT(read_buf[0] != write_buf[0]);
@@ -280,39 +280,39 @@ void test_cache_case2(void)
     CU_ASSERT(read_buf[2] != write_buf[2]);
     read_buf[1] = 0x2233445566778899;  // 修改内容
     
-    // 获取checkpoint buf
-    checkpoint_buf = get_buffer(mgr, BLOCK_ID1, CHECKPOINT_BUF);
-    CU_ASSERT(checkpoint_buf != NULL);
-    checkpoint_cache = list_entry(checkpoint_buf, cache_node_t, buf);
-    CU_ASSERT(checkpoint_cache->state == CLEAN);
-    CU_ASSERT(checkpoint_cache->block_id == BLOCK_ID1);
-    CU_ASSERT(checkpoint_cache->ref_cnt == 1);
-    CU_ASSERT(checkpoint_cache->read_cache == read_cache);
-    CU_ASSERT(checkpoint_cache->side_cache[0] == NULL);
-    CU_ASSERT(checkpoint_cache->side_cache[1] == NULL);
+    // 获取flush buf
+    flush_buf = get_buffer(mgr, BLOCK_ID1, FOR_FLUSH);
+    CU_ASSERT(flush_buf != NULL);
+    flush_cache = list_entry(flush_buf, cache_node_t, buf);
+    CU_ASSERT(flush_cache->state == CLEAN);
+    CU_ASSERT(flush_cache->block_id == BLOCK_ID1);
+    CU_ASSERT(flush_cache->ref_cnt == 1);
+    CU_ASSERT(flush_cache->read_cache == read_cache);
+    CU_ASSERT(flush_cache->side_cache[0] == NULL);
+    CU_ASSERT(flush_cache->side_cache[1] == NULL);
     CU_ASSERT(read_cache->side_cache[write_side] == write_cache);
-    CU_ASSERT(read_cache->side_cache[checkpoint_side] == checkpoint_cache);
-    put_buffer(mgr, checkpoint_buf);
-    CU_ASSERT(checkpoint_buf[0] == read_buf[0]);
-    CU_ASSERT(checkpoint_buf[1] == read_buf[1]);
-    CU_ASSERT(checkpoint_buf[2] == read_buf[2]);
+    CU_ASSERT(read_cache->side_cache[flush_side] == flush_cache);
+    put_buffer(mgr, flush_buf);
+    CU_ASSERT(flush_buf[0] == read_buf[0]);
+    CU_ASSERT(flush_buf[1] == read_buf[1]);
+    CU_ASSERT(flush_buf[2] == read_buf[2]);
 
     // 最后再确认一下各buffer的关系正确
     CU_ASSERT(read_cache->read_cache == NULL);
     CU_ASSERT(read_cache->side_cache[write_side] == write_cache);
-    CU_ASSERT(read_cache->side_cache[checkpoint_side] == checkpoint_cache);
+    CU_ASSERT(read_cache->side_cache[flush_side] == flush_cache);
     CU_ASSERT(write_cache->read_cache == read_cache);
     CU_ASSERT(write_cache->side_cache[0] == NULL);
     CU_ASSERT(write_cache->side_cache[1] == NULL);
-    CU_ASSERT(checkpoint_cache->read_cache == read_cache);
-    CU_ASSERT(checkpoint_cache->side_cache[0] == NULL);
-    CU_ASSERT(checkpoint_cache->side_cache[1] == NULL);
-    CU_ASSERT(checkpoint_buf[0] != write_buf[0]);
-    CU_ASSERT(checkpoint_buf[1] != write_buf[1]);
-    CU_ASSERT(checkpoint_buf[2] != write_buf[2]);
-    CU_ASSERT(checkpoint_buf[0] == read_buf[0]);
-    CU_ASSERT(checkpoint_buf[1] == read_buf[1]);
-    CU_ASSERT(checkpoint_buf[2] == read_buf[2]);
+    CU_ASSERT(flush_cache->read_cache == read_cache);
+    CU_ASSERT(flush_cache->side_cache[0] == NULL);
+    CU_ASSERT(flush_cache->side_cache[1] == NULL);
+    CU_ASSERT(flush_buf[0] != write_buf[0]);
+    CU_ASSERT(flush_buf[1] != write_buf[1]);
+    CU_ASSERT(flush_buf[2] != write_buf[2]);
+    CU_ASSERT(flush_buf[0] == read_buf[0]);
+    CU_ASSERT(flush_buf[1] == read_buf[1]);
+    CU_ASSERT(flush_buf[2] == read_buf[2]);
 
     tx_cache_exit_system(mgr);
 }
@@ -325,9 +325,9 @@ void test_cache_case3(void)
     u64_t *write_buf;
     cache_node_t *read_cache;
     u64_t *read_buf;
-    cache_node_t *checkpoint_cache;
-    u64_t *checkpoint_buf;
-    uint8_t  checkpoint_side = (mgr->write_side + 1) & 0x1;
+    cache_node_t *flush_cache;
+    u64_t *flush_buf;
+    uint8_t  flush_side = (mgr->write_side + 1) & 0x1;
     uint8_t  write_side = mgr->write_side;
 
     // mgr内容确认
@@ -336,20 +336,20 @@ void test_cache_case3(void)
     CU_ASSERT(mgr->cur_tx_id == 1);
     CU_ASSERT(mgr->onfly_tx_num == 0);
 
-    // 获取checkpoint buf
-    checkpoint_buf = get_buffer(mgr, BLOCK_ID1, CHECKPOINT_BUF);
-    CU_ASSERT(checkpoint_buf != NULL);
-    checkpoint_cache = list_entry(checkpoint_buf, cache_node_t, buf);
-    CU_ASSERT(checkpoint_cache->state == CLEAN);
-    CU_ASSERT(checkpoint_cache->block_id == BLOCK_ID1);
-    CU_ASSERT(checkpoint_cache->ref_cnt == 1);
-    CU_ASSERT(checkpoint_cache->read_cache != NULL);
-    CU_ASSERT(checkpoint_cache->side_cache[0] == NULL);
-    CU_ASSERT(checkpoint_cache->side_cache[1] == NULL);
-    put_buffer(mgr, checkpoint_buf);
-    checkpoint_buf[0] = 0x1122334455667788;  // 修改内容
-    checkpoint_buf[1] = 0x55AA55AA55AA55AA;  // 修改内容
-    checkpoint_buf[2] = 0xAA55AA55AA55AA55;  // 修改内容
+    // 获取flush buf
+    flush_buf = get_buffer(mgr, BLOCK_ID1, FOR_FLUSH);
+    CU_ASSERT(flush_buf != NULL);
+    flush_cache = list_entry(flush_buf, cache_node_t, buf);
+    CU_ASSERT(flush_cache->state == CLEAN);
+    CU_ASSERT(flush_cache->block_id == BLOCK_ID1);
+    CU_ASSERT(flush_cache->ref_cnt == 1);
+    CU_ASSERT(flush_cache->read_cache != NULL);
+    CU_ASSERT(flush_cache->side_cache[0] == NULL);
+    CU_ASSERT(flush_cache->side_cache[1] == NULL);
+    put_buffer(mgr, flush_buf);
+    flush_buf[0] = 0x1122334455667788;  // 修改内容
+    flush_buf[1] = 0x55AA55AA55AA55AA;  // 修改内容
+    flush_buf[2] = 0xAA55AA55AA55AA55;  // 修改内容
 
     // 获取read buf
     read_buf = get_buffer(mgr, BLOCK_ID1, FOR_READ);
@@ -360,12 +360,12 @@ void test_cache_case3(void)
     CU_ASSERT(read_cache->ref_cnt == 1);
     CU_ASSERT(read_cache->read_cache == NULL);
     CU_ASSERT(read_cache->side_cache[write_side] == NULL);
-    CU_ASSERT(read_cache->side_cache[checkpoint_side] == checkpoint_cache);
+    CU_ASSERT(read_cache->side_cache[flush_side] == flush_cache);
     put_buffer(mgr, read_buf);
     CU_ASSERT(read_cache->ref_cnt == 0);
-    CU_ASSERT(checkpoint_buf[0] != read_buf[0]);
-    CU_ASSERT(checkpoint_buf[1] != read_buf[1]);
-    CU_ASSERT(checkpoint_buf[2] != read_buf[2]);
+    CU_ASSERT(flush_buf[0] != read_buf[0]);
+    CU_ASSERT(flush_buf[1] != read_buf[1]);
+    CU_ASSERT(flush_buf[2] != read_buf[2]);
     read_buf[1] = 0x2233445566778899;  // 修改内容
     
     // 获取write buf
@@ -379,26 +379,26 @@ void test_cache_case3(void)
     CU_ASSERT(write_cache->side_cache[0] == NULL);
     CU_ASSERT(write_cache->side_cache[1] == NULL);
     CU_ASSERT(read_cache->side_cache[write_side] == write_cache);
-    CU_ASSERT(read_cache->side_cache[checkpoint_side] == checkpoint_cache);
+    CU_ASSERT(read_cache->side_cache[flush_side] == flush_cache);
     put_buffer(mgr, write_buf);
     CU_ASSERT(write_cache->ref_cnt == 0);
 
     // 最后再确认一下各buffer的关系正确
     CU_ASSERT(read_cache->read_cache == NULL);
     CU_ASSERT(read_cache->side_cache[write_side] == write_cache);
-    CU_ASSERT(read_cache->side_cache[checkpoint_side] == checkpoint_cache);
+    CU_ASSERT(read_cache->side_cache[flush_side] == flush_cache);
     CU_ASSERT(write_cache->read_cache == read_cache);
     CU_ASSERT(write_cache->side_cache[0] == NULL);
     CU_ASSERT(write_cache->side_cache[1] == NULL);
-    CU_ASSERT(checkpoint_cache->read_cache == read_cache);
-    CU_ASSERT(checkpoint_cache->side_cache[0] == NULL);
-    CU_ASSERT(checkpoint_cache->side_cache[1] == NULL);
-    CU_ASSERT(checkpoint_buf[0] == write_buf[0]);
-    CU_ASSERT(checkpoint_buf[1] == write_buf[1]);
-    CU_ASSERT(checkpoint_buf[2] == write_buf[2]);
-    CU_ASSERT(checkpoint_buf[0] != read_buf[0]);
-    CU_ASSERT(checkpoint_buf[1] != read_buf[1]);
-    CU_ASSERT(checkpoint_buf[2] != read_buf[2]);
+    CU_ASSERT(flush_cache->read_cache == read_cache);
+    CU_ASSERT(flush_cache->side_cache[0] == NULL);
+    CU_ASSERT(flush_cache->side_cache[1] == NULL);
+    CU_ASSERT(flush_buf[0] == write_buf[0]);
+    CU_ASSERT(flush_buf[1] == write_buf[1]);
+    CU_ASSERT(flush_buf[2] == write_buf[2]);
+    CU_ASSERT(flush_buf[0] != read_buf[0]);
+    CU_ASSERT(flush_buf[1] != read_buf[1]);
+    CU_ASSERT(flush_buf[2] != read_buf[2]);
 
     tx_cache_exit_system(mgr);
 }
@@ -431,7 +431,7 @@ void test_cache_case4(void)
     put_buffer(mgr, read_buf);
 
     // 切换前commit，无法下内容
-    CU_ASSERT(commit_all_checkpoint_cache(mgr) == 0);
+    CU_ASSERT(flush_all_cache(mgr) == 0);
     
     // read buf中的内容还是为全0
     read_buf = get_buffer(mgr, BLOCK_ID1, FOR_READ);
@@ -445,7 +445,7 @@ void test_cache_case4(void)
     pingpong_cache(mgr);
     
     // commit
-    CU_ASSERT(commit_all_checkpoint_cache(mgr) == 0);
+    CU_ASSERT(flush_all_cache(mgr) == 0);
     
     // read buf内容改变
     read_buf = get_buffer(mgr, BLOCK_ID1, FOR_READ);
@@ -492,7 +492,7 @@ void test_cache_case5(void)
     pingpong_cache(mgr);
     
     // commit
-    CU_ASSERT(commit_all_checkpoint_cache(mgr) == 0);
+    CU_ASSERT(flush_all_cache(mgr) == 0);
     
     // read buf内容改变
     read_buf = get_buffer(mgr, BLOCK_ID1, FOR_READ);
@@ -511,15 +511,15 @@ void test_cache_case6(void)
     cache_mgr_t *mgr = tx_cache_init_system(BD_NAME, BD_BLOCK_SIZE, &test_bd_ops);
     u64_t *write_buf;
     u64_t *read_buf;
-    u64_t *checkpoint_buf;
+    u64_t *flush_buf;
 
-    // 获取checkpoint buf
-    checkpoint_buf = get_buffer(mgr, BLOCK_ID1, CHECKPOINT_BUF);
-    CU_ASSERT(checkpoint_buf != NULL);
-    put_buffer(mgr, checkpoint_buf);
-    checkpoint_buf[0] = 0x1122334455667788;  // 修改内容
-    checkpoint_buf[1] = 0x55AA55AA55AA55AA;  // 修改内容
-    checkpoint_buf[2] = 0xAA55AA55AA55AA55;  // 修改内容
+    // 获取flush buf
+    flush_buf = get_buffer(mgr, BLOCK_ID1, FOR_FLUSH);
+    CU_ASSERT(flush_buf != NULL);
+    put_buffer(mgr, flush_buf);
+    flush_buf[0] = 0x1122334455667788;  // 修改内容
+    flush_buf[1] = 0x55AA55AA55AA55AA;  // 修改内容
+    flush_buf[2] = 0xAA55AA55AA55AA55;  // 修改内容
 
     // 确认read buf中的内容
     read_buf = get_buffer(mgr, BLOCK_ID1, FOR_READ);
@@ -532,12 +532,12 @@ void test_cache_case6(void)
     // 获取write buf
     write_buf = get_buffer(mgr, BLOCK_ID1, FOR_WRITE);
     CU_ASSERT(write_buf != NULL);
-    CU_ASSERT(write_buf[0] == checkpoint_buf[0]);
-    CU_ASSERT(write_buf[1] == checkpoint_buf[1]);
-    CU_ASSERT(write_buf[2] == checkpoint_buf[2]);
-    write_buf[0] = ~checkpoint_buf[0];  // 修改内容
-    write_buf[1] = ~checkpoint_buf[1];  // 修改内容
-    write_buf[2] = ~checkpoint_buf[2];  // 修改内容
+    CU_ASSERT(write_buf[0] == flush_buf[0]);
+    CU_ASSERT(write_buf[1] == flush_buf[1]);
+    CU_ASSERT(write_buf[2] == flush_buf[2]);
+    write_buf[0] = ~flush_buf[0];  // 修改内容
+    write_buf[1] = ~flush_buf[1];  // 修改内容
+    write_buf[2] = ~flush_buf[2];  // 修改内容
     
     // 标记buffer dirty
     mark_buffer_dirty(mgr, write_buf);
@@ -548,53 +548,57 @@ void test_cache_case6(void)
     pingpong_cache(mgr);
     
     // commit
-    CU_ASSERT(commit_all_checkpoint_cache(mgr) == 0);
+    CU_ASSERT(flush_all_cache(mgr) == 0);
     
     // read buf内容改变
     read_buf = get_buffer(mgr, BLOCK_ID1, FOR_READ);
     CU_ASSERT(read_buf[0] == write_buf[0]);
     CU_ASSERT(read_buf[1] == write_buf[1]);
     CU_ASSERT(read_buf[2] == write_buf[2]);
-    CU_ASSERT(read_buf[0] != checkpoint_buf[0]);
-    CU_ASSERT(read_buf[1] != checkpoint_buf[1]);
-    CU_ASSERT(read_buf[2] != checkpoint_buf[2]);
+    CU_ASSERT(read_buf[0] != flush_buf[0]);
+    CU_ASSERT(read_buf[1] != flush_buf[1]);
+    CU_ASSERT(read_buf[2] != flush_buf[2]);
     put_buffer(mgr, read_buf);
 
     tx_cache_exit_system(mgr);
 }
 
-// 测试事务机制 tx
+// 测试提交事务
 void test_tx_case0(void)
 {
     cache_mgr_t *mgr = tx_cache_init_system(BD_NAME, BD_BLOCK_SIZE, &test_bd_ops);
-    cache_node_t *write_cache;
-    u64_t *write_buf;
+    tx_cache_node_t *tx_cache;
+    u64_t *tx_buf;
     u64_t *read_buf;
     tx_t *tx;
         
     CU_ASSERT(tx_alloc(mgr, &tx) == 0);
     CU_ASSERT(tx->tx_id == 1);
+    mgr->max_modified_blocks = 1;
 
     // 对一个块先写后读
-    write_buf = tx_get_write_buffer(tx, BLOCK_ID1);
-    CU_ASSERT(write_buf != NULL);
-    write_buf[0] = 0x1122334455667788;  // 修改内容
-    write_buf[1] = 0x55AA55AA55AA55AA;  // 修改内容
-    write_buf[2] = 0xAA55AA55AA55AA55;  // 修改内容
+    tx_buf = tx_get_buffer(tx, BLOCK_ID1);
+    CU_ASSERT(tx_buf != NULL);
+    tx_buf[0] = 0x1122334455667788;  // 修改内容
+    tx_buf[1] = 0x55AA55AA55AA55AA;  // 修改内容
+    tx_buf[2] = 0xAA55AA55AA55AA55;  // 修改内容
+    tx_cache = list_entry(tx_buf, tx_cache_node_t, buf);
+    CU_ASSERT(tx_cache->state == CLEAN);
 
-    mark_buffer_dirty(mgr, write_buf);
+    tx_mark_buffer_dirty(tx, tx_buf);
     
-    write_cache = list_entry(write_buf, cache_node_t, buf);
-    CU_ASSERT(write_cache->ref_cnt == 1);
-    CU_ASSERT(write_cache->state == DIRTY);
+    CU_ASSERT(tx_cache->ref_cnt == 1);
+    CU_ASSERT(tx_cache->state == DIRTY);
     CU_ASSERT(mgr->write_side == 0);
     CU_ASSERT(mgr->onfly_tx_num == 1);
+
+    tx_put_buffer(tx, tx_buf);
+    CU_ASSERT(tx_cache->ref_cnt == 0);
     
-    // 提交修改的数据到日志
+    // 提交修改的数据到日志，tx buf中的数据生效到write buf
     tx_commit(tx);
     
-    CU_ASSERT(write_cache->ref_cnt == 0);
-    CU_ASSERT(write_cache->state == DIRTY);
+    CU_ASSERT(tx_cache->state == CLEAN);
     CU_ASSERT(mgr->write_side == 1);
     CU_ASSERT(mgr->onfly_tx_num == 0);
     
@@ -606,15 +610,138 @@ void test_tx_case0(void)
 
     // 真正下盘
     commit_disk(mgr);
-    CU_ASSERT(mgr->checkpoint_sn == 1);
-    CU_ASSERT(write_cache->state == CLEAN);
+    CU_ASSERT(mgr->flush_sn == 1);
+    
+    CU_ASSERT(read_buf[0] == tx_buf[0]);
+    CU_ASSERT(read_buf[1] == tx_buf[1]);
+    CU_ASSERT(read_buf[2] == tx_buf[2]);
+
+    tx_cache_exit_system(mgr);
+}
+
+// 测试提交事务
+void test_tx_case1(void)
+{
+    cache_mgr_t *mgr = tx_cache_init_system(BD_NAME, BD_BLOCK_SIZE, &test_bd_ops);
+    u64_t *tx_buf;
+    u64_t *tx_buf1;
+    u64_t *read_buf;
+    tx_t *tx;
+        
+    CU_ASSERT(tx_alloc(mgr, &tx) == 0);
+    CU_ASSERT(tx->tx_id == 1);
+    mgr->max_modified_blocks = 1;
+    CU_ASSERT(mgr->flush_sn == 0);
+
+    // 对一个块先写后读
+    tx_buf = tx_get_buffer(tx, BLOCK_ID1);
+    CU_ASSERT(tx_buf != NULL);
+    tx_buf1 = tx_buf;
+    tx_buf = tx_get_buffer(tx, BLOCK_ID1);
+    CU_ASSERT(tx_buf == tx_buf1);
+    tx_buf = tx_get_buffer(tx, BLOCK_ID1);
+    CU_ASSERT(tx_buf == tx_buf1);
+    tx_buf[0] = 0x1122334455667788;  // 修改内容
+    tx_buf[1] = 0x55AA55AA55AA55AA;  // 修改内容
+    tx_buf[2] = 0xAA55AA55AA55AA55;  // 修改内容
+
+    tx_mark_buffer_dirty(tx, tx_buf);
+
+    tx_put_buffer(tx, tx_buf);
+    tx_put_buffer(tx, tx_buf);
+    tx_put_buffer(tx, tx_buf);
+    
+    // 提交修改的数据到日志，tx buf中的数据生效到write buf
+    tx_commit(tx);
     
     read_buf = get_buffer(mgr, BLOCK_ID1, FOR_READ);
     CU_ASSERT(read_buf != NULL);
-    CU_ASSERT(read_buf[0] == write_buf[0]);
-    CU_ASSERT(read_buf[1] == write_buf[1]);
-    CU_ASSERT(read_buf[2] == write_buf[2]);
+    CU_ASSERT(read_buf[0] == 0);
+    CU_ASSERT(read_buf[1] == 0);
+    CU_ASSERT(read_buf[2] == 0);
     put_buffer(mgr, read_buf);
+
+    // 真正下盘
+    commit_disk(mgr);
+    
+    CU_ASSERT(mgr->flush_sn == 1);
+    
+    CU_ASSERT(read_buf[0] == tx_buf[0]);
+    CU_ASSERT(read_buf[1] == tx_buf[1]);
+    CU_ASSERT(read_buf[2] == tx_buf[2]);
+    
+    CU_ASSERT(tx_alloc(mgr, &tx) == 0);
+    tx_buf = tx_get_buffer(tx, BLOCK_ID1);
+    CU_ASSERT(tx_buf != NULL);
+    tx_buf[0] = ~0x1122334455667788;  // 修改内容
+    tx_buf[1] = ~0x55AA55AA55AA55AA;  // 修改内容
+    tx_buf[2] = ~0xAA55AA55AA55AA55;  // 修改内容
+    tx_mark_buffer_dirty(tx, tx_buf);
+    
+    tx_put_buffer(tx, tx_buf);
+    
+    tx_commit(tx);
+    
+    CU_ASSERT(read_buf[0] != tx_buf[0]);
+    CU_ASSERT(read_buf[1] != tx_buf[1]);
+    CU_ASSERT(read_buf[2] != tx_buf[2]);
+    
+    commit_disk(mgr);
+    
+    CU_ASSERT(read_buf[0] == tx_buf[0]);
+    CU_ASSERT(read_buf[1] == tx_buf[1]);
+    CU_ASSERT(read_buf[2] == tx_buf[2]);
+
+    tx_cache_exit_system(mgr);
+}
+
+// 测试取消事务
+void test_tx_case2(void)
+{
+    cache_mgr_t *mgr = tx_cache_init_system(BD_NAME, BD_BLOCK_SIZE, &test_bd_ops);
+    u64_t *tx_buf;
+    u64_t *read_buf;
+    tx_t *tx;
+        
+    CU_ASSERT(tx_alloc(mgr, &tx) == 0);
+    mgr->max_modified_blocks = 1;
+    CU_ASSERT(mgr->flush_sn == 0);
+
+    // 对一个块先写后读
+    tx_buf = tx_get_buffer(tx, BLOCK_ID1);
+    CU_ASSERT(tx_buf != NULL);
+    tx_buf[0] = 0x1122334455667788;  // 修改内容
+    tx_buf[1] = 0x55AA55AA55AA55AA;  // 修改内容
+    tx_buf[2] = 0xAA55AA55AA55AA55;  // 修改内容
+
+    tx_mark_buffer_dirty(tx, tx_buf);
+
+    tx_put_buffer(tx, tx_buf);
+    
+    tx_cancel(tx);
+    
+    read_buf = get_buffer(mgr, BLOCK_ID1, FOR_READ);
+    CU_ASSERT(read_buf != NULL);
+    CU_ASSERT(read_buf[0] == 0);
+    CU_ASSERT(read_buf[1] == 0);
+    CU_ASSERT(read_buf[2] == 0);
+    put_buffer(mgr, read_buf);
+
+    // 真正下盘
+    commit_disk(mgr);
+    
+    CU_ASSERT(read_buf[0] != tx_buf[0]);
+    CU_ASSERT(read_buf[1] != tx_buf[1]);
+    CU_ASSERT(read_buf[2] != tx_buf[2]);
+    
+    CU_ASSERT(mgr->modified_block_num == 0);
+    
+    tx_buf = tx_get_buffer(tx, BLOCK_ID1);
+    CU_ASSERT(tx_buf != NULL);
+    CU_ASSERT(tx_buf[0] == 0);
+    CU_ASSERT(tx_buf[1] == 0);
+    CU_ASSERT(tx_buf[2] == 0);
+    tx_put_buffer(tx, tx_buf);
 
     tx_cache_exit_system(mgr);
 }
@@ -630,6 +757,8 @@ CU_TestInfo test_tx_cache_cases[]
     {to_str(test_cache_case5), test_cache_case5},  
     {to_str(test_cache_case6), test_cache_case6},  
     {to_str(test_tx_case0), test_tx_case0},  
+    {to_str(test_tx_case1), test_tx_case1},  
+    {to_str(test_tx_case2), test_tx_case2},  
     CU_TEST_INFO_NULL  
 };  
 
