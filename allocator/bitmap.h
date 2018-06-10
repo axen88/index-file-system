@@ -44,7 +44,8 @@ extern "C"
 {
 #endif
 
-#define BITS_PER_U64    64
+#define BITS_PER_U64     64
+#define BYTES_PER_U64    8
 
 // 检查某个位是否为1
 static inline bool_t check_bit(u64_t *dat, uint32_t pos)
@@ -88,17 +89,41 @@ static inline uint32_t set_dat_first_0bit(u64_t *dat, uint32_t start_pos)
     return INVALID_U32;
 }
 
+#define U64_ALL_1  INVALID_U64
+
+// 
+static inline uint32_t set_buf_first_0bit(void *buf, uint32_t buf_size, uint32_t start_pos)
+{
+    u64_t *dat = buf;
+    uint32_t i;
+    uint32_t end_pos = roundup(buf_size, BYTES_PER_U64);
+    
+    ASSERT(NULL != buf);
+
+    ASSERT((buf_size % BITS_PER_U64) == 0);
+
+    for (i = start_pos / BYTES_PER_U64; i < end_pos; i++)
+    {
+        if (buf[i] == U64_ALL_1)
+            continue;
+
+        return ((i * BITS_PER_U64) + set_dat_first_0bit(&buf[i], start_pos % BITS_PER_U64));
+    }
+
+    return INVALID_U32;
+}
+
 // 可以用来管理块
 typedef struct bitmap_hnd
 {
     void *cache_mgr;
 
     uint32_t block_size;
-    uint32_t bits_per_block;   // 
-    u64_t total_bit_blocks;        // 这些位占用的block数目
-    u64_t total_bits;          // 总共的位数
+    uint32_t bits_per_block;      // 
+    u64_t    total_bit_blocks;    // 这些位占用的block数目
+    u64_t    total_bits;          // 总共的位数
 
-    u64_t cur_bit;           // current bit
+    u64_t    cur_bit;             // current bit
 } bitmap_hnd_t;
 
 // 初始化文件位图缓存系统

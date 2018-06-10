@@ -40,26 +40,6 @@
 MODULE(PID_BITMAP);
 #include "log.h"
 
-#define U64_ALL_1  INVALID_U64
-
-// 
-uint32_t set_buf_first_0bit(u64_t *buf, uint32_t buf_size, uint32_t start_pos)
-{
-    ASSERT(NULL != buf);
-    uint32_t i;
-
-    ASSERT((buf_size % BITS_PER_U64) == 0);
-
-    for (i = start_pos % BITS_PER_U64; i < buf_size / BITS_PER_U64; i++)
-    {
-        if (buf[i] == U64_ALL_1)
-            continue;
-
-        return ((i * BITS_PER_U64) + set_dat_first_0bit(&buf[i], start_pos % BITS_PER_U64));
-    }
-
-    return INVALID_U32;
-}
 
 // 查询文件中位图区域为0的区域
 u64_t bitmap_set_first_0bit(bitmap_hnd_t *hnd, u64_t start_pos)
