@@ -19,7 +19,7 @@ TARGET_ALL = $(TEST_SUITE_MAIN)
 all: $(TARGET_ALL)
 
 $(TEST_SUITE_MAIN):
-	gcc -o $@  $(CFLAGS)  $(TX_CACHE_SRC) test_suite_main.c -lpthread -lcunit -static
+	gcc -o $@  $(CFLAGS)  $(TX_CACHE_SRC) test_suite_main.c -lpthread -lcunit
 	
 	
 clean:

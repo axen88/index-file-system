@@ -61,7 +61,7 @@ void hashtab_destroy(hashtab_t *h);
 
 
 // 对hash表中的所有key,value运行apply函数
-int hashtab_map(hashtab_t *h, int (*apply)(void *value, void *arg), void *args);  
+int hashtab_walkall(hashtab_t *h, int (*apply)(void *value, void *arg), void *args);  
 
 // hash表统计信息
 typedef struct hashtab_info {  

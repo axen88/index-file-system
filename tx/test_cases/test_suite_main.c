@@ -9,43 +9,8 @@
 #include <CUnit/TestDB.h>  
 #include <CUnit/Automated.h>  
 
-// 测试用例集合
-extern CU_TestInfo test_tx_cache_cases[];
-int test_tx_cache_init(void);
-int test_tx_cache_clean(void);
-
-  
-// suite初始化过程 
-int suite_success_init(void)
-{  
-    return 0;  
-      
-}  
-  
-// suite清理过程，以便恢复原状，使结果不影响到下次运行 
-int suite_success_clean(void)
-{  
-    return 0;  
-}  
-  
-// 定义suite数组，包括多个suite，每个suite又会包括若干个测试方法。  
-CU_SuiteInfo suites[]
-= {  
-    {"test_tx_cache_suite", test_tx_cache_init, test_tx_cache_clean, test_tx_cache_cases},  
-    CU_SUITE_INFO_NULL  
-};  
-  
-// 测试类的调用总接口 
-void add_test_suites(void)
-{  
-    assert(NULL != CU_get_registry());  
-    assert(!CU_is_test_running());  
-  
-    if (CUE_SUCCESS != CU_register_suites(suites))
-    {  
-        exit(EXIT_FAILURE);  
-    }  
-}  
+// 用户指定的测试用例接口
+void add_tx_cache_suites(void);
 
 // 运行测试入口 
 int run_test(void)
@@ -56,7 +21,7 @@ int run_test(void)
         exit(EXIT_FAILURE);  
     }
 
-    add_test_suites();  
+    add_tx_cache_suites();  
     
     /// 测试模式1: Automated Mode，自动模式，会生成报表，用浏览器查看测试结果
     //CU_set_output_filename("test_suite"); 

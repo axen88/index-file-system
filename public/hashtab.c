@@ -146,7 +146,7 @@ void hashtab_destroy(hashtab_t *h)
 }
 
 // 对hash表中的所有key,value运行apply函数
-int hashtab_map(hashtab_t *h, int (*apply)(void *value, void *arg), void *arg)
+int hashtab_walkall(hashtab_t *h, int (*apply)(void *value, void *arg), void *arg)
 {
     unsigned long i;
     int ret;

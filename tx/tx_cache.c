@@ -10,264 +10,352 @@ MODULE(PID_CACHE);
 
 #include "tx_cache.h"
 
-// 申请cache node
-cache_node_t *alloc_cache_node(uint32_t block_size)
+// 申请cache block
+cache_block_t *alloc_cache_block(uint32_t block_size)
 {
-    int cache_size = sizeof(cache_node_t) + block_size;
-    cache_node_t *cache = OS_MALLOC(cache_size);
-    if (cache == NULL)
+    int cb_size = sizeof(cache_block_t) + block_size;
+    cache_block_t *cb = OS_MALLOC(cb_size);
+    if (cb == NULL)
     {
-        LOG_ERROR("alloc memory(%d) failed\n", cache_size);
+        LOG_ERROR("alloc memory(%d) failed\n", cb_size);
         return NULL;
     }
 
-    memset(cache, 0, sizeof(cache_node_t));
-    cache->state = EMPTY;
+    memset(cb, 0, sizeof(cache_block_t));
+    cb->state = EMPTY;
 
-    return cache;
+    return cb;
 }
 
-// 释放cache node
-void free_cache_node(cache_node_t *cache)
+// 释放cache block
+void free_cache_block(cache_block_t *cb)
 {
-    if (cache == NULL)
+    if (cb == NULL)
         return;
     
-    if (cache->ref_cnt != 0)
+    if (cb->ref_cnt != 0)
     {
-        LOG_ERROR("cache block(%llu) ref_cnt(%d)\n", cache->block_id, cache->ref_cnt);
+        LOG_ERROR("cache block(%llu) ref_cnt(%d)\n", cb->block_id, cb->ref_cnt);
     }
     
-    if (cache->state == DIRTY)
+    if (cb->state == DIRTY)
     {
-        LOG_ERROR("cache block(%llu) is DIRTY(%d)\n", cache->block_id, cache->state);
+        LOG_ERROR("cache block(%llu) is DIRTY(%d)\n", cb->block_id, cb->state);
     }
     
-    LOG_EVENT("destroy cache(%p) block(%llu)\n", cache, cache->block_id);
+    LOG_EVENT("destroy cache(%p) block(%llu)\n", cb, cb->block_id);
 
-    OS_FREE(cache);
+    OS_FREE(cb);
 }
 
-// get write cache node
-cache_node_t *get_write_cache_node(cache_mgr_t *mgr, cache_node_t *read_cache)
+// commit cache block状态为EMPTY的两种场景
+// 1. 此cache是刚申请的
+// 2. 刚pingpong过的cache
+int32_t fill_commit_cb(cache_mgr_t *mgr, cache_block_t *rw_cb)
 {
-    uint8_t write_side = mgr->write_side;
-    cache_node_t *cache = NULL;
+    cache_block_t *commit_cb = rw_cb->pp_cb[mgr->commit_side];
 
-    if (read_cache->side_cache[write_side] == NULL)
+    if (commit_cb == NULL)
     {
-        cache = alloc_cache_node(mgr->block_size);
-        if (cache == NULL)
-        {
-            LOG_ERROR("alloc write cache(%llu) failed\n", read_cache->block_id);
-            return NULL;
-        }
+        return SUCCESS;
+    }
 
-        cache->block_id = read_cache->block_id;
-        cache->read_cache = read_cache;
+    if (commit_cb->state != EMPTY)
+    {
+        return SUCCESS;
+    }
 
-        read_cache->side_cache[write_side] = cache;
+    cache_block_t *flush_cb = rw_cb->pp_cb[(mgr->commit_side + 1) & 0x1];
+    
+    if (rw_cb->state == CLEAN) // 优先以读写buffer中的干净数据为准
+    {
+        memcpy(commit_cb->buf, rw_cb->buf, mgr->block_size);
+    }
+    else if ((flush_cb != NULL) && (flush_cb->state != EMPTY)) // 其次以flush buffer中的数据为准
+    {
+        memcpy(commit_cb->buf, flush_cb->buf, mgr->block_size);
     }
     else
     {
-        cache = read_cache->side_cache[mgr->write_side];
+        ASSERT(0);
     }
+        
+    commit_cb->state = CLEAN;
 
-    // 此处cache状态为EMPTY的两种场景
-    // 1. 此cache是刚申请的
-    // 2. 此cache曾经因为做事务失败而导致事务被取消， TODO  这里处理不对(正确处理是消除这种情况)
-    if (cache->state == EMPTY)
-    {
-        uint8_t flush_side = (write_side + 1) & 0x1;
-        cache_node_t *flush_cache = read_cache->side_cache[flush_side];
-        if (flush_cache != NULL)
-        { // 优先从flush cache中拷贝数据，因为这里的数据更新
-            memcpy(cache->buf, flush_cache->buf, mgr->block_size);
-        }
-        else
-        {
-            memcpy(cache->buf, read_cache->buf, mgr->block_size);
-        }
-
-        cache->state = CLEAN;
-    }
-
-    return cache;
+    return SUCCESS;
 }
 
-// get flush cache node
-cache_node_t *get_flush_cache_node(cache_mgr_t *mgr, cache_node_t *read_cache)
+// alloc commit cache block
+cache_block_t *alloc_commit_cb(cache_mgr_t *mgr, cache_block_t *rw_cb)
 {
-    uint8_t flush_side = (mgr->write_side + 1) & 0x1;
-    cache_node_t *cache = NULL;
+    uint8_t commit_side = mgr->commit_side;
+    cache_block_t *commit_cb = NULL;
+    int32_t ret;
 
-    ASSERT(read_cache != NULL);
-
-    if (read_cache->side_cache[flush_side] == NULL)
+    if (rw_cb->pp_cb[commit_side] == NULL)
     {
-        cache = alloc_cache_node(mgr->block_size);
-        if (cache == NULL)
+        commit_cb = alloc_cache_block(mgr->block_size);
+        if (commit_cb == NULL)
         {
-            LOG_ERROR("alloc flush cache(%llu) failed\n", read_cache->block_id);
+            LOG_ERROR("alloc write cache(%llu) failed\n", rw_cb->block_id);
             return NULL;
         }
 
-        cache->block_id = read_cache->block_id;
-        cache->read_cache = read_cache;
-
-        read_cache->side_cache[flush_side] = cache;
+        commit_cb->block_id = rw_cb->block_id;
+        rw_cb->pp_cb[commit_side] = commit_cb;
     }
     else
     {
-        cache = read_cache->side_cache[flush_side];
+        commit_cb = rw_cb->pp_cb[mgr->commit_side];
     }
 
-    // 此处cache状态为EMPTY的两种场景
-    // 1. 此cache是刚申请的
-    // 2. 此cache曾经因为做事务失败而导致事务被取消， TODO  这里处理不对(正确处理是消除这种情况)
-    if (cache->state == EMPTY)
+    // 填充rw cache block内容
+    ret = fill_commit_cb(mgr, rw_cb);
+    if (ret < SUCCESS)
     {
-        ASSERT(read_cache->state == CLEAN);
-        memcpy(cache->buf, read_cache->buf, mgr->block_size);
-        cache->state = CLEAN;
+        LOG_ERROR("fill commit cache(%d) block(%lld) failed(%d)\n", mgr->block_size, rw_cb->block_id, ret);
+        return NULL;
     }
 
-    return cache;
+    return commit_cb;
 }
 
-// 获取指定类型的cache node
-cache_node_t *get_cache_node(cache_mgr_t *mgr, u64_t block_id, BUF_TYPE_E buf_type)
+int32_t fill_rw_cb(cache_mgr_t *mgr, cache_block_t *rw_cb)
+{
+    int32_t ret;
+    ASSERT(rw_cb != NULL);
+    
+    if (rw_cb->state != EMPTY)
+    {
+        return SUCCESS;
+    }
+
+    cache_block_t *commit_cb = rw_cb->pp_cb[mgr->commit_side];
+    cache_block_t *flush_cb = rw_cb->pp_cb[(mgr->commit_side + 1) & 1];
+    
+    if ((commit_cb != NULL) && (commit_cb->state != EMPTY)) // 优先以commit buffer中的数据为准
+    {
+        memcpy(rw_cb->buf, commit_cb->buf, mgr->block_size);
+    }
+    else if ((flush_cb != NULL) && (flush_cb->state != EMPTY)) // 其次以flush buffer中的数据为准
+    {
+        memcpy(rw_cb->buf, flush_cb->buf, mgr->block_size);
+    }
+    else // 最后以盘上数据为准
+    {
+        ret = mgr->bd_ops->read(mgr->bd_hnd, rw_cb->buf, mgr->block_size, rw_cb->block_id);
+        if (ret <= 0)
+        {
+            LOG_ERROR("read block failed. bd_hnd(%p) size(%d) block_id(%lld) ret(%d)\n",
+                mgr->bd_hnd, mgr->block_size, rw_cb->block_id, ret);
+            return -ERR_TX_READ_DISK;
+        }
+    }
+
+    rw_cb->state = CLEAN;
+    return SUCCESS;
+}
+
+// 获取指定类型的cache block
+cache_block_t *alloc_cb(cache_mgr_t *mgr, u64_t block_id, BUF_USAGE_E usage)
 {
     int ret;
 
-    ASSERT(buf_type < BUF_TYPE_NUM);
+    ASSERT(usage < BUF_USAGE_NUM);
 
-    // hash表中只记录读cache
-    cache_node_t *read_cache = hashtab_search(mgr->hcache, (void *)block_id);
-    if (read_cache == NULL)
-    { // 申请读cache
-        read_cache = alloc_cache_node(mgr->block_size);
-        if (read_cache == NULL)
+    // hash表中只记录rw cache block
+    cache_block_t *rw_cb = hashtab_search(mgr->hcache, (void *)block_id);
+    if (rw_cb == NULL)
+    { // 申请rw cache block
+        rw_cb = alloc_cache_block(mgr->block_size);
+        if (rw_cb == NULL)
         {
-            LOG_ERROR("alloc read cache node block(%lld) failed\n", block_id);
+            LOG_ERROR("alloc rw cache block(%lld) failed\n", block_id);
             return NULL;
         }
 
-        read_cache->block_id = block_id;
-        ret = hashtab_insert(mgr->hcache, (void *)block_id, read_cache);
+        rw_cb->block_id = block_id;
+        ret = hashtab_insert(mgr->hcache, (void *)block_id, rw_cb);
         if (ret < 0)
         {
-            OS_FREE(read_cache);
+            OS_FREE(rw_cb);
             LOG_ERROR("hashtab_insert failed. block_id(%lld) ret(%d)\n", block_id, ret);
             return NULL;
         }
 
-        // 第一次想申请的就不是读buf，说明不用管盘上的数据
-        if (buf_type != FOR_READ)
+        // 第一次就以写的方式申请，说明不用管盘上的数据
+        if (usage == FOR_WRITE)
         {
-            memset(read_cache->buf, 0, mgr->block_size);
-            read_cache->state = CLEAN; // 直接认为读cache上的数据就是有效的，全0
+            memset(rw_cb->buf, 0, mgr->block_size);
+            rw_cb->state = CLEAN; // 直接认为读cache上的数据就是有效的，全0，不用读盘
         }
     }
 
-    // 没有读过数据，或上次读数据失败
-    if (read_cache->state == EMPTY)
+    // 填充rw cache block内容
+    ret = fill_rw_cb(mgr, rw_cb);
+    if (ret < SUCCESS)
     {
-        // 读盘, 此时read_cache肯定已经记录在hash表中了
-        ret = mgr->bd_ops->read(mgr->bd_hnd, read_cache->buf, mgr->block_size, read_cache->block_id);
-        if (ret <= 0)
-        {
-            LOG_ERROR("read block failed. bd_hnd(%p) size(%d) block_id(%lld) ret(%d)\n",
-                mgr->bd_hnd, mgr->block_size, read_cache->block_id, ret);
-            return NULL;
-        }
-
-        read_cache->state = CLEAN;
+        LOG_ERROR("fill rw cache(%d) block(%lld) failed(%d)\n", mgr->block_size, block_id, ret);
+        return NULL;
     }
 
-    ASSERT(read_cache->state == CLEAN); // 读cache的状态不可能为DIRTY
+    if (usage == FOR_READ)
+    {
+        rw_cb->usage = FOR_READ;
+        return rw_cb;
+    }
+    
+    ASSERT(usage == FOR_WRITE);
+    cache_block_t *commit_cb = alloc_commit_cb(mgr, rw_cb);  // 确保commit cb申请成功，才能写
+    if (commit_cb == NULL)
+    {
+        LOG_ERROR("get commit cache block failed. size(%d) block_id(%lld)\n", mgr->block_size, block_id);
+        return NULL;
+    }
 
-    if (buf_type == FOR_READ)
-        return read_cache;
-    else if (buf_type == FOR_WRITE)
-        return get_write_cache_node(mgr, read_cache);
-
-    return get_flush_cache_node(mgr, read_cache);
+    rw_cb->usage = FOR_WRITE;
+    return rw_cb;
 }
 
-// 必须和put_buffer成对使用
-void *get_buffer(cache_mgr_t *mgr, u64_t block_id, BUF_TYPE_E buf_type)
+// 获取指定类型的cache block
+cache_block_t *get_cb(cache_mgr_t *mgr, u64_t block_id, BUF_TYPE_E buf_type)
 {
-    cache_node_t *cache = get_cache_node(mgr, block_id, buf_type);
+    ASSERT(buf_type < BUF_TYPE_NUM);
+
+    // hash表中只记录rw cache block
+    cache_block_t *rw_cb = hashtab_search(mgr->hcache, (void *)block_id);
+    if (rw_cb == NULL)
+    {
+        return NULL;
+    }
+
+    if (buf_type == RW_BUF)
+    {
+        return rw_cb;
+    }
+        
+    cache_block_t *commit_cb = rw_cb->pp_cb[mgr->commit_side];
+    if (buf_type == COMMIT_BUF)
+    {
+        return commit_cb;
+    }
+
+    cache_block_t *flush_cb = rw_cb->pp_cb[(mgr->commit_side + 1) & 1];
+    ASSERT(buf_type == FLUSH_BUF);
+    return flush_cb;
+}
+
+// 必须和put_buffer、commit_buffer、cancel_buffer配合使用
+void *get_buffer_by_type(cache_mgr_t *mgr, u64_t block_id, BUF_TYPE_E buf_type)
+{
+    cache_block_t *cache = get_cb(mgr, block_id, buf_type);
     if (cache == NULL)
         return NULL;
 
     cache->ref_cnt++;
-
     return cache->buf;
 }
 
-// 必须和get_buffer成对使用
+// 必须和put_buffer、commit_buffer、cancel_buffer配合使用
+void *get_buffer(cache_mgr_t *mgr, u64_t block_id, BUF_USAGE_E usage)
+{
+    cache_block_t *cache = alloc_cb(mgr, block_id, usage);
+    if (cache == NULL)
+        return NULL;
+
+    cache->ref_cnt++;
+    return cache->buf;
+}
+
+// 必须和get_buffer配合使用
 void put_buffer(cache_mgr_t *mgr, void *buf)
 {
-    cache_node_t *cache = list_entry(buf, cache_node_t, buf);
+    cache_block_t *cache = list_entry(buf, cache_block_t, buf);
 
     ASSERT(cache->ref_cnt != 0);
-
     cache->ref_cnt--;
 
     return;
 }
 
-// 标记write cache dirty
-void mark_write_cache_dirty(cache_mgr_t *mgr, cache_node_t *write_cache)
+// 标记buffer dirty
+void mark_buffer_dirty(cache_mgr_t *mgr, void *rw_buf)
 {
-    ASSERT(write_cache->ref_cnt != 0);
-    ASSERT(write_cache->read_cache != NULL);
-
-    // 确保操作的一定是write buf
-    ASSERT(write_cache->read_cache->side_cache[mgr->write_side] == write_cache);
-
-    ASSERT(write_cache->state != EMPTY);
-
-    if (write_cache->state != DIRTY)
+    cache_block_t *rw_cb = list_entry(rw_buf, cache_block_t, buf);
+    ASSERT(rw_cb->state != EMPTY);
+    if (rw_cb->state == CLEAN)
     {
-        write_cache->state = DIRTY;
-
-        if (mgr->modified_block_num == 0)
-        { // 记录第一个块修改的时间
-            mgr->first_modified_time = os_get_ms_count();
-        }
-
-        mgr->modified_block_num++;
-        mgr->modified_data_bytes += mgr->block_size;
+        rw_cb->state = DIRTY;
     }
 }
 
-// 标记buffer dirty
-void mark_buffer_dirty(cache_mgr_t *mgr, void *write_buf)
+// 记录统计数据
+void update_mgr_info(cache_mgr_t *mgr)
 {
-    cache_node_t *write_cache = list_entry(write_buf, cache_node_t, buf);
+    if (mgr->modified_block_num == 0)
+    { // 记录第一个块修改的时间
+        mgr->first_modified_time = os_get_ms_count();
+    }
 
-    mark_write_cache_dirty(mgr, write_cache);
-
-    return;
+    mgr->modified_block_num++;
+    mgr->modified_data_bytes += mgr->block_size;
 }
 
-// 将指定flush cache的内容写到盘上
-int flush_cache(cache_mgr_t *mgr, cache_node_t *read_cache)
+// commit cache block
+void commit_cb(cache_mgr_t *mgr, cache_block_t *rw_cb)
+{
+    if (rw_cb->state != DIRTY)
+    {
+        return;
+    }
+
+    cache_block_t *commit_cb = rw_cb->pp_cb[mgr->commit_side];
+    ASSERT(commit_cb != NULL);
+    
+    memcpy(commit_cb->buf, rw_cb->buf, mgr->block_size);
+    commit_cb->state = DIRTY; // commit cb中的内容待pingpong后变成flush cb下盘
+    rw_cb->state = CLEAN;     // 
+    update_mgr_info(mgr);    
+}
+
+// commit buffer
+void commit_buffer(cache_mgr_t *mgr, void *rw_buf)
+{
+    cache_block_t *rw_cb = list_entry(rw_buf, cache_block_t, buf);
+    commit_cb(mgr, rw_cb);
+}
+
+// cancel cache block
+void cancel_cb(cache_mgr_t *mgr, cache_block_t *rw_cb)
+{
+    if (rw_cb->state == DIRTY)
+    { // 将脏数据直接废弃
+        rw_cb->state = EMPTY;
+        //fill_rw_cb(mgr, rw_cb);
+    }
+}
+
+// cancel buffer
+void cancel_buffer(cache_mgr_t *mgr, void *rw_buf)
+{
+    cache_block_t *rw_cb = list_entry(rw_buf, cache_block_t, buf);
+    cancel_cb(mgr, rw_cb);
+}
+
+// 将指定flush cache block的内容写到盘上
+int flush_cache_block(cache_mgr_t *mgr, cache_block_t *rw_cb)
 {
     int ret;
-    cache_node_t *flush_cache;
+    cache_block_t *flush_cb;
 
-    flush_cache = read_cache->side_cache[(mgr->write_side + 1) & 0x1];
-    if (flush_cache == NULL)
+    flush_cb = rw_cb->pp_cb[(mgr->commit_side + 1) & 0x1];
+    if (flush_cb == NULL)
     { // 说明这个位置没有要下盘的数据
         return SUCCESS;
     }
 
     // 说明这块数据未被修改过
-    if (flush_cache->state != DIRTY)
+    if (flush_cb->state != DIRTY)
     {
         return SUCCESS;
     }
@@ -276,48 +364,43 @@ int flush_cache(cache_mgr_t *mgr, cache_node_t *read_cache)
     ASSERT(mgr->flush_block_num != 0);
 
     // 数据下盘
-    ret = mgr->bd_ops->write(mgr->bd_hnd, flush_cache->buf, mgr->block_size, flush_cache->block_id);
+    ret = mgr->bd_ops->write(mgr->bd_hnd, flush_cb->buf, mgr->block_size, flush_cb->block_id);
     if (ret <= 0)
     {
         LOG_ERROR("write block failed. bd_hnd(%p) size(%d) block_id(%lld) ret(%d)\n",
-            mgr->bd_hnd, mgr->block_size, flush_cache->block_id, ret);
+            mgr->bd_hnd, mgr->block_size, flush_cb->block_id, ret);
         return -ERR_FILE_WRITE;
     }
 
-    // 修改read cache中的内容
-    memcpy(read_cache->buf, flush_cache->buf, mgr->block_size);
-
     mgr->flush_block_num--;
-    flush_cache->state = CLEAN;
+    flush_cb->state = CLEAN;
 
     return SUCCESS;
 }
 
-// 将指定flush cache的内容写到盘上，方便hash表遍历执行
-int flush_one_cache(void *cache, void *mgr)
+// 将指定flush cache block的内容写到盘上，方便hash表遍历执行
+int flush_one_cb(void *cache, void *mgr)
 {
-    return flush_cache(mgr, cache);
+    return flush_cache_block(mgr, cache);
 }
 
-// 将当前mgr中所有的flush cache的内容下盘
-int flush_all_cache(cache_mgr_t *mgr)
+// 将当前mgr中所有的flush cache block的内容下盘
+int flush_all_cb(cache_mgr_t *mgr)
 {
-    return hashtab_map(mgr->hcache, flush_one_cache, mgr);
-    //return hashtab_map(mgr->hcache, flush_cache, mgr);
+    return hashtab_walkall(mgr->hcache, flush_one_cb, mgr);
 }
 
-// 后台任务，所有的脏数据下盘
-void *commit_disk(void *arg)
+// 后台任务，所有checkpoint/flush buffer list中的脏数据下盘
+int flush_disk(cache_mgr_t *mgr)
 {
-    cache_mgr_t *mgr = arg;
     int ret;
 
     // 将当前所有的flush cache中的内容下盘
-    ret = flush_all_cache(mgr);
+    ret = flush_all_cb(mgr);
     if (ret < 0)
     {
         LOG_ERROR("flush_all_cache failed(%d)\n", ret);
-        return NULL;
+        return ret;
     }
 
     ASSERT(mgr->flush_block_num == 0);
@@ -326,17 +409,53 @@ void *commit_disk(void *arg)
 
     mgr->flush_sn++;
 
-    return NULL;
+    return SUCCESS;
 }
 
-// 切换cache，也就是将write cache和flush cache交换
+// 
+int pingpong_cb(cache_mgr_t *mgr, cache_block_t *rw_cb)
+{
+    cache_block_t *flush_cb;
+    cache_block_t *commit_cb;
+
+    commit_cb = rw_cb->pp_cb[mgr->commit_side];
+    flush_cb = rw_cb->pp_cb[(mgr->commit_side + 1) & 0x1];
+    if ((commit_cb == NULL) || (flush_cb == NULL))
+    { 
+        return SUCCESS;
+    }
+
+    //
+    if ((commit_cb->state == DIRTY) && (flush_cb->state == CLEAN))
+    {
+        flush_cb->state = EMPTY;
+    }
+
+    return SUCCESS;
+}
+
+// 
+int pingpong_one_cb(void *cache, void *mgr)
+{
+    return pingpong_cb(mgr, cache);
+}
+
+// 
+int pingpong_all_cb(cache_mgr_t *mgr)
+{
+    return hashtab_walkall(mgr->hcache, pingpong_one_cb, mgr);
+}
+
+// 切换cache，也就是将commit cache和checkpoint/flush cache交换
 void pingpong_cache(cache_mgr_t *mgr)
 {
-    ASSERT(mgr->onfly_tx_num == 0);  // writing cache这边事务在进行
+    ASSERT(mgr->onfly_tx_num == 0);    // commit cache这边事务在进行
     ASSERT(mgr->flush_block_num == 0); // flush cache这边全部下盘完成
 
+    pingpong_all_cb(mgr);
+
     // 切换cache
-    mgr->write_side = (mgr->write_side + 1) & 0x1;
+    mgr->commit_side = (mgr->commit_side + 1) & 0x1;
     mgr->flush_block_num = mgr->modified_block_num;
 
     // 清除切换cache计数
@@ -348,221 +467,6 @@ void pingpong_cache(cache_mgr_t *mgr)
 
     return;
 }
-
-// 获取tx cache node
-tx_cache_node_t *get_tx_cache(tx_t *tx, cache_node_t *write_cache)
-{
-    tx_cache_node_t *tx_cache;
-    
-    ASSERT(write_cache->ref_cnt == 0); // 确保这个write cache还没有tx在使用
-    
-    if (write_cache->tx_cache == NULL)
-    {
-        int cache_size = sizeof(tx_cache_node_t) + tx->mgr->block_size;
-        tx_cache = OS_MALLOC(cache_size);
-        if (tx_cache == NULL)
-        {
-            LOG_ERROR("alloc memory(%d) failed\n", cache_size);
-            return NULL;
-        }
-        
-        memset(tx_cache, 0, sizeof(tx_cache_node_t));
-
-        // 建立两者之间的关联
-        tx_cache->write_cache = write_cache;
-        write_cache->tx_cache = tx_cache;
-    }
-    else
-    {
-        tx_cache = write_cache->tx_cache;
-    }
-
-    // 拷贝内容，这是专为事务做的副本
-    memcpy(tx_cache->buf, write_cache->buf, tx->mgr->block_size);
-    tx_cache->state = CLEAN;
-
-    // tx占用write cache
-    write_cache->owner_tx_id = tx->tx_id;
-    write_cache->ref_cnt++; // 只占用一次
-    
-    list_add_tail(&tx->write_cache, &tx_cache->node);
-    
-    return tx_cache;
-}
-
-// 释放tx cache node
-void free_tx_cache(tx_cache_node_t *tx_cache)
-{
-    if (tx_cache == NULL)
-    {
-        return;
-    }
-    
-    cache_node_t *write_cache = tx_cache->write_cache;
-
-    // 取消两者之间的关联
-    write_cache->tx_cache = NULL;
-    tx_cache->write_cache = NULL;
-
-    OS_FREE(tx_cache);
-}
-
-// 释放对write cache的占用
-void put_tx_cache(tx_cache_node_t *tx_cache)
-{
-    cache_node_t *write_cache = tx_cache->write_cache;
-
-    ASSERT(write_cache->ref_cnt == 1);  // 一定被引用过一次
-    write_cache->ref_cnt--;
-    
-    //list_del(&tx_cache->node);
-    //free_tx_cache(tx_cache);  // pingpong的时候，再统一释放
-    //write_cache->tx_cache = NULL;
-}
-
-// 分配一个新的事务
-int tx_alloc(cache_mgr_t *mgr, tx_t **new_tx)
-{
-    if (!mgr->allow_new_tx)
-    {
-        LOG_ERROR("new tx is not allowed.\n");
-        return -ERR_NEW_TX_BLOCKED;
-    }
-
-    tx_t *tx = OS_MALLOC(sizeof(tx_t));
-    if (tx == NULL)
-    {
-        LOG_ERROR("alloc memory(%d) failed.\n", sizeof(tx_t));
-        return -ERR_NO_MEMORY;
-    }
-
-    memset(tx, 0, sizeof(tx_t));
-
-    tx->mgr = mgr;
-    list_init_head(&tx->write_cache);
-    tx->tx_id = mgr->cur_tx_id++;
-
-    mgr->onfly_tx_num++;
-
-    *new_tx = tx;
-
-    return SUCCESS;
-}
-
-// 带事务修改时，调用这个接口
-void *tx_get_buffer(tx_t *tx, u64_t block_id)
-{
-    tx_cache_node_t *tx_cache;
-    cache_node_t *write_cache = get_cache_node(tx->mgr, block_id, FOR_WRITE);
-    if (write_cache == NULL)
-        return NULL;
-
-    // 第一次使用，这个write cache还不属于任何tx
-    if (write_cache->ref_cnt == 0)
-    {
-        tx_cache = get_tx_cache(tx, write_cache);
-        if (tx_cache == NULL)
-        {
-            LOG_ERROR("get tx(%llu) cache failed(%d).\n", tx->tx_id, tx->mgr->block_size);
-            return NULL;
-        }
-    }
-    else if (write_cache->owner_tx_id != tx->tx_id)
-    { // 不允许多个事务修改同一个buffer
-        LOG_ERROR("tx(%llu) get tx cache conflict(%llu).\n", tx->tx_id, write_cache->owner_tx_id);
-        return NULL;
-    }
-    else
-    { // 同一个tx多次获取tx cache
-        tx_cache = write_cache->tx_cache;
-        ASSERT(tx_cache != NULL);
-    }
-
-    tx_cache->ref_cnt++;
-    
-    return tx_cache->buf; // 返回临时副本给外面修改使用
-}
-
-// 标记tx buffer dirty
-void tx_mark_buffer_dirty(tx_t *tx, void *tx_buf)
-{
-    tx_cache_node_t *tx_cache = list_entry(tx_buf, tx_cache_node_t, buf);
-
-    ASSERT(tx_cache->ref_cnt != 0);
-    ASSERT(tx_cache->write_cache != NULL);
-
-    if (tx_cache->state != DIRTY)
-    {
-        tx_cache->state = DIRTY;
-    }
-
-    return;
-}
-
-// 带事务修改时，调用这个接口
-void tx_put_buffer(tx_t *tx, void *tx_buf)
-{
-    tx_cache_node_t *tx_cache = list_entry(tx_buf, tx_cache_node_t, buf);
-
-    ASSERT(tx_cache->ref_cnt != 0);
-    ASSERT(tx_cache->write_cache != NULL);
-
-    if (--tx_cache->ref_cnt != 0)
-    { // 说明tx还在引用
-        return;
-    }
-
-    return;
-}
-
-// 将临时申请的tx_write_cache中的内容刷到write_cache中
-void commit_tx_cache(tx_t *tx)
-{
-    list_head_t *pos;
-
-    while ((pos = list_pop_first(&tx->write_cache)) != NULL)
-    {
-        tx_cache_node_t *tx_cache = list_entry(pos, tx_cache_node_t, node);
-        cache_node_t *write_cache = tx_cache->write_cache;
-
-        ASSERT(write_cache->ref_cnt == 1);
-        ASSERT(tx_cache->ref_cnt == 0);
-
-        if (tx_cache->state == DIRTY)
-        {
-            // tx cache的内容生效到write cache中
-            memcpy(write_cache->buf, tx_cache->buf, tx->mgr->block_size);
-            mark_write_cache_dirty(tx->mgr, write_cache); // 此时还不能释放write cache的引用
-
-            tx_cache->state = CLEAN; // 
-        }
-
-        put_tx_cache(tx_cache);
-    }
-}
-
-// 放弃临时申请的tx_write_cache中的内容
-void cancel_tx_cache(tx_t *tx)
-{
-    list_head_t *pos;
-
-    while ((pos = list_pop_first(&tx->write_cache)) != NULL)
-    {
-        tx_cache_node_t *tx_cache = list_entry(pos, tx_cache_node_t, node);
-        cache_node_t *write_cache = tx_cache->write_cache;
-
-        ASSERT(write_cache->ref_cnt == 1);
-
-        if (tx_cache->state == DIRTY)
-        {
-            // 放弃tx cache的内容
-            tx_cache->state = CLEAN; // 
-        }
-
-        put_tx_cache(tx_cache);
-    }
-}
-
 
 // 检查是否达到切换cache的条件，如果达到就切换
 void pingpong_cache_if_possible(cache_mgr_t *mgr)
@@ -585,7 +489,6 @@ void pingpong_cache_if_possible(cache_mgr_t *mgr)
         }
     }
 
-
     // 说明flush还没有下盘完成，此时不可以切换cache
     if (mgr->flush_block_num != 0)
     {
@@ -606,14 +509,127 @@ void pingpong_cache_if_possible(cache_mgr_t *mgr)
     return;
 }
 
-// 提交修改的数据到日志，tx buf中的数据生效到write buf
+// 分配一个新的事务
+int tx_alloc(cache_mgr_t *mgr, tx_t **new_tx)
+{
+    if (!mgr->allow_new_tx)
+    {
+        LOG_ERROR("new tx is not allowed.\n");
+        return -ERR_NEW_TX_BLOCKED;
+    }
+
+    tx_t *tx = OS_MALLOC(sizeof(tx_t));
+    if (tx == NULL)
+    {
+        LOG_ERROR("alloc memory(%d) failed.\n", sizeof(tx_t));
+        return -ERR_NO_MEMORY;
+    }
+
+    memset(tx, 0, sizeof(tx_t));
+
+    tx->mgr = mgr;
+    list_init_head(&tx->rw_cb);
+    tx->tx_id = mgr->cur_tx_id++;
+
+    mgr->onfly_tx_num++;
+
+    *new_tx = tx;
+
+    return SUCCESS;
+}
+
+// 带事务修改时，调用这个接口
+void *tx_get_buffer(tx_t *tx, u64_t block_id)
+{
+    cache_block_t *rw_cb = alloc_cb(tx->mgr, block_id, FOR_WRITE);
+    if (rw_cb == NULL)
+        return NULL;
+
+    if (rw_cb->ref_cnt == 0)
+    { // 第一次使用，这个write buffer还不属于任何tx
+        rw_cb->owner_tx_id = tx->tx_id;
+    }
+    else if (rw_cb->owner_tx_id != tx->tx_id)
+    { // 不允许多个事务修改同一个buffer
+        LOG_ERROR("tx(%llu) get tx cache conflict(%llu).\n", tx->tx_id, rw_cb->owner_tx_id);
+        return NULL;
+    }
+    else
+    { // 同一个tx多次获取tx buffer
+        // do nothing
+    }
+
+    rw_cb->ref_cnt++;
+    
+    return rw_cb->buf;
+}
+
+// 标记tx buffer dirty
+void tx_mark_buffer_dirty(tx_t *tx, void *tx_buf)
+{
+    cache_block_t *rw_cb = list_entry(tx_buf, cache_block_t, buf);
+    ASSERT(rw_cb->ref_cnt != 0);
+    ASSERT(rw_cb->state != EMPTY);
+    
+    if (rw_cb->state == CLEAN)
+    {
+        rw_cb->state = DIRTY;
+        list_add_tail(&tx->rw_cb, &rw_cb->node);
+    }
+
+    return;
+}
+
+// 带事务修改时，调用这个接口
+void tx_put_buffer(tx_t *tx, void *tx_buf)
+{
+    cache_block_t *rw_cb = list_entry(tx_buf, cache_block_t, buf);
+
+    ASSERT(rw_cb->ref_cnt != 0);
+    if (--rw_cb->ref_cnt != 0)
+    { // 说明tx还在引用
+        return;
+    }
+
+    return;
+}
+
+// 将rw cb的内容刷到commit cb上
+void commit_all_cb(tx_t *tx)
+{
+    list_head_t *pos;
+
+    while ((pos = list_pop_first(&tx->rw_cb)) != NULL)
+    {
+        cache_block_t *rw_cb = list_entry(pos, cache_block_t, node);
+        ASSERT(rw_cb->ref_cnt == 0);
+        commit_cb(tx->mgr, rw_cb);
+        rw_cb->ref_cnt = 0; // 允许其他事务引用
+    }
+}
+
+// 放弃rw cb的内容
+void cancel_all_cb(tx_t *tx)
+{
+    list_head_t *pos;
+
+    while ((pos = list_pop_first(&tx->rw_cb)) != NULL)
+    {
+        cache_block_t *rw_cb = list_entry(pos, cache_block_t, node);
+        ASSERT(rw_cb->ref_cnt != 0);
+        cancel_cb(tx->mgr, rw_cb);
+        rw_cb->ref_cnt = 0; // 允许其他事务引用
+    }
+}
+
+// 提交修改的数据到日志，tx buf中的数据生效到commit buf
 void tx_commit(tx_t *tx)
 {
 
-    // 1. 将write_cache中的内容写日志
+    // 1. 将rw cb中的内容写日志
 
     // 2. 将临时申请的cache中的内容刷到write_cache中
-    commit_tx_cache(tx);
+    commit_all_cb(tx);
 
     ASSERT(tx->mgr->onfly_tx_num > 0);
     tx->mgr->onfly_tx_num--;
@@ -630,7 +646,7 @@ void tx_commit(tx_t *tx)
 void tx_cancel(tx_t *tx)
 {
     // 1. 放弃此tx的所有修改
-    cancel_tx_cache(tx);
+    cancel_all_cb(tx);
 
     ASSERT(tx->mgr->onfly_tx_num > 0);
     tx->mgr->onfly_tx_num--;
@@ -642,30 +658,28 @@ void tx_cancel(tx_t *tx)
 }
 
 // 销毁cache，要将read cache、flush cache、write cache都要销毁
-void destroy_cache(cache_node_t *read_cache)
+void destroy_cb(cache_block_t *rw_cb)
 {
-    if (read_cache->side_cache[0] != NULL)
+    if (rw_cb->pp_cb[0] != NULL)
     {
-        free_tx_cache(read_cache->side_cache[0]->tx_cache);
-        free_cache_node(read_cache->side_cache[0]);
+        free_cache_block(rw_cb->pp_cb[0]);
     }
     
-    if (read_cache->side_cache[1] != NULL)
+    if (rw_cb->pp_cb[1] != NULL)
     {
-        free_tx_cache(read_cache->side_cache[1]->tx_cache);
-        free_cache_node(read_cache->side_cache[1]);
+        free_cache_block(rw_cb->pp_cb[1]);
     }
     
-    free_cache_node(read_cache);
+    free_cache_block(rw_cb);
 }
 
 // 销毁所有的cache
 void destroy_all_caches(hashtab_t *h)
 {
-    cache_node_t *read_cache;
+    cache_block_t *rw_cb;
 
-    while ((read_cache = hashtab_pop_first(h)) != NULL)
-        destroy_cache(read_cache);
+    while ((rw_cb = hashtab_pop_first(h)) != NULL)
+        destroy_cb(rw_cb);
 }
 
 // 退出cache系统
@@ -711,7 +725,7 @@ uint32_t hash_key(hashtab_t *h, void *key)
 int compare_key(hashtab_t *h, void *key, void *value)
 {
     u64_t block_id1 = (u64_t)key;
-    u64_t block_id2 = ((cache_node_t *)value)->block_id;
+    u64_t block_id2 = ((cache_block_t *)value)->block_id;
 
     if (block_id1 > block_id2)
         return 1;
@@ -745,7 +759,7 @@ cache_mgr_t *tx_cache_init_system(char *bd_name, uint32_t block_size, space_ops_
         return NULL;
     }
 
-    mgr->hcache = hashtab_create(hash_key, compare_key, 1000, offsetof(cache_node_t, hnode));
+    mgr->hcache = hashtab_create(hash_key, compare_key, 1000, offsetof(cache_block_t, hnode));
     if (mgr->hcache == NULL)
     {
         tx_cache_exit_system(mgr);
@@ -768,7 +782,7 @@ cache_mgr_t *tx_cache_init_system(char *bd_name, uint32_t block_size, space_ops_
 }
 
 
-#if 1  // 临时代码
+#if 0  // 临时代码
 
 #include "disk_if.h"
 
