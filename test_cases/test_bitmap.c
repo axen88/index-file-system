@@ -49,59 +49,60 @@ space_ops_t test_bd_ops
 // ≤‚ ‘bit
 void test_bitmap_case0(void)
 {
-    u64_t dat;
+    u64_t buf[3] = {0};
+    uint32_t x;
 
-    dat = 0;
-    set_bit(&dat, 0);
-    CU_ASSERT(dat == 1);
-    set_bit(&dat, 1);
-    CU_ASSERT(dat == 3);
-    set_bit(&dat, 63);
-    CU_ASSERT(dat == 0x8000000000000003);
-    set_bit(&dat, 63);
-    CU_ASSERT(dat == 0x8000000000000003);
-    set_bit(&dat, 62);
-    CU_ASSERT(dat == 0xC000000000000003);
-    set_bit(&dat, 4);
-    CU_ASSERT(dat == 0xC000000000000013);
-
-    CU_ASSERT(check_bit(&dat, 0) == TRUE);
-    CU_ASSERT(check_bit(&dat, 1) == TRUE);
-    CU_ASSERT(check_bit(&dat, 63) == TRUE);
-    CU_ASSERT(check_bit(&dat, 4) == TRUE);
-    CU_ASSERT(check_bit(&dat, 62) == TRUE);
-    CU_ASSERT(check_bit(&dat, 2) == FALSE);
-    CU_ASSERT(check_bit(&dat, 3) == FALSE);
-
-    clr_bit(&dat, 62);
-    CU_ASSERT(dat == 0x8000000000000013);
-    clr_bit(&dat, 0);
-    CU_ASSERT(dat == 0x8000000000000012);
-    clr_bit(&dat, 1);
-    CU_ASSERT(dat == 0x8000000000000010);
-    clr_bit(&dat, 63);
-    CU_ASSERT(dat == 0x0000000000000010);
-    clr_bit(&dat, 4);
-    CU_ASSERT(dat == 0x0000000000000000);
+    x = set_buf_first_0bit(buf, 0, 3);
+    CU_ASSERT(x == 0);
+    CU_ASSERT(buf[0] == 0x0000000000000001);
     
-    CU_ASSERT(check_bit(&dat, 0) == FALSE);
-    CU_ASSERT(check_bit(&dat, 1) == FALSE);
-    CU_ASSERT(check_bit(&dat, 63) == FALSE);
-    CU_ASSERT(check_bit(&dat, 4) == FALSE);
-    CU_ASSERT(check_bit(&dat, 62) == FALSE);
-    CU_ASSERT(check_bit(&dat, 2) == FALSE);
-    CU_ASSERT(check_bit(&dat, 3) == FALSE);
+    x = set_buf_first_0bit(buf, 0, 3);
+    CU_ASSERT(x == 1);
+    CU_ASSERT(buf[0] == 0x0000000000000003);
+    
+    x = set_buf_first_0bit(buf, 0, 3);
+    CU_ASSERT(x == 2);
+    CU_ASSERT(buf[0] == 0x0000000000000007);
+    
+    x = set_buf_first_0bit(buf, 0, 3);
+    CU_ASSERT(x == INVALID_U32);
 
-    dat = 0x8000000000000012;
+    buf[0] = 0x0FFFFFFFFFFFFFFF;
+    x = set_buf_first_0bit(buf, 0, 65);
+    CU_ASSERT(x == 60);
+    CU_ASSERT(buf[0] == 0x1FFFFFFFFFFFFFFF);
+    
+    buf[0] = 0x7FFFFFFFFFFFFFFF;
+    x = set_buf_first_0bit(buf, 0, 65);
+    CU_ASSERT(x == 63);
+    CU_ASSERT(buf[0] == 0xFFFFFFFFFFFFFFFF);
+    
+    x = set_buf_first_0bit(buf, 0, 65);
+    CU_ASSERT(x == 64);
+    CU_ASSERT(buf[0] == 0xFFFFFFFFFFFFFFFF);
+    CU_ASSERT(buf[1] == 0x0000000000000001);
 
-    CU_ASSERT(set_dat_first_0bit(&dat, 0) == 0);
-    CU_ASSERT(set_dat_first_0bit(&dat, 0) == 2);
-    CU_ASSERT(set_dat_first_0bit(&dat, 0) == 3);
-    CU_ASSERT(dat == 0x800000000000001F);
-    CU_ASSERT(set_dat_first_0bit(&dat, 7) == 7);
-    CU_ASSERT(dat == 0x800000000000009F);
-    CU_ASSERT(set_dat_first_0bit(&dat, 7) == 8);
-    CU_ASSERT(dat == 0x800000000000019F);
+    x = set_buf_first_0bit(buf, 0, 65);
+    CU_ASSERT(x == INVALID_U32);
+
+    buf[0] = 0xFFFFFFFFFFFFFFFF;
+    buf[1] = 0xFFFFFFFFFFFFFFFF;
+    buf[2] = 0x0000000000000001;
+    x = set_buf_first_0bit(buf, 0, 130);
+    CU_ASSERT(x == 129);
+    CU_ASSERT(buf[0] == 0xFFFFFFFFFFFFFFFF);
+    CU_ASSERT(buf[1] == 0xFFFFFFFFFFFFFFFF);
+    CU_ASSERT(buf[2] == 0x0000000000000003);
+
+    buf[0] = 0xFFFFFFFFFFFFFFFF;
+    buf[1] = 0xFFFFFFFFFFFFFFFF;
+    buf[2] = 0x0000000000000001;
+    x = set_buf_first_0bit(buf, 128, 2);
+    CU_ASSERT(x == 129);
+    CU_ASSERT(buf[0] == 0xFFFFFFFFFFFFFFFF);
+    CU_ASSERT(buf[1] == 0xFFFFFFFFFFFFFFFF);
+    CU_ASSERT(buf[2] == 0x0000000000000003);
+
 }
 
 // ≤‚ ‘

@@ -44,73 +44,95 @@ extern "C"
 {
 #endif
 
-#define BITS_PER_U64     64
-#define BYTES_PER_U64    8
+#define U64_ALL_1     INVALID_U64
 
-// 检查某个位是否为1
-static inline bool_t check_bit(u64_t *dat, uint32_t pos)
-{
-    ASSERT(pos < BITS_PER_U64);
-    return (*dat & ((u64_t)1 << (pos & (BITS_PER_U64 - 1)))) ? TRUE : FALSE;
-}
-
-// 设置某个位为1
-static inline void set_bit(u64_t *dat, uint32_t pos)
-{
-    ASSERT(pos < BITS_PER_U64);
-    *dat |= ((u64_t)1 << (pos & (BITS_PER_U64 - 1)));
-}
-
-// 设置某个位为0
-static inline void clr_bit(u64_t *dat, uint32_t pos)
-{
-    ASSERT(pos < BITS_PER_U64);
-    *dat &= ~((u64_t)1 << (pos & (BITS_PER_U64 - 1)));
-}
-
-// 获取第一个不为0的位，设置为1，并返回这个位置
-static inline uint32_t set_dat_first_0bit(u64_t *dat, uint32_t start_pos)
+// 获取第一个不为0的位，设置为1，并返回这个位置；total_bits为从start_bit开始
+static inline uint32_t set_dat_first_0bit(u64_t *dat, uint32_t start_bit, uint32_t total_bits)
 {
     uint32_t i;
     
-    ASSERT(start_pos < BITS_PER_U64);
+    ASSERT(start_bit + total_bits <= BITS_PER_U64);
 
-    for (i = start_pos; i < BITS_PER_U64; i++)
+    for (i = 0; i < total_bits; i++)
     {
-        if (!check_bit(dat, i))
+        if (!GET_BIT(*dat, start_bit))
         {
-            set_bit(dat, i);
-            return i;
+            *dat = SET_BIT(*dat, start_bit);
+            return start_bit;
         }
-    }
 
-    ASSERT(0);
+        start_bit++;
+    }
 
     return INVALID_U32;
 }
 
-#define U64_ALL_1  INVALID_U64
-
-// 
-static inline uint32_t set_buf_first_0bit(void *buf, uint32_t buf_size, uint32_t start_pos)
+// total_bits为从buf[0]的bit0开始
+static inline uint32_t set_buf_first_0bit(u64_t *buf, uint32_t start_bit, uint32_t total_bits)
 {
-    u64_t *dat = buf;
     uint32_t i;
-    uint32_t end_pos = roundup(buf_size, BYTES_PER_U64);
+    uint32_t n;
+    uint32_t left;
+    uint32_t start_bit_in_u64;
     
     ASSERT(NULL != buf);
 
-    ASSERT((buf_size % BITS_PER_U64) == 0);
+    i = start_bit >> BITS_PER_U64_SHIFT;
+    start_bit_in_u64 = start_bit & MASK_N(BITS_PER_U64_SHIFT);
+    n = roundup3(total_bits + start_bit_in_u64, BITS_PER_U64_SHIFT);
 
-    for (i = start_pos / BYTES_PER_U64; i < end_pos; i++)
+    if (start_bit_in_u64)
     {
-        if (buf[i] == U64_ALL_1)
-            continue;
+        start_bit -= start_bit_in_u64;
+        left = BITS_PER_U64 - start_bit_in_u64;
+        start_bit_in_u64 = set_dat_first_0bit(&buf[i], start_bit_in_u64, left);
+        if (start_bit_in_u64 != INVALID_U32)
+        {
+            return start_bit_in_u64 + start_bit;
+        }
+        
+        start_bit += BITS_PER_U64;
+        total_bits -= left;
+    }
 
-        return ((i * BITS_PER_U64) + set_dat_first_0bit(&buf[i], start_pos % BITS_PER_U64));
+    while (i < n)
+    {
+        if (buf[i] != U64_ALL_1)
+            break;
+
+        i++;
+        if (total_bits >= BITS_PER_U64)
+        {
+            total_bits -= BITS_PER_U64;
+            start_bit += BITS_PER_U64;
+        }
+    }
+
+    if (total_bits == 0)
+        return INVALID_U32;
+
+    left = (total_bits > BITS_PER_U64) ? BITS_PER_U64 : total_bits;
+    start_bit_in_u64 = set_dat_first_0bit(&buf[i], 0, left);
+    if (start_bit_in_u64 != INVALID_U32)
+    {
+        return start_bit_in_u64 + start_bit;
     }
 
     return INVALID_U32;
+}
+
+static inline void clr_buf_bit(u64_t *buf, uint32_t start_bit)
+{
+    ASSERT(NULL != buf);
+    
+    buf[start_bit >> BITS_PER_U64_SHIFT] &= ~(1 << (start_bit & MASK_N(BITS_PER_U64_SHIFT)));
+}
+
+static inline void set_buf_bit(u64_t *buf, uint32_t start_bit)
+{
+    ASSERT(NULL != buf);
+    
+    buf[start_bit >> BITS_PER_U64_SHIFT] |= (1 << (start_bit & MASK_N(BITS_PER_U64_SHIFT)));
 }
 
 // 可以用来管理块

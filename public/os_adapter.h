@@ -128,11 +128,11 @@ extern "C" {
 //
 // Bits operations
 //
-#define SetBits(x, bs) ((x) |= (bs))
-#define ClrBits(x, bs) ((x) &= ~(bs))
-#define GetBits(x, bs) ((x) & (bs))
+#define GET_BIT(x, n)    ((x) & ((u64_t)1 << (n)))
+#define SET_BIT(x, n)    ((x) | ((u64_t)1 << (n)))
+#define CLR_BIT(x, n)    ((x) | ((u64_t)1 << (n)))
     
-#define ArraySize(a)           (sizeof(a) / sizeof(a[0])) // Get array size
+#define ARRAY_SIZE(a)           (sizeof(a) / sizeof(a[0])) // Get array size
 
 #define DESC(x) 1
 
@@ -142,11 +142,7 @@ extern "C" {
 #define OS_CONTAINER(ptr, type, member) \
     ((type *)(((char *)(ptr)) - OS_OFFSET(type, member)))
     
-#define RoundUp(num, round)    (((num) + ((round) - 1)) & ~((round) - 1))
-#define RoundUp2(num, round, roundShift)    (((num) + ((round) - 1)) >> roundShift)
-#define RoundUp3(num, round)    (((num) + ((round) - 1)) / (round))
 
-#define RoundDown(num, round)  ((num) & ~((round) - 1))
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
@@ -154,8 +150,12 @@ extern "C" {
 #define to_str(x)  (#x)
 #define offsetof(TYPE, MEMBER)	((size_t)&((TYPE *)0)->MEMBER)
 
-#define roundup(x, size)   (((x) + (size) - 1) / (size))
-#define rounddown(x, size) ((x) / (size))
+#define roundup(n, size)       (((n) + (size) - 1) / (size))
+#define roundup2(n, size)      (((n) + ((size) - 1)) & ~((size) - 1))
+#define roundup3(n, shift)     (((n) + ((u64_t)1 << (shift)) - 1) >> (shift))
+
+#define rounddown(n, size)     ((n) / (size))
+#define rounddown2(n, size)    ((n) & ~((size) - 1))
 
 
 #define SUCCESS 0
@@ -222,6 +222,8 @@ static inline void destroy_threads_group(threads_group_t *threads_group, bool_t 
 }
     
 
+#define INVALID_U8   (0xFF)
+#define INVALID_U16  (0xFFFF)
 #define INVALID_U32  (0xFFFFFFFF)
 #define INVALID_U64  (0xFFFFFFFFFFFFFFFF)
 
@@ -233,11 +235,17 @@ static inline void destroy_threads_group(threads_group_t *threads_group, bool_t 
 #define BITS_PER_BYTE_SHIFT 3
 #endif
 
-
-
 #ifndef BITS_PER_BYTE
 #define BITS_PER_BYTE (1 << BITS_PER_BYTE_SHIFT)
 #endif
+
+#define BITS_PER_U64_SHIFT 6
+
+#ifndef BITS_PER_U64
+#define BITS_PER_U64 (1 << BITS_PER_U64_SHIFT)
+#endif
+
+#define MASK_N(shift)  (((u64_t)1 << (shift)) -1) 
 
 //static uint32_t g_pid = PID_INDEX;
 #define MODULE(pid)  static uint32_t g_pid = (pid)    

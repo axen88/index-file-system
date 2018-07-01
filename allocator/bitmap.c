@@ -115,11 +115,11 @@ void set_nbits(u64_t *buf, uint32_t pos, uint32_t num, bool_t value)
     {
         if (value)
         {
-            set_bit(buf, pos++);
+           // SET_BIT(buf, pos++);
         }
         else
         {
-            clr_bit(buf, pos++);
+           // CLR_BIT(buf, pos++);
         }
     }
 
