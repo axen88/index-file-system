@@ -42,25 +42,19 @@ MODULE(PID_BITMAP);
 
 
 // 查询文件中位图区域为0的区域
-u64_t bitmap_set_first_0bit(bitmap_hnd_t *hnd, u64_t start_pos)
+u64_t bitmap_set_first_0bit(tx_t *tx, bitmap_hnd_t *hnd, u64_t start_pos)
 {
-    ASSERT(NULL != hnd);
     cache_mgr_t *mgr = hnd->cache_mgr;
-    tx_t *tx;
     int ret;
     u64_t *tx_buf;
     u64_t block_id;
     uint32_t block_cnt;
     
-    ret = tx_alloc(mgr, &tx);
-    if (ret)
-        return ret;
-
     block_cnt = 0;
     block_id = start_pos / hnd->bits_per_block;
     while (block_cnt < hnd->total_bit_blocks)
     {
-        tx_buf = tx_get_buffer(tx, block_id);
+        tx_buf = tx_get_buffer(tx, block_id, M_RW);
 
 
 
@@ -73,8 +67,6 @@ u64_t bitmap_set_first_0bit(bitmap_hnd_t *hnd, u64_t start_pos)
             block_id = 0; // 从头开始找
         }
     }
-
-    tx_commit(tx);
 
     return 0;
 }
@@ -95,7 +87,7 @@ int32_t clean_all_bits(bitmap_hnd_t *hnd)
 
     for (block_id = 0; block_id < hnd->total_bit_blocks; block_id++)
     {
-        tx_buf = tx_get_buffer(tx, block_id);
+        tx_buf = tx_get_buffer(tx, block_id, M_WR);
         memset(tx_buf, 0, hnd->block_size);
         tx_mark_buffer_dirty(tx, tx_buf);
         tx_put_buffer(tx, tx_buf);
@@ -104,26 +96,6 @@ int32_t clean_all_bits(bitmap_hnd_t *hnd)
     tx_commit(tx);
 
     return 0;
-}
-
-// 设置内存中多个位为指定值
-void set_nbits(u64_t *buf, uint32_t pos, uint32_t num, bool_t value)
-{
-    ASSERT(NULL != buf);
-
-    while (num--)
-    {
-        if (value)
-        {
-           // SET_BIT(buf, pos++);
-        }
-        else
-        {
-           // CLR_BIT(buf, pos++);
-        }
-    }
-
-    return;
 }
 
 // 设置指定bit的值
@@ -140,8 +112,8 @@ int32_t bitmap_set_bit(bitmap_hnd_t *hnd, u64_t pos, bool_t value)
     if (ret)
         return ret;
 
-    tx_buf = tx_get_buffer(tx, block_id);
-    set_nbits(tx_buf, pos % hnd->bits_per_block, 1, value);
+    tx_buf = tx_get_buffer(tx, block_id, M_RW);
+    set_buf_bit(tx_buf, pos % hnd->bits_per_block);
     tx_mark_buffer_dirty(tx, tx_buf);
     tx_put_buffer(tx, tx_buf);
 

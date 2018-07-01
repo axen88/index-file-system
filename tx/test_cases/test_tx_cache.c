@@ -167,12 +167,12 @@ void test_tx_case0(void)
     CU_ASSERT(mgr->flush_sn == 0);
 
     // 对一个块先写后读
-    tx_buf = tx_get_buffer(tx, BLOCK_ID1);
+    tx_buf = tx_get_buffer(tx, BLOCK_ID1, M_RW);
     CU_ASSERT(tx_buf != NULL);
     tx_buf1 = tx_buf;
-    tx_buf = tx_get_buffer(tx, BLOCK_ID1);
+    tx_buf = tx_get_buffer(tx, BLOCK_ID1, M_RW);
     CU_ASSERT(tx_buf == tx_buf1);
-    tx_buf = tx_get_buffer(tx, BLOCK_ID1);
+    tx_buf = tx_get_buffer(tx, BLOCK_ID1, M_RW);
     CU_ASSERT(tx_buf == tx_buf1);
     tx_buf[0] = 0x1122334455667788;  // 修改内容
     tx_buf[1] = 0x55AA55AA55AA55AA;  // 修改内容
@@ -204,7 +204,7 @@ void test_tx_case0(void)
     CU_ASSERT(rw_buf[2] == tx_buf[2]);
     
     CU_ASSERT(tx_alloc(mgr, &tx) == 0);
-    tx_buf = tx_get_buffer(tx, BLOCK_ID1);
+    tx_buf = tx_get_buffer(tx, BLOCK_ID1, M_RW);
     CU_ASSERT(tx_buf != NULL);
     tx_buf[0] = ~0x1122334455667788;  // 修改内容
     tx_buf[1] = ~0x55AA55AA55AA55AA;  // 修改内容
@@ -242,7 +242,7 @@ void test_tx_case1(void)
     CU_ASSERT(mgr->flush_sn == 0);
 
     // 对一个块先写后读
-    tx_buf = tx_get_buffer(tx, BLOCK_ID1);
+    tx_buf = tx_get_buffer(tx, BLOCK_ID1, M_RW);
     CU_ASSERT(tx_buf != NULL);
     tx_buf[0] = 0x1122334455667788;  // 修改内容
     tx_buf[1] = 0x55AA55AA55AA55AA;  // 修改内容
@@ -270,7 +270,7 @@ void test_tx_case1(void)
     
     CU_ASSERT(mgr->modified_block_num == 0);
     
-    tx_buf = tx_get_buffer(tx, BLOCK_ID1);
+    tx_buf = tx_get_buffer(tx, BLOCK_ID1, M_RW);
     CU_ASSERT(tx_buf != NULL);
     CU_ASSERT(tx_buf[0] == 0);
     CU_ASSERT(tx_buf[1] == 0);

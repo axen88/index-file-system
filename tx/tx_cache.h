@@ -42,6 +42,10 @@ typedef enum
     BUF_TYPE_NUM
 } BUF_TYPE_E;
 
+#define M_RD   (1 << 0)
+#define M_WR   (1 << 1)
+#define M_RW   (M_RD | M_WR)
+
 // 获取buf的用途
 typedef enum
 {
@@ -79,7 +83,7 @@ typedef struct cache_block
     u64_t    owner_tx_id;    // 写cache时，只有一个事务能拥有
     
     BUF_STATE_E state;    // TODO
-    BUF_USAGE_E usage;     // 
+    uint32_t    mode;     // 
     
     hashtab_node_t hnode; // 在hashtab中登记
     list_head_t    node;  // 在tx中登记
@@ -150,7 +154,7 @@ typedef struct
 int tx_alloc(cache_mgr_t *mgr, tx_t **new_tx);
 
 // 带事务修改时，调用这个接口
-void *tx_get_buffer(tx_t *tx, u64_t block_id);
+void *tx_get_buffer(tx_t *tx, u64_t block_id, uint32_t mode);
 
 // 标记tx buffer dirty
 void tx_mark_buffer_dirty(tx_t *tx, void *tx_buf);
@@ -173,7 +177,7 @@ void tx_cache_exit_system(cache_mgr_t *mgr);
 
 
 // 必须和put_buffer、commit_buffer、cancel_buffer配合使用
-void *get_buffer(cache_mgr_t *mgr, u64_t block_id, BUF_USAGE_E usage);
+void *get_buffer(cache_mgr_t *mgr, u64_t block_id, uint32_t mode);
 
 
 // 必须和put_buffer、commit_buffer、cancel_buffer配合使用

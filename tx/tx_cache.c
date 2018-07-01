@@ -157,11 +157,9 @@ int32_t fill_rw_cb(cache_mgr_t *mgr, cache_block_t *rw_cb)
 }
 
 // 获取指定类型的cache block
-cache_block_t *alloc_cb(cache_mgr_t *mgr, u64_t block_id, BUF_USAGE_E usage)
+cache_block_t *alloc_cb(cache_mgr_t *mgr, u64_t block_id, uint32_t mode)
 {
     int ret;
-
-    ASSERT(usage < BUF_USAGE_NUM);
 
     // hash表中只记录rw cache block
     cache_block_t *rw_cb = hashtab_search(mgr->hcache, (void *)block_id);
@@ -183,8 +181,8 @@ cache_block_t *alloc_cb(cache_mgr_t *mgr, u64_t block_id, BUF_USAGE_E usage)
             return NULL;
         }
 
-        // 第一次就以写的方式申请，说明不用管盘上的数据
-        if (usage == FOR_WRITE)
+        // 未指定读，说明不用管盘上的数据
+        if (!(mode & M_RD))
         {
             memset(rw_cb->buf, 0, mgr->block_size);
             rw_cb->state = CLEAN; // 直接认为读cache上的数据就是有效的，全0，不用读盘
@@ -199,13 +197,13 @@ cache_block_t *alloc_cb(cache_mgr_t *mgr, u64_t block_id, BUF_USAGE_E usage)
         return NULL;
     }
 
-    if (usage == FOR_READ)
+    rw_cb->mode = mode;
+    
+    if (!(mode & M_WR)) // 未指定写
     {
-        rw_cb->usage = FOR_READ;
         return rw_cb;
     }
     
-    ASSERT(usage == FOR_WRITE);
     cache_block_t *commit_cb = alloc_commit_cb(mgr, rw_cb);  // 确保commit cb申请成功，才能写
     if (commit_cb == NULL)
     {
@@ -213,7 +211,6 @@ cache_block_t *alloc_cb(cache_mgr_t *mgr, u64_t block_id, BUF_USAGE_E usage)
         return NULL;
     }
 
-    rw_cb->usage = FOR_WRITE;
     return rw_cb;
 }
 
@@ -257,9 +254,9 @@ void *get_buffer_by_type(cache_mgr_t *mgr, u64_t block_id, BUF_TYPE_E buf_type)
 }
 
 // 必须和put_buffer、commit_buffer、cancel_buffer配合使用
-void *get_buffer(cache_mgr_t *mgr, u64_t block_id, BUF_USAGE_E usage)
+void *get_buffer(cache_mgr_t *mgr, u64_t block_id, uint32_t mode)
 {
-    cache_block_t *cache = alloc_cb(mgr, block_id, usage);
+    cache_block_t *cache = alloc_cb(mgr, block_id, mode);
     if (cache == NULL)
         return NULL;
 
@@ -539,9 +536,9 @@ int tx_alloc(cache_mgr_t *mgr, tx_t **new_tx)
 }
 
 // 带事务修改时，调用这个接口
-void *tx_get_buffer(tx_t *tx, u64_t block_id)
+void *tx_get_buffer(tx_t *tx, u64_t block_id, uint32_t mode)
 {
-    cache_block_t *rw_cb = alloc_cb(tx->mgr, block_id, FOR_WRITE);
+    cache_block_t *rw_cb = alloc_cb(tx->mgr, block_id, mode);
     if (rw_cb == NULL)
         return NULL;
 
