@@ -13,27 +13,27 @@
 #include "bitmap.h"
 
 // 操作函数定义
-int test_bd_open(void **hnd, char *bd_name)
+static int test_bd_open(void **hnd, char *bd_name)
 {
     return os_disk_open(hnd, bd_name);
 }
 
-int test_bd_read(void *hnd, void *buf, int size, u64_t offset)
+static int test_bd_read(void *hnd, void *buf, int size, u64_t offset)
 {
     return os_disk_pread(hnd, buf, size, offset);
 }
 
-int test_bd_write(void *hnd, void *buf, int size, u64_t offset)
+static int test_bd_write(void *hnd, void *buf, int size, u64_t offset)
 {
     return os_disk_pwrite(hnd, buf, size, offset);
 }
 
-void test_bd_close(void *hnd)
+static void test_bd_close(void *hnd)
 {
     os_disk_close(hnd);
 }
 
-space_ops_t test_bd_ops
+static space_ops_t test_bd_ops
 = {
     "test_bd_ops",
         
@@ -148,3 +148,21 @@ int test_bitmap_clean(void)
 }  
   
 
+// 定义suite数组，包括多个suite，每个suite又会包括若干个测试方法。  
+CU_SuiteInfo test_bitmap_suites[]
+= {  
+    {"test_bitmap_suite", test_bitmap_init, test_bitmap_clean, test_bitmap_cases},  
+    CU_SUITE_INFO_NULL  
+};  
+  
+//  
+void add_test_bitmap_suites(void)
+{  
+    assert(NULL != CU_get_registry());  
+    assert(!CU_is_test_running());  
+
+    if (CUE_SUCCESS != CU_register_suites(test_bitmap_suites))
+    {  
+        exit(EXIT_FAILURE);  
+    }  
+}  

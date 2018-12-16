@@ -10,16 +10,13 @@
 #include <CUnit/Automated.h>  
 
 // 测试用例集合
-extern CU_TestInfo test_bitmap_cases[];
-int test_bitmap_init(void);
-int test_bitmap_clean(void);
-
+void add_test_bitmap_suites(void);
+void add_tx_cache_suites(void);
   
 // suite初始化过程 
 int suite_success_init(void)
 {  
     return 0;  
-      
 }  
   
 // suite清理过程，以便恢复原状，使结果不影响到下次运行 
@@ -28,23 +25,14 @@ int suite_success_clean(void)
     return 0;  
 }  
   
-// 定义suite数组，包括多个suite，每个suite又会包括若干个测试方法。  
-CU_SuiteInfo suites[]
-= {  
-    {"test_bitmap_suite", test_bitmap_init, test_bitmap_clean, test_bitmap_cases},  
-    CU_SUITE_INFO_NULL  
-};  
-  
 // 测试类的调用总接口 
 void add_test_suites(void)
 {  
     assert(NULL != CU_get_registry());  
     assert(!CU_is_test_running());  
   
-    if (CUE_SUCCESS != CU_register_suites(suites))
-    {  
-        exit(EXIT_FAILURE);  
-    }  
+    add_test_bitmap_suites();
+	add_tx_cache_suites();
 }  
 
 // 运行测试入口 
