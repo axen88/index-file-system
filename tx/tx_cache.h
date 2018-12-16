@@ -119,11 +119,6 @@ typedef struct
 
     hashtab_t *hcache;              // 所有的数据块缓存在这都能快速找到
 
-    // write_cache -> flush_cache -> read_cache
-    //list_head_t read_cache;        // 只读cache，从盘上读到的未经修改过的数据
-    //list_head_t checkin_cache;     // 正在下盘的cache
-
-
     // 块设备操作
     void *bd_hnd;         // block device handle
     space_ops_t *bd_ops;  // block device operations
@@ -138,6 +133,35 @@ typedef struct
     list_head_t rw_cb;  // 本事务修改过或正在修改的cache，commit或cancel时使用
 } tx_t;
 
+// 必须和put_buffer、commit_buffer、cancel_buffer配合使用
+void *get_buffer_by_type(cache_mgr_t *mgr, u64_t block_id, BUF_TYPE_E buf_type);
+
+// checkpoint, 也就是将commit cache和flush cache交换
+void checkpoint_all_cache_block(cache_mgr_t *mgr);
+
+// 将当前mgr中所有的flush cache的内容下盘
+int flush_all_cb(cache_mgr_t *mgr);
+
+// 将所有flush buffer中的脏数据下盘
+int flush_all_cache_block(cache_mgr_t *mgr);
+
+// 必须和put_buffer、commit_buffer、cancel_buffer配合使用
+void *get_buffer(cache_mgr_t *mgr, u64_t block_id, uint32_t mode);
+
+// 必须和get_buffer配合使用
+void put_buffer(cache_mgr_t *mgr, void *buf);
+
+// 标记buffer dirty
+void mark_buffer_dirty(cache_mgr_t *mgr, void *rw_buf);
+
+// commit buffer
+int32_t commit_buffer(cache_mgr_t *mgr, void *rw_buf);
+
+// cancel buffer
+void cancel_buffer(cache_mgr_t *mgr, void *rw_buf);
+
+
+#if DESC("对外接口")
 
 // 分配一个新的事务
 int tx_alloc(cache_mgr_t *mgr, tx_t **new_tx);
@@ -157,46 +181,14 @@ int tx_commit(tx_t *tx);
 // 放弃这个事务的所有修改
 void tx_cancel(tx_t *tx);
 
-
 // 初始化cache系统
 cache_mgr_t *tx_cache_init_system(char *bd_name, uint32_t block_size, space_ops_t *bd_ops);
 
 // 退出cache系统
 void tx_cache_exit_system(cache_mgr_t *mgr);
 
+#endif
 
-// 必须和put_buffer、commit_buffer、cancel_buffer配合使用
-void *get_buffer(cache_mgr_t *mgr, u64_t block_id, uint32_t mode);
-
-
-// 必须和put_buffer、commit_buffer、cancel_buffer配合使用
-void *get_buffer_by_type(cache_mgr_t *mgr, u64_t block_id, BUF_TYPE_E buf_type);
-
-// 必须和get_buffer配合使用
-void put_buffer(cache_mgr_t *mgr, void *buf);
-
-// 标记buffer dirty
-void mark_buffer_dirty(cache_mgr_t *mgr, void *rw_buf);
-
-// commit buffer
-int32_t commit_buffer(cache_mgr_t *mgr, void *rw_buf);
-
-// cancel buffer
-void cancel_buffer(cache_mgr_t *mgr, void *rw_buf);
-
-// checkpoint, 也就是将commit cache和flush cache交换
-void checkpoint_all_cache_block(cache_mgr_t *mgr);
-
-// 将当前mgr中所有的flush cache的内容下盘
-int flush_all_cb(cache_mgr_t *mgr);
-
-// 将所有flush buffer中的脏数据下盘
-int flush_all_cache_block(cache_mgr_t *mgr);
-
-
-
-
-//extern space_ops_t bd_ops;
 
 #ifdef __cplusplus
 }
