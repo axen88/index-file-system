@@ -54,7 +54,7 @@ u64_t bitmap_set_first_0bit(tx_t *tx, bitmap_hnd_t *hnd, u64_t start_pos)
     block_id = start_pos / hnd->bits_per_block;
     while (block_cnt < hnd->total_bit_blocks)
     {
-        tx_buf = tx_get_buffer(tx, block_id, M_RW);
+        tx_buf = tx_get_buffer(tx, block_id, F_NO_READ);
 
 
 
@@ -87,7 +87,7 @@ int32_t clean_all_bits(bitmap_hnd_t *hnd)
 
     for (block_id = 0; block_id < hnd->total_bit_blocks; block_id++)
     {
-        tx_buf = tx_get_buffer(tx, block_id, M_WR);
+        tx_buf = tx_get_buffer(tx, block_id, F_NO_READ);
         memset(tx_buf, 0, hnd->block_size);
         tx_mark_buffer_dirty(tx, tx_buf);
         tx_put_buffer(tx, tx_buf);
@@ -112,7 +112,7 @@ int32_t bitmap_set_bit(bitmap_hnd_t *hnd, u64_t pos, bool_t value)
     if (ret)
         return ret;
 
-    tx_buf = tx_get_buffer(tx, block_id, M_RW);
+    tx_buf = tx_get_buffer(tx, block_id, 0);
     set_buf_bit(tx_buf, pos % hnd->bits_per_block);
     tx_mark_buffer_dirty(tx, tx_buf);
     tx_put_buffer(tx, tx_buf);
