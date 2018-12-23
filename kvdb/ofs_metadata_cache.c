@@ -38,7 +38,7 @@ History:
 
 #include "ofs_if.h"
 
-MODULE(PID_CACHE);
+MODULE(MID_CACHE);
 #include "log.h"
 
 

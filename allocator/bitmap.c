@@ -36,9 +36,9 @@
 #include "os_adapter.h"
 #include "globals.h"
 #include "bitmap.h"
-
-MODULE(PID_BITMAP);
 #include "log.h"
+
+MODULE(MID_BITMAP);
 
 // 查询文件中位图区域为0的区域
 u64_t bitmap_set_first_0bit(tx_t *tx, bitmap_mgr_t *bmp, u64_t start_pos)
@@ -109,7 +109,7 @@ int32_t clean_all_bits(bitmap_mgr_t *bmp)
     char *bmp_buf;
     u64_t block_id;
     
-    ret = tx_alloc(bmp->cache_mgr, &tx);
+    ret = tx_create(bmp->cache_mgr, M_NO_JOURNAL, &tx);
     if (ret)
     {
         LOG_ERROR("alloc tx failed(%d)\n", ret);
@@ -151,7 +151,7 @@ int32_t bitmap_set_bit(bitmap_mgr_t *bmp, u64_t pos, bool_t value)
     u64_t    block_id     = pos / bmp->bits_per_block;
     uint32_t pos_in_block = pos % bmp->bits_per_block;
     
-    ret = tx_alloc(bmp->cache_mgr, &tx);
+    ret = tx_create(bmp->cache_mgr, 0, &tx);
     if (ret)
     {
         LOG_ERROR("alloc tx failed(%d)\n", ret);

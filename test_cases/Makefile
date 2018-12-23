@@ -12,7 +12,7 @@ TEST_SUITE_MAIN = test_suite_main
 PUBLIC_DIR = ../public
 
 PUBLIC_SRC = $(PUBLIC_DIR)/log.c $(PUBLIC_DIR)/file_if.c $(PUBLIC_DIR)/utils.c $(PUBLIC_DIR)/hashtab.c
-TEST_SRC = test_bitmap.c test_tx_cache.c ../allocator/bitmap.c ../tx/tx_cache.c $(PUBLIC_SRC) 
+TEST_SRC = test_bitmap.c test_tx_cache.c ../allocator/bitmap.c ../tx/tx_cache.c ../tx/tx_journal.c $(PUBLIC_SRC) 
 
 TARGET_ALL = $(TEST_SUITE_MAIN)
 

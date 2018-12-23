@@ -228,7 +228,7 @@ void test_tx_case0(void)
     tx_t *tx;
     int   ret;
         
-    CU_ASSERT(tx_alloc(mgr, &tx) == 0);
+    CU_ASSERT(tx_create(mgr, M_NO_JOURNAL, &tx) == 0);
     CU_ASSERT(tx != NULL);
     CU_ASSERT(tx->tx_id == 1);
     mgr->max_modified_blocks = 1;
@@ -259,7 +259,7 @@ void test_tx_case0(void)
     CU_ASSERT(ret == SUCCESS);
     CU_ASSERT(mgr->flush_sn == 1);
     
-    CU_ASSERT(tx_alloc(mgr, &tx) == 0);
+    CU_ASSERT(tx_create(mgr, M_NO_JOURNAL, &tx) == 0);
     tx_buf = tx_get_buffer(tx, BLOCK_ID1, 0);
     CU_ASSERT(tx_buf != NULL);
     CU_ASSERT(tx_buf[0] == 1);
@@ -281,7 +281,7 @@ void test_tx_case0(void)
     CU_ASSERT(ret == SUCCESS);
     CU_ASSERT(mgr->flush_sn == 2);
 
-    CU_ASSERT(tx_alloc(mgr, &tx) == 0);
+    CU_ASSERT(tx_create(mgr, M_NO_JOURNAL, &tx) == 0);
     tx_buf = tx_get_buffer(tx, BLOCK_ID1, 0);
     CU_ASSERT(tx_buf != NULL);
     CU_ASSERT(tx_buf[0] == 4);

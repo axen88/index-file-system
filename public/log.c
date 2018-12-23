@@ -200,26 +200,26 @@ static int32_t backup_log(log_t *log)
 
 #endif
 
-void log_set_level(void *log, uint32_t pid, uint32_t level)
+void log_set_level(void *log, uint32_t mid, uint32_t level)
 {
-    if ((!log) || (pid >= PIDS_NUM))
+    if ((!log) || (mid >= PIDS_NUM))
     {
         return;
     }
     
-    ((log_t *)log)->levels[pid] = level;
+    ((log_t *)log)->levels[mid] = level;
 
     return;
 }
 
-int32_t log_get_level(void *log, uint32_t pid)
+int32_t log_get_level(void *log, uint32_t mid)
 {
-    if ((!log) || (pid >= PIDS_NUM))
+    if ((!log) || (mid >= PIDS_NUM))
     {
         return -1;
     }
     
-    return ((log_t *)log)->levels[pid];
+    return ((log_t *)log)->levels[mid];
 }
 
 void *log_open(const char *file_name, const char *version, const char *dir, uint32_t mode)
@@ -287,12 +287,12 @@ void log_close(void *log)
     OS_FREE(tmp_log);
 }
 
-void log_trace(void *log, uint32_t pid, uint32_t level, const char *format, ...)
+void log_trace(void *log, uint32_t mid, uint32_t level, const char *format, ...)
 {
     log_t *tmp_log = (log_t *)log;
     va_list ap;
 
-    if ((tmp_log == NULL) || (pid >= PIDS_NUM) || (level > tmp_log->levels[pid])
+    if ((tmp_log == NULL) || (mid >= PIDS_NUM) || (level > tmp_log->levels[mid])
         || ((tmp_log->mode & LOG_TO_SCNFILE) == 0)
         || (((tmp_log->mode & LOG_TO_SCREEN) == 0) && (tmp_log->disk_hnd == NULL)))
     {

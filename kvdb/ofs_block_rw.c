@@ -36,7 +36,7 @@ History:
 *******************************************************************************/
 #include "ofs_if.h"
 
-MODULE(PID_BLOCK);
+MODULE(MID_BLOCK);
 #include "log.h"
 
 static void assemble_block(block_head_t *blk)

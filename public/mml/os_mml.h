@@ -16,7 +16,7 @@
 #ifndef __MML_H__
 #define __MML_H__
 
-#define PID_MML   1
+#define MID_MML   1
 
 #define MML_DEV_NAME "mml_dev"
 
@@ -26,7 +26,7 @@ typedef enum tagMML_ERROR
     MML_ERR_START = 1,
     MML_ERR_SEND_CMD,
     MML_ERR_PARAMETER,
-    MML_ERR_PID_CORRUPT,
+    MML_ERR_MID_CORRUPT,
 } MML_ERROR;
 
 // 命令
@@ -55,17 +55,17 @@ typedef struct tagMML_CMD
     uint8_t  dat[MML_DAT_LEN];
 } MML_CMD;
 
-#define MML_PID_NUM         256
-#define MML_PID_NAME_SIZE   8
+#define MML_MID_NUM         256
+#define MML_MID_NAME_SIZE   8
 
 typedef struct tagMML_MODULE
 {
     //OS_U32  pid;
-    char   name[MML_PID_NAME_SIZE]; /* 唯一区分各module */
+    char   name[MML_MID_NAME_SIZE]; /* 唯一区分各module */
     void (*DoCmd)(char *);
 } MML_MODULE;
 
-extern MML_MODULE g_mmlModules[MML_PID_NUM];
+extern MML_MODULE g_mmlModules[MML_MID_NUM];
 
 extern int32_t MML_Register(uint32_t v_pid, MML_MODULE *v_module);
 extern int32_t MML_Unregister(uint32_t v_pid);

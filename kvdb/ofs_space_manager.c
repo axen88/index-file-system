@@ -37,7 +37,7 @@
  *******************************************************************************/
 #include "ofs_if.h"
  
-MODULE(PID_SPACE_MANAGER);
+MODULE(MID_SPACE_MANAGER);
 #include "log.h"
 
 int32_t alloc_space(object_handle_t *obj, u64_t start_blk, uint32_t blk_cnt, u64_t *real_start_blk)

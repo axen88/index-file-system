@@ -3,12 +3,12 @@
 #include "os_adapter.h"
 #include "globals.h"
 #include "utils.h"
-
-
-MODULE(PID_CACHE);
 #include "log.h"
-
 #include "tx_cache.h"
+#include "tx_journal.h"
+
+MODULE(MID_CACHE);
+
 
 // 申请cache block
 cache_block_t *alloc_cache_block(uint32_t block_size, u64_t block_id)
@@ -524,8 +524,8 @@ void checkpoint_cache_if_possible(cache_mgr_t *mgr)
     return;
 }
 
-// 分配一个新的事务
-int tx_alloc(cache_mgr_t *mgr, tx_t **new_tx)
+// 创建一个新的事务
+int tx_create(cache_mgr_t *mgr, uint32_t mode, tx_t **new_tx)
 {
     if (!mgr->allow_new_tx)
     {
@@ -545,6 +545,7 @@ int tx_alloc(cache_mgr_t *mgr, tx_t **new_tx)
     tx->mgr = mgr;
     list_init_head(&tx->rw_cb);
     tx->tx_id = mgr->cur_tx_id++;
+    tx->mode = mode;
     mgr->onfly_tx_num++;
 
     *new_tx = tx;
@@ -641,13 +642,6 @@ void release_tx_cb(tx_t *tx)
     }
 }
 
-///TODO: 封装成日志下盘
-int tx_write_log(tx_t *tx)
-{
-    tx->mgr->log_sn++;
-    return SUCCESS;
-}
-
 // 提交修改的数据到日志，tx buf中的数据生效到commit buf
 int tx_commit(tx_t *tx)
 {
@@ -664,12 +658,15 @@ int tx_commit(tx_t *tx)
     }
 
     // 2. 将rw cb中的内容写日志
-    ret = tx_write_log(tx);
-    if (ret < 0)
+    if (!(tx->mode & M_NO_JOURNAL))
     {
-        tx->mgr->onfly_commit_tx--;
-        LOG_ERROR("commit tx(%llu) write log failed(%d).\n", tx->tx_id, ret);
-        return ret;
+        ret = tx_write_journal(tx);
+        if (ret < 0)
+        {
+            tx->mgr->onfly_commit_tx--;
+            LOG_ERROR("commit tx(%llu) write log failed(%d).\n", tx->tx_id, ret);
+            return ret;
+        }
     }
 
     // 3. 将tx修改链表中的cache block释放

@@ -38,7 +38,7 @@ History:
 
 #include "ofs_if.h"
  
-MODULE(PID_EXTENT_MAP);
+MODULE(MID_EXTENT_MAP);
 #include "log.h"
 
 #if 0

@@ -31,7 +31,7 @@ static uint32_t g_datLen = 0;
 
 static MML_CMD g_kCmd;
 
-MML_MODULE g_mmlModules[MML_PID_NUM];
+MML_MODULE g_mmlModules[MML_MID_NUM];
 
 #define MML_ARGV_NUM  512
 static uint32_t g_argc;
@@ -210,20 +210,20 @@ void DoCmd(void)
 {
     uint32_t pid = 0;
 
-    if (strlen(g_argv[0]) > MML_PID_NAME_SIZE)
+    if (strlen(g_argv[0]) > MML_MID_NAME_SIZE)
     {
         LOG_ERROR("module name too long. name(%s)\n", g_argv[0]);
         return;
     }
 
-    for (pid = 0; pid < MML_PID_NUM; pid++)
+    for (pid = 0; pid < MML_MID_NUM; pid++)
     {
         if (NULL == g_mmlModules[pid].DoCmd)
         {
             continue;
         }
         
-        if (0 != strncmp(g_argv[0], g_mmlModules[pid].name, MML_PID_NAME_SIZE))
+        if (0 != strncmp(g_argv[0], g_mmlModules[pid].name, MML_MID_NAME_SIZE))
         {
             continue;
         }
@@ -231,7 +231,7 @@ void DoCmd(void)
         g_mmlModules[pid].DoCmd(g_argv[1]);
     }
 
-    if (MML_PID_NUM <= pid)
+    if (MML_MID_NUM <= pid)
     {
         LOG_ERROR("module not found. name(%s)\n", g_argv[0]);
     }
@@ -294,10 +294,10 @@ int32_t MML_Register(uint32_t v_pid, MML_MODULE *v_module)
     ASSERT(NULL != v_module->DoCmd);
     
     len = strlen(v_module->name);
-    if (MML_PID_NAME_SIZE <= len)
+    if (MML_MID_NAME_SIZE <= len)
     {
         LOG_ERROR("module name too long. name(%s) max(%d)\n",
-            v_module->name, MML_PID_NAME_SIZE);
+            v_module->name, MML_MID_NAME_SIZE);
         return -MML_ERR_PARAMETER;
     }
     
@@ -307,10 +307,10 @@ int32_t MML_Register(uint32_t v_pid, MML_MODULE *v_module)
         return -MML_ERR_PARAMETER;
     }
 
-    if (MML_PID_NUM <= v_pid)
+    if (MML_MID_NUM <= v_pid)
     {
         LOG_ERROR("module pid too large. pid(%d) max(%d)\n",
-            v_pid, MML_PID_NUM - 1);
+            v_pid, MML_MID_NUM - 1);
         return -MML_ERR_PARAMETER;
     }
 
@@ -318,7 +318,7 @@ int32_t MML_Register(uint32_t v_pid, MML_MODULE *v_module)
     {
         LOG_ERROR("module pid corrupt. new(%s) old(%s)\n",
             v_module->name, g_mmlModules[v_pid].name);
-        return -MML_ERR_PID_CORRUPT;
+        return -MML_ERR_MID_CORRUPT;
     }
 
     strncpy(g_mmlModules[v_pid].name ,v_module->name, len);
@@ -341,10 +341,10 @@ int32_t MML_Register(uint32_t v_pid, MML_MODULE *v_module)
 *******************************************************************************/
 int32_t MML_Unregister(uint32_t v_pid)
 {
-    if (MML_PID_NUM <= v_pid)
+    if (MML_MID_NUM <= v_pid)
     {
         LOG_ERROR("module pid too large. pid(%d) max(%d)\n",
-            v_pid, MML_PID_NUM - 1);
+            v_pid, MML_MID_NUM - 1);
         return -MML_ERR_PARAMETER;
     }
 

@@ -248,7 +248,7 @@ static inline void destroy_threads_group(threads_group_t *threads_group, bool_t 
 #define MASK_N(shift)  (((u64_t)1 << (shift)) -1) 
 
 //static uint32_t g_pid = PID_INDEX;
-#define MODULE(pid)  static uint32_t g_pid = (pid)    
+#define MODULE(mid)  static uint32_t g_mid = (mid)    
 
 #ifdef	__cplusplus
 }

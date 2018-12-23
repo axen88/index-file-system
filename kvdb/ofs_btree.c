@@ -37,7 +37,7 @@ History:
 
 #include "ofs_if.h"
 
-MODULE(PID_BTREE);
+MODULE(MID_BTREE);
 #include "log.h"
 
 #define INDEX_GETTO_BEGIN  1

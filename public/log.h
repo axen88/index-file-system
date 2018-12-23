@@ -59,31 +59,31 @@ extern void *g_log_hnd;
 
 #define LOG_SYSTEM_INIT(dir, name) g_log_hnd = log_open(name, "V100R001C01", dir, LOG_TO_FILE)
 #define LOG_SYSTEM_EXIT()          log_close(g_log_hnd);
-#define LOG_SET_LEVEL(level)       log_set_level(g_log_hnd, g_pid, level)
-#define LOG_GET_LEVEL()            log_get_level(g_log_hnd, g_pid)
+#define LOG_SET_LEVEL(level)       log_set_level(g_log_hnd, g_mid, level)
+#define LOG_GET_LEVEL()            log_get_level(g_log_hnd, g_mid)
 
 #define LOG_DEBUG(fmt, ...)    \
-    log_trace(g_log_hnd, g_pid, 4, "[DEBUG][%lld][%s:%s:%d]: "fmt, \
+    log_trace(g_log_hnd, g_mid, 4, "[DEBUG][%lld][%s:%s:%d]: "fmt, \
         (u64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
 #define LOG_INFO(fmt, ...)       \
-    log_trace(g_log_hnd, g_pid, 3, "[INFO ][%lld][%s:%s:%d]: "fmt, \
+    log_trace(g_log_hnd, g_mid, 3, "[INFO ][%lld][%s:%s:%d]: "fmt, \
         (u64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
    
 #define LOG_WARN(fmt, ...)         \
-    log_trace(g_log_hnd, g_pid, 2, "[WARN ][%lld][%s:%s:%d]: "fmt, \
+    log_trace(g_log_hnd, g_mid, 2, "[WARN ][%lld][%s:%s:%d]: "fmt, \
         (u64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
    
 #define LOG_ERROR(fmt, ...)        \
-    log_trace(g_log_hnd, g_pid, 1, "[ERROR][%lld][%s:%s:%d]: "fmt, \
+    log_trace(g_log_hnd, g_mid, 1, "[ERROR][%lld][%s:%s:%d]: "fmt, \
         (u64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
    
 #define LOG_EMERG(fmt, ...)        \
-    log_trace(g_log_hnd, g_pid, 0, "[EMERG][%lld][%s:%s:%d]: "fmt, \
+    log_trace(g_log_hnd, g_mid, 0, "[EMERG][%lld][%s:%s:%d]: "fmt, \
         (u64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
 #define LOG_EVENT(fmt, ...)        \
-    log_trace(g_log_hnd, g_pid, 0, "[EVENT][%lld][%s:%s:%d]: "fmt, \
+    log_trace(g_log_hnd, g_mid, 0, "[EVENT][%lld][%s:%s:%d]: "fmt, \
         (u64_t)OS_GET_THREAD_ID(),  __FILE__, __FUNCTION__, __LINE__, ##__VA_ARGS__)
        
 #ifdef __cplusplus

@@ -20,7 +20,7 @@
 
 void TraceSetModuleLogLevel(uint32_t v_pid, uint32_t v_level)
 {
-    ASSERT(MML_PID_NUM <= v_pid);
+    ASSERT(MML_MID_NUM <= v_pid);
         
     LOG_SET_LEVEL(v_pid, v_level);
 
@@ -31,7 +31,7 @@ void TraceSetAllModulesLogLevel(uint32_t v_level)
 {
     uint32_t pid = 0;
 
-    for (pid = 0; pid < MML_PID_NUM; pid++)
+    for (pid = 0; pid < MML_MID_NUM; pid++)
     {
         LOG_SET_LEVEL(pid, v_level);
     }
@@ -43,7 +43,7 @@ void TracePrintAllModulesLogLevel(void)
 {
     uint32_t pid = 0;
 
-    for (pid = 0; pid < MML_PID_NUM; pid++)
+    for (pid = 0; pid < MML_MID_NUM; pid++)
     {
         if (0 != strlen(g_mmlModules[pid].name))
         {

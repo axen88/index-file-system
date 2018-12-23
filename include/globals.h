@@ -71,20 +71,21 @@ extern "C" {
 
 enum
 {
-    PID_BTREE = 10,
-    PID_CONTAINER = 11,
-    PID_OBJECT = 12,
-    PID_BLOCK = 13,
-    PID_SPACE_MANAGER = 14,
-    PID_CACHE = 15,
-    PID_SERVER = 16,
-    PID_CLIENT = 17,
-    PID_TOOLS = 18,
-    PID_UTILS = 19,
-    PID_EXTENT_MAP = 20,
-    PID_BITMAP = 21,
+    MID_BTREE = 10,
+    MID_CONTAINER = 11,
+    MID_OBJECT = 12,
+    MID_BLOCK = 13,
+    MID_SPACE_MANAGER = 14,
+    MID_CACHE = 15,
+    MID_SERVER = 16,
+    MID_CLIENT = 17,
+    MID_TOOLS = 18,
+    MID_UTILS = 19,
+    MID_EXTENT_MAP = 20,
+    MID_BITMAP = 21,
+    MID_JOURNAL = 22,
 
-    PID_BUTT
+    MID_BUTT
 };
 
 typedef enum error_code

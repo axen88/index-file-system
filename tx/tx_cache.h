@@ -44,8 +44,6 @@ typedef enum
     BUF_TYPE_NUM
 } BUF_TYPE_E;
 
-// flag
-#define F_NO_READ   (1 << 0) // 不需要读盘上的数据，默认数据为全0
 
 // buf的状态
 typedef enum
@@ -130,6 +128,7 @@ typedef struct
     cache_mgr_t *mgr;
 
     uint32_t tx_id;     // 此事务的id
+    uint32_t mode;      // mode
     list_head_t rw_cb;  // 本事务修改过或正在修改的cache，commit或cancel时使用
 } tx_t;
 
@@ -146,7 +145,7 @@ int flush_all_cb(cache_mgr_t *mgr);
 int flush_all_cache_block(cache_mgr_t *mgr);
 
 // 必须和put_buffer、commit_buffer、cancel_buffer配合使用
-void *get_buffer(cache_mgr_t *mgr, u64_t block_id, uint32_t mode);
+void *get_buffer(cache_mgr_t *mgr, u64_t block_id, uint32_t flag);
 
 // 必须和get_buffer配合使用
 void put_buffer(cache_mgr_t *mgr, void *buf);
@@ -163,8 +162,14 @@ void cancel_buffer(cache_mgr_t *mgr, void *rw_buf);
 
 #if DESC("对外接口")
 
-// 分配一个新的事务
-int tx_alloc(cache_mgr_t *mgr, tx_t **new_tx);
+// tx_create mode
+#define M_NO_JOURNAL    (1 << 0) // 提交时不需要写日志
+
+// 创建一个新的事务
+int tx_create(cache_mgr_t *mgr, uint32_t mode, tx_t **new_tx);
+
+// get_buffer/tx_get_buffer flag
+#define F_NO_READ   (1 << 0) // 不需要读盘上的数据，默认数据为全0
 
 // 带事务修改时，调用这个接口
 void *tx_get_buffer(tx_t *tx, u64_t block_id, uint32_t flag);
