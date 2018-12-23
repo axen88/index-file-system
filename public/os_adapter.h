@@ -128,9 +128,9 @@ extern "C" {
 //
 // Bits operations
 //
-#define GET_BIT(x, n)    ((x) & ((u64_t)1 << (n)))
-#define SET_BIT(x, n)    ((x) | ((u64_t)1 << (n)))
-#define CLR_BIT(x, n)    ((x) | ((u64_t)1 << (n)))
+#define GET_BIT(x, n)    ((x) & (1 << (n)))
+#define SET_BIT(x, n)    ((x) |= (1 << (n)))
+#define CLR_BIT(x, n)    ((x) &= ~(1 << (n)))
     
 #define ARRAY_SIZE(a)           (sizeof(a) / sizeof(a[0])) // Get array size
 

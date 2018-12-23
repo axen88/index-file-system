@@ -51,7 +51,7 @@ static space_ops_t test_bd_ops
 // 测试get/put buffer
 void test_cache_case0(void)
 {
-    cache_mgr_t *mgr = tx_cache_init_system(BD_NAME, BD_BLOCK_SIZE, &test_bd_ops);
+    cache_mgr_t *mgr = init_cache_mgr(BD_NAME, BD_BLOCK_SIZE, &test_bd_ops);
     u64_t *rw_buf;
     u64_t *rw_buf2;
     u64_t *commit_buf;
@@ -80,13 +80,13 @@ void test_cache_case0(void)
     flush_buf = get_buffer_by_type(mgr, BLOCK_ID1, FLUSH_BUF);
     CU_ASSERT(flush_buf == NULL);
 
-    tx_cache_exit_system(mgr);
+    destroy_cache_mgr(mgr);
 }
 
 // 测试get/put buffer
 void test_cache_case1(void)
 {
-    cache_mgr_t *mgr = tx_cache_init_system(BD_NAME, BD_BLOCK_SIZE, &test_bd_ops);
+    cache_mgr_t *mgr = init_cache_mgr(BD_NAME, BD_BLOCK_SIZE, &test_bd_ops);
     u64_t *rw_buf;
     u64_t *rw_buf2;
     u64_t *commit_buf;
@@ -116,13 +116,13 @@ void test_cache_case1(void)
     flush_buf = get_buffer_by_type(mgr, BLOCK_ID1, FLUSH_BUF);
     CU_ASSERT(flush_buf == NULL);
 
-    tx_cache_exit_system(mgr);
+    destroy_cache_mgr(mgr);
 }
 
 // 测试get/put/commit buffer
 void test_cache_case2(void)
 {
-    cache_mgr_t *mgr = tx_cache_init_system(BD_NAME, BD_BLOCK_SIZE, &test_bd_ops);
+    cache_mgr_t *mgr = init_cache_mgr(BD_NAME, BD_BLOCK_SIZE, &test_bd_ops);
     u64_t *rw_buf;
     u64_t *commit_buf;
     u64_t *flush_buf;
@@ -217,13 +217,13 @@ void test_cache_case2(void)
     CU_ASSERT(flush_buf[0] == 0x2);
     put_buffer(mgr, flush_buf);
 
-    tx_cache_exit_system(mgr);
+    destroy_cache_mgr(mgr);
 }
 
 // 测试提交事务
 void test_tx_case0(void)
 {
-    cache_mgr_t *mgr = tx_cache_init_system(BD_NAME, BD_BLOCK_SIZE, &test_bd_ops);
+    cache_mgr_t *mgr = init_cache_mgr(BD_NAME, BD_BLOCK_SIZE, &test_bd_ops);
     u64_t *tx_buf;
     tx_t *tx;
     int   ret;
@@ -290,7 +290,7 @@ void test_tx_case0(void)
     tx_put_buffer(tx, tx_buf);
     tx_cancel(tx);
 
-    tx_cache_exit_system(mgr);
+    destroy_cache_mgr(mgr);
 }
 
 // 将多个测试用例打包成组，以便指定给一个Suite 

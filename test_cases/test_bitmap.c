@@ -49,71 +49,78 @@ static space_ops_t test_bd_ops
 // ≤‚ ‘bit
 void test_bitmap_case0(void)
 {
-    u64_t buf[3] = {0};
+    uint8_t buf[3] = {0};
     uint32_t x;
 
     x = set_buf_first_0bit(buf, 0, 3);
     CU_ASSERT(x == 0);
-    CU_ASSERT(buf[0] == 0x0000000000000001);
+    CU_ASSERT(buf[0] == 0x01);
     
     x = set_buf_first_0bit(buf, 0, 3);
     CU_ASSERT(x == 1);
-    CU_ASSERT(buf[0] == 0x0000000000000003);
+    CU_ASSERT(buf[0] == 0x03);
     
     x = set_buf_first_0bit(buf, 0, 3);
     CU_ASSERT(x == 2);
-    CU_ASSERT(buf[0] == 0x0000000000000007);
+    CU_ASSERT(buf[0] == 0x07);
     
     x = set_buf_first_0bit(buf, 0, 3);
     CU_ASSERT(x == INVALID_U32);
 
-    buf[0] = 0x0FFFFFFFFFFFFFFF;
-    x = set_buf_first_0bit(buf, 0, 65);
-    CU_ASSERT(x == 60);
-    CU_ASSERT(buf[0] == 0x1FFFFFFFFFFFFFFF);
+    buf[0] = 0x0F;
+    x = set_buf_first_0bit(buf, 0, 23);
+    CU_ASSERT(x == 4);
+    CU_ASSERT(buf[0] == 0x1F);
     
-    buf[0] = 0x7FFFFFFFFFFFFFFF;
-    x = set_buf_first_0bit(buf, 0, 65);
-    CU_ASSERT(x == 63);
-    CU_ASSERT(buf[0] == 0xFFFFFFFFFFFFFFFF);
+    buf[0] = 0x0F;
+    x = set_buf_first_0bit(buf, 2, 23);
+    CU_ASSERT(x == 4);
+    CU_ASSERT(buf[0] == 0x1F);
     
-    x = set_buf_first_0bit(buf, 0, 65);
-    CU_ASSERT(x == 64);
-    CU_ASSERT(buf[0] == 0xFFFFFFFFFFFFFFFF);
-    CU_ASSERT(buf[1] == 0x0000000000000001);
+    buf[0] = 0x7F;
+    x = set_buf_first_0bit(buf, 0, 23);
+    CU_ASSERT(x == 7);
+    CU_ASSERT(buf[0] == 0xFF);
+    
+    x = set_buf_first_0bit(buf, 0, 23);
+    CU_ASSERT(x == 8);
+    CU_ASSERT(buf[0] == 0xFF);
+    CU_ASSERT(buf[1] == 0x01);
 
-    x = set_buf_first_0bit(buf, 0, 65);
+    buf[0] = 0xFF;
+    buf[1] = 0xFF;
+    buf[2] = 0x01;
+    x = set_buf_first_0bit(buf, 0, 23);
+    CU_ASSERT(x == 17);
+    CU_ASSERT(buf[0] == 0xFF);
+    CU_ASSERT(buf[1] == 0xFF);
+    CU_ASSERT(buf[2] == 0x03);
+    
+    buf[0] = 0xFF;
+    buf[1] = 0xFF;
+    buf[2] = 0x3F;
+    x = set_buf_first_0bit(buf, 0, 23);
+    CU_ASSERT(x == 22);
+    
+    x = set_buf_first_0bit(buf, 0, 23);
     CU_ASSERT(x == INVALID_U32);
-
-    buf[0] = 0xFFFFFFFFFFFFFFFF;
-    buf[1] = 0xFFFFFFFFFFFFFFFF;
-    buf[2] = 0x0000000000000001;
-    x = set_buf_first_0bit(buf, 0, 130);
-    CU_ASSERT(x == 129);
-    CU_ASSERT(buf[0] == 0xFFFFFFFFFFFFFFFF);
-    CU_ASSERT(buf[1] == 0xFFFFFFFFFFFFFFFF);
-    CU_ASSERT(buf[2] == 0x0000000000000003);
-
-    buf[0] = 0xFFFFFFFFFFFFFFFF;
-    buf[1] = 0xFFFFFFFFFFFFFFFF;
-    buf[2] = 0x0000000000000001;
-    x = set_buf_first_0bit(buf, 128, 2);
-    CU_ASSERT(x == 129);
-    CU_ASSERT(buf[0] == 0xFFFFFFFFFFFFFFFF);
-    CU_ASSERT(buf[1] == 0xFFFFFFFFFFFFFFFF);
-    CU_ASSERT(buf[2] == 0x0000000000000003);
-
 }
 
 // ≤‚ ‘
 void test_bitmap_case1(void)
 {
-    bitmap_hnd_t *hnd = bitmap_init_system(BD_NAME, BD_BLOCK_SIZE, &test_bd_ops, 80);
+    create_bitmap_para_t para;
 
-    CU_ASSERT(hnd != NULL);
+    para.bd_name = BD_NAME;
+    para.bd_ops = &test_bd_ops;
+    para.block_size = BD_BLOCK_SIZE;
+    para.total_bits = 80;
+    bitmap_mgr_t *bmp = create_bitmap(&para);
+
+    CU_ASSERT(bmp != NULL);
 
 
-    bitmap_exit_system(hnd);
+    close_bitmap(bmp);
 }
 
 
@@ -121,6 +128,7 @@ void test_bitmap_case1(void)
 CU_TestInfo test_bitmap_cases[]
 = {  
     {to_str(test_bitmap_case0), test_bitmap_case0},  
+    {to_str(test_bitmap_case1), test_bitmap_case1},  
     CU_TEST_INFO_NULL  
 };  
 

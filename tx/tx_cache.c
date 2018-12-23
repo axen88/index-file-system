@@ -668,7 +668,6 @@ int tx_commit(tx_t *tx)
     if (ret < 0)
     {
         tx->mgr->onfly_commit_tx--;
-        tx_cancel(tx); // 回退cache中的内容
         LOG_ERROR("commit tx(%llu) write log failed(%d).\n", tx->tx_id, ret);
         return ret;
     }
@@ -723,8 +722,8 @@ void free_all_caches(hashtab_t *h)
     }
 }
 
-// 退出cache系统
-void tx_cache_exit_system(cache_mgr_t *mgr)
+// 销毁cache管理结构
+void destroy_cache_mgr(cache_mgr_t *mgr)
 {
     if (mgr == NULL)
     {
@@ -792,8 +791,8 @@ int compare_key(hashtab_t *h, void *key, void *value)
     }
 }
 
-// 初始化cache系统
-cache_mgr_t *tx_cache_init_system(char *bd_name, uint32_t block_size, space_ops_t *bd_ops)
+// 创建cache管理结构
+cache_mgr_t *init_cache_mgr(char *bd_name, uint32_t block_size, space_ops_t *bd_ops)
 {
     int ret = 0;
 
@@ -811,7 +810,7 @@ cache_mgr_t *tx_cache_init_system(char *bd_name, uint32_t block_size, space_ops_
     ret = bd_ops->open(&mgr->bd_hnd, bd_name);
     if (ret < 0)
     {
-        tx_cache_exit_system(mgr);
+        destroy_cache_mgr(mgr);
         LOG_ERROR("open block device(%s) failed(%d).\n", bd_name, ret);
         return NULL;
     }
@@ -819,7 +818,7 @@ cache_mgr_t *tx_cache_init_system(char *bd_name, uint32_t block_size, space_ops_
     mgr->hcache = hashtab_create(hash_key, compare_key, 1000, offsetof(cache_block_t, hnode));
     if (mgr->hcache == NULL)
     {
-        tx_cache_exit_system(mgr);
+        destroy_cache_mgr(mgr);
         LOG_ERROR("create device(%s) hash table failed.\n", bd_name);
         return NULL;
     }

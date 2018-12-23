@@ -151,6 +151,7 @@ typedef enum error_code
     ERR_NEW_TX_BLOCKED,
 
     ERR_INIT_CACHE,
+    ERR_GET_TX_BUF,
     
     INDEX_ERR_BUTT
 } error_code_t;

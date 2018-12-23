@@ -181,11 +181,11 @@ int tx_commit(tx_t *tx);
 // 放弃这个事务的所有修改
 void tx_cancel(tx_t *tx);
 
-// 初始化cache系统
-cache_mgr_t *tx_cache_init_system(char *bd_name, uint32_t block_size, space_ops_t *bd_ops);
+// 创建cache管理结构
+cache_mgr_t *init_cache_mgr(char *bd_name, uint32_t block_size, space_ops_t *bd_ops);
 
-// 退出cache系统
-void tx_cache_exit_system(cache_mgr_t *mgr);
+// 销毁cache管理结构
+void destroy_cache_mgr(cache_mgr_t *mgr);
 
 #endif
 
